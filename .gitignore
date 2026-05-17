@@ -1,0 +1,33 @@
+# Entorno (nunca al repo)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Linters / cache
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Testing
+htmlcov/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(docker compose version 2>&1)",
+      "Bash(export PATH=\"/c/nvm4w/nodejs:$PATH\")",
+      "Bash(pnpm dev *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(curl -s -L -o /dev/null -w \"%{http_code}\" http://localhost:3000/login)",
+      "Bash(npx tsc *)",
+      "Bash(python -c ' *)",
+      "Bash(.venv/Scripts/uvicorn app.main:app --host 0.0.0.0 --port 8000)",
+      "Bash(curl -s http://localhost:8000/api/v1/health)",
+      "Bash(curl -s http://localhost:8000/api/v1/health/db)",
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/auth/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@example.com\",\"password\":\"changeme123\"}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('access_token:', d.get\\('access_token','ERROR'\\)[:40]+'...'\\)\")",
+      "Bash(ls \"C:\\\\proyectos\" 2>&1)",
+      "Bash(Get-ChildItem -Path \"C:\\\\proyectos\\\\web-app\" -Recurse -Force)",
+      "Bash(Select-Object -Property FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(ls \"/c/Users/Jose Bogarin/.claude/commands/\" 2>/dev/null || echo \"directorio no existe\")",
+      "Bash(mkdir -p \"/c/Users/Jose Bogarin/.claude/commands\")",
+      "Bash(grep -v \"^$\")",
+      "Bash(git config *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
