@@ -1,4 +1,3 @@
-import uuid
 from typing import Any
 
 from sqlalchemy import select
@@ -43,14 +42,17 @@ async def get_audit_logs(
     *,
     skip: int = 0,
     limit: int = 50,
-    user_id: uuid.UUID | None = None,
+    user_id: int | None = None,
     action: str | None = None,
+    resource: str | None = None,
 ) -> list[AuditLog]:
     stmt = select(AuditLog)
     if user_id is not None:
         stmt = stmt.where(AuditLog.user_id == user_id)
     if action is not None:
-        stmt = stmt.where(AuditLog.action == action)
+        stmt = stmt.where(AuditLog.action.ilike(f"%{action}%"))
+    if resource is not None:
+        stmt = stmt.where(AuditLog.resource == resource)
     stmt = stmt.order_by(AuditLog.created_at.desc()).offset(skip).limit(limit)
     result = await db.execute(stmt)
     return list(result.scalars().all())

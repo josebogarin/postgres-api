@@ -31,3 +31,24 @@ htmlcov/
 .DS_Store
 Thumbs.db
 *.log
+
+# Archivos comprimidos / backups
+*.zip
+
+# Tuneles / binarios externos
+ngrok.exe
+cloudflared.exe
+
+# Worktrees temporales de agentes
+.claude/worktrees/
+
+# Excels generados (auditorias, exports, verificacion)
+BECBUC_verificacion.xlsx
+static/auditorias/
+static/exports/
+app/static/auditorias/
+
+# Artefactos basura de oficina / editores
+.~lock.*#
+*.tmp
+*.html.js

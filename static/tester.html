@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FastAPI CRUD Tester</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #009688;
+      --accent2: #00bcd4;
+      --get: #4caf50;
+      --post: #2196f3;
+      --put: #ff9800;
+      --delete: #f44336;
+      --text: #e0e0e0;
+      --muted: #8892b0;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 { font-size: 1.2rem; font-weight: 600; color: var(--accent2); }
+
+    header span.badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .main {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 57px);
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 280px;
+      min-width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      padding: 14px 16px 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .base-url-wrap {
+      padding: 8px 12px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .base-url-wrap label { font-size: 0.75rem; color: var(--muted); }
+    .base-url-wrap input {
+      width: 100%;
+      margin-top: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 7px 10px;
+      font-size: 0.82rem;
+      outline: none;
+    }
+    .base-url-wrap input:focus { border-color: var(--accent2); }
+
+    /* Login automático */
+    .login-wrap {
+      padding: 10px 12px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .login-wrap label { font-size: 0.75rem; color: var(--muted); }
+    .login-wrap input {
+      width: 100%;
+      margin-top: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      outline: none;
+      margin-bottom: 6px;
+    }
+    .login-wrap input:focus { border-color: var(--accent2); }
+    .login-btn {
+      width: 100%;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      padding: 7px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 2px;
+    }
+    .login-btn:hover { opacity: 0.85; }
+    .login-status {
+      margin-top: 6px;
+      font-size: 0.72rem;
+      text-align: center;
+      min-height: 16px;
+    }
+    .login-status.ok  { color: var(--get); }
+    .login-status.err { color: var(--delete); }
+
+    .token-wrap {
+      padding: 8px 12px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .token-wrap label { font-size: 0.75rem; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+    .token-wrap label span { cursor: pointer; color: var(--accent2); font-size: 0.7rem; }
+    .token-wrap textarea {
+      width: 100%;
+      margin-top: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: #a8ff78;
+      padding: 7px 10px;
+      font-size: 0.72rem;
+      font-family: monospace;
+      outline: none;
+      resize: none;
+      height: 48px;
+      line-height: 1.4;
+    }
+    .token-wrap textarea:focus { border-color: var(--accent2); }
+    .token-wrap textarea.has-token { border-color: rgba(76,175,80,0.5); }
+
+    /* ── DB Tree ── */
+    .db-tree { flex: 1; overflow-y: auto; padding: 6px 0; }
+
+    .tree-group { margin-bottom: 2px; }
+
+    .tree-group-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+      user-select: none;
+      transition: color 0.15s;
+    }
+    .tree-group-header:hover { color: var(--text); }
+    .tree-arrow { font-size: 0.6rem; transition: transform 0.2s; display: inline-block; }
+    .tree-arrow.open { transform: rotate(90deg); }
+    .tree-count {
+      margin-left: auto;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    .tree-items { display: none; }
+    .tree-items.open { display: block; }
+
+    .tree-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px 5px 24px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--text);
+      border-radius: 4px;
+      margin: 1px 6px;
+      transition: background 0.12s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tree-item:hover { background: var(--surface2); color: var(--accent2); }
+    .tree-item.active { background: rgba(0,188,212,0.1); color: var(--accent2); }
+    .tree-item-icon { font-size: 0.75rem; flex-shrink: 0; }
+
+    .tree-loading { padding: 14px 16px; font-size: 0.78rem; color: var(--muted); }
+    .tree-error   { padding: 14px 16px; font-size: 0.75rem; color: var(--delete); }
+
+    /* Fila de tabla: toggle + nombre */
+    .tree-table-row {
+      display: flex;
+      align-items: center;
+      border-radius: 4px;
+      margin: 1px 6px;
+      transition: background 0.12s;
+    }
+    .tree-table-row:hover { background: var(--surface2); }
+    .tree-table-row.active { background: rgba(0,188,212,0.1); }
+
+    .tree-toggle {
+      flex-shrink: 0;
+      padding: 5px 4px 5px 10px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.55rem;
+      transition: transform 0.18s, color 0.15s;
+      user-select: none;
+    }
+    .tree-toggle:hover { color: var(--text); }
+    .tree-toggle.open { transform: rotate(90deg); }
+
+    .tree-table-name {
+      flex: 1;
+      padding: 5px 10px 5px 2px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tree-table-row.active .tree-table-name { color: var(--accent2); }
+    .tree-table-name:hover { color: var(--accent2); }
+
+    .tree-open-btn {
+      flex-shrink: 0;
+      padding: 4px 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      opacity: 0;
+      transition: opacity 0.15s;
+      border-radius: 4px;
+    }
+    .tree-table-row:hover .tree-open-btn { opacity: 0.7; }
+    .tree-open-btn:hover { opacity: 1 !important; background: var(--surface2); }
+
+    /* Columnas expandidas */
+    .tree-cols { display: none; padding: 0 0 4px 0; }
+    .tree-cols.open { display: block; }
+
+    .tree-col {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 12px 3px 32px;
+      font-size: 0.73rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .tree-col-name { color: var(--text); flex-shrink: 0; }
+    .tree-col-type { color: #7986cb; font-size: 0.68rem; }
+    .tree-col-badge {
+      font-size: 0.58rem;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .badge-pk { background: rgba(255,193,7,0.2); color: #ffc107; }
+    .badge-fk { background: rgba(33,150,243,0.2); color: #64b5f6; }
+    .badge-uq { background: rgba(156,39,176,0.2); color: #ce93d8; }
+    .badge-idx { background: rgba(0,150,136,0.15); color: #4db6ac; }
+
+    /* Tree header con botón refresh */
+    .tree-header {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px 4px;
+      gap: 6px;
+    }
+    .tree-header-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      flex: 1;
+    }
+    .tree-refresh-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 2px 5px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .tree-refresh-btn:hover { color: var(--accent2); }
+
+    /* Botón vaciar tabla */
+    .sql-del-btn {
+      background: rgba(244,67,54,0.15);
+      border: 1px solid rgba(244,67,54,0.3);
+      border-radius: var(--radius);
+      color: #ef9a9a;
+      padding: 7px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .sql-del-btn:hover { opacity: 0.8; }
+    .sql-del-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .request-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    select#method {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 9px 12px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      outline: none;
+    }
+
+    input#path {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 9px 14px;
+      font-size: 0.88rem;
+      outline: none;
+    }
+    input#path:focus { border-color: var(--accent2); }
+
+    button#sendBtn {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      padding: 9px 22px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    button#sendBtn:hover { opacity: 0.85; }
+    button#sendBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    button#pingBtn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      padding: 9px 14px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.15s;
+    }
+    button#pingBtn:hover { color: var(--text); }
+
+    .error-box {
+      background: rgba(244,67,54,0.1);
+      border: 1px solid rgba(244,67,54,0.3);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      color: #ef9a9a;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 0.85rem;
+      line-height: 1.7;
+    }
+    .error-box code {
+      display: block;
+      margin-top: 10px;
+      background: rgba(0,0,0,0.3);
+      padding: 10px 12px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      color: #a5d6a7;
+      font-family: monospace;
+      white-space: pre;
+    }
+
+    .panels { flex: 1; display: flex; overflow: hidden; }
+    .panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .panel + .panel { border-left: 1px solid var(--border); }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .panel-header .actions { display: flex; gap: 8px; }
+    .panel-header .actions button {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      padding: 3px 10px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .panel-header .actions button:hover { color: var(--text); }
+
+    .tab-row {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .tab-row button {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      padding: 8px 16px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-row button.active {
+      color: var(--accent2);
+      border-bottom-color: var(--accent2);
+    }
+
+    .tab-content { display: none; flex: 1; overflow: auto; }
+    .tab-content.active { display: flex; flex-direction: column; flex: 1; }
+
+    textarea {
+      flex: 1;
+      width: 100%;
+      background: var(--surface2);
+      border: none;
+      color: #a8ff78;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      padding: 14px;
+      resize: none;
+      outline: none;
+      min-height: 200px;
+    }
+
+    .headers-table {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .header-row { display: flex; gap: 6px; align-items: center; }
+    .header-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      outline: none;
+    }
+    .header-row input:focus { border-color: var(--accent2); }
+    .header-row button {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--delete);
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 0.78rem;
+    }
+
+    .add-header-btn {
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      padding: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      text-align: center;
+      transition: color 0.15s;
+    }
+    .add-header-btn:hover { color: var(--text); }
+
+    #responseArea {
+      flex: 1;
+      overflow: auto;
+      padding: 14px;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .status-bar { display: flex; gap: 14px; align-items: center; padding: 0 16px; }
+
+    .status-pill {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .status-2xx { background: rgba(76,175,80,0.2); color: var(--get); }
+    .status-4xx { background: rgba(244,67,54,0.2); color: var(--delete); }
+    .status-5xx { background: rgba(255,152,0,0.2); color: var(--put); }
+    .status-other { background: rgba(100,100,100,0.2); color: var(--muted); }
+
+    .json-key  { color: #80cbc4; }
+    .json-str  { color: #a5d6a7; }
+    .json-num  { color: #ffcc02; }
+    .json-bool { color: #ef9a9a; }
+    .json-null { color: #b0bec5; }
+
+    .tag-GET    { background: rgba(76,175,80,0.2);  color: var(--get); }
+    .tag-POST   { background: rgba(33,150,243,0.2); color: var(--post); }
+    .tag-PUT    { background: rgba(255,152,0,0.2);  color: var(--put); }
+    .tag-DELETE { background: rgba(244,67,54,0.2);  color: var(--delete); }
+    .tag-PATCH  { background: rgba(156,39,176,0.2); color: #ce93d8; }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .placeholder-msg {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ── SQL Panel ── */
+    .sql-panel {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sql-panel.active { display: flex; }
+
+    .sql-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .sql-toolbar span { font-size: 0.75rem; color: var(--muted); flex: 1; }
+    .sql-run-btn {
+      background: #7c3aed;
+      border: none;
+      border-radius: var(--radius);
+      color: #fff;
+      padding: 7px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .sql-run-btn:hover { opacity: 0.85; }
+    .sql-run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .sql-editor-wrap {
+      flex: 0 0 160px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .sql-editor {
+      width: 100%;
+      height: 100%;
+      background: #0d1117;
+      border: none;
+      color: #e2c08d;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      padding: 14px;
+      resize: none;
+      outline: none;
+      line-height: 1.6;
+    }
+
+    .sql-results {
+      flex: 1;
+      overflow: auto;
+      background: var(--bg);
+    }
+
+    .sql-stats {
+      padding: 8px 14px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 16px;
+    }
+    .sql-stats b { color: var(--get); }
+
+    .sql-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .sql-table th {
+      position: sticky;
+      top: 0;
+      background: var(--surface2);
+      color: var(--accent2);
+      font-weight: 600;
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .sql-table td {
+      padding: 6px 12px;
+      border-bottom: 1px solid rgba(46,50,80,0.5);
+      color: var(--text);
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .sql-table tr:hover td { background: var(--surface2); }
+    .sql-table td.null-val { color: var(--muted); font-style: italic; }
+
+    .sql-empty { padding: 30px; text-align: center; color: var(--muted); font-size: 0.85rem; }
+    .sql-error {
+      margin: 14px;
+      background: rgba(244,67,54,0.1);
+      border: 1px solid rgba(244,67,54,0.3);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      color: #ef9a9a;
+      font-family: monospace;
+      font-size: 0.82rem;
+    }
+
+    /* nav tab SQL */
+    .mode-tabs {
+      display: flex;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      gap: 4px;
+    }
+    .mode-tab {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      padding: 10px 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mode-tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+
+    /* ── Edit Modal ─────────────────────────────────────────────────────── */
+    .edit-overlay {
+      position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;
+      display:flex;align-items:center;justify-content:center;
+      animation:eoFadeIn .15s;
+    }
+    @keyframes eoFadeIn{from{opacity:0}to{opacity:1}}
+    .edit-card {
+      background:var(--surface);border:1px solid var(--border);border-radius:12px;
+      width:min(680px,96vw);max-height:88vh;display:flex;flex-direction:column;
+      box-shadow:0 24px 64px rgba(0,0,0,.6);animation:eoSlideUp .18s;
+    }
+    @keyframes eoSlideUp{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .edit-header {
+      padding:15px 22px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:10px;flex-shrink:0;
+    }
+    .edit-title{font-size:.95rem;font-weight:700;color:var(--accent2);flex:1;}
+    .edit-pk-badge{
+      font-size:.7rem;color:var(--muted);background:var(--surface2);
+      border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-family:monospace;
+    }
+    .edit-close-btn{
+      background:none;border:none;color:var(--muted);font-size:1.1rem;
+      cursor:pointer;padding:2px 7px;border-radius:4px;transition:all .15s;
+    }
+    .edit-close-btn:hover{color:var(--delete);background:rgba(244,67,54,.1);}
+    .edit-body{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:14px;}
+    .edit-footer{
+      padding:13px 22px;border-top:1px solid var(--border);
+      display:flex;gap:8px;align-items:center;flex-shrink:0;
+    }
+    .ef-group{display:flex;flex-direction:column;gap:5px;}
+    .ef-label{
+      font-size:.71rem;font-weight:700;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:5px;
+    }
+    .ef-req{color:var(--delete);}
+    .ef-ro{color:#7986cb;font-size:.63rem;}
+    .ef-input{
+      width:100%;background:var(--surface2);border:1px solid var(--border);
+      border-radius:var(--radius);color:var(--text);padding:8px 11px;
+      font-size:.84rem;outline:none;font-family:inherit;transition:border-color .15s;
+    }
+    .ef-input:focus{border-color:var(--accent2);}
+    .ef-input[readonly],.ef-input:disabled{opacity:.55;cursor:not-allowed;border-style:dashed;}
+    .ef-textarea{resize:vertical;min-height:72px;line-height:1.5;}
+    .ef-help{font-size:.7rem;color:var(--muted);}
+    .ef-mv-row{display:flex;gap:6px;}
+    .ef-mv-row .ef-input{flex:1;}
+    .ef-mv-btn{
+      background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+      color:var(--accent2);padding:0 13px;cursor:pointer;font-size:.82rem;font-weight:600;
+      transition:all .15s;white-space:nowrap;
+    }
+    .ef-mv-btn:hover{background:var(--accent2);color:#000;border-color:var(--accent2);}
+    .ef-bool-wrap{display:flex;align-items:center;gap:9px;padding:4px 0;}
+    .ef-bool-wrap input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
+    .ef-bool-lbl{font-size:.84rem;cursor:pointer;}
+    .btn-confirm-edit{
+      background:var(--accent);border:none;border-radius:var(--radius);
+      color:#fff;padding:8px 22px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .15s;
+    }
+    .btn-confirm-edit:hover{opacity:.85;}
+    .btn-confirm-edit:disabled{opacity:.45;cursor:not-allowed;}
+    .btn-cancel-edit{
+      background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+      color:var(--text);padding:8px 18px;font-size:.85rem;cursor:pointer;transition:opacity .15s;
+    }
+    .btn-cancel-edit:hover{opacity:.8;}
+    /* Filas clicables */
+    .sql-table tbody tr.editable-row{cursor:pointer;}
+    .sql-table tbody tr.editable-row:hover td{background:rgba(0,188,212,.07);}
+    /* MV Picker */
+    .mv-picker-overlay{
+      position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;
+      background:rgba(0,0,0,.55);
+    }
+    .mv-picker-card{
+      background:var(--surface);border:1px solid var(--border);border-radius:10px;
+      width:min(440px,94vw);max-height:76vh;display:flex;flex-direction:column;
+      box-shadow:0 16px 48px rgba(0,0,0,.5);
+    }
+    .mv-picker-head{
+      padding:12px 18px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:700;
+    }
+    .mv-picker-search{
+      width:100%;background:var(--surface2);border:1px solid var(--border);
+      border-radius:6px;color:var(--text);padding:7px 10px;font-size:.83rem;outline:none;
+    }
+    .mv-picker-search:focus{border-color:var(--accent2);}
+    .mv-picker-list{flex:1;overflow-y:auto;}
+    .mv-picker-item{
+      padding:9px 18px;cursor:pointer;font-size:.84rem;
+      display:flex;align-items:center;justify-content:space-between;
+      border-bottom:1px solid rgba(46,50,80,.4);transition:background .12s;
+    }
+    .mv-picker-item:hover{background:rgba(0,188,212,.12);color:var(--accent2);}
+    .mv-picker-val{font-family:monospace;font-size:.72rem;color:var(--muted);}
+    .mv-picker-empty{padding:24px;text-align:center;color:var(--muted);font-size:.82rem;}
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ FastAPI CRUD Tester</h1>
+  <span class="badge">REST</span>
+  <button onclick="openUsuarios()" style="margin-left:auto;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;">👥 Usuarios</button>
+  <button id="btnNavPortal" onclick="openPortal()" style="display:none;margin-left:8px;background:#334155;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;">← Portal</button>
+  <button id="btnNavDic" onclick="openDiccionario()" style="display:none;margin-left:8px;background:#6d28d9;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;">📖 Diccionario</button>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-section">Base URL</div>
+    <div class="base-url-wrap">
+      <label>Servidor</label>
+      <input type="text" id="baseUrl" value="" placeholder="http://localhost:8000" />
+    </div>
+    <div class="login-wrap">
+      <label>Usuario</label>
+      <input type="text" id="loginEmail" value="admin" />
+      <label>Password</label>
+      <input type="password" id="loginPassword" value="faute" />
+      <button class="login-btn" id="loginBtn" onclick="autoLogin()">🔑 Login</button>
+      <div class="login-status" id="loginStatus"></div>
+    </div>
+
+    <div class="token-wrap">
+      <label>Token JWT <span onclick="clearToken()">✕ limpiar</span></label>
+      <textarea id="tokenInput" placeholder="Se llena automático al hacer login..." oninput="onTokenInput()"></textarea>
+    </div>
+
+    <div class="tree-header" style="border-top:1px solid var(--border);margin-top:4px;">
+      <span class="tree-header-label">Esquema DB</span>
+      <button class="tree-refresh-btn" onclick="loadDbTree()" title="Recargar árbol">⟳</button>
+      <button class="tree-refresh-btn" onclick="refreshDiccionario()" title="Sincronizar diccionario" id="dictBtn">📖</button>
+    </div>
+    <div style="padding:4px 10px 6px;">
+      <select id="dbSelect" onchange="onDbChange()"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--accent2);padding:6px 8px;font-size:0.8rem;font-weight:600;outline:none;cursor:pointer;">
+        <option value="">Cargando bases de datos…</option>
+      </select>
+    </div>
+    <div id="dictStatus" style="font-size:0.7rem;text-align:center;min-height:13px;color:var(--muted);padding:0 12px 4px;"></div>
+
+    <div class="db-tree" id="dbTree">
+      <div class="tree-loading">Cargando esquema…</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Modo REST vs SQL -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" onclick="setMode('rest')">⚡ REST</button>
+      <button class="mode-tab" onclick="setMode('sql')">🛢 SQL</button>
+      <button class="mode-tab" onclick="setMode('access')">👥 Accesos</button>
+    </div>
+
+    <div class="request-bar">
+      <select id="method">
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PUT">PUT</option>
+        <option value="DELETE">DELETE</option>
+        <option value="PATCH">PATCH</option>
+      </select>
+      <input type="text" id="path" placeholder="/api/v1/users" value="/api/v1/health" />
+      <button id="pingBtn" onclick="pingServer()" title="Verificar conexión">🔌 Ping</button>
+      <button id="sendBtn" onclick="sendRequest()">▶ Enviar</button>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-header">
+          Petición
+          <div class="actions">
+            <button onclick="formatBody()">Formatear JSON</button>
+            <button onclick="clearBody()">Limpiar</button>
+          </div>
+        </div>
+        <div class="tab-row">
+          <button class="active" onclick="switchTab(this,'body')">Body</button>
+          <button onclick="switchTab(this,'headers')">Headers</button>
+        </div>
+        <div class="tab-content active" id="tab-body">
+          <textarea id="bodyInput" placeholder='{"key": "value"}'></textarea>
+        </div>
+        <div class="tab-content" id="tab-headers">
+          <div class="headers-table" id="headersTable">
+            <div class="header-row">
+              <input type="text" value="Content-Type" />
+              <input type="text" value="application/json" />
+              <button onclick="removeHeader(this)">✕</button>
+            </div>
+          </div>
+          <div style="padding:8px 10px;">
+            <div class="add-header-btn" onclick="addHeader()">+ Agregar header</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          Respuesta
+          <div class="status-bar" id="statusBar"></div>
+          <div class="actions">
+            <button onclick="copyResponse()">Copiar</button>
+            <button onclick="clearResponse()">Limpiar</button>
+          </div>
+        </div>
+        <div class="tab-row">
+          <button class="active" onclick="switchRespTab(this,'resp-body')">Body</button>
+          <button onclick="switchRespTab(this,'resp-headers')">Headers</button>
+        </div>
+        <div class="tab-content active" id="tab-resp-body">
+          <div id="responseArea" class="placeholder-msg">Envía una petición para ver la respuesta aquí.</div>
+        </div>
+        <div class="tab-content" id="tab-resp-headers">
+          <div id="respHeadersArea" style="padding:14px;font-size:0.8rem;font-family:monospace;color:var(--muted);overflow:auto;flex:1;">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Accesos (oculto por defecto) -->
+    <div class="sql-panel" id="accessPanel" style="padding:16px;overflow:auto;">
+      <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+
+        <!-- Columna izquierda: selector de usuario -->
+        <div style="flex:1;min-width:220px;">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Usuario</div>
+          <select id="accessUserSel" onchange="loadUserSistemas()"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);padding:7px 10px;font-size:0.85rem;outline:none;cursor:pointer;">
+            <option value="">— selecciona un usuario —</option>
+          </select>
+          <div style="margin-top:16px;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Sistemas asignados</div>
+            <div id="userSistemasList" style="display:flex;flex-direction:column;gap:6px;min-height:40px;">
+              <div style="color:var(--muted);font-size:0.8rem;">Selecciona un usuario</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna derecha: asignar nuevo sistema -->
+        <div style="flex:1;min-width:220px;">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Agregar sistema</div>
+          <select id="accessSistemaSel"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);padding:7px 10px;font-size:0.85rem;outline:none;cursor:pointer;">
+            <option value="">— selecciona un sistema —</option>
+          </select>
+          <button onclick="assignSistema()"
+            style="margin-top:8px;width:100%;background:var(--accent2);color:#fff;border:none;border-radius:var(--radius);padding:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
+            ➕ Asignar
+          </button>
+          <div id="accessStatus" style="margin-top:8px;font-size:0.78rem;min-height:18px;"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Panel SQL (oculto por defecto) -->
+    <div class="sql-panel" id="sqlPanel">
+      <div class="sql-toolbar">
+        <span>Ctrl+Enter para ejecutar &nbsp;·&nbsp; máx. 500 filas</span>
+        <button class="sql-del-btn" id="sqlDelBtn" onclick="deleteTableContent()">🗑 Vaciar tabla</button>
+        <button class="sql-run-btn" id="sqlRunBtn" onclick="runSQL()">▶ Ejecutar</button>
+      </div>
+      <div class="sql-editor-wrap">
+        <textarea class="sql-editor" id="sqlEditor" placeholder="SELECT * FROM users LIMIT 10;"></textarea>
+      </div>
+      <div id="sqlStats" style="display:none" class="sql-stats"></div>
+      <div class="sql-results" id="sqlResults">
+        <div class="sql-empty">Escribe una consulta SQL y presiona Ejecutar.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Auto-detect base URL from current location (works when served by FastAPI)
+  const autoBase = window.location.origin !== 'null' ? window.location.origin : 'http://localhost:8000';
+  document.getElementById('baseUrl').value = autoBase;
+
+  // ── Abrir página de usuarios ──
+  function openUsuarios() {
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    window.open(`${base}/usuarios?token=${encodeURIComponent(token)}&base=${encodeURIComponent(base)}`, '_blank');
+  }
+
+  // ── Abrir editor de diccionario ──
+  function openDiccionario() {
+    const base    = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token   = getToken();
+    // Leer el ID del sistema directamente del DOM (más robusto que la variable cacheada)
+    const sel     = document.getElementById('dbSelect');
+    const selOpt  = sel.options[sel.selectedIndex];
+    const sid_val = selOpt && selOpt.dataset.id ? selOpt.dataset.id : (currentSistemaId || '');
+    const sid     = sid_val ? `&sistema_id=${sid_val}` : '';
+    window.open(`${base}/diccionario?token=${encodeURIComponent(token)}&base=${encodeURIComponent(base)}${sid}`, '_blank');
+  }
+
+  // ── Auto login ──
+  async function autoLogin() {
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const username = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPassword').value;
+    const btn   = document.getElementById('loginBtn');
+    const status = document.getElementById('loginStatus');
+
+    if (!username || !pass) { status.className = 'login-status err'; status.textContent = 'Completa usuario y password'; return; }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Ingresando…';
+    status.className = 'login-status';
+    status.textContent = '';
+
+    try {
+      const res  = await fetch(base + '/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password: pass }),
+      });
+      const data = await res.json();
+      if (res.ok && data.access_token) {
+        document.getElementById('tokenInput').value = data.access_token;
+        onTokenInput();
+        status.className = 'login-status ok';
+        status.textContent = '✓ Conectado';
+        // Sincronizar sistema, cargar combo y árbol
+        syncSistema();
+        await loadSistema();
+        loadDbTree();
+        applyNavAccess();
+      } else {
+        status.className = 'login-status err';
+        status.textContent = data.detail || 'Credenciales incorrectas';
+      }
+    } catch (e) {
+      status.className = 'login-status err';
+      status.textContent = 'Error de conexión';
+    }
+    btn.disabled = false;
+    btn.textContent = '🔑 Login';
+  }
+
+  // Login automático al cargar
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(autoLogin, 300);
+  });
+
+  // Enter en password dispara login
+  document.getElementById('loginPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') autoLogin();
+  });
+
+  function onTokenInput() {
+    const ta = document.getElementById('tokenInput');
+    const val = ta.value.trim();
+    ta.className = val ? 'has-token' : '';
+  }
+
+  function clearToken() {
+    document.getElementById('tokenInput').value = '';
+    document.getElementById('tokenInput').className = '';
+  }
+
+  async function syncSistema() {
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    if (!token) return;
+    try {
+      await fetch(base + '/api/v1/admin/sync-sistema', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      });
+    } catch { /* silencioso — no bloquear el flujo */ }
+  }
+
+  async function refreshDiccionario() {
+    const base   = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token  = getToken();
+    const btn    = document.getElementById('dictBtn');
+    const status = document.getElementById('dictStatus');
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Sincronizando…';
+    status.style.color = 'var(--muted)';
+    status.textContent = '';
+
+    try {
+      if (!currentSistemaId) {
+        status.style.color = 'var(--delete)';
+        status.textContent = '❌ Selecciona un sistema primero';
+        btn.disabled = false;
+        btn.textContent = '🔄 Refrescar Diccionario';
+        return;
+      }
+      const res  = await fetch(base + `/api/v1/admin/seed-diccionario?id_sistema=${currentSistemaId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+        },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        status.style.color = 'var(--get)';
+        status.textContent = `✓ +${data.inserted} nuevos · ${data.skipped} existían`;
+      } else {
+        status.style.color = 'var(--delete)';
+        status.textContent = '❌ ' + (data.detail || 'Error');
+      }
+    } catch (e) {
+      status.style.color = 'var(--delete)';
+      status.textContent = '❌ Sin conexión';
+    }
+
+    btn.disabled = false;
+    btn.textContent = '🔄 Refrescar Diccionario';
+  }
+
+  function getToken() {
+    return document.getElementById('tokenInput').value.trim();
+  }
+
+  async function applyNavAccess() {
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res = await fetch(base + '/api/v1/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const me = await res.json();
+      const roles = (me.roles || []).map(r => r.name);
+      const isAdmin   = roles.includes('admin') || roles.includes('superadmin');
+      document.getElementById('btnNavDic').style.display = isAdmin ? '' : 'none';
+      const btnP = document.getElementById('btnNavPortal');
+      if (btnP) btnP.style.display = sessionStorage.getItem('pg_token') ? '' : 'none';
+    } catch (_) {}
+  }
+
+  function openPortal() {
+    window.open(window.location.origin + '/portal', 'pg_portal');
+  }
+
+  let reqHistory = [];
+  let lastResponseText = '';
+
+  function switchTab(btn, tabId) {
+    btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = btn.closest('.panel');
+    panel.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    panel.querySelector('#tab-' + tabId).classList.add('active');
+  }
+
+  function switchRespTab(btn, tabId) {
+    btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const panel = btn.closest('.panel');
+    panel.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    panel.querySelector('#tab-' + tabId).classList.add('active');
+  }
+
+  function addHeader() {
+    const row = document.createElement('div');
+    row.className = 'header-row';
+    row.innerHTML = `<input type="text" placeholder="Header" /><input type="text" placeholder="Valor" /><button onclick="removeHeader(this)">✕</button>`;
+    document.getElementById('headersTable').appendChild(row);
+  }
+
+  function removeHeader(btn) { btn.parentElement.remove(); }
+
+  function getHeaders() {
+    const headers = {};
+    document.querySelectorAll('#headersTable .header-row').forEach(row => {
+      const inputs = row.querySelectorAll('input');
+      const k = inputs[0].value.trim(), v = inputs[1].value.trim();
+      if (k) headers[k] = v;
+    });
+    return headers;
+  }
+
+  function formatBody() {
+    const ta = document.getElementById('bodyInput');
+    try { ta.value = JSON.stringify(JSON.parse(ta.value), null, 2); }
+    catch { alert('JSON inválido'); }
+  }
+
+  function clearBody() { document.getElementById('bodyInput').value = ''; }
+
+  function highlight(json) {
+    if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
+    return json.replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      m => {
+        let cls = 'json-num';
+        if (/^"/.test(m)) cls = /:$/.test(m) ? 'json-key' : 'json-str';
+        else if (/true|false/.test(m)) cls = 'json-bool';
+        else if (/null/.test(m)) cls = 'json-null';
+        return `<span class="${cls}">${m}</span>`;
+      }
+    );
+  }
+
+  async function pingServer() {
+    const base = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const btn  = document.getElementById('pingBtn');
+    btn.textContent = '⏳'; btn.disabled = true;
+    try {
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(), 4000);
+      await fetch(base + '/api/v1/health', { signal: ctrl.signal });
+      btn.textContent = '✅ Online'; btn.style.color = 'var(--get)';
+    } catch (e) {
+      btn.textContent = e.name === 'AbortError' ? '⏱ Timeout' : '❌ Offline';
+      btn.style.color = 'var(--delete)';
+    }
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = '🔌 Ping'; btn.style.color = ''; }, 3000);
+  }
+
+  async function sendRequest() {
+    const method  = document.getElementById('method').value;
+    const base    = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const pathVal = document.getElementById('path').value.trim();
+    const bodyRaw = document.getElementById('bodyInput').value.trim();
+    const headers = getHeaders();
+
+    if (!pathVal) { alert('Escribe un path, ej: /api/v1/users'); return; }
+
+    const url = base + (pathVal.startsWith('/') ? pathVal : '/' + pathVal);
+
+    // Inject token automatically if set
+    const token = getToken();
+    if (token && !headers['Authorization'] && !headers['authorization']) {
+      headers['Authorization'] = 'Bearer ' + token;
+    }
+
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Enviando…';
+    document.getElementById('statusBar').innerHTML = '';
+    document.getElementById('responseArea').innerHTML = '<span style="color:var(--muted)">Esperando respuesta…</span>';
+    document.getElementById('respHeadersArea').innerHTML = '—';
+
+    if (['POST','PUT','PATCH'].includes(method) && bodyRaw) {
+      try { JSON.parse(bodyRaw); }
+      catch { showError('Body inválido', 'No es JSON válido.', null); btn.disabled=false; btn.textContent='▶ Enviar'; return; }
+    }
+
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 12000);
+    const options = { method, headers, signal: controller.signal };
+    if (['POST','PUT','PATCH'].includes(method) && bodyRaw) options.body = bodyRaw;
+
+    const start = Date.now();
+    let response, responseText, ok = true;
+
+    try {
+      response     = await fetch(url, options);
+      responseText = await response.text();
+      clearTimeout(tid);
+    } catch (err) {
+      clearTimeout(tid);
+      ok = false;
+      if (err.name === 'AbortError') {
+        showError('Timeout (12s)', `Sin respuesta en 12 segundos.\n• ¿Está corriendo la API en <strong>${base}</strong>?`, null);
+      } else {
+        showError(
+          'Error de conexión',
+          `No se pudo conectar a <strong>${url}</strong>\n\nError: <em>${err.message}</em>`,
+          null
+        );
+      }
+      document.getElementById('statusBar').innerHTML = `<span class="status-pill status-other">SIN RESPUESTA</span>`;
+    }
+
+    if (ok) {
+      const ms = Date.now() - start;
+      const code = response.status;
+      const cls  = code < 300 ? 'status-2xx' : code < 500 ? 'status-4xx' : 'status-5xx';
+      document.getElementById('statusBar').innerHTML =
+        `<span class="status-pill ${cls}">${code} ${response.statusText}</span>` +
+        `<span style="font-size:0.72rem;color:var(--muted);margin-left:8px">${ms} ms</span>`;
+
+      let display = '';
+      try {
+        const parsed     = JSON.parse(responseText);
+        lastResponseText = JSON.stringify(parsed, null, 2);
+        display = '<pre style="margin:0">' + highlight(lastResponseText) + '</pre>';
+      } catch {
+        lastResponseText = responseText;
+        display = '<pre style="color:var(--text);margin:0">' + escapeHtml(responseText) + '</pre>';
+      }
+      const area = document.getElementById('responseArea');
+      area.className = '';
+      area.style.cssText = 'flex:1;overflow:auto;padding:14px;font-family:monospace;font-size:0.8rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;';
+      area.innerHTML = display;
+
+      let hHtml = '';
+      response.headers.forEach((v, k) => {
+        hHtml += `<div style="margin-bottom:6px"><span style="color:var(--accent2)">${escapeHtml(k)}</span>: ${escapeHtml(v)}</div>`;
+      });
+      document.getElementById('respHeadersArea').innerHTML = hHtml || '(Sin headers)';
+
+      // Auto-fill token on login
+      try {
+        const parsed = JSON.parse(responseText);
+        if (parsed.access_token) {
+          document.getElementById('tokenInput').value = parsed.access_token;
+          onTokenInput();
+        }
+      } catch {}
+
+      addToHistory(method, pathVal, code);
+    }
+
+    btn.disabled = false; btn.textContent = '▶ Enviar';
+  }
+
+  function showError(title, msg, code) {
+    const area = document.getElementById('responseArea');
+    area.className = '';
+    area.style.cssText = 'flex:1;overflow:auto;padding:14px;';
+    area.innerHTML =
+      `<div class="error-box"><strong>❌ ${title}</strong><br/><br/>${msg.replace(/\n/g,'<br/>')}` +
+      (code ? `<code>${escapeHtml(code)}</code>` : '') + `</div>`;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── DB Tree ──
+  let activeTreeItem = null;
+  let currentDbSlug     = null; // null = BD principal (nombre_bd para engine lookup)
+  let currentSistemaId  = null; // id numérico del sistema seleccionado
+  const colCache = {};
+  const cabeceraSet = new Set();  // tablas configuradas como cabecera en el sistema activo
+  let allSistemasList  = [];    // cache global de sistemas para slug lookup (edit modal)
+  let dicTableCache    = {};    // { "sistemaId:tabla": [DicEntry] }
+  let rawSchemaCache   = {};    // { "tabla:slug": [ColumnDef] }
+  let lastSelectTable  = null;  // última tabla abierta desde selectTable
+  let _editRow         = null;  // estado del modal de edición abierto
+
+  async function loadSistema() {
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res  = await fetch(base + '/api/v1/sistema/?limit=100', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      if (!res.ok) return;
+      const sistemas = await res.json();
+      allSistemasList = sistemas;              // ← cache global para el edit modal
+      const sel  = document.getElementById('dbSelect');
+      sel.innerHTML = '';
+
+      // BD principal siempre primera (app_db)
+      const mainOpt = document.createElement('option');
+      mainOpt.value = '';
+      mainOpt.textContent = '🗄 app_db (principal)';
+      sel.appendChild(mainOpt);
+
+      sistemas.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.nombre_bd;          // slug para db-tables
+        opt.dataset.id = s.id;            // id numérico para seed-diccionario
+        opt.textContent = `🗄 ${s.nombre}`;
+        sel.appendChild(opt);
+      });
+
+      // Seleccionar app_db por defecto
+      sel.value = '';
+      currentDbSlug = null;
+      currentSistemaId = null;
+    } catch { /* silencioso */ }
+  }
+
+  function onDbChange() {
+    const sel = document.getElementById('dbSelect');
+    currentDbSlug    = sel.value || null;
+    const selOpt     = sel.options[sel.selectedIndex];
+    currentSistemaId = selOpt && selOpt.dataset.id ? parseInt(selOpt.dataset.id) : null;
+    Object.keys(colCache).forEach(k => delete colCache[k]);
+    Object.keys(dicTableCache).forEach(k => delete dicTableCache[k]);
+    Object.keys(rawSchemaCache).forEach(k => delete rawSchemaCache[k]);
+    cabeceraSet.clear();
+    activeTreeItem = null;
+    lastSelectTable = null;
+    loadDbTree();
+  }
+
+  async function loadDbTree() {
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    const tree  = document.getElementById('dbTree');
+    if (!token) return;
+
+    // Limpiar cache de columnas para que las tablas borradas no reaparezcan
+    Object.keys(colCache).forEach(k => delete colCache[k]);
+    activeTreeItem = null;
+    tree.innerHTML = '<div class="tree-loading">Cargando esquema…</div>';
+    const authHeader = { 'Authorization': 'Bearer ' + token };
+    const slugParam  = currentDbSlug ? `?db_slug=${currentDbSlug}` : '';
+
+    try {
+      const res  = await fetch(base + '/api/v1/admin/db-tables' + slugParam, { headers: authHeader });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      tree.innerHTML = renderTreeGroup('📋 Tablas', data.tables || [], 'table', true)
+                     + renderTreeGroup('👁 Vistas',  data.views  || [], 'view',  false);
+      // Cargar cabeceras del sistema activo
+      cabeceraSet.clear();
+      if (currentSistemaId) {
+        try {
+          const cabRes = await fetch(base + `/api/v1/admin/cabecera-config?id_sistema=${currentSistemaId}`, { headers: authHeader });
+          if (cabRes.ok) {
+            const cabData = await cabRes.json();
+            (cabData.cabeceras || []).forEach(n => cabeceraSet.add(n));
+          }
+        } catch {}
+      }
+    } catch {
+      tree.innerHTML = '<div class="tree-error">Error cargando esquema</div>';
+    }
+  }
+
+  function renderTreeGroup(label, items, type, openByDefault) {
+    const id   = 'grp-' + type;
+    const open = openByDefault ? 'open' : '';
+    const rows = items.map(item => {
+      const name = item.name || item.table_name;
+      return `
+        <div>
+          <div class="tree-table-row" id="tr-${name}">
+            <span class="tree-toggle" id="tog-${name}" onclick="toggleCols('${name}','${type}')">▶</span>
+            <span class="tree-table-name" onclick="selectTable('${name}','${type}')" title="${name}">${name}</span>
+            <span class="tree-open-btn" onclick="openTabla('${name}')" title="Abrir en CRUD completo">📋</span>
+          </div>
+          <div class="tree-cols" id="cols-${name}"></div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="tree-group">
+        <div class="tree-group-header" onclick="toggleGroup('${id}')">
+          <span class="tree-arrow ${open}" id="arr-${id}">▶</span>
+          ${label}
+          <span class="tree-count">${items.length}</span>
+        </div>
+        <div class="tree-items ${open}" id="${id}">
+          ${rows || '<div class="tree-loading" style="padding:6px 24px">Sin resultados</div>'}
+        </div>
+      </div>`;
+  }
+
+  function toggleGroup(id) {
+    document.getElementById(id).classList.toggle('open');
+    document.getElementById('arr-' + id).classList.toggle('open');
+  }
+
+  async function toggleCols(name, type) {
+    const colsEl = document.getElementById('cols-' + name);
+    const togEl  = document.getElementById('tog-' + name);
+    const isOpen = colsEl.classList.contains('open');
+
+    if (isOpen) {
+      colsEl.classList.remove('open');
+      togEl.classList.remove('open');
+      return;
+    }
+
+    // Abrir: cargar columnas si no están en cache
+    colsEl.classList.add('open');
+    togEl.classList.add('open');
+
+    if (colCache[name]) {
+      colsEl.innerHTML = colCache[name];
+      return;
+    }
+
+    colsEl.innerHTML = '<div class="tree-col" style="color:var(--muted)">Cargando…</div>';
+
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    const authHeader = { 'Authorization': 'Bearer ' + token };
+    const slugParam  = currentDbSlug ? `&db_slug=${currentDbSlug}` : '';
+
+    try {
+      let cols = [];
+      const schemaRes = await fetch(
+        base + `/api/v1/admin/db-table-schema?table_name=${name}${slugParam}`,
+        { headers: authHeader }
+      );
+      if (schemaRes.ok) {
+        const data = await schemaRes.json();
+        cols = data.columns || [];
+      }
+
+      const html = cols.map(c => {
+        const badges = [
+          c.is_primary_key ? '<span class="tree-col-badge badge-pk">PK</span>' : '',
+          c.is_foreign_key ? '<span class="tree-col-badge badge-fk">FK</span>' : '',
+          c.is_unique      ? '<span class="tree-col-badge badge-uq">UQ</span>' : '',
+          c.is_index       ? '<span class="tree-col-badge badge-idx">IDX</span>' : '',
+        ].join('');
+        const typeName = (c.type || c.data_type || '').replace('character varying','varchar').replace('timestamp with time zone','timestamptz');
+        return `<div class="tree-col">
+          <span class="tree-col-name">${c.name || c.column_name}</span>
+          <span class="tree-col-type">${typeName}</span>
+          ${badges}
+        </div>`;
+      }).join('');
+
+      colCache[name] = html || '<div class="tree-col">Sin columnas</div>';
+      colsEl.innerHTML = colCache[name];
+    } catch {
+      colsEl.innerHTML = '<div class="tree-col" style="color:var(--delete)">Error</div>';
+    }
+  }
+
+  async function selectTable(name, type) {
+    // Marcar activo
+    if (activeTreeItem) document.getElementById('tr-' + activeTreeItem)?.classList.remove('active');
+    activeTreeItem = name;
+    document.getElementById('tr-' + name)?.classList.add('active');
+
+    // Expandir columnas automáticamente si no están abiertas
+    const colsEl = document.getElementById('cols-' + name);
+    if (!colsEl.classList.contains('open')) {
+      toggleCols(name, type); // no await — carga en paralelo
+    }
+
+    // Registrar tabla activa y ejecutar SELECT
+    lastSelectTable = name;
+    document.getElementById('sqlEditor').value = `SELECT *\nFROM ${name}\nLIMIT 100;`;
+    setMode('sql');
+    await runSQL();
+
+    // Si la tabla ya no existe (fue eliminada), quitarla del árbol
+    const errEl = document.querySelector('#sqlResults .sql-error');
+    if (errEl && /does not exist|no existe/i.test(errEl.textContent)) {
+      const rowEl = document.getElementById('tr-' + name);
+      rowEl?.parentElement?.remove();
+      activeTreeItem = null;
+      lastSelectTable = null;
+      return;
+    }
+
+    // Enriquecer filas con doble-click para edición
+    await enrichTableRows(name);
+  }
+
+  function openTabla(tableName) {
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    const sel   = document.getElementById('dbSelect');
+    const selOpt = sel.options[sel.selectedIndex];
+    const sid   = selOpt && selOpt.dataset.id ? selOpt.dataset.id : (currentSistemaId || '');
+    const slug  = selOpt && selOpt.value ? selOpt.value : '';
+    const params = new URLSearchParams({ token, base, tabla: tableName });
+    if (sid)  params.set('sistema_id', sid);
+    if (slug) params.set('db_slug', slug);
+    // Redirigir a cabecera-detalle si corresponde
+    const page = cabeceraSet.has(tableName) ? 'cabecera' : 'tabla';
+    window.open(`${base}/${page}?${params.toString()}`, '_blank');
+  }
+
+  async function deleteTableContent() {
+    if (!activeTreeItem) {
+      alert('Selecciona primero una tabla en el árbol.');
+      return;
+    }
+    if (!confirm(`¿Eliminar TODOS los registros de "${activeTreeItem}"?\nEsta acción no se puede deshacer.`)) return;
+
+    document.getElementById('sqlEditor').value = `DELETE FROM ${activeTreeItem};`;
+    setMode('sql');
+    await runSQL();
+
+    // Recargar la tabla luego del delete
+    document.getElementById('sqlEditor').value = `SELECT *\nFROM ${activeTreeItem}\nLIMIT 100;`;
+    await runSQL();
+  }
+
+  function copyResponse() {
+    if (!lastResponseText) return;
+    navigator.clipboard.writeText(lastResponseText).then(() => alert('Copiado ✓'));
+  }
+
+  function clearResponse() {
+    lastResponseText = '';
+    document.getElementById('responseArea').innerHTML = '<span style="color:var(--muted)">Panel limpiado.</span>';
+    document.getElementById('statusBar').innerHTML = '';
+  }
+
+  document.getElementById('path').addEventListener('keydown', e => { if (e.key === 'Enter') sendRequest(); });
+
+  // ── Modo REST / SQL ──
+  let currentMode = 'rest';
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.mode-tab').forEach(b => {
+      if (b.textContent.toLowerCase().includes(mode === 'access' ? 'acceso' : mode))
+        b.classList.add('active');
+    });
+    const restEls = [
+      document.querySelector('.request-bar'),
+      document.querySelector('.panels'),
+    ];
+    const sqlPanel    = document.getElementById('sqlPanel');
+    const accessPanel = document.getElementById('accessPanel');
+    if (mode === 'sql') {
+      restEls.forEach(el => { if(el) el.style.display = 'none'; });
+      sqlPanel.classList.add('active');
+      accessPanel.classList.remove('active');
+      document.getElementById('sqlEditor').focus();
+    } else if (mode === 'access') {
+      restEls.forEach(el => { if(el) el.style.display = 'none'; });
+      sqlPanel.classList.remove('active');
+      accessPanel.classList.add('active');
+      loadAccessPanel();
+    } else {
+      restEls.forEach(el => { if(el) el.style.display = ''; });
+      sqlPanel.classList.remove('active');
+      accessPanel.classList.remove('active');
+    }
+  }
+
+  // ── Panel Accesos ──────────────────────────────────────────────────────────
+
+  let allSistemas = [];
+
+  async function loadAccessPanel() {
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    if (!token) return;
+    const h = { 'Authorization': 'Bearer ' + token };
+
+    // Cargar usuarios
+    const [uRes, sRes] = await Promise.all([
+      fetch(base + '/api/v1/users/?limit=200', { headers: h }),
+      fetch(base + '/api/v1/sistema/?limit=200', { headers: h }),
+    ]);
+    if (!uRes.ok || !sRes.ok) return;
+
+    const users    = await uRes.json();
+    const sistemas = await sRes.json();
+    allSistemas = sistemas;
+
+    // Poblar selector de usuarios
+    const uSel = document.getElementById('accessUserSel');
+    uSel.innerHTML = '<option value="">— selecciona un usuario —</option>';
+    users.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.id;
+      opt.textContent = u.username + ' (' + u.email + ')';
+      uSel.appendChild(opt);
+    });
+
+    // Poblar selector de sistemas
+    const sSel = document.getElementById('accessSistemaSel');
+    sSel.innerHTML = '<option value="">— selecciona un sistema —</option>';
+    sistemas.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.nombre;
+      sSel.appendChild(opt);
+    });
+  }
+
+  async function loadUserSistemas() {
+    const base   = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token  = getToken();
+    const userId = document.getElementById('accessUserSel').value;
+    const list   = document.getElementById('userSistemasList');
+
+    if (!userId) { list.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">Selecciona un usuario</div>'; return; }
+
+    const res = await fetch(base + `/api/v1/users/${userId}/sistemas`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) { list.innerHTML = '<div style="color:var(--delete);font-size:0.8rem;">Error cargando sistemas</div>'; return; }
+
+    const sistemas = await res.json();
+    if (sistemas.length === 0) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">Sin sistemas asignados</div>';
+      return;
+    }
+    list.innerHTML = sistemas.map(s => `
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:var(--radius);padding:6px 10px;font-size:0.82rem;">
+        <span>🗄 ${s.nombre}</span>
+        <button onclick="removeSistema(${s.id})"
+          style="background:var(--delete);color:#fff;border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:0.75rem;">✕</button>
+      </div>
+    `).join('');
+  }
+
+  async function assignSistema() {
+    const base      = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token     = getToken();
+    const userId    = document.getElementById('accessUserSel').value;
+    const sistemaId = document.getElementById('accessSistemaSel').value;
+    const status    = document.getElementById('accessStatus');
+
+    if (!userId || !sistemaId) { status.style.color = 'var(--delete)'; status.textContent = 'Selecciona usuario y sistema'; return; }
+
+    const res = await fetch(base + `/api/v1/users/${userId}/sistemas`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sistema_id: parseInt(sistemaId) }),
+    });
+    if (res.ok) {
+      status.style.color = 'var(--get)'; status.textContent = '✓ Sistema asignado';
+      loadUserSistemas();
+    } else {
+      const d = await res.json();
+      status.style.color = 'var(--delete)'; status.textContent = '❌ ' + (d.detail || 'Error');
+    }
+  }
+
+  async function removeSistema(sistemaId) {
+    const base   = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token  = getToken();
+    const userId = document.getElementById('accessUserSel').value;
+    const status = document.getElementById('accessStatus');
+
+    const res = await fetch(base + `/api/v1/users/${userId}/sistemas/${sistemaId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token },
+    });
+    if (res.ok || res.status === 204) {
+      status.style.color = 'var(--get)'; status.textContent = '✓ Acceso removido';
+      loadUserSistemas();
+    } else {
+      status.style.color = 'var(--delete)'; status.textContent = '❌ Error al remover';
+    }
+  }
+
+  // Ctrl+Enter en el editor SQL
+  document.getElementById('sqlEditor').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); runSQL(); }
+  });
+
+  async function runSQL() {
+    const query = document.getElementById('sqlEditor').value.trim();
+    if (!query) return;
+
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    const btn   = document.getElementById('sqlRunBtn');
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Ejecutando…';
+    document.getElementById('sqlStats').style.display = 'none';
+    document.getElementById('sqlResults').innerHTML = '<div class="sql-empty">Ejecutando…</div>';
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    try {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 30000);
+      const res  = await fetch(base + '/api/v1/admin/sql-db', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ query, db_slug: currentDbSlug || null }),
+        signal: controller.signal,
+      });
+      clearTimeout(tid);
+      const data = await res.json();
+
+      if (!res.ok) {
+        document.getElementById('sqlResults').innerHTML =
+          `<div class="sql-error">❌ ${escapeHtml(data.detail || JSON.stringify(data))}</div>`;
+      } else if (data.columns && data.columns.length > 0) {
+        // Stats
+        const stats = document.getElementById('sqlStats');
+        stats.style.display = 'flex';
+        stats.innerHTML =
+          `<span><b>${data.count}</b> filas</span>` +
+          `<span><b>${data.columns.length}</b> columnas</span>` +
+          `<span><b>${data.time_ms}</b> ms</span>`;
+
+        // Table
+        let html = '<table class="sql-table"><thead><tr>';
+        data.columns.forEach(c => { html += `<th>${escapeHtml(c)}</th>`; });
+        html += '</tr></thead><tbody>';
+        data.rows.forEach(row => {
+          html += '<tr>';
+          data.columns.forEach(c => {
+            const v = row[c];
+            html += v === null
+              ? '<td class="null-val">null</td>'
+              : `<td title="${escapeHtml(v)}">${escapeHtml(v)}</td>`;
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        document.getElementById('sqlResults').innerHTML = html;
+      } else {
+        const stats = document.getElementById('sqlStats');
+        stats.style.display = 'flex';
+        stats.innerHTML = `<span style="color:var(--get)">✓ OK</span><span><b>${data.time_ms}</b> ms</span>`;
+        document.getElementById('sqlResults').innerHTML =
+          '<div class="sql-empty">Consulta ejecutada — sin filas devueltas.</div>';
+      }
+    } catch (err) {
+      document.getElementById('sqlResults').innerHTML =
+        `<div class="sql-error">❌ ${err.name === 'AbortError' ? 'Timeout (30s)' : escapeHtml(err.message)}</div>`;
+    }
+
+    btn.disabled = false;
+    btn.textContent = '▶ Ejecutar';
+  }
+
+  function addToHistory(method, path, code) {
+    reqHistory.push({ method, path, code, ts: Date.now() });
+    if (reqHistory.length > 50) reqHistory.shift();
+  }
+
+  const methodColors = { GET:'#4caf50', POST:'#2196f3', PUT:'#ff9800', DELETE:'#f44336', PATCH:'#ce93d8' };
+  const methodSel = document.getElementById('method');
+  methodSel.addEventListener('change', () => { methodSel.style.color = methodColors[methodSel.value]; });
+  methodSel.style.color = methodColors['GET'];
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // EDIT MODAL — Ficha de edición por doble-click (basada en diccionario)
+  // ════════════════════════════════════════════════════════════════════════════
+
+  function escH(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Fetch diccionario para una tabla ────────────────────────────────────────
+  async function fetchDicForTable(tabla) {
+    if (!currentSistemaId) return [];
+    const key = `${currentSistemaId}:${tabla}`;
+    if (dicTableCache[key]) return dicTableCache[key];
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    try {
+      const res = await fetch(`${base}/api/v1/diccionario/?id_sistema=${currentSistemaId}&limit=2000`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!res.ok) { dicTableCache[key] = []; return []; }
+      const all = await res.json();
+      dicTableCache[key] = all.filter(d => d.tabla === tabla);
+    } catch { dicTableCache[key] = []; }
+    return dicTableCache[key];
+  }
+
+  // ── Fetch schema crudo (detectar PK y tipos) ─────────────────────────────
+  async function fetchRawSchema(tabla) {
+    const slug = currentDbSlug || '';
+    const key  = `${tabla}:${slug}`;
+    if (rawSchemaCache[key]) return rawSchemaCache[key];
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    const sp    = currentDbSlug ? `&db_slug=${currentDbSlug}` : '';
+    try {
+      const res = await fetch(`${base}/api/v1/admin/db-table-schema?table_name=${tabla}${sp}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (!res.ok) { rawSchemaCache[key] = []; return []; }
+      const data = await res.json();
+      rawSchemaCache[key] = data.columns || [];
+    } catch { rawSchemaCache[key] = []; }
+    return rawSchemaCache[key];
+  }
+
+  // ── Agregar doble-click a filas del resultado SQL ────────────────────────
+  async function enrichTableRows(tabla) {
+    const tbody = document.querySelector('#sqlResults .sql-table tbody');
+    const thead = document.querySelector('#sqlResults .sql-table thead tr');
+    if (!tbody || !thead) return;
+
+    const colNames = Array.from(thead.querySelectorAll('th')).map(th => th.textContent.trim());
+
+    // Detectar PK desde schema
+    const schema = await fetchRawSchema(tabla);
+    let pkCol = 'id';
+    const pkDef = schema.find(c => c.is_primary_key);
+    if (pkDef) pkCol = pkDef.name || pkDef.column_name || 'id';
+    else if (!colNames.includes('id') && colNames.length > 0) pkCol = colNames[0];
+
+    Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+      if (tr.dataset.enriched) return;
+      tr.dataset.enriched = '1';
+      tr.classList.add('editable-row');
+      tr.title = 'Doble-click para editar';
+      tr.addEventListener('dblclick', async () => {
+        const cells = Array.from(tr.querySelectorAll('td'));
+        const row = {};
+        colNames.forEach((c, i) => {
+          const txt = cells[i]?.textContent ?? '';
+          row[c] = txt === 'null' ? null : txt;
+        });
+        await openEditModal(tabla, pkCol, row[pkCol], colNames, row);
+      });
+    });
+  }
+
+  // ── Parsear multivalor estático ──────────────────────────────────────────
+  function parseStaticMvOptions(mv) {
+    const result = [];
+    mv.replace(/\r?\n/g, ';').split(';').forEach(item => {
+      item = item.trim();
+      if (!item) return;
+      const pipe = item.indexOf('|');
+      if (pipe > 0) result.push({ val: item.slice(0, pipe).trim(), label: item.slice(pipe + 1).trim() });
+      else if (pipe < 0) result.push({ val: item, label: item });
+    });
+    return result;
+  }
+
+  // ── Fetch opciones de multivalor (SQL o estático) ────────────────────────
+  async function fetchMvOptions(mv) {
+    mv = mv.trim();
+    if (mv.toLowerCase().startsWith('select')) {
+      const base    = document.getElementById('baseUrl').value.replace(/\/$/, '');
+      const token   = getToken();
+      const sistema = allSistemasList.find(s => s.id === currentSistemaId);
+      const dbSlug  = sistema?.nombre_bd || null;
+      try {
+        const res = await fetch(`${base}/api/v1/admin/sql-db`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ query: mv, limit: 500, db_slug: dbSlug })
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return (data.rows || []).map(row => {
+          const vals = Object.values(row);
+          return { val: String(vals[0] ?? ''), label: vals.length > 1 ? String(vals[1] ?? vals[0]) : String(vals[0] ?? '') };
+        });
+      } catch { return []; }
+    }
+    return parseStaticMvOptions(mv);
+  }
+
+  // ── Construir campo del formulario ───────────────────────────────────────
+  function buildEditField(campo, val) {
+    if (!_editRow) return '';
+    const { dicMap, schemaMap, pkCol } = _editRow;
+    const d  = dicMap[campo];
+    const sc = schemaMap[campo];
+
+    const label     = d?.alias || campo;
+    const mv        = d?.multivalor?.trim() || null;
+    const readOnly  = d?.es_solo_lectura || campo === pkCol;
+    const required  = d?.es_obligatorio  || false;
+    const help      = d?.texto_ayuda     || '';
+    const decimales = d?.decimales ?? null;
+
+    // Tipo: dic tiene prioridad sobre schema DB
+    let tipo = (d?.tipo_dato || sc?.data_type || sc?.type || '')
+      .toLowerCase()
+      .replace('character varying', 'varchar')
+      .replace('timestamp with time zone', 'timestamptz')
+      .replace('double precision', 'float');
+
+    const labelHtml = `<div class="ef-label">
+      ${escH(label)}
+      ${required ? '<span class="ef-req" title="Obligatorio">*</span>' : ''}
+      ${readOnly ? '<span class="ef-ro">[solo lectura]</span>' : ''}
+    </div>`;
+
+    let inputHtml;
+
+    if (readOnly) {
+      inputHtml = `<input type="text" class="ef-input" id="fld-${campo}" value="${escH(val ?? '')}" readonly>`;
+    } else if (mv) {
+      inputHtml = `<div class="ef-mv-row">
+        <input type="hidden" id="fld-${campo}" value="${escH(val ?? '')}">
+        <input type="text" class="ef-input" id="fld-display-${campo}" value="${escH(val ?? '')}" readonly placeholder="— seleccionar —">
+        <button class="ef-mv-btn" onclick="openMvPicker('${escH(campo)}')" title="Buscar opción">🔍 Buscar</button>
+      </div>`;
+    } else if (tipo === 'boolean' || tipo === 'bool') {
+      const chk = val === true || val === 'true' || val === 't' || val === '1';
+      inputHtml = `<div class="ef-bool-wrap">
+        <input type="checkbox" id="fld-${campo}" ${chk ? 'checked' : ''}
+               onchange="document.getElementById('fld-bool-lbl-${campo}').textContent=this.checked?'Sí':'No'">
+        <label class="ef-bool-lbl" id="fld-bool-lbl-${campo}" for="fld-${campo}">${chk ? 'Sí' : 'No'}</label>
+      </div>`;
+    } else if (tipo === 'timestamptz' || tipo.includes('timestamp') || tipo === 'datetime') {
+      const dtv = val ? String(val).replace(' ', 'T').slice(0, 16) : '';
+      inputHtml = `<input type="datetime-local" class="ef-input" id="fld-${campo}" value="${dtv}">`;
+    } else if (tipo === 'date') {
+      const dv = val ? String(val).slice(0, 10) : '';
+      inputHtml = `<input type="date" class="ef-input" id="fld-${campo}" value="${dv}">`;
+    } else if (tipo === 'text') {
+      inputHtml = `<textarea class="ef-input ef-textarea" id="fld-${campo}" rows="4">${escH(val ?? '')}</textarea>`;
+    } else if (tipo.includes('int') || tipo === 'bigint' || tipo === 'smallint' || tipo === 'serial') {
+      inputHtml = `<input type="number" class="ef-input" id="fld-${campo}" value="${escH(val ?? '')}" step="1">`;
+    } else if (tipo === 'numeric' || tipo === 'decimal' || tipo === 'float' || tipo === 'real') {
+      const step = (decimales !== null && decimales >= 0)
+        ? (1 / Math.pow(10, decimales)).toFixed(decimales) : 'any';
+      inputHtml = `<input type="number" class="ef-input" id="fld-${campo}" value="${escH(val ?? '')}" step="${step}">`;
+    } else {
+      // varchar y demás → una línea
+      inputHtml = `<input type="text" class="ef-input" id="fld-${campo}" value="${escH(val ?? '')}">`;
+    }
+
+    return `<div class="ef-group">
+      ${labelHtml}
+      ${inputHtml}
+      ${help ? `<div class="ef-help">💡 ${escH(help)}</div>` : ''}
+    </div>`;
+  }
+
+  // ── Abrir modal de edición ───────────────────────────────────────────────
+  async function openEditModal(tabla, pkCol, pk, colNames, row) {
+    document.getElementById('editOverlay')?.remove();
+
+    const [dicEntries, schema] = await Promise.all([
+      fetchDicForTable(tabla),
+      fetchRawSchema(tabla)
+    ]);
+
+    const dicMap    = {};
+    dicEntries.forEach(d => { dicMap[d.campo] = d; });
+    const schemaMap = {};
+    schema.forEach(c => { schemaMap[c.name || c.column_name] = c; });
+
+    // Columnas visibles ordenadas por orden_campo
+    let visible = colNames.filter(c => {
+      const d = dicMap[c];
+      return d ? d.es_visible !== false : true;
+    });
+    visible.sort((a, b) => {
+      const oa = dicMap[a]?.orden_campo ?? 9999;
+      const ob = dicMap[b]?.orden_campo ?? 9999;
+      return oa - ob || a.localeCompare(b);
+    });
+
+    _editRow = { tabla, pkCol, pk, colNames, row, dicMap, schemaMap, mvOptions: {} };
+
+    const fieldsHtml = visible.map(c => buildEditField(c, row[c])).join('');
+
+    const overlay = document.createElement('div');
+    overlay.className = 'edit-overlay';
+    overlay.id = 'editOverlay';
+    overlay.innerHTML = `
+      <div class="edit-card">
+        <div class="edit-header">
+          <span class="edit-title">✏️ ${escH(tabla)}</span>
+          <span class="edit-pk-badge">${escH(pkCol)} = ${escH(pk)}</span>
+          <button class="edit-close-btn" onclick="closeEditModal()" title="Cerrar">✕</button>
+        </div>
+        <div class="edit-body" id="editBody">${fieldsHtml}</div>
+        <div class="edit-footer">
+          <span id="editMsg" style="flex:1;font-size:.78rem;color:var(--muted)"></span>
+          <button class="btn-cancel-edit" onclick="closeEditModal()">✕ Cancelar</button>
+          <button class="btn-confirm-edit" id="editConfirmBtn" onclick="confirmEdit()">💾 Confirmar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeEditModal(); });
+    overlay._esc = e => { if (e.key === 'Escape') closeEditModal(); };
+    document.addEventListener('keydown', overlay._esc);
+
+    // Cargar labels de multivalor en background
+    loadAllMvDisplayLabels();
+  }
+
+  // ── Actualizar labels de campos multivalor ───────────────────────────────
+  async function loadAllMvDisplayLabels() {
+    if (!_editRow) return;
+    for (const campo of Object.keys(_editRow.dicMap)) {
+      const d = _editRow.dicMap[campo];
+      if (!d?.multivalor) continue;
+      const opts = await fetchMvOptions(d.multivalor);
+      _editRow.mvOptions[campo] = opts;
+      const hidden  = document.getElementById('fld-' + campo);
+      const display = document.getElementById('fld-display-' + campo);
+      if (!hidden || !display) continue;
+      const found = opts.find(o => String(o.val) === String(hidden.value));
+      if (found) display.value = found.label;
+    }
+  }
+
+  // ── Picker de multivalor ─────────────────────────────────────────────────
+  async function openMvPicker(campo) {
+    if (!_editRow) return;
+    document.getElementById('mvPickerOverlay')?.remove();
+    const d = _editRow.dicMap[campo];
+    if (!d?.multivalor) return;
+
+    let opts = _editRow.mvOptions[campo];
+    if (!opts) { opts = await fetchMvOptions(d.multivalor); _editRow.mvOptions[campo] = opts; }
+
+    const label = d.alias || campo;
+    const renderItems = (f = '') => {
+      const fl = f.toLowerCase();
+      const list = fl ? opts.filter(o => o.label.toLowerCase().includes(fl) || String(o.val).toLowerCase().includes(fl)) : opts;
+      if (!list.length) return '<div class="mv-picker-empty">Sin resultados</div>';
+      return list.map(o => `<div class="mv-picker-item" onclick="selectMvOption('${escH(campo)}','${escH(o.val)}','${escH(o.label)}')">
+        <span>${escH(o.label)}</span><span class="mv-picker-val">${escH(o.val)}</span>
+      </div>`).join('');
+    };
+
+    const po = document.createElement('div');
+    po.className = 'mv-picker-overlay';
+    po.id = 'mvPickerOverlay';
+    po.innerHTML = `<div class="mv-picker-card">
+      <div class="mv-picker-head">
+        <span style="flex:1">🔍 ${escH(label)}</span>
+        <button onclick="document.getElementById('mvPickerOverlay')?.remove()"
+                style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem">✕</button>
+      </div>
+      <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+        <input class="mv-picker-search" id="mvSearch" placeholder="Buscar…"
+               oninput="filterMvPicker('${escH(campo)}',this.value)">
+      </div>
+      <div class="mv-picker-list" id="mvPickerList">${renderItems()}</div>
+    </div>`;
+    document.body.appendChild(po);
+    po.addEventListener('click', e => { if (e.target === po) po.remove(); });
+    po._esc = e => { if (e.key === 'Escape') { po.remove(); e.stopPropagation(); } };
+    document.addEventListener('keydown', po._esc);
+    setTimeout(() => document.getElementById('mvSearch')?.focus(), 40);
+  }
+
+  function filterMvPicker(campo, f) {
+    const opts = _editRow?.mvOptions[campo] || [];
+    const fl   = f.toLowerCase();
+    const list = fl ? opts.filter(o => o.label.toLowerCase().includes(fl) || String(o.val).toLowerCase().includes(fl)) : opts;
+    const el   = document.getElementById('mvPickerList');
+    if (!el) return;
+    el.innerHTML = list.length
+      ? list.map(o => `<div class="mv-picker-item" onclick="selectMvOption('${escH(campo)}','${escH(o.val)}','${escH(o.label)}')">
+          <span>${escH(o.label)}</span><span class="mv-picker-val">${escH(o.val)}</span>
+        </div>`).join('')
+      : '<div class="mv-picker-empty">Sin resultados</div>';
+  }
+
+  function selectMvOption(campo, val, label) {
+    const h = document.getElementById('fld-' + campo);
+    const d = document.getElementById('fld-display-' + campo);
+    if (h) h.value = val;
+    if (d) d.value = label;
+    document.getElementById('mvPickerOverlay')?.remove();
+  }
+
+  // ── Cerrar modal ─────────────────────────────────────────────────────────
+  function closeEditModal() {
+    const ov = document.getElementById('editOverlay');
+    if (ov) { if (ov._esc) document.removeEventListener('keydown', ov._esc); ov.remove(); }
+    document.getElementById('mvPickerOverlay')?.remove();
+    _editRow = null;
+  }
+
+  // ── Confirmar edición (PATCH) ────────────────────────────────────────────
+  async function confirmEdit() {
+    if (!_editRow) return;
+    const { tabla, pkCol, pk, colNames, dicMap, schemaMap } = _editRow;
+    const btn = document.getElementById('editConfirmBtn');
+    const msg = document.getElementById('editMsg');
+    btn.disabled = true; btn.textContent = '⏳ Guardando…'; msg.textContent = '';
+
+    // Campos editables (excluir PK y solo-lectura)
+    const editables = colNames.filter(c => {
+      if (c === pkCol) return false;
+      const d = dicMap[c];
+      if (d?.es_solo_lectura) return false;
+      return d ? d.es_visible !== false : true;
+    });
+
+    const payload = {};
+    editables.forEach(campo => {
+      const d  = dicMap[campo];
+      const sc = schemaMap[campo];
+      const tipo = (d?.tipo_dato || sc?.data_type || sc?.type || '')
+        .toLowerCase().replace('character varying','varchar')
+        .replace('timestamp with time zone','timestamptz');
+
+      if (d?.multivalor) {
+        const h = document.getElementById('fld-' + campo);
+        if (h) payload[campo] = h.value || null;
+      } else if (tipo === 'boolean' || tipo === 'bool') {
+        const cb = document.getElementById('fld-' + campo);
+        if (cb) payload[campo] = cb.checked;
+      } else {
+        const el = document.getElementById('fld-' + campo);
+        if (!el) return;
+        const v = el.value.trim();
+        if (v === '') { payload[campo] = null; return; }
+        if (tipo.includes('int') || tipo === 'bigint' || tipo === 'smallint' || tipo === 'serial')
+          payload[campo] = parseInt(v, 10);
+        else if (tipo === 'numeric' || tipo === 'decimal' || tipo === 'float' || tipo === 'real')
+          payload[campo] = parseFloat(v);
+        else payload[campo] = v;
+      }
+    });
+
+    const base  = document.getElementById('baseUrl').value.replace(/\/$/, '');
+    const token = getToken();
+    const sp    = currentDbSlug ? `?db_slug=${currentDbSlug}` : '';
+
+    try {
+      const res = await fetch(
+        `${base}/api/v1/admin/tables/${encodeURIComponent(tabla)}/rows/${encodeURIComponent(pk)}${sp}`,
+        { method:'PATCH', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
+          body: JSON.stringify(payload) }
+      );
+      if (res.ok) {
+        msg.style.color = 'var(--get)';
+        msg.textContent = '✓ Guardado correctamente';
+        btn.textContent = '✓ Listo';
+        setTimeout(async () => {
+          closeEditModal();
+          await runSQL();
+          if (lastSelectTable) enrichTableRows(lastSelectTable);
+        }, 700);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        msg.style.color = 'var(--delete)';
+        msg.textContent = `❌ ${err.detail || res.statusText}`;
+        btn.disabled = false; btn.textContent = '💾 Confirmar';
+      }
+    } catch (e) {
+      msg.style.color = 'var(--delete)';
+      msg.textContent = `❌ ${e.message}`;
+      btn.disabled = false; btn.textContent = '💾 Confirmar';
+    }
+  }
+</script>
+
+</body>
+</html>

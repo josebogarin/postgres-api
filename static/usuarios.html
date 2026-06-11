@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gestión de Usuarios</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0f1117;
+    --surface:  #181c24;
+    --surface2: #1e2330;
+    --surface3: #252a38;
+    --border:   #2a3045;
+    --fg:       #e2e8f0;
+    --muted:    #64748b;
+    --accent:   #6366f1;
+    --accent2:  #22d3ee;
+    --green:    #22c55e;
+    --red:      #ef4444;
+    --yellow:   #f59e0b;
+    --radius:   8px;
+    --shadow:   0 4px 24px rgba(0,0,0,.4);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-logo { font-size: 1.1rem; font-weight: 700; color: var(--fg); letter-spacing: -.02em; }
+  .header-logo span { color: var(--accent2); }
+  .header-badge {
+    background: var(--accent); color: #fff;
+    font-size: 0.65rem; font-weight: 700; letter-spacing: .08em;
+    padding: 2px 8px; border-radius: 20px; text-transform: uppercase;
+  }
+  .btn-back {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); padding: 6px 14px; border-radius: var(--radius);
+    font-size: 0.8rem; cursor: pointer; transition: all .15s;
+  }
+  .btn-back:hover { color: var(--fg); border-color: var(--muted); }
+  .btn-nav { background: #4f46e5; border: none; color: #fff; padding: 6px 13px; border-radius: var(--radius); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: opacity .15s; margin-right: 6px; }
+  .btn-nav:hover { opacity: .85; }
+
+  /* ── Layout ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 280px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar-top {
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .btn-new {
+    background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius);
+    padding: 8px 14px; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: opacity .15s; width: 100%;
+  }
+  .btn-new:hover { opacity: .85; }
+  .search-wrap {
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border); color: var(--fg);
+    border-radius: var(--radius); padding: 7px 10px 7px 32px;
+    font-size: 0.82rem; outline: none;
+  }
+  .search-wrap input:focus { border-color: var(--accent2); }
+  .search-icon {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 0.85rem; pointer-events: none;
+  }
+
+  .user-list {
+    flex: 1; overflow-y: auto; padding: 6px;
+  }
+  .user-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: var(--radius);
+    cursor: pointer; transition: background .12s;
+    border: 1px solid transparent;
+  }
+  .user-item:hover { background: var(--surface2); }
+  .user-item.active {
+    background: var(--surface3);
+    border-color: var(--accent);
+  }
+  .user-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent); display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: 0.85rem;
+    color: #fff; flex-shrink: 0; text-transform: uppercase;
+  }
+  .user-avatar.inactive { background: var(--muted); }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-weight: 600; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-email { font-size: 0.73rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-roles-badges { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 3px; }
+  .role-badge {
+    font-size: 0.65rem; padding: 1px 6px; border-radius: 10px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .role-badge.superadmin { background: rgba(99,102,241,.2); color: var(--accent); }
+  .role-badge.admin      { background: rgba(34,211,238,.15); color: var(--accent2); }
+  .role-badge.operator   { background: rgba(34,197,94,.15);  color: var(--green); }
+  .role-badge.viewer     { background: rgba(100,116,139,.2); color: var(--muted); }
+  .role-badge.other      { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  }
+  .status-dot.active   { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.inactive { background: var(--muted); }
+
+  /* ── Main panel ── */
+  .main {
+    flex: 1; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .empty-state {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--muted); gap: 10px;
+  }
+  .empty-state .icon { font-size: 2.5rem; }
+  .empty-state p { font-size: 0.85rem; }
+
+  /* ── Form ── */
+  .form-wrap {
+    flex: 1; overflow-y: auto; padding: 24px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .form-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .form-title {
+    font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px;
+  }
+  .form-title .avatar-lg {
+    width: 42px; height: 42px; border-radius: 50%; background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1rem; color: #fff; text-transform: uppercase;
+  }
+  .form-actions {
+    display: flex; gap: 8px;
+  }
+  .btn {
+    border: none; border-radius: var(--radius); padding: 8px 16px;
+    font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all .15s;
+  }
+  .btn-save    { background: var(--green);  color: #fff; }
+  .btn-cancel  { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+  .btn-delete  { background: transparent; color: var(--red); border: 1px solid var(--red); }
+  .btn-save:hover   { opacity: .85; }
+  .btn-cancel:hover { color: var(--fg); border-color: var(--muted); }
+  .btn-delete:hover { background: rgba(239,68,68,.1); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
+  .tab-btn {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--muted); padding: 10px 16px; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: all .15s; margin-bottom: -1px;
+  }
+  .tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Fields ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .card-title {
+    font-size: 0.72rem; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 16px;
+  }
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field-full { grid-column: 1 / -1; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 0.75rem; font-weight: 600; color: var(--muted); }
+  .field input[type="text"],
+  .field input[type="email"],
+  .field input[type="password"] {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--fg); border-radius: var(--radius);
+    padding: 8px 12px; font-size: 0.85rem; outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus { border-color: var(--accent2); }
+  .field input:disabled { opacity: .5; cursor: not-allowed; }
+  .field input.changed { border-color: var(--yellow); }
+
+  /* Toggle */
+  .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+  .toggle {
+    position: relative; width: 42px; height: 24px; cursor: pointer;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0; background: var(--muted);
+    border-radius: 24px; transition: .2s;
+  }
+  .slider::before {
+    content: ''; position: absolute;
+    width: 18px; height: 18px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: .2s;
+  }
+  .toggle input:checked + .slider { background: var(--green); }
+  .toggle input:checked + .slider::before { transform: translateX(18px); }
+  .toggle-label { font-size: 0.82rem; font-weight: 500; }
+
+  /* Password change */
+  .pwd-toggle {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    border-radius: var(--radius); padding: 5px 10px; font-size: 0.75rem;
+    cursor: pointer; transition: all .15s; align-self: flex-start;
+  }
+  .pwd-toggle:hover { color: var(--fg); border-color: var(--muted); }
+
+  /* ── Checkboxes grid ── */
+  .check-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px;
+  }
+  .check-card {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 12px; cursor: pointer;
+    transition: all .15s; user-select: none;
+  }
+  .check-card:hover { border-color: var(--muted); }
+  .check-card.selected { border-color: var(--accent2); background: rgba(34,211,238,.06); }
+  .check-card input[type="checkbox"] { display: none; }
+  .check-icon {
+    width: 20px; height: 20px; border-radius: 5px;
+    border: 2px solid var(--border); display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; transition: all .15s;
+  }
+  .check-card.selected .check-icon { background: var(--accent2); border-color: var(--accent2); }
+  .check-icon::after { content: '✓'; color: #fff; font-size: 0.7rem; display: none; }
+  .check-card.selected .check-icon::after { display: block; }
+  .check-label { font-size: 0.82rem; font-weight: 500; }
+  .check-sub   { font-size: 0.7rem; color: var(--muted); }
+
+  /* ── Confirm bar ── */
+  .confirm-bar {
+    display: none; align-items: center; justify-content: space-between;
+    background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.3);
+    border-radius: var(--radius); padding: 10px 16px; margin-bottom: 4px;
+  }
+  .confirm-bar.visible { display: flex; }
+  .confirm-msg { font-size: 0.82rem; color: var(--yellow); display: flex; align-items: center; gap: 6px; }
+  .confirm-btns { display: flex; gap: 8px; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 18px;
+    font-size: 0.82rem; box-shadow: var(--shadow);
+    transform: translateY(80px); opacity: 0;
+    transition: all .25s; z-index: 100; pointer-events: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.ok  { border-color: var(--green); color: var(--green); }
+  .toast.err { border-color: var(--red);   color: var(--red); }
+
+  /* ── Modal de confirmación ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.6); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px; max-width: 380px; width: 90%;
+    box-shadow: var(--shadow);
+  }
+  .modal h3 { font-size: 1rem; margin-bottom: 10px; }
+  .modal p  { color: var(--muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px; }
+  .modal-btns { display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+  .loading { color: var(--muted); font-size: 0.82rem; padding: 20px; text-align: center; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="header-logo">⚡ <span>Gestión</span> de Usuarios</span>
+    <span class="header-badge">Admin</span>
+  </div>
+  <button id="btnNavPortal" class="btn-nav" onclick="openPortal()" style="display:none;background:#334155;">← Portal</button>
+  <button id="btnNavDic"    class="btn-nav" onclick="openDic()"    style="display:none;">📖 Diccionario</button>
+  <button id="btnNavTester" class="btn-nav" onclick="openTester()" style="display:none;">🔧 Tester</button>
+  <button class="btn-back" onclick="window.close()">✕ Cerrar</button>
+</header>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-top">
+      <button class="btn-new" onclick="newUser()">＋ Nuevo Usuario</button>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Buscar usuario..." oninput="filterUsers()" />
+      </div>
+    </div>
+    <div class="user-list" id="userList">
+      <div class="loading">Cargando usuarios…</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main" id="mainPanel">
+    <div class="empty-state" id="emptyState">
+      <div class="icon">👤</div>
+      <p>Selecciona un usuario para editarlo<br>o crea uno nuevo.</p>
+    </div>
+
+    <div class="form-wrap" id="formWrap" style="display:none;">
+      <!-- Header del formulario -->
+      <div class="form-header">
+        <div class="form-title">
+          <div class="avatar-lg" id="formAvatar">?</div>
+          <div>
+            <div id="formTitleName">Nuevo Usuario</div>
+            <div style="font-size:0.75rem;color:var(--muted);font-weight:400;" id="formTitleEmail"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-delete" id="deleteBtn" onclick="confirmDelete()" style="display:none">🗑 Eliminar</button>
+        </div>
+      </div>
+
+      <!-- Barra de cambios pendientes -->
+      <div class="confirm-bar" id="confirmBar">
+        <div class="confirm-msg">⚠ Hay cambios sin guardar</div>
+        <div class="confirm-btns">
+          <button class="btn btn-cancel" onclick="cancelChanges()">Cancelar</button>
+          <button class="btn btn-save"   onclick="saveChanges()">💾 Guardar</button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(this,'tab-info')">👤 Información</button>
+        <button class="tab-btn"        onclick="switchTab(this,'tab-roles')">🛡 Roles</button>
+        <button class="tab-btn"        onclick="switchTab(this,'tab-sistemas')">🗄 Sistemas</button>
+      </div>
+
+      <!-- Tab: Información -->
+      <div class="tab-content active" id="tab-info">
+        <div class="card">
+          <div class="card-title">Datos del usuario</div>
+          <div class="field-grid">
+            <div class="field">
+              <label>Usuario *</label>
+              <input type="text" id="fUsername" oninput="markChanged()" />
+            </div>
+            <div class="field">
+              <label>Email *</label>
+              <input type="email" id="fEmail" oninput="markChanged()" />
+            </div>
+            <div class="field field-full">
+              <label>Estado</label>
+              <div class="toggle-wrap">
+                <label class="toggle">
+                  <input type="checkbox" id="fActive" onchange="markChanged()" />
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label" id="activeLabel">Activo</span>
+              </div>
+            </div>
+            <div class="field field-full" id="pwdSection">
+              <label>Contraseña</label>
+              <button class="pwd-toggle" onclick="togglePwd()" id="pwdToggleBtn">🔒 Cambiar contraseña</button>
+              <div id="pwdFields" style="display:none;display:flex;gap:10px;margin-top:6px;" class="field-grid">
+                <div class="field">
+                  <label>Nueva contraseña</label>
+                  <input type="password" id="fPassword" oninput="markChanged()" placeholder="Mínimo 8 caracteres" />
+                </div>
+                <div class="field">
+                  <label>Confirmar contraseña</label>
+                  <input type="password" id="fPassword2" oninput="checkPwdMatch()" />
+                </div>
+              </div>
+              <div id="pwdError" style="color:var(--red);font-size:0.75rem;display:none;">Las contraseñas no coinciden</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Roles -->
+      <div class="tab-content" id="tab-roles">
+        <div class="card">
+          <div class="card-title">Roles asignados</div>
+          <div class="check-grid" id="rolesGrid">
+            <div class="loading">Cargando roles…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Sistemas -->
+      <div class="tab-content" id="tab-sistemas">
+        <div class="card">
+          <div class="card-title">Acceso a sistemas</div>
+          <div class="check-grid" id="sistemasGrid">
+            <div class="loading">Cargando sistemas…</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmación de eliminación -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>⚠ Eliminar usuario</h3>
+    <p id="deleteModalMsg">¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.</p>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn" style="background:var(--red);color:#fff;" onclick="deleteUser()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Config ──────────────────────────────────────────────────────────────────
+  const params  = new URLSearchParams(window.location.search);
+  let token     = params.get('token') || sessionStorage.getItem('gu_token') || '';
+  let baseUrl   = params.get('base')  || window.location.origin;
+  if (token) sessionStorage.setItem('gu_token', token);
+
+  const apiFetch = (path, opts = {}) => fetch(baseUrl + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+      ...(opts.headers || {}),
+    },
+  });
+
+  // Auto-login silencioso (igual que Tester)
+  async function loginSilent() {
+    try {
+      const r = await fetch(baseUrl + '/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'admin', password: 'faute' }),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        token = d.access_token;
+        sessionStorage.setItem('gu_token', token);
+        localStorage.setItem('tok_fix', token);
+      }
+    } catch {}
+  }
+
+  const api = async (path, opts = {}) => {
+    let r = await apiFetch(path, opts);
+    if (r.status === 401) {
+      await loginSilent();
+      r = await apiFetch(path, opts);
+    }
+    return r;
+  };
+
+  // ── Estado ──────────────────────────────────────────────────────────────────
+  let allUsers    = [];
+  let allRoles    = [];
+  let allSistemas = [];
+  let currentUser = null;   // usuario en pantalla
+  let isNew       = false;
+  let isDirty     = false;
+  let origState   = null;   // snapshot antes de editar
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  async function init() {
+    if (!token) await loginSilent();
+    const [uRes, rRes, sRes, meRes] = await Promise.all([
+      api('/api/v1/users/?limit=500'),
+      api('/api/v1/roles/?limit=100'),
+      api('/api/v1/sistema/?limit=200'),
+      api('/api/v1/auth/me'),
+    ]);
+    if (uRes.ok) allUsers    = await uRes.json();
+    if (rRes.ok) allRoles    = await rRes.json();
+    if (sRes.ok) allSistemas = await sRes.json();
+    if (meRes.ok) applyNavAccess(await meRes.json());
+    renderList(allUsers);
+  }
+
+  function applyNavAccess(me) {
+    const roles = (me?.roles || []).map(r => r.name);
+    const isAdmin      = roles.includes('admin') || roles.includes('superadmin');
+    const isSuperadmin = roles.includes('superadmin');
+    const btnP = document.getElementById('btnNavPortal');
+    const btnD = document.getElementById('btnNavDic');
+    const btnT = document.getElementById('btnNavTester');
+    if (btnP) btnP.style.display = sessionStorage.getItem('pg_token') ? '' : 'none';
+    if (btnD) btnD.style.display = isAdmin      ? '' : 'none';
+    if (btnT) btnT.style.display = isSuperadmin ? '' : 'none';
+  }
+
+  function openPortal() {
+    window.open(window.location.origin + '/portal', 'pg_portal');
+  }
+
+  function openDic() {
+    window.open(`${baseUrl}/diccionario?token=${encodeURIComponent(token)}&base=${encodeURIComponent(baseUrl)}`, '_blank');
+  }
+
+  function openTester() {
+    window.open(`${baseUrl}/tester`, '_blank');
+  }
+
+  // ── Lista ───────────────────────────────────────────────────────────────────
+  function renderList(users) {
+    const list = document.getElementById('userList');
+    if (!users.length) { list.innerHTML = '<div class="loading">Sin usuarios</div>'; return; }
+    list.innerHTML = users.map(u => {
+      const initials = (u.username || '?').slice(0, 2).toUpperCase();
+      const badges   = (u.roles || []).map(r => roleBadge(r.name)).join('');
+      const active   = u.is_active !== false;
+      return `
+        <div class="user-item ${currentUser?.id === u.id ? 'active' : ''}"
+             onclick="selectUser(${u.id})">
+          <div class="user-avatar ${active ? '' : 'inactive'}">${initials}</div>
+          <div class="user-info">
+            <div class="user-name">${esc(u.username)}</div>
+            <div class="user-email">${esc(u.email)}</div>
+            <div class="user-roles-badges">${badges}</div>
+          </div>
+          <div class="status-dot ${active ? 'active' : 'inactive'}"></div>
+        </div>`;
+    }).join('');
+  }
+
+  function roleBadge(name) {
+    const cls = ['superadmin','admin','operator','viewer'].includes(name) ? name : 'other';
+    return `<span class="role-badge ${cls}">${esc(name)}</span>`;
+  }
+
+  function filterUsers() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    renderList(q ? allUsers.filter(u =>
+      u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+    ) : allUsers);
+  }
+
+  // ── Seleccionar usuario ──────────────────────────────────────────────────────
+  async function selectUser(id) {
+    if (isDirty && !confirm('Hay cambios sin guardar. ¿Descartar?')) return;
+    const res = await api(`/api/v1/users/${id}`);
+    if (!res.ok) { showToast('Error cargando usuario', 'err'); return; }
+    currentUser = await res.json();
+    isNew = false;
+    renderForm(currentUser);
+    renderList(filterActive());
+  }
+
+  function filterActive() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    return q ? allUsers.filter(u =>
+      u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+    ) : allUsers;
+  }
+
+  // ── Nuevo usuario ────────────────────────────────────────────────────────────
+  function newUser() {
+    if (isDirty && !confirm('Hay cambios sin guardar. ¿Descartar?')) return;
+    currentUser = { id: null, username: '', email: '', is_active: true, roles: [], sistemas: [] };
+    isNew = true;
+    renderForm(currentUser);
+    renderList(filterActive());
+  }
+
+  // ── Renderizar formulario ────────────────────────────────────────────────────
+  function renderForm(user) {
+    isDirty = false;
+    document.getElementById('emptyState').style.display  = 'none';
+    document.getElementById('formWrap').style.display    = '';
+    document.getElementById('confirmBar').classList.remove('visible');
+
+    // Header
+    const name = user.username || 'Nuevo';
+    document.getElementById('formAvatar').textContent    = name.slice(0,2).toUpperCase();
+    document.getElementById('formTitleName').textContent = isNew ? 'Nuevo Usuario' : name;
+    document.getElementById('formTitleEmail').textContent = user.email || '';
+    document.getElementById('deleteBtn').style.display   = isNew ? 'none' : '';
+
+    // Campos
+    document.getElementById('fUsername').value = user.username || '';
+    document.getElementById('fEmail').value    = user.email    || '';
+    document.getElementById('fActive').checked = user.is_active !== false;
+    updateActiveLabel();
+
+    // Password
+    hidePwd();
+    if (isNew) {
+      document.getElementById('pwdToggleBtn').style.display = 'none';
+      showPwdFields();
+    } else {
+      document.getElementById('pwdToggleBtn').style.display = '';
+    }
+
+    // Tab activo
+    switchTab(document.querySelector('.tab-btn'), 'tab-info');
+
+    // Roles
+    renderRolesGrid(user.roles || []);
+
+    // Sistemas: cargar los asignados al usuario
+    if (!isNew) {
+      loadUserSistemas(user.id);
+    } else {
+      renderSistemasGrid([]);
+    }
+
+    // Snapshot
+    origState = snapshotForm();
+  }
+
+  // ── Roles grid ───────────────────────────────────────────────────────────────
+  function renderRolesGrid(userRoles) {
+    const assigned = new Set((userRoles || []).map(r => r.id));
+    const grid = document.getElementById('rolesGrid');
+    grid.innerHTML = allRoles.map(r => {
+      const sel = assigned.has(r.id);
+      return `
+        <label class="check-card ${sel ? 'selected' : ''}" onclick="toggleCheck(this,'role')">
+          <input type="checkbox" value="${r.id}" ${sel ? 'checked' : ''} data-type="role" />
+          <div class="check-icon"></div>
+          <div>
+            <div class="check-label">${esc(r.name)}</div>
+            ${r.description ? `<div class="check-sub">${esc(r.description)}</div>` : ''}
+          </div>
+        </label>`;
+    }).join('');
+  }
+
+  // ── Sistemas grid ─────────────────────────────────────────────────────────────
+  async function loadUserSistemas(userId) {
+    const res = await api(`/api/v1/users/${userId}/sistemas`);
+    const assigned = res.ok ? await res.json() : [];
+    renderSistemasGrid(assigned);
+  }
+
+  function renderSistemasGrid(assignedList) {
+    const assigned = new Set(assignedList.map(s => s.id));
+    const grid = document.getElementById('sistemasGrid');
+    if (!allSistemas.length) { grid.innerHTML = '<div class="loading">No hay sistemas registrados</div>'; return; }
+    grid.innerHTML = allSistemas.map(s => {
+      const sel = assigned.has(s.id);
+      return `
+        <label class="check-card ${sel ? 'selected' : ''}" onclick="toggleCheck(this,'sistema')">
+          <input type="checkbox" value="${s.id}" ${sel ? 'checked' : ''} data-type="sistema" />
+          <div class="check-icon"></div>
+          <div>
+            <div class="check-label">${esc(s.nombre)}</div>
+            <div class="check-sub">${esc(s.nombre_bd || '')}</div>
+          </div>
+        </label>`;
+    }).join('');
+  }
+
+  function toggleCheck(label, type) {
+    // Evitar doble disparo — el click en el label también dispara input
+    const cb = label.querySelector('input');
+    // El estado del checkbox ya fue invertido por el click nativo
+    // Solo actualizamos la clase visual
+    setTimeout(() => {
+      label.classList.toggle('selected', cb.checked);
+      markChanged();
+    }, 0);
+  }
+
+  // ── Detección de cambios ──────────────────────────────────────────────────────
+  function snapshotForm() {
+    return {
+      username:  document.getElementById('fUsername').value,
+      email:     document.getElementById('fEmail').value,
+      is_active: document.getElementById('fActive').checked,
+      password:  document.getElementById('fPassword').value,
+      roles:     getCheckedIds('role'),
+      sistemas:  getCheckedIds('sistema'),
+    };
+  }
+
+  function getCheckedIds(type) {
+    return [...document.querySelectorAll(`input[data-type="${type}"]:checked`)]
+      .map(el => parseInt(el.value)).sort();
+  }
+
+  function markChanged() {
+    isDirty = true;
+    document.getElementById('confirmBar').classList.add('visible');
+    updateActiveLabel();
+  }
+
+  function updateActiveLabel() {
+    const checked = document.getElementById('fActive').checked;
+    document.getElementById('activeLabel').textContent = checked ? 'Activo' : 'Inactivo';
+  }
+
+  // ── Guardar ──────────────────────────────────────────────────────────────────
+  async function saveChanges() {
+    if (!validateForm()) return;
+
+    const btn = document.querySelector('#confirmBar .btn-save');
+    btn.disabled = true;
+    btn.textContent = '⏳ Guardando…';
+
+    try {
+      if (isNew) {
+        await createUser();
+      } else {
+        await updateUser();
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 Guardar';
+    }
+  }
+
+  function validateForm() {
+    const u = document.getElementById('fUsername').value.trim();
+    const e = document.getElementById('fEmail').value.trim();
+    const p = document.getElementById('fPassword').value;
+    const p2 = document.getElementById('fPassword2').value;
+    if (!u) { showToast('El usuario es obligatorio', 'err'); return false; }
+    if (!e) { showToast('El email es obligatorio', 'err'); return false; }
+    if (isNew && !p) { showToast('La contraseña es obligatoria para nuevo usuario', 'err'); return false; }
+    if (p && p !== p2) { showToast('Las contraseñas no coinciden', 'err'); return false; }
+    if (p && p.length < 8) { showToast('La contraseña debe tener al menos 8 caracteres', 'err'); return false; }
+    return true;
+  }
+
+  async function createUser() {
+    const body = {
+      username:  document.getElementById('fUsername').value.trim(),
+      email:     document.getElementById('fEmail').value.trim(),
+      password:  document.getElementById('fPassword').value,
+      is_active: document.getElementById('fActive').checked,
+    };
+    const res = await api('/api/v1/users/', { method: 'POST', body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.detail || 'Error al crear usuario', 'err'); return; }
+
+    currentUser = data;
+    isNew = false;
+    allUsers.push(data);
+
+    // Asignar roles y sistemas
+    await syncRoles(data.id, data.roles || []);
+    await syncSistemas(data.id, []);
+
+    await refreshCurrentUser();
+    showToast('✓ Usuario creado', 'ok');
+  }
+
+  async function updateUser() {
+    const body = {};
+    const cur = snapshotForm();
+
+    if (cur.username !== origState.username) body.username = cur.username;
+    if (cur.email    !== origState.email)    body.email    = cur.email;
+    if (cur.is_active !== origState.is_active) body.is_active = cur.is_active;
+    if (cur.password) body.password = cur.password;
+
+    if (Object.keys(body).length > 0) {
+      const res = await api(`/api/v1/users/${currentUser.id}`, {
+        method: 'PATCH', body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        showToast(d.detail || 'Error al actualizar', 'err');
+        return;
+      }
+    }
+
+    // Sincronizar roles y sistemas
+    await syncRoles(currentUser.id, currentUser.roles || []);
+    await syncSistemas(currentUser.id, await getUserSistemas(currentUser.id));
+
+    await refreshCurrentUser();
+    showToast('✓ Cambios guardados', 'ok');
+  }
+
+  async function getUserSistemas(userId) {
+    const res = await api(`/api/v1/users/${userId}/sistemas`);
+    return res.ok ? await res.json() : [];
+  }
+
+  async function syncRoles(userId, currentRoles) {
+    const wanted   = new Set(getCheckedIds('role'));
+    const existing = new Set((currentRoles || []).map(r => r.id));
+
+    for (const id of wanted) {
+      if (!existing.has(id)) {
+        await api(`/api/v1/users/${userId}/roles`, {
+          method: 'POST', body: JSON.stringify({ role_id: id })
+        });
+      }
+    }
+    for (const id of existing) {
+      if (!wanted.has(id)) {
+        await api(`/api/v1/users/${userId}/roles/${id}`, { method: 'DELETE' });
+      }
+    }
+  }
+
+  async function syncSistemas(userId, currentSistemas) {
+    const wanted   = new Set(getCheckedIds('sistema'));
+    const existing = new Set((currentSistemas || []).map(s => s.id));
+
+    for (const id of wanted) {
+      if (!existing.has(id)) {
+        await api(`/api/v1/users/${userId}/sistemas`, {
+          method: 'POST', body: JSON.stringify({ sistema_id: id })
+        });
+      }
+    }
+    for (const id of existing) {
+      if (!wanted.has(id)) {
+        await api(`/api/v1/users/${userId}/sistemas/${id}`, { method: 'DELETE' });
+      }
+    }
+  }
+
+  async function refreshCurrentUser() {
+    const res = await api(`/api/v1/users/${currentUser.id}`);
+    if (res.ok) {
+      currentUser = await res.json();
+      // Actualizar en allUsers
+      const idx = allUsers.findIndex(u => u.id === currentUser.id);
+      if (idx >= 0) allUsers[idx] = currentUser;
+      else allUsers.push(currentUser);
+    }
+    isDirty = false;
+    origState = snapshotForm();
+    document.getElementById('confirmBar').classList.remove('visible');
+    document.getElementById('formTitleName').textContent  = currentUser.username;
+    document.getElementById('formTitleEmail').textContent = currentUser.email;
+    document.getElementById('formAvatar').textContent     = currentUser.username.slice(0,2).toUpperCase();
+    renderList(filterActive());
+    // Recargar sistemas asignados
+    await loadUserSistemas(currentUser.id);
+  }
+
+  // ── Cancelar cambios ─────────────────────────────────────────────────────────
+  function cancelChanges() {
+    if (isNew) {
+      currentUser = null;
+      isNew = false;
+      isDirty = false;
+      document.getElementById('emptyState').style.display = '';
+      document.getElementById('formWrap').style.display   = 'none';
+      renderList(filterActive());
+    } else {
+      renderForm(currentUser);
+    }
+  }
+
+  // ── Eliminar ─────────────────────────────────────────────────────────────────
+  function confirmDelete() {
+    document.getElementById('deleteModalMsg').textContent =
+      `¿Eliminar al usuario "${currentUser.username}"? Esta acción no se puede deshacer.`;
+    document.getElementById('deleteModal').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('deleteModal').classList.remove('show');
+  }
+
+  async function deleteUser() {
+    closeModal();
+    const res = await api(`/api/v1/users/${currentUser.id}`, { method: 'DELETE' });
+    if (res.ok || res.status === 204) {
+      allUsers = allUsers.filter(u => u.id !== currentUser.id);
+      currentUser = null;
+      isDirty = false;
+      document.getElementById('emptyState').style.display = '';
+      document.getElementById('formWrap').style.display   = 'none';
+      renderList(filterActive());
+      showToast('✓ Usuario eliminado', 'ok');
+    } else {
+      const d = await res.json();
+      showToast(d.detail || 'Error al eliminar', 'err');
+    }
+  }
+
+  // ── Tabs ─────────────────────────────────────────────────────────────────────
+  function switchTab(btn, tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+  }
+
+  // ── Password toggle ───────────────────────────────────────────────────────────
+  function togglePwd() {
+    const fields = document.getElementById('pwdFields');
+    const shown  = fields.style.display !== 'none';
+    if (shown) hidePwd(); else showPwdFields();
+  }
+  function showPwdFields() {
+    document.getElementById('pwdFields').style.display  = 'flex';
+    document.getElementById('pwdToggleBtn').textContent = '🔒 Cancelar cambio';
+  }
+  function hidePwd() {
+    document.getElementById('pwdFields').style.display  = 'none';
+    document.getElementById('pwdToggleBtn').textContent = '🔒 Cambiar contraseña';
+    document.getElementById('fPassword').value  = '';
+    document.getElementById('fPassword2').value = '';
+    document.getElementById('pwdError').style.display = 'none';
+  }
+  function checkPwdMatch() {
+    const p  = document.getElementById('fPassword').value;
+    const p2 = document.getElementById('fPassword2').value;
+    document.getElementById('pwdError').style.display = (p && p2 && p !== p2) ? '' : 'none';
+    markChanged();
+  }
+
+  // ── Toast ─────────────────────────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg, type = 'ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ── Utils ─────────────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Start ─────────────────────────────────────────────────────────────────────
+  init();
+</script>
+</body>
+</html>

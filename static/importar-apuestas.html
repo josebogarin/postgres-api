@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Importar Apuestas — BECBUC</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1d23;color:#e2e8f0;font-size:13px;padding:20px}
+h1{font-size:1.15rem;font-weight:800;color:#fff;margin-bottom:4px}
+.sub{color:#64748b;font-size:.78rem;margin-bottom:20px}
+.card{background:#242930;border:1px solid #2e3540;border-radius:10px;padding:18px;margin-bottom:16px}
+.card-title{font-size:.82rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+
+/* Drop zone */
+.drop-zone{border:2px dashed #2e3540;border-radius:10px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.drop-zone:hover,.drop-zone.drag-over{border-color:#00a651;background:rgba(0,166,81,.05)}
+/* file input is display:none, triggered programmatically */
+.drop-icon{font-size:2.5rem;margin-bottom:10px}
+.drop-label{font-size:.88rem;color:#94a3b8}
+.drop-label strong{color:#00a651}
+.drop-hint{font-size:.72rem;color:#475569;margin-top:6px}
+.file-loaded{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#1a2735;border-radius:8px;border:1px solid #00a651}
+.file-loaded .fname{font-weight:700;color:#00a651}
+.file-loaded .finfo{font-size:.72rem;color:#64748b}
+.btn-clear{background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;margin-left:auto}
+
+/* Tables */
+table{width:100%;border-collapse:collapse}
+th{background:#1a1d23;color:#64748b;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;text-align:left;border-bottom:1px solid #2e3540}
+td{padding:7px 10px;border-bottom:1px solid #1e2530;font-size:.8rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.ic-ok{color:#00a651}
+.ic-warn{color:#f59e0b}
+.ic-err{color:#ef4444}
+.badge-req{background:rgba(239,68,68,.15);color:#fca5a5;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700}
+.badge-opt{background:rgba(100,116,139,.15);color:#94a3b8;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700}
+.col-match{font-family:monospace;background:#1a1d23;padding:2px 6px;border-radius:4px;color:#7dd3fc;font-size:.75rem}
+.col-none{color:#475569;font-style:italic}
+
+/* Apostador grid */
+.ap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:14px}
+.ap-card{background:#1a1d23;border:1px solid #2e3540;border-radius:8px;padding:12px}
+.ap-alias{font-weight:800;color:#7dd3fc;font-size:.88rem;margin-bottom:2px}
+.ap-name{font-size:.75rem;color:#94a3b8;margin-bottom:8px}
+.ap-stats{display:flex;gap:6px;flex-wrap:wrap}
+.ap-stat{background:#242930;border-radius:5px;padding:2px 8px;font-size:.7rem}
+.ap-stat.ok{color:#86efac;border:1px solid rgba(134,239,172,.2)}
+.ap-stat.warn{color:#fcd34d;border:1px solid rgba(252,211,77,.2)}
+.ap-stat.err{color:#fca5a5;border:1px solid rgba(252,165,165,.2)}
+.ap-bet-row{font-size:.72rem;color:#e2e8f0;padding:3px 0;border-bottom:1px solid #1e2530;display:grid;grid-template-columns:36px 1fr 54px 54px auto;gap:4px;align-items:center}
+.ap-bet-row:last-child{border-bottom:none}
+.ap-bet-scroll{max-height:180px;overflow-y:auto;margin-top:8px}
+
+/* Field stats */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.stat-box{background:#1a1d23;border-radius:7px;padding:10px 12px;border:1px solid #2e3540}
+.stat-key{font-size:.7rem;color:#7dd3fc;font-family:monospace;margin-bottom:4px}
+.stat-val{font-size:.78rem;color:#e2e8f0}
+.stat-null{font-size:.68rem;color:#64748b;margin-top:2px}
+.stat-null.has-null{color:#f59e0b}
+
+/* Users section */
+.usr-row{display:grid;grid-template-columns:28px 130px 1fr 90px;gap:8px;align-items:center;padding:7px 10px;border-bottom:1px solid #1e2530;font-size:.8rem}
+.usr-row:last-child{border-bottom:none}
+.badge-new{background:rgba(59,130,246,.15);color:#93c5fd;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700}
+.badge-exists{background:rgba(100,116,139,.15);color:#94a3b8;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700}
+.badge-created{background:rgba(0,166,81,.15);color:#86efac;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700}
+.badge-error{background:rgba(239,68,68,.15);color:#fca5a5;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700}
+
+/* Preview */
+.preview-wrap{overflow-x:auto;max-height:220px;overflow-y:auto}
+.preview-wrap table td{white-space:nowrap;font-size:.75rem}
+
+/* Summary */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sum-card{background:#1a1d23;border-radius:8px;padding:12px;text-align:center}
+.sum-num{font-size:1.5rem;font-weight:900}
+.sum-lbl{font-size:.7rem;color:#64748b;margin-top:2px}
+.sum-created .sum-num{color:#00a651}
+.sum-updated .sum-num{color:#f59e0b}
+.sum-dup    .sum-num{color:#64748b}
+.sum-err    .sum-num{color:#ef4444}
+
+/* Buttons */
+.btn{padding:9px 18px;border:none;border-radius:7px;font-size:.83rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:opacity .15s}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:#00a651;color:#fff}
+.btn-primary:hover:not(:disabled){opacity:.87}
+.btn-secondary{background:#2e3540;color:#e2e8f0}
+.btn-secondary:hover:not(:disabled){background:#3a4250}
+.btn-blue{background:#3b82f6;color:#fff}
+.btn-blue:hover:not(:disabled){opacity:.87}
+.btn-row{display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap}
+
+.msg-box{padding:10px 14px;border-radius:7px;font-size:.8rem;margin-top:12px;display:none}
+.msg-box.show{display:block}
+.msg-error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
+.msg-ok{background:rgba(0,166,81,.1);border:1px solid rgba(0,166,81,.25);color:#86efac}
+.msg-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#fcd34d}
+
+.section-hidden{display:none}
+.spinner{animation:spin 1s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+details summary{cursor:pointer;font-size:.75rem;color:#64748b;padding:4px 0;user-select:none}
+details summary:hover{color:#94a3b8}
+</style>
+</head>
+<body>
+
+<h1>📥 Importar Apuestas — BECBUC</h1>
+<div class="sub" id="torneoLabel">Conectando…</div>
+
+<!-- PASO 1: CARGA ARCHIVO -->
+<div class="card">
+  <div class="card-title">1 · Seleccionar archivo Excel</div>
+  <div id="loadError" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:10px 14px;border-radius:7px;font-size:.82rem;margin-bottom:12px"></div>
+  <label for="fileInput" id="dropZone" class="drop-zone" style="display:block;cursor:pointer">
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="onFileSelected(this.files[0])">
+    <div class="drop-icon">&#128194;</div>
+    <div class="drop-label">Arrastr&#225; el archivo aqu&#237; o <strong>hac&#233; clic para buscar</strong></div>
+    <div class="drop-hint">Formatos: .xlsx &middot; .xls &middot; .csv</div>
+    <div style="margin-top:14px">
+      <span style="background:#00a651;color:#fff;border-radius:7px;padding:9px 22px;font-size:.83rem;font-weight:700;display:inline-block">Seleccionar archivo</span>
+    </div>
+  </label>
+  <div id="fileLoaded" class="file-loaded section-hidden">
+    <span>📄</span>
+    <div>
+      <div class="fname" id="fileName">—</div>
+      <div class="finfo" id="fileInfo">—</div>
+    </div>
+    <button class="btn-clear" onclick="clearFile()" title="Quitar archivo">✕</button>
+  </div>
+</div>
+
+<!-- PASO 2: MATRIZ DE COMPATIBILIDAD -->
+<div class="card section-hidden" id="cardMatriz">
+  <div class="card-title">2 · Matriz de compatibilidad</div>
+  <div style="overflow:auto;max-height:420px;border:1px solid #2e3540;border-radius:6px">
+  <table id="matrizTable" style="min-width:620px">
+    <thead style="position:sticky;top:0;z-index:1">
+      <tr>
+        <th>Campo sistema</th>
+        <th>Reglamento</th>
+        <th>Columna Excel detectada</th>
+        <th>Tipo</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody id="matrizBody"></tbody>
+  </table>
+  </div>
+  <div class="msg-box" id="matrizMsg"></div>
+</div>
+
+<!-- PASO 3: VISTA POR APOSTADOR -->
+<div class="card section-hidden" id="cardApostadores">
+  <div class="card-title">3 · Datos por apostador <span id="apCount" style="color:#64748b;font-weight:400;font-size:.75rem"></span></div>
+  <div id="apGrid" class="ap-grid"></div>
+  <details>
+    <summary>▶ Ver estadísticas por campo</summary>
+    <div id="fieldStats" class="stat-grid" style="margin-top:10px"></div>
+  </details>
+</div>
+
+<!-- PASO 4: GESTIÓN DE USUARIOS -->
+<div class="card section-hidden" id="cardUsuarios">
+  <div class="card-title">4 · Gestión de usuarios apostadores</div>
+  <div id="usrCheckWrap">
+    <div style="font-size:.8rem;color:#94a3b8;margin-bottom:10px">
+      Verificá si los apostadores del archivo ya tienen cuenta. Los nuevos se crean con contraseña <code style="background:#1a1d23;padding:1px 5px;border-radius:3px;color:#7dd3fc">becbuc2026</code>.
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btnCheckUsers" onclick="checkExistingUsers()">🔍 Verificar usuarios</button>
+      <span id="checkStatus" style="color:#94a3b8;font-size:.75rem"></span>
+    </div>
+  </div>
+  <div id="usrListWrap" class="section-hidden" style="margin-top:14px">
+    <div id="usrList"></div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-blue" id="btnCreateUsers" onclick="crearUsuariosNuevos()" style="display:none">
+        👤 Crear usuarios nuevos
+      </button>
+      <span id="createStatus" style="color:#94a3b8;font-size:.75rem"></span>
+    </div>
+    <div class="msg-box" id="usrMsg"></div>
+  </div>
+</div>
+
+<!-- PASO 5b: PRONÓSTICOS GLOBALES (individual format only) -->
+<div class="card section-hidden" id="cardGlobales" style="border-color:#7c3aed44">
+  <div class="card-title" style="color:#a78bfa">🌐 Pronósticos Globales A-G detectados</div>
+  <div id="globalesContent" style="font-size:.82rem;color:#94a3b8;margin-bottom:12px"></div>
+  <div class="btn-row">
+    <button class="btn" id="btnImportGlobales" onclick="importarGlobales()"
+      style="background:#7c3aed;border:none;color:#fff;padding:9px 20px;border-radius:8px;font-weight:700;cursor:pointer">
+      🌐 Importar pronósticos globales
+    </button>
+    <span id="globalesStatus" style="color:#94a3b8;font-size:.75rem"></span>
+  </div>
+</div>
+
+<!-- PASO 5: IMPORTAR APUESTAS -->
+<div class="card section-hidden" id="cardImport">
+  <div class="card-title">5 · Revision y confirmacion de importacion</div>
+  <div id="importReady" style="color:#86efac;font-size:.82rem;margin-bottom:10px">
+    Campos requeridos cubiertos. Revisa los datos abajo antes de importar.
+  </div>
+  <div id="importNotReady" class="section-hidden" style="color:#fcd34d;font-size:.82rem;margin-bottom:10px">
+    Faltan campos requeridos. Revisa la matriz de compatibilidad.
+  </div>
+  <!-- Tabla editable de revision: valor Excel vs valor a importar -->
+  <div id="reviewTableWrap" style="display:none;margin-bottom:14px;background:#1a1d23;border-radius:8px;padding:14px;border:1px solid #2e3540">
+    <div style="font-size:.78rem;font-weight:700;color:#94a3b8;margin-bottom:8px">
+      Revision de datos a importar — los valores nulos (null) se convierten a <code style="background:#242930;padding:1px 5px;border-radius:3px;color:#fcd34d">0</code>. Podes editar cualquier celda antes de confirmar.
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btnImport" onclick="doImport()" disabled>Confirmar e importar</button>
+    <span id="importStatus" style="color:#94a3b8;font-size:.78rem"></span>
+  </div>
+  <div id="summaryWrap" class="section-hidden" style="margin-top:16px">
+    <div class="summary-grid">
+      <div class="sum-card sum-created"><div class="sum-num" id="sumCreated">0</div><div class="sum-lbl">Nuevas</div></div>
+      <div class="sum-card sum-updated"><div class="sum-num" id="sumUpdated">0</div><div class="sum-lbl">Actualizadas</div></div>
+      <div class="sum-card sum-dup"><div class="sum-num" id="sumDup">0</div><div class="sum-lbl">Sin cambios</div></div>
+      <div class="sum-card sum-err"><div class="sum-num" id="sumErr">0</div><div class="sum-lbl">Errores</div></div>
+    </div>
+    <div id="errDetail" class="msg-box msg-error section-hidden" style="margin-top:10px"></div>
+    <div id="importMsg" class="msg-box" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+let token = params.get('token') || sessionStorage.getItem('bec_token') || localStorage.getItem('tok_fix') || '';
+let baseUrl = params.get('base') || location.origin;
+let torneoId = null;
+const DEFAULT_PASSWORD = 'becbuc2026';
+
+// ── Definición de campos del sistema ─────────────────────────────────────────
+const CAMPOS = [
+  { key: 'apostador',              label: 'apostador',              reg: 'Alias (username)',              req: true,  aliases: ['apostador','alias','usuario','username','user'] },
+  { key: 'nombre',                 label: 'nombre',                 reg: 'Nombre completo',               req: false, aliases: ['nombre','nombre_completo','name','full_name'] },
+  { key: 'email',                  label: 'email',                  reg: 'Correo electronico',            req: false, aliases: ['email','correo','mail'] },
+  { key: 'telefono',               label: 'telefono',               reg: 'Telefono',                      req: false, aliases: ['telefono','phone','cel','celular','tel'] },
+  { key: 'partido_num',            label: 'partido_num',            reg: 'N Partido (P001-P104)',         req: true,  aliases: ['partido_num','id_partido','partido','num_partido','match','match_id','p','pid'] },
+  { key: 'equipo_local',           label: 'equipo_local',           reg: 'Equipo local (solo vista)',     req: false, display_only: true, aliases: ['equipo_local','equipo1','equipo_1','local_team','team1','home','eq_local','eq1'] },
+  { key: 'goles_local',            label: 'goles_local',            reg: 'H/I - Goles local',             req: true,  aliases: ['goles_local','gl','gol_l','score_l','g_local','goles','gol_local'] },
+  { key: 'goles_visitante',        label: 'goles_visitante',        reg: 'H/I - Goles visitante',         req: true,  aliases: ['goles_visitante','gv','gol_v','score_v','g_visita','goles_1','gol_visitante'] },
+  { key: 'equipo_visitante',       label: 'equipo_visitante',       reg: 'Equipo visitante (solo vista)', req: false, display_only: true, aliases: ['equipo_visitante','equipo2','equipo_2','visit_team','team2','away','eq_visit','eq2'] },
+  { key: 'pred_minuto_gol',        label: 'pred_minuto_gol',        reg: 'N - Minuto 1er gol (1-120)',    req: false, aliases: ['pred_minuto_gol','minuto_gol','minuto','min','minute','1er_gol','n_1er_gol','n__1er_gol','primer_gol'] },
+  { key: 'pred_amarillas',         label: 'pred_amarillas',         reg: 'J - Cant. amarillas',           req: false, aliases: ['pred_amarillas','amarillas','amar','yellow','yellows'] },
+  { key: 'pred_var',               label: 'pred_var',               reg: 'L - Cant. intervenciones VAR',  req: false, aliases: ['pred_var','var','var_count','intervenciones_var'] },
+  { key: 'pred_rojas',             label: 'pred_rojas',             reg: 'K - Cant. tarjetas rojas',      req: false, aliases: ['pred_rojas','rojas','roja','red','reds'] },
+  { key: 'pred_penales_partido',   label: 'pred_penales_partido',   reg: 'M - Penales sancionados',       req: false, aliases: ['pred_penales_partido','penales_partido','penales','pen_partido','pens'] },
+  // columnas ignoradas (puntaje calculado, no se importan)
+  { key: '_pts_h',   label: '_pts_h',   reg: 'H - Pts resultado (ignorado)',     req: false, ignored: true, aliases: ['h','pts_h','puntaje_h','resultado_pts'] },
+  { key: '_pts_i',   label: '_pts_i',   reg: 'I - Pts marcador exacto (ignorado)',req: false, ignored: true, aliases: ['i','pts_i','puntaje_i','marcador_pts'] },
+  { key: '_pts_j',   label: '_pts_j',   reg: 'J - Pts amarillas (ignorado)',     req: false, ignored: true, aliases: ['j','pts_j','puntaje_j'] },
+  { key: '_pts_k',   label: '_pts_k',   reg: 'K - Pts rojas (ignorado)',         req: false, ignored: true, aliases: ['k','pts_k','puntaje_k'] },
+  { key: '_pts_l',   label: '_pts_l',   reg: 'L - Pts VAR (ignorado)',           req: false, ignored: true, aliases: ['l','pts_l','puntaje_l'] },
+  { key: '_pts_o',   label: '_pts_o',   reg: 'O - Pts penales tanda (ignorado)', req: false, ignored: true, aliases: ['o','pts_o','puntaje_o'] },
+  { key: '_pts_tot', label: '_pts_tot', reg: 'Total partido (ignorado)',          req: false, ignored: true, aliases: ['total','pts_total','puntaje_total','total_partido','total_pts'] },
+];
+const REQUIRED_KEYS = CAMPOS.filter(c => c.req).map(c => c.key);
+const INT_FIELDS = ['goles_local','goles_visitante','pred_minuto_gol','pred_amarillas','pred_var','pred_rojas','pred_penales_partido'];
+
+// ── Estado global ─────────────────────────────────────────────────────────────
+let parsedRows    = [];
+let mapping       = {};
+let cleanRows     = [];
+let editRows      = [];   // copia editable para la tabla de revision pre-import
+let usrStatusMap  = {};   // alias -> 'new' | 'exists' | 'created' | 'error'
+let fileFormatType = 'consolidado';  // 'consolidado' | 'individual'
+let skippedCount   = 0;
+let parsedGlobales = null; // { apostador, pred_campeon, pred_finalista1, ... } o null
+
+// ── Helper numerico ───────────────────────────────────────────────────────────
+// Convierte cualquier valor Excel a entero seguro.
+// 2, 2.0, "2", "2.0" -> 2 | "", "-", "?" -> null (o 0 si nullToZero=true)
+function toSafeInt(v, nullToZero) {
+  if (v == null || v === '' || v === '-' || v === '?' || v === 'N/A') return nullToZero ? 0 : null;
+  const n = Number(v);
+  return isNaN(n) ? (nullToZero ? 0 : null) : Math.round(n);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  if (!token) { document.querySelector('.sub').textContent = 'Sin token. Abri esta pagina desde el portal.'; return; }
+  try {
+    const r = await fetch(baseUrl + '/api/v1/torneo/activas', { headers: { 'Authorization': 'Bearer ' + token } });
+    const activas = await r.json();
+    if (activas && activas.length) {
+      torneoId = activas[0].id;
+      document.getElementById('torneoLabel').textContent = 'Torneo activo: ' + activas[0].nombre;
+    } else {
+      document.getElementById('torneoLabel').textContent = 'Sin torneo activo';
+    }
+  } catch(e) { document.getElementById('torneoLabel').textContent = 'Error conectando al servidor'; }
+}
+
+// ── Drag & Drop ───────────────────────────────────────────────────────────────
+const dz = document.getElementById('dropZone');
+if (dz) {
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) onFileSelected(f);
+    else showLoadError('No se pudo leer el archivo arrastrado.');
+  });
+}
+
+function showLoadError(msg) {
+  const el = document.getElementById('loadError');
+  if (el) { el.innerHTML = msg; el.style.display = 'block'; }
+  else alert(msg);
+}
+
+function showMsg(elId, type, msg) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const colors = { ok: '#86efac', warn: '#fbbf24', error: '#f87171' };
+  const bgs    = { ok: 'rgba(134,239,172,.1)', warn: 'rgba(251,191,36,.1)', error: 'rgba(248,113,113,.1)' };
+  el.style.color      = colors[type] || colors.warn;
+  el.style.background = bgs[type]    || bgs.warn;
+  el.style.border     = `1px solid ${colors[type] || colors.warn}`;
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+// ── Deteccion de formato ──────────────────────────────────────────────────────
+function detectFileFormat(wb) {
+  const names = wb.SheetNames.map(n => n.toLowerCase());
+  // Prioridad absoluta: si tiene TBL MASTER → siempre consolidado
+  if (names.some(n => /tbl[\s_-]*master|master/i.test(n))) return 'consolidado';
+  const hasFicha       = names.some(n => /ficha|inscripcion/.test(n));
+  const hasPronosticos = names.some(n => /pron/.test(n));
+  return (hasFicha && hasPronosticos) ? 'individual' : 'consolidado';
+}
+
+// ── Parser formato INDIVIDUAL (un apostador por archivo) ─────────────────────
+// Hoja 10-FICHA: col C=etiqueta, col D=valor (filas 4-7: nombre/alias/tel/email)
+// Hoja 20-MIS PRONOSTICOS: fila 1=headers, filas 2+:
+//   col 0=ID_PARTIDO, 9=EQUIPO1, 11=GL, 13=GV, 14=EQUIPO2,
+//   24=AMARILLAS, 25=ROJAS, 26=VAR, 27=PENALES, 28=MINUTO
+function parseIndividualFormat(wb) {
+  const fichaName  = wb.SheetNames.find(n => /ficha|inscripcion/i.test(n));
+  const pronosName = wb.SheetNames.find(n => /pron/i.test(n));
+  if (!fichaName || !pronosName) {
+    showLoadError('Formato individual: se esperan hojas "FICHA DE INSCRIPCION" y "MIS PRONOSTICOS".');
+    return false;
+  }
+
+  // Leer FICHA DE INSCRIPCION
+  // Estructura fija (header:1, indices 0-based):
+  //   fichaData[3][3] = D4 = Nombre completo
+  //   fichaData[4][3] = D5 = Alias (username)  <- PRIMARY
+  //   fichaData[5][3] = D6 = Telefono
+  //   fichaData[6][3] = D7 = Email
+  const fichaData = XLSX.utils.sheet_to_json(wb.Sheets[fichaName], {header:1, defval:null});
+
+  // fichaVal: el patron real del archivo es [null, etiqueta, valor, null...]
+  // El VALOR es SIEMPRE el segundo elemento no-nulo de la fila (sea en col C, D o E).
+  function fichaVal(rowIdx) {
+    const row = fichaData[rowIdx];
+    if (!row) return null;
+    let nonNullCount = 0;
+    for (let i = 0; i < row.length; i++) {
+      if (row[i] == null || row[i] === '') continue;
+      nonNullCount++;
+      if (nonNullCount === 2) {  // primero = etiqueta, segundo = valor
+        const s = String(row[i]).replace(/\u00a0/g,' ').trim();
+        return s || null;
+      }
+    }
+    return null;
+  }
+
+  // Metodo 1: posicion fija por numero de fila (0-based desde fila 1 del Excel)
+  let alias    = fichaVal(4);  // Excel fila 5 (D5 o C5 segun layout)
+  let nombre   = fichaVal(3);  // Excel fila 4
+  let telefono = fichaVal(5);  // Excel fila 6
+  let email    = fichaVal(6);  // Excel fila 7
+
+  // Metodo 2: label matching como fallback (busca etiqueta en cualquier columna)
+  if (!alias || !nombre) {
+    fichaData.forEach(function(row) {
+      // La etiqueta es el PRIMER elemento no-nulo de la fila
+      let labelCell = '';
+      for (let i = 0; i < row.length; i++) {
+        if (row[i] != null && row[i] !== '') { labelCell = String(row[i]); break; }
+      }
+      const label = labelCell.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      const val = fichaVal(fichaData.indexOf(row));
+      if (!val) return;
+      if (!alias    && /alias/.test(label))             alias    = val;
+      if (!nombre   && /nombre/.test(label))            nombre   = val;
+      if (!telefono && /telefono|tel/.test(label))      telefono = val;
+      if (!email    && /email|correo/.test(label))      email    = val;
+    });
+  }
+
+  // Diagnostico visible: que se leyo de la ficha
+  window._fichaHtml = [
+    { campo: 'alias (D5)',  val: alias,    req: true  },
+    { campo: 'nombre (D4)', val: nombre,   req: false },
+    { campo: 'tel (D6)',    val: telefono, req: false },
+    { campo: 'email (D7)',  val: email,    req: false },
+  ].map(function(f) {
+    return f.val
+      ? ('<b>' + f.campo + '</b>: ' + f.val)
+      : ('<span style="color:' + (f.req ? '#ef4444' : '#f59e0b') + '">' + f.campo + ': no encontrado</span>');
+  }).join(' &nbsp;|&nbsp; ');
+
+  if (!alias) {
+    const row5 = fichaData[4] ? JSON.stringify(fichaData[4].slice(0,6)) : 'fila vacia';
+    showLoadError(
+      'No se encontro el ALIAS en "' + fichaName + '" celda D5.<br>'
+      + 'Fila 5 leida: ' + row5 + '<br>'
+      + 'Verifica que D5 contenga el alias del apostador.'
+    );
+    return false;
+  }
+
+  // ── Leer pronósticos globales A-G desde la ficha (subtítulo "pronósticos globales") ──
+  parsedGlobales = null;
+  (function() {
+    // Buscar fila con subtítulo "globales" para marcar inicio de sección
+    let globalStartIdx = -1;
+    for (let ri = 0; ri < fichaData.length; ri++) {
+      const rowText = (fichaData[ri] || []).map(c => String(c||'').toLowerCase()).join(' ');
+      if (/global/.test(rowText)) { globalStartIdx = ri; break; }
+    }
+    // También intentar por label matching directo en toda la hoja
+    const GLOBAL_LABELS = {
+      pred_campeon:         /campe[oó]n/i,
+      pred_finalista1:      /finalista.*1|1.*finalista|primer.*finalista/i,
+      pred_finalista2:      /finalista.*2|2.*finalista|segundo.*finalista/i,
+      pred_goleador:        /goleador/i,
+      pred_peor_equipo:     /peor.*equipo|equipo.*peor/i,
+      pred_goleada_ganador: /goleada.*ganador|ganador.*goleada|goleada.*local|mayor.*goleada.*1/i,
+      pred_goleada_perdedor:/goleada.*perdedor|perdedor.*goleada|goleada.*visitante|mayor.*goleada.*2/i,
+      pred_etapa_paraguay:  /etapa.*paraguay|paraguay.*etapa/i,
+      pred_goles_paraguay:  /goles.*paraguay|paraguay.*goles/i,
+    };
+    const found = {};
+    const scanFrom = globalStartIdx >= 0 ? globalStartIdx : 0;
+    for (let ri = scanFrom; ri < fichaData.length; ri++) {
+      const row = fichaData[ri] || [];
+      // La etiqueta es el primer elemento no-nulo de la fila
+      let label = '';
+      let val = null;
+      let nonNull = 0;
+      for (let ci = 0; ci < row.length; ci++) {
+        if (row[ci] == null || row[ci] === '') continue;
+        nonNull++;
+        if (nonNull === 1) label = String(row[ci]);
+        if (nonNull === 2) { val = String(row[ci]).replace(/ /g,' ').trim(); break; }
+      }
+      if (!label || !val) continue;
+      for (const [key, re] of Object.entries(GLOBAL_LABELS)) {
+        if (!found[key] && re.test(label)) { found[key] = val; break; }
+      }
+    }
+    if (Object.keys(found).length > 0) {
+      parsedGlobales = Object.assign({ apostador: alias }, found);
+    }
+  })();
+
+  // Leer MIS PRONOSTICOS
+  // Col indices (0-based): 0=ID_PARTIDO, 9=EQUIPO1, 11=GL, 13=GV, 14=EQUIPO2,
+  //   24=AMARILLAS, 25=ROJAS, 26=VAR, 27=PENALES_PARTIDO, 28=MINUTO_GOL
+  // No mapeados (KO-only): 29=penales_tanda, 30=equipo_clasifica
+  const pronosData = XLSX.utils.sheet_to_json(wb.Sheets[pronosName], {header:1, defval:null});
+  parsedRows = [];
+  for (let i = 1; i < pronosData.length; i++) {
+    const row = pronosData[i];
+    if (!row || !row[0]) continue;
+    // Solo importar fase grupos (excluye KO, globales, etc.)
+    const _fase = String(row[5] || '').toUpperCase();
+    if (_fase && !_fase.includes('GRUPO') && !_fase.includes('10-')) continue;
+    parsedRows.push({
+      apostador:            alias,
+      nombre:               nombre,
+      email:                email,
+      telefono:             telefono,
+      partido_num:          row[0],
+      equipo_local:         row[9],
+      goles_local:          row[11],
+      goles_visitante:      row[13],
+      equipo_visitante:     row[14],
+      pred_amarillas:       row[24],
+      pred_rojas:           row[25],
+      pred_var:             row[26],
+      pred_penales_partido: row[27],
+      pred_minuto_gol:      row[28],
+      // row[29] = penales_tanda (O) - KO only, no aplica grupos
+      // row[30] = equipo_clasifica (P) - excluido por decision
+    });
+  }
+
+  mapping = {};
+  CAMPOS.forEach(function(c) { if (!c.ignored) mapping[c.key] = c.key; });
+  return true;
+}
+
+// ── Carga de archivo ──────────────────────────────────────────────────────────
+function onFileSelected(file) {
+  const errEl = document.getElementById('loadError');
+  if (errEl) errEl.style.display = 'none';
+  if (!file) { showLoadError('No se recibio ningun archivo.'); return; }
+  if (typeof XLSX === 'undefined') { showLoadError('La libreria XLSX no esta cargada. Verifica tu conexion a internet.'); return; }
+  const reader = new FileReader();
+  reader.onerror = () => showLoadError('Error al leer el archivo: ' + (reader.error ? reader.error.message : 'desconocido'));
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      fileFormatType = detectFileFormat(wb);
+
+      if (fileFormatType === 'individual') {
+        // Formato individual: un apostador por archivo
+        const ok = parseIndividualFormat(wb);
+        if (!ok) return;
+        const alias = parsedRows.length ? parsedRows[0].apostador : '?';
+        document.getElementById('dropZone').classList.add('section-hidden');
+        document.getElementById('fileLoaded').classList.remove('section-hidden');
+        document.getElementById('fileName').textContent = file.name;
+        const fichaInfo = window._fichaHtml || ('apostador: ' + alias);
+        document.getElementById('fileInfo').innerHTML =
+          'Individual &nbsp;|&nbsp; ' + fichaInfo + ' &nbsp;|&nbsp; ' + parsedRows.length + ' filas leidas';
+        // Mostrar card de globales si se detectaron pronósticos A-G
+        renderGlobalesCard();
+      } else {
+        // Formato consolidado (TBL MASTER)
+        // TBL MASTER = hoja definitiva para consolidado
+        let sheetName = wb.SheetNames.find(n => /tbl[\s_-]*master/i.test(n));
+        if (!sheetName) sheetName = wb.SheetNames.find(n => /master/i.test(n));
+        if (!sheetName) {
+          let maxRows = -1;
+          wb.SheetNames.forEach(n => {
+            try {
+              const cnt = XLSX.utils.sheet_to_json(wb.Sheets[n], {defval:null,header:1}).length;
+              if (cnt > maxRows) { maxRows = cnt; sheetName = n; }
+            } catch(ex) {}
+          });
+        }
+        if (!sheetName) sheetName = wb.SheetNames[0];
+        const ws  = wb.Sheets[sheetName];
+        const raw = XLSX.utils.sheet_to_json(ws, { defval: null });
+        if (!raw.length) { showLoadError('El archivo no tiene datos en la hoja "' + sheetName + '".'); return; }
+        parsedRows = raw;
+        document.getElementById('dropZone').classList.add('section-hidden');
+        document.getElementById('fileLoaded').classList.remove('section-hidden');
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileInfo').textContent =
+          'Consolidado - ' + raw.length + ' filas - ' + Object.keys(raw[0]).length + ' columnas - hoja: ' + sheetName;
+      }
+      try { analyzeFile(); } catch(e2) { console.error(e2); showLoadError('Error al analizar el archivo: ' + e2.message); }
+    } catch(err) { console.error(err); showLoadError('No se pudo leer el archivo: ' + err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function clearFile() {
+  parsedRows = []; mapping = {}; cleanRows = []; editRows = []; usrStatusMap = {};
+  skippedCount = 0; fileFormatType = 'consolidado'; parsedGlobales = null;
+  document.getElementById('dropZone').classList.remove('section-hidden');
+  document.getElementById('fileLoaded').classList.add('section-hidden');
+  document.getElementById('fileInput').value = '';
+  ['cardMatriz','cardApostadores','cardUsuarios','cardGlobales','cardImport'].forEach(id =>
+    document.getElementById(id).classList.add('section-hidden'));
+}
+
+// ── Pronósticos Globales A-G ──────────────────────────────────────────────────
+function renderGlobalesCard() {
+  const card = document.getElementById('cardGlobales');
+  if (!parsedGlobales || Object.keys(parsedGlobales).length <= 1) {
+    // Solo tiene 'apostador', sin globales reales
+    card.classList.add('section-hidden');
+    return;
+  }
+  const LABELS = {
+    pred_campeon:          '🏆 A · Campeón',
+    pred_finalista1:       '🥈 B · Finalista 1',
+    pred_finalista2:       '🥈 B · Finalista 2',
+    pred_goleador:         '⚽ C · Goleador',
+    pred_peor_equipo:      '📉 D · Peor equipo',
+    pred_goleada_ganador:  '💥 E · Mayor goleada (ganador)',
+    pred_goleada_perdedor: '💥 E · Mayor goleada (perdedor)',
+    pred_etapa_paraguay:   '🇵🇾 F · Etapa Paraguay',
+    pred_goles_paraguay:   '🇵🇾 G · Goles Paraguay',
+  };
+  const rows = Object.entries(LABELS)
+    .filter(([k]) => parsedGlobales[k])
+    .map(([k, lbl]) =>
+      `<div style="display:grid;grid-template-columns:220px 1fr;gap:6px;padding:5px 0;border-bottom:1px solid #1e2530;">
+        <span style="color:#a78bfa;font-size:.75rem">${lbl}</span>
+        <span style="color:#e2e8f0;font-weight:600;font-size:.8rem">${parsedGlobales[k]}</span>
+      </div>`
+    ).join('');
+  const notFound = Object.keys(LABELS).filter(k => !parsedGlobales[k]);
+  document.getElementById('globalesContent').innerHTML =
+    `<div style="margin-bottom:8px;color:#64748b;font-size:.74rem">Apostador: <b style="color:#7dd3fc">${parsedGlobales.apostador}</b></div>`
+    + (rows || '<div style="color:#f59e0b">No se detectaron valores en los campos globales.</div>')
+    + (notFound.length ? `<div style="margin-top:7px;font-size:.7rem;color:#64748b">Sin datos: ${notFound.map(k=>LABELS[k]).join(', ')}</div>` : '');
+  document.getElementById('globalesStatus').textContent = '';
+  card.classList.remove('section-hidden');
+}
+
+async function importarGlobales() {
+  if (!parsedGlobales) return;
+  const btn    = document.getElementById('btnImportGlobales');
+  const status = document.getElementById('globalesStatus');
+  btn.disabled = true; status.textContent = 'Importando globales...';
+  try {
+    const payload = Object.assign({}, parsedGlobales);  // apostador + campos A-G
+    const resp = await fetch(baseUrl + '/api/v1/bets/importar-globales-apostador/' + torneoId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(payload),
+    });
+    const d = await resp.json();
+    if (!resp.ok) {
+      status.style.color = '#ef4444';
+      status.textContent = d.detail || 'Error al importar globales';
+      return;
+    }
+    // Mostrar resultado claramente: guardado + equipos resueltos
+    const res = d.resueltos || {};
+    const noResInput = d.no_resueltos_input || {};
+    const noRes = Object.entries(res).filter(([,v]) => v == null && noResInput[v] !== undefined).map(([k]) => k);
+    const noResAll = Object.entries(res).filter(([,v]) => v == null).map(([k]) => k);
+    const okRes = Object.entries(res).filter(([,v]) => v != null).length;
+    const eqDb = d.equipos_db || 0;
+
+    if (d.guardado) {
+      status.style.color = noResAll.length && okRes === 0 ? '#fbbf24' : '#86efac';
+      let msg = `✅ Pronósticos globales guardados para ${d.apostador}.`;
+      if (okRes > 0) msg += ` ${okRes} equipo(s) resuelto(s).`;
+      if (noResAll.length) {
+        const noResNames = noResAll.map(k => {
+          const val = (parsedGlobales||{})[`pred_${k}`];
+          return val ? `${k}="${val}"` : k;
+        });
+        msg += ` ⚠️ Sin resolver: ${noResNames.join(', ')}.`;
+        if (eqDb === 0) msg += ' (BD sin equipos cargados aún)';
+      }
+      status.textContent = msg;
+    } else {
+      status.style.color = '#fbbf24';
+      status.textContent = `⚠️ ${okRes} equipos resueltos.` + (noResAll.length ? ` No resueltos: ${noResAll.join(', ')}` : '');
+    }
+  } catch(e) {
+    status.style.color = '#ef4444';
+    status.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── Analisis de columnas ──────────────────────────────────────────────────────
+function normalize(s) {
+  return String(s || '').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9_]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+}
+
+function detectMapping(excelCols) {
+  const normCols = {};
+  excelCols.forEach(c => normCols[normalize(c)] = c);
+  const result = {};
+  CAMPOS.forEach(campo => {
+    for (const alias of campo.aliases) {
+      const norm = normalize(alias);
+      if (normCols[norm]) { result[campo.key] = normCols[norm]; break; }
+    }
+    if (!result[campo.key]) {
+      for (const alias of campo.aliases) {
+        const na = normalize(alias);
+        for (const [nc, oc] of Object.entries(normCols)) {
+          if (nc.includes(na) || na.includes(nc)) { result[campo.key] = oc; break; }
+        }
+        if (result[campo.key]) break;
+      }
+    }
+  });
+  return result;
+}
+
+function analyzeFile() {
+  if (fileFormatType === 'consolidado') {
+    const excelCols = Object.keys(parsedRows[0]);
+    mapping = detectMapping(excelCols);
+  }
+  const tbody = document.getElementById('matrizBody');
+  tbody.innerHTML = '';
+  let allReqOk = true, coveredCount = 0;
+  CAMPOS.forEach(campo => {
+    if (campo.ignored) {
+      const col = mapping[campo.key];
+      if (!col || fileFormatType === 'individual') return;
+      const tr = document.createElement('tr');
+      tr.style.opacity = '0.45';
+      tr.innerHTML = '<td style="font-family:monospace;color:#64748b">' + campo.label + '</td>'
+        + '<td style="color:#475569">' + campo.reg + '</td>'
+        + '<td><span class="col-match" style="color:#64748b">' + col + '</span></td>'
+        + '<td><span style="background:rgba(100,116,139,.1);color:#475569;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700">Ignorado</span></td>'
+        + '<td><span style="color:#475569">-</span></td>';
+      tbody.appendChild(tr);
+      return;
+    }
+    const col = mapping[campo.key];
+    const isOk = !!col;
+    if (campo.req && !isOk) allReqOk = false;
+    if (isOk && !campo.display_only) coveredCount++;
+    const typeBadge = campo.req ? '<span class="badge-req">Requerido</span>'
+                    : campo.display_only ? '<span class="badge-opt" style="color:#7dd3fc">Solo vista</span>'
+                    : '<span class="badge-opt">Opcional</span>';
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td style="font-family:monospace;color:#7dd3fc">' + campo.label + '</td>'
+      + '<td style="color:#94a3b8">' + campo.reg + '</td>'
+      + '<td>' + (col ? '<span class="col-match">' + col + '</span>' : '<span class="col-none">- no detectada -</span>') + '</td>'
+      + '<td>' + typeBadge + '</td>'
+      + '<td>' + (isOk ? '<span class="ic-ok">OK</span>' : (campo.req ? '<span class="ic-err">X</span>' : '<span class="ic-warn">?</span>')) + '</td>';
+    tbody.appendChild(tr);
+  });
+  document.getElementById('cardMatriz').classList.remove('section-hidden');
+  const total = CAMPOS.filter(c => !c.ignored).length;
+  if (allReqOk) showMsg('matrizMsg', 'ok', coveredCount + '/' + total + ' campos detectados. Campos requeridos cubiertos.');
+  else {
+    const miss = CAMPOS.filter(c => c.req && !mapping[c.key]).map(c => c.label).join(', ');
+    showMsg('matrizMsg', 'warn', coveredCount + '/' + total + ' campos. Faltan requeridos: ' + miss);
+  }
+
+  buildCleanRows();
+  renderApostadoresPreview();
+  renderFieldStats();
+  document.getElementById('cardApostadores').classList.remove('section-hidden');
+  document.getElementById('cardUsuarios').classList.remove('section-hidden');
+  renderImportCard(allReqOk);
+}
+
+// ── Construir filas limpias ───────────────────────────────────────────────────
+function buildCleanRows() {
+  skippedCount = 0;
+  const allRows = parsedRows.map((row, i) => {
+    const out = { _fila: i + 2 };
+    CAMPOS.forEach(campo => {
+      const col = mapping[campo.key];
+      out[campo.key] = (col !== undefined) ? row[col] : null;
+    });
+    return out;
+  });
+
+  cleanRows = [];
+  allRows.forEach(r => {
+    if (r.apostador) r.apostador = String(r.apostador).replace(/ /g,' ').trim();
+    if (!r.apostador || !r.apostador.trim()) { skippedCount++; return; }
+    if (r.partido_num != null) {
+      const s = String(r.partido_num).replace(/ /g,'').trim();
+      if (/^[Pp]0*(\d+)$/.test(s)) r.partido_num = parseInt(s.replace(/^[Pp]0*/,''), 10) || parseInt(s.replace(/^[Pp]/,''), 10);
+      else if (/^\d+$/.test(s))    r.partido_num = parseInt(s, 10);
+      else                          r.partido_num = null;
+    }
+    if (r.partido_num == null || r.partido_num < 1) { skippedCount++; return; }
+    // Para archivos individuales: filtrar solo fase grupos (excluye KO, globales)
+    // Nota: para formato individual, el filtro de fase ya se aplica en parseIndividualFormat.
+    // Para consolidado, filtrar por fase si hay columna disponible.
+    if (fileFormatType === 'consolidado') {
+      const _faseCheck = r.fase || r.FASE || r['fase_excel'] || null;
+      if (_faseCheck != null) {
+        const faseStr = String(_faseCheck).toUpperCase();
+        if (!faseStr.includes('GRUPO') && !faseStr.includes('10-')) { skippedCount++; return; }
+      }
+    }
+    // Convertir campos numericos a int seguro (maneja 2.0, "", "-", "?", etc.)
+    INT_FIELDS.forEach(k => { r[k] = toSafeInt(r[k], false); });
+    // Requiere al menos uno de los goles
+    if (r.goles_local == null && r.goles_visitante == null) { skippedCount++; return; }
+    ['nombre','email','telefono'].forEach(k => { if (r[k]) r[k] = String(r[k]).replace(/ /g,' ').trim(); });
+    ['equipo_local','equipo_visitante'].forEach(k => { if (r[k]) r[k] = String(r[k]).replace(/ /g,' ').trim(); });
+    cleanRows.push(r);
+  });
+  // Copia editable: null goles -> 0 por defecto (preferencia del usuario)
+  editRows = cleanRows.map(r => Object.assign({}, r, {
+    goles_local:     r.goles_local     != null ? r.goles_local     : 0,
+    goles_visitante: r.goles_visitante != null ? r.goles_visitante : 0,
+  }));
+}
+
+// -- Vista por apostador -------------------------------------------------------
+function renderApostadoresPreview() {
+  const byAp = {};
+  cleanRows.forEach(r => {
+    const ap = r.apostador || '(sin alias)';
+    if (!byAp[ap]) byAp[ap] = { nombre: r.nombre, email: r.email, telefono: r.telefono, bets: [] };
+    else {
+      if (!byAp[ap].nombre && r.nombre) byAp[ap].nombre = r.nombre;
+      if (!byAp[ap].email  && r.email)  byAp[ap].email  = r.email;
+    }
+    byAp[ap].bets.push(r);
+  });
+
+  const apList = Object.entries(byAp);
+  const maxNum = cleanRows.length ? Math.max(...cleanRows.map(r=>r.partido_num||0)) : 0;
+  document.getElementById('apCount').textContent = '- ' + apList.length + ' apostadores - ' + cleanRows.length + ' apuestas (grupos P001-P' + String(maxNum).padStart(3,'0') + ')';
+
+  const grid = document.getElementById('apGrid');
+  grid.innerHTML = apList.map(([alias, info]) => {
+    const bets = info.bets;
+    const nullGL = bets.filter(b => b.goles_local == null).length;
+    const nullGV = bets.filter(b => b.goles_visitante == null).length;
+    const withBonus = bets.filter(b => b.pred_minuto_gol != null || b.pred_amarillas != null || b.pred_var != null).length;
+    const hasErrors = nullGL > 0 || nullGV > 0;
+    const _maxGrupoNum = cleanRows.length ? Math.max(...cleanRows.map(r => r.partido_num || 0)) : 72;
+    const TOTAL_GRUPOS = _maxGrupoNum || 72;
+    const missing = Math.max(0, TOTAL_GRUPOS - bets.length);
+
+    const betRows = bets.slice(0, 8).map(b => {
+      const pid  = b.partido_num != null ? 'P' + String(b.partido_num).padStart(3,'0') : '-';
+      const gl   = b.goles_local != null ? String(b.goles_local) : '?';
+      const gv   = b.goles_visitante != null ? String(b.goles_visitante) : '?';
+      const glSt = b.goles_local != null ? '' : 'color:#ef4444';
+      const gvSt = b.goles_visitante != null ? '' : 'color:#ef4444';
+      const loc  = b.equipo_local     ? String(b.equipo_local).slice(0,13) : '';
+      const vis  = b.equipo_visitante ? String(b.equipo_visitante).slice(0,13) : '';
+      const teams = (loc || vis) ? (loc + (loc && vis ? ' v ' : ' ') + vis) : '';
+      const min  = b.pred_minuto_gol != null ? ' m' + b.pred_minuto_gol : '';
+      const am   = b.pred_amarillas  != null ? ' a' + b.pred_amarillas  : '';
+      return '<div style="font-size:.7rem;padding:2px 0;border-bottom:1px solid #1e2530;display:grid;grid-template-columns:40px 1fr 48px auto;gap:4px;align-items:center">'
+        + '<span style="color:#64748b;font-family:monospace">' + pid + '</span>'
+        + '<span style="color:#475569;font-size:.65rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + teams + '</span>'
+        + '<span style="text-align:center;font-weight:700"><span style="' + glSt + '">' + gl + '</span><span style="color:#475569">-</span><span style="' + gvSt + '">' + gv + '</span></span>'
+        + '<span style="color:#64748b;font-size:.65rem">' + min + am + '</span>'
+        + '</div>';
+    }).join('');
+    const more = bets.length > 8 ? '<div style="color:#64748b;font-size:.68rem;padding:2px 0">+' + (bets.length-8) + ' mas...</div>' : '';
+
+    // alias seguro para ID DOM
+    const safeId = 'ap_' + alias.replace(/[^a-z0-9]/gi,'_');
+
+    return '<div class="ap-card" id="' + safeId + '">'
+      + '<div class="ap-alias">' + alias + '</div>'
+      + '<div style="font-size:.75rem;color:#94a3b8;margin-bottom:6px">' + (info.nombre || '<em style="color:#475569">sin nombre</em>') + '</div>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'
+      + '<span style="background:#242930;border-radius:5px;padding:2px 8px;font-size:.7rem;color:' + (missing>0?'#fcd34d':'#86efac') + ';border:1px solid rgba(134,239,172,.2)">' + bets.length + ' de ' + TOTAL_GRUPOS + ' partidos</span>'
+      + (withBonus ? '<span style="background:#242930;border-radius:5px;padding:2px 8px;font-size:.7rem;color:#86efac;border:1px solid rgba(134,239,172,.2)">+' + withBonus + ' bonus</span>' : '')
+      + (missing > 0 ? '<span style="background:rgba(239,68,68,.12);border-radius:5px;padding:2px 8px;font-size:.7rem;color:#fca5a5;border:1px solid rgba(239,68,68,.25);font-weight:700">' + missing + ' faltantes</span>' : '<span style="background:rgba(0,166,81,.1);border-radius:5px;padding:2px 8px;font-size:.7rem;color:#86efac;border:1px solid rgba(0,166,81,.2)">Completo</span>')
+      + (hasErrors  ? '<span style="background:#242930;border-radius:5px;padding:2px 8px;font-size:.7rem;color:#fca5a5;border:1px solid rgba(252,165,165,.2)">!' + (nullGL+nullGV) + ' vacios</span>' : '')
+      + '</div>'
+      + '<div style="max-height:180px;overflow-y:auto">' + betRows + more + '</div>'
+      + '<div style="margin-top:8px">'
+      + '<button data-alias="' + alias.replace(/"/g,'&quot;') + '" style="background:#2e3540;color:#e2e8f0;border:none;border-radius:5px;padding:4px 10px;font-size:.72rem;cursor:pointer" onclick="openApModal(this.dataset.alias)">'
+      + 'Ver datos completos</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// -- Modal detalle por apostador -----------------------------------------------
+function openApModal(alias) {
+  const bets = cleanRows.filter(r => r.apostador === alias);
+  // Todos los partidos grupo; marcar los que faltan
+  const betMap = {};
+  bets.forEach(b => { betMap[b.partido_num] = b; });
+  const _totalGrupos = cleanRows.length ? Math.max(...cleanRows.map(r => r.partido_num || 0)) : 72;
+
+  const rows = Array.from({length:_totalGrupos}, (_,i) => {
+    const pid = i + 1;
+    const b = betMap[pid];
+    const pidStr = 'P' + String(pid).padStart(3,'0');
+    if (!b) {
+      return '<tr style="background:rgba(239,68,68,.06)">'
+        + '<td style="color:#ef4444;font-family:monospace">' + pidStr + '</td>'
+        + '<td colspan="8" style="color:#ef4444;font-style:italic">Sin apuesta</td>'
+        + '</tr>';
+    }
+    const loc  = b.equipo_local     || '';
+    const vis  = b.equipo_visitante || '';
+    const gl   = b.goles_local != null ? b.goles_local : '<span style="color:#ef4444">?</span>';
+    const gv   = b.goles_visitante != null ? b.goles_visitante : '<span style="color:#ef4444">?</span>';
+    const min  = b.pred_minuto_gol  != null ? b.pred_minuto_gol  : '-';
+    const am   = b.pred_amarillas   != null ? b.pred_amarillas   : '-';
+    const vr   = b.pred_var         != null ? b.pred_var         : '-';
+    const rj   = b.pred_rojas       != null ? b.pred_rojas       : '-';
+    return '<tr>'
+      + '<td style="font-family:monospace;color:#7dd3fc">' + pidStr + '</td>'
+      + '<td style="color:#94a3b8">' + loc + '</td>'
+      + '<td style="font-weight:700;text-align:center">' + gl + '</td>'
+      + '<td style="color:#475569;text-align:center">-</td>'
+      + '<td style="font-weight:700;text-align:center">' + gv + '</td>'
+      + '<td style="color:#94a3b8">' + vis + '</td>'
+      + '<td style="color:#64748b">' + min + '</td>'
+      + '<td style="color:#64748b">' + am + '</td>'
+      + '<td style="color:#64748b">' + vr + '</td>'
+      + '<td style="color:#64748b">' + rj + '</td>'
+      + '</tr>';
+  }).join('');
+
+  // nombre desde byAp si esta disponible
+  const info = cleanRows.find(r => r.apostador === alias);
+  const nombre = (info && info.nombre) ? info.nombre : '';
+
+  const modal = document.getElementById('apModal');
+  document.getElementById('apModalTitle').textContent = alias + (nombre ? ' - ' + nombre : '') + '  (' + bets.length + '/' + _totalGrupos + ')';
+  document.getElementById('apModalBody').innerHTML = '<div style="overflow-x:auto;max-height:65vh"><table>'
+    + '<thead><tr>'
+    + '<th>Partido</th><th>Local</th><th>GL</th><th></th><th>GV</th><th>Visitante</th><th>Min</th><th>Amar</th><th>VAR</th><th>Rojas</th>'
+    + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+  modal.style.display = 'flex';
+}
+
+function closeApModal() {
+  document.getElementById('apModal').style.display = 'none';
+}
+
+// -- Field stats ---------------------------------------------------------------
+function renderFieldStats() {
+  const numKeys = ['goles_local','goles_visitante','pred_minuto_gol','pred_amarillas','pred_var','pred_rojas','pred_penales_partido'];
+  const el = document.getElementById('fieldStats');
+  el.innerHTML = numKeys.map(key => {
+    if (!mapping[key]) return '';
+    const vals = cleanRows.map(r => r[key]).filter(v => v != null && !isNaN(Number(v))).map(Number);
+    const nulls = cleanRows.length - cleanRows.filter(r => r[key] != null).length;
+    const mn  = vals.length ? Math.min(...vals) : '-';
+    const mx  = vals.length ? Math.max(...vals) : '-';
+    const avg = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : '-';
+    return '<div style="background:#1a1d23;border-radius:7px;padding:10px 12px;border:1px solid #2e3540">'
+      + '<div style="font-size:.7rem;color:#7dd3fc;font-family:monospace;margin-bottom:4px">' + key + '</div>'
+      + '<div style="font-size:.78rem">Min: <b>' + mn + '</b> Max: <b>' + mx + '</b> Avg: <b>' + avg + '</b></div>'
+      + '<div style="font-size:.68rem;margin-top:2px;color:' + (nulls > 0 ? '#f59e0b' : '#64748b') + '">'
+      + (nulls > 0 ? '! ' + nulls + ' nulos' : 'Sin nulos (' + vals.length + ' valores)') + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// -- Gestion de usuarios -------------------------------------------------------
+async function checkExistingUsers() {
+  const btn = document.getElementById('btnCheckUsers');
+  const status = document.getElementById('checkStatus');
+  btn.disabled = true; status.textContent = 'Consultando...'; usrStatusMap = {};
+  try {
+    const r = await fetch(baseUrl + '/api/v1/bets/apostadores', { headers: { 'Authorization': 'Bearer ' + token } });
+    const existing = await r.json();
+    const existingSet = new Set((existing||[]).map(u => (u.username||u.alias||'').toLowerCase()));
+    const apMap = {};
+    cleanRows.forEach(row => {
+      const alias = row.apostador;
+      if (!alias) return;
+      if (!apMap[alias]) apMap[alias] = { nombre: row.nombre, email: row.email, telefono: row.telefono };
+    });
+    Object.keys(apMap).forEach(alias => {
+      usrStatusMap[alias] = existingSet.has(alias.toLowerCase()) ? 'exists' : 'new';
+    });
+    renderUserList(apMap);
+    document.getElementById('usrListWrap').classList.remove('section-hidden');
+    const newCount = Object.values(usrStatusMap).filter(v => v === 'new').length;
+    const btnC = document.getElementById('btnCreateUsers');
+    if (newCount > 0) {
+      btnC.style.display = 'inline-flex';
+      btnC.textContent = 'Crear ' + newCount + ' usuario' + (newCount>1?'s':'') + ' nuevo' + (newCount>1?'s':'');
+    } else { btnC.style.display = 'none'; }
+    status.textContent = Object.keys(apMap).length + ' apostadores - ' + newCount + ' nuevos - ' + (Object.keys(apMap).length - newCount) + ' ya existen';
+  } catch(e) { status.textContent = 'Error: ' + e.message; }
+  finally    { btn.disabled = false; }
+}
+
+function renderUserList(apMap) {
+  const rows = Object.entries(apMap).map(([alias, info], i) => {
+    const st = usrStatusMap[alias] || 'new';
+    const badge = st === 'exists'  ? '<span style="background:rgba(100,116,139,.15);color:#94a3b8;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700">Ya existe</span>'
+                : st === 'created' ? '<span style="background:rgba(0,166,81,.15);color:#86efac;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700">Creado</span>'
+                : st === 'error'   ? '<span style="background:rgba(239,68,68,.15);color:#fca5a5;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700">Error</span>'
+                :                   '<span style="background:rgba(59,130,246,.15);color:#93c5fd;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700">Nuevo</span>';
+    return '<div style="display:grid;grid-template-columns:28px 130px 1fr 90px;gap:8px;align-items:center;padding:7px 10px;border-bottom:1px solid #1e2530;font-size:.8rem" id="usr-' + alias.replace(/[^a-z0-9]/gi,'_') + '">'
+      + '<span style="color:#475569">' + (i+1) + '</span>'
+      + '<span style="font-family:monospace;color:#7dd3fc">' + alias + '</span>'
+      + '<span style="color:#94a3b8">' + (info.nombre||'-') + '</span>'
+      + '<span>' + badge + '</span></div>';
+  }).join('');
+  document.getElementById('usrList').innerHTML = '<div><div style="display:grid;grid-template-columns:28px 130px 1fr 90px;gap:8px;padding:6px 10px;font-size:.7rem;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #2e3540"><div>#</div><div>Alias</div><div>Nombre</div><div>Estado</div></div>' + rows + '</div>';
+}
+
+async function crearUsuariosNuevos() {
+  const btn = document.getElementById('btnCreateUsers');
+  const status = document.getElementById('createStatus');
+  btn.disabled = true; status.textContent = 'Creando usuarios...';
+  let apostadorRoleId = null;
+  try {
+    const rr = await fetch(baseUrl + '/api/v1/roles/', { headers: { 'Authorization': 'Bearer ' + token } });
+    const roles = await rr.json();
+    const apRol = (roles||[]).find(r => r.name === 'apostador');
+    apostadorRoleId = apRol ? apRol.id : null;
+    if (!apostadorRoleId) showMsg('usrMsg','warn','No se encontro el rol "apostador".');
+  } catch(e) { showMsg('usrMsg','warn','No se pudo obtener roles: ' + e.message); }
+
+  const apMap = {};
+  cleanRows.forEach(row => {
+    if (row.apostador && usrStatusMap[row.apostador] === 'new')
+      if (!apMap[row.apostador]) apMap[row.apostador] = { nombre: row.nombre, email: row.email, telefono: row.telefono };
+  });
+
+  let created = 0, errors = 0;
+  for (const [alias, info] of Object.entries(apMap)) {
+    const email = info.email || (alias.replace(/[^a-z0-9_.\-]/gi,'_') + '@becbuc.app');
+    const body = { username: alias, email, password: DEFAULT_PASSWORD,
+                   nombre: info.nombre || alias, telefono: info.telefono || null,
+                   is_active: true, must_change_password: false };
+    try {
+      const rc = await fetch(baseUrl + '/api/v1/users/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(body),
+      });
+      const dc = await rc.json();
+      if (!rc.ok) throw new Error(dc.detail || rc.statusText);
+      if (apostadorRoleId && dc.id) {
+        await fetch(baseUrl + '/api/v1/users/' + dc.id + '/roles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ role_id: apostadorRoleId }),
+        });
+      }
+      usrStatusMap[alias] = 'created'; created++;
+    } catch(e) { usrStatusMap[alias] = 'error'; errors++; console.error(alias, e.message); }
+    renderUserList(apMap);
+  }
+  showMsg('usrMsg', errors ? 'warn' : 'ok', created + ' usuario' + (created!==1?'s':'') + ' creado' + (created!==1?'s':'') + (errors ? ' - ' + errors + ' con error' : ''));
+  btn.style.display = 'none'; btn.disabled = false; status.textContent = '';
+}
+
+function renderImportCard(allReqOk) {
+  document.getElementById('cardImport').classList.remove('section-hidden');
+  document.getElementById('importReady').style.display = allReqOk ? 'block' : 'none';
+  document.getElementById('importNotReady').classList.toggle('section-hidden', allReqOk);
+  if (allReqOk) renderReviewTable();
+  const btn = document.getElementById('btnImport');
+  btn.disabled = !allReqOk || !torneoId;
+  btn.textContent = 'Confirmar e importar ' + editRows.length + ' registros';
+}
+
+// ── Tabla de revision pre-import (editable) ───────────────────────────────────
+// Muestra: apostador, partido, valor Excel, valor a importar (editable)
+// Null en goles -> 0 por defecto. Usuario puede editar antes de importar.
+function renderReviewTable() {
+  const wrap = document.getElementById('reviewTableWrap');
+  if (!wrap) return;
+
+  // Stats
+  const nullGL = cleanRows.filter(r => r.goles_local == null).length;
+  const nullGV = cleanRows.filter(r => r.goles_visitante == null).length;
+  const totalAp = new Set(editRows.map(r => r.apostador)).size;
+  let statsHtml = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">'
+    + '<span style="background:#1a1d23;border-radius:6px;padding:4px 10px;font-size:.75rem;color:#86efac">'
+    + editRows.length + ' registros listos</span>'
+    + '<span style="background:#1a1d23;border-radius:6px;padding:4px 10px;font-size:.75rem;color:#7dd3fc">'
+    + totalAp + ' apostadores</span>';
+  if (skippedCount > 0)
+    statsHtml += '<span style="background:rgba(239,68,68,.1);border-radius:6px;padding:4px 10px;font-size:.75rem;color:#fca5a5">'
+      + skippedCount + ' filas omitidas (sin alias o sin partido valido)</span>';
+  if (nullGL > 0)
+    statsHtml += '<span style="background:rgba(245,158,11,.1);border-radius:6px;padding:4px 10px;font-size:.75rem;color:#fcd34d">'
+      + nullGL + ' goles_local eran null → convertidos a 0</span>';
+  if (nullGV > 0)
+    statsHtml += '<span style="background:rgba(245,158,11,.1);border-radius:6px;padding:4px 10px;font-size:.75rem;color:#fcd34d">'
+      + nullGV + ' goles_visitante eran null → convertidos a 0</span>';
+  statsHtml += '</div>';
+
+  // Preview table (primeros 20 registros con indicador de cuantos hay)
+  const preview = editRows.slice(0, 30);
+  const moreCount = editRows.length - preview.length;
+  let tableHtml = '<div style="overflow:auto;max-height:360px"><table style="min-width:700px;white-space:nowrap">'
+    + '<thead><tr>'
+    + '<th>Apostador</th><th>P#</th><th>Local</th>'
+    + '<th style="text-align:center">GL (Excel→importar)</th>'
+    + '<th style="text-align:center">GV (Excel→importar)</th>'
+    + '<th>Visitante</th><th>Min</th><th>Amar</th><th>VAR</th>'
+    + '</tr></thead><tbody>';
+
+  preview.forEach((r, idx) => {
+    const origGL = cleanRows[idx] ? cleanRows[idx].goles_local : null;
+    const origGV = cleanRows[idx] ? cleanRows[idx].goles_visitante : null;
+    const glChanged = origGL == null;
+    const gvChanged = origGV == null;
+    const pid = 'P' + String(r.partido_num).padStart(3,'0');
+    tableHtml += '<tr>'
+      + '<td style="color:#7dd3fc;font-family:monospace;white-space:nowrap">' + r.apostador + '</td>'
+      + '<td style="font-family:monospace;color:#64748b">' + pid + '</td>'
+      + '<td style="color:#94a3b8;font-size:.72rem">' + (r.equipo_local || '') + '</td>'
+      + '<td style="text-align:center">'
+      + (glChanged ? '<span style="color:#f59e0b;font-size:.68rem">null→</span>' : '')
+      + '<input data-idx="' + idx + '" data-field="goles_local" type="number" min="0" max="99" value="' + r.goles_local + '" '
+      + 'style="width:52px;background:#1a1d23;border:1px solid ' + (glChanged?'#f59e0b':'#2e3540') + ';color:#e2e8f0;border-radius:4px;padding:2px 4px;text-align:center;font-size:.8rem" '
+      + 'onchange="updateEditRow(this)">'
+      + '</td>'
+      + '<td style="text-align:center">'
+      + (gvChanged ? '<span style="color:#f59e0b;font-size:.68rem">null→</span>' : '')
+      + '<input data-idx="' + idx + '" data-field="goles_visitante" type="number" min="0" max="99" value="' + r.goles_visitante + '" '
+      + 'style="width:52px;background:#1a1d23;border:1px solid ' + (gvChanged?'#f59e0b':'#2e3540') + ';color:#e2e8f0;border-radius:4px;padding:2px 4px;text-align:center;font-size:.8rem" '
+      + 'onchange="updateEditRow(this)">'
+      + '</td>'
+      + '<td style="color:#94a3b8;font-size:.72rem">' + (r.equipo_visitante || '') + '</td>'
+      + '<td style="color:#64748b;font-size:.72rem">' + (r.pred_minuto_gol != null ? r.pred_minuto_gol : '-') + '</td>'
+      + '<td style="color:#64748b;font-size:.72rem">' + (r.pred_amarillas != null ? r.pred_amarillas : '-') + '</td>'
+      + '<td style="color:#64748b;font-size:.72rem">' + (r.pred_var != null ? r.pred_var : '-') + '</td>'
+      + '</tr>';
+  });
+  if (moreCount > 0) {
+    tableHtml += '<tr><td colspan="9" style="text-align:center;color:#475569;font-size:.72rem;padding:6px">'
+      + '... y ' + moreCount + ' registros más...</td></tr>';
+  }
+  tableHtml += '</tbody></table></div>';
+
+  wrap.innerHTML = statsHtml + tableHtml;
+}
+
+function updateEditRow(input) {
+  const idx = parseInt(input.dataset.idx);
+  const field = input.dataset.field;
+  if (idx >= 0 && idx < editRows.length) {
+    editRows[idx][field] = input.value === '' ? null : Number(input.value);
+  }
+}
+
+// ── Check existentes + doImport ───────────────────────────────────────────────
+async function checkExistingBets(aliasesList) {
+  try {
+    const q = aliasesList.map(encodeURIComponent).join(',');
+    const r = await fetch(baseUrl + '/api/v1/bets/contar-apuestas/' + torneoId + '?apostadores=' + q,
+      { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+async function doImport() {
+  const btn = document.getElementById('btnImport');
+  const statusEl = document.getElementById('importStatus');
+  if (!editRows.length || !torneoId) return;
+
+  btn.disabled = true;
+  statusEl.style.color = '#94a3b8';
+  statusEl.textContent = 'Verificando apuestas existentes...';
+
+  // Verificar si ya existen apuestas
+  const aliases = [...new Set(editRows.map(r => r.apostador))];
+  const existing = await checkExistingBets(aliases);
+  const conApuestas = existing
+    ? Object.entries(existing).filter(([,v]) => v.apuestas > 0)
+    : [];
+
+  if (conApuestas.length > 0) {
+    const names = conApuestas.map(([a, v]) => a + ' (' + v.apuestas + ' apuestas)').join('\n  ');
+    const ok = confirm(
+      '⚠️ Ya existen apuestas para ' + conApuestas.length + ' apostador(es):\n\n  ' + names +
+      '\n\n¿Reemplazar con los datos del Excel?'
+    );
+    if (!ok) {
+      btn.disabled = false;
+      statusEl.textContent = 'Importación cancelada.';
+      return;
+    }
+  }
+
+  statusEl.textContent = 'Importando ' + editRows.length + ' registros...';
+
+  try {
+    const resp = await fetch(baseUrl + '/api/v1/bets/importar-apuestas-grupos/' + torneoId, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(editRows),
+    });
+    const d = await resp.json();
+    if (!resp.ok) {
+      statusEl.style.color = '#ef4444';
+  statusEl.textContent = d.detail || 'Error al importar';
+      return;
+    }
+    let msg = '✅ ' + (d.creadas||0) + ' nuevas · ' + (d.actualizadas||0) + ' actualizadas · ' + (d.sin_cambios||0) + ' sin cambios';
+    if (d.brackets_reiniciados) msg += ' · 🔄 Brackets reiniciados';
+    statusEl.style.color = '#86efac';
+    statusEl.textContent = msg;
+    if ((d.advertencias||[]).length) {
+      showMsg('importMsg', 'warn', d.advertencias.map(a => a.motivo||JSON.stringify(a)).join(' | '));
+    }
+    if ((d.errores_usuarios||[]).length) {
+      showMsg('importMsg', 'warn', 'Usuarios no encontrados: ' + d.errores_usuarios.join(', '));
+    }
+  } catch(e) {
+    statusEl.style.color = '#ef4444';
+    statusEl.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

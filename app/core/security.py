@@ -8,11 +8,13 @@ from app.core.config import settings
 
 
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    """Normaliza a minúsculas antes de hashear (comparación case-insensitive)."""
+    return bcrypt.hashpw(password.strip().lower().encode(), bcrypt.gensalt()).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return bcrypt.checkpw(plain.encode(), hashed.encode())
+    """Normaliza a minúsculas antes de comparar."""
+    return bcrypt.checkpw(plain.strip().lower().encode(), hashed.encode())
 
 
 def _create_token(subject: Any, expires_delta: timedelta, token_type: str) -> str:

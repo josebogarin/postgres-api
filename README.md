@@ -22,7 +22,7 @@ API REST centralizada de gestión de usuarios y permisos para aplicaciones multi
 
 ```bash
 git clone <url-del-repo>
-cd postgres-docker
+cd backend
 ```
 
 ### 2. Configurar variables de entorno
@@ -60,14 +60,18 @@ Requiere PostgreSQL corriendo (puede ser el contenedor solo):
 # Solo la base de datos en Docker
 docker compose up db -d
 
-# Instalar dependencias Python
+# Crear entorno virtual e instalar dependencias
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # Linux/Mac
+
 pip install -r requirements.txt
 
 # Ejecutar migraciones
-alembic upgrade head
+.venv\Scripts\alembic upgrade head
 
 # Iniciar API con hot-reload
-uvicorn app.main:app --reload --port 8000
+.venv\Scripts\uvicorn app.main:app --reload --port 8000
 ```
 
 ## Estructura del proyecto

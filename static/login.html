@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Acceso al Sistema</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#181c24;--surface2:#1e2330;
+  --border:#2a3045;--fg:#e2e8f0;--muted:#64748b;
+  --accent:#009688;--accent2:#00bcd4;--red:#ef4444;--radius:7px;
+}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:40px 40px 36px;width:min(420px,94vw);box-shadow:0 24px 64px rgba(0,0,0,.55);}
+.logo{text-align:center;margin-bottom:32px;}
+.logo-icon{font-size:2.8rem;margin-bottom:10px;}
+.logo-title{font-size:1.25rem;font-weight:800;color:var(--accent2);letter-spacing:-.02em;}
+.logo-sub{font-size:.8rem;color:var(--muted);margin-top:5px;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:.71rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.field select,.field input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);color:var(--fg);padding:10px 13px;
+  font-size:.88rem;outline:none;transition:border-color .15s;font-family:inherit;
+}
+.field select:focus,.field input:focus{border-color:var(--accent2);}
+.field select option{background:var(--surface2);}
+.btn-login{
+  width:100%;background:var(--accent);color:#fff;border:none;
+  border-radius:var(--radius);padding:12px;font-size:.92rem;font-weight:700;
+  cursor:pointer;transition:opacity .15s;margin-top:6px;letter-spacing:.01em;
+}
+.btn-login:hover:not(:disabled){opacity:.85;}
+.btn-login:disabled{opacity:.45;cursor:not-allowed;}
+.error{
+  background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);
+  border-radius:var(--radius);padding:10px 14px;font-size:.82rem;
+  color:#fca5a5;margin-top:16px;display:none;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">🗄</div>
+    <div class="logo-title">Postgres API</div>
+    <div class="logo-sub">Seleccioná el sistema e ingresá con tus credenciales</div>
+  </div>
+
+  <div class="field">
+    <label>Sistema</label>
+    <select id="sistemaSelect">
+      <option value="">— cargando sistemas… —</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Usuario</label>
+    <input type="text" id="username" placeholder="usuario" autocomplete="username">
+  </div>
+  <div class="field">
+    <label>Contraseña</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+  </div>
+  <button class="btn-login" id="loginBtn" onclick="doLogin()">Ingresar</button>
+  <div class="error" id="errorMsg"></div>
+</div>
+
+<script>
+const baseUrl = window.location.origin;
+
+async function loadSistemas() {
+  const sel = document.getElementById('sistemaSelect');
+  try {
+    const res = await fetch(baseUrl + '/api/v1/sistema/publico');
+    if (!res.ok) throw new Error();
+    const items = await res.json();
+    if (!items.length) {
+      sel.innerHTML = '<option value="">— sin sistemas activos —</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">— seleccionar sistema —</option>' +
+      items.map(s => `<option value="${s.id}" data-nombre="${encodeURIComponent(s.nombre)}">${s.nombre}</option>`).join('');
+  } catch {
+    sel.innerHTML = '<option value="">— error al cargar sistemas —</option>';
+  }
+}
+
+async function doLogin() {
+  const sel       = document.getElementById('sistemaSelect');
+  const sistemaId = sel.value;
+  const username  = document.getElementById('username').value.trim();
+  const password  = document.getElementById('password').value;
+  const btn       = document.getElementById('loginBtn');
+
+  hideError();
+  if (!sistemaId) { showError('Seleccioná un sistema.'); return; }
+  if (!username)  { showError('Ingresá el usuario.'); return; }
+  if (!password)  { showError('Ingresá la contraseña.'); return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Ingresando…';
+
+  try {
+    const res  = await fetch(baseUrl + '/api/v1/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username, password}),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showError(data.detail || 'Usuario o contraseña incorrectos.');
+      btn.disabled = false; btn.textContent = 'Ingresar';
+      return;
+    }
+    // Guardar sesión
+    const opt           = sel.options[sel.selectedIndex];
+    const sistemaNombre = decodeURIComponent(opt.dataset.nombre || '');
+    sessionStorage.setItem('pg_token',          data.access_token);
+    sessionStorage.setItem('pg_refresh_token',  data.refresh_token || '');
+    sessionStorage.setItem('pg_sistema_id',     sistemaId);
+    sessionStorage.setItem('pg_sistema_nombre', sistemaNombre);
+    window.location.href = baseUrl + '/portal';
+  } catch {
+    showError('Error de conexión con el servidor.');
+    btn.disabled = false; btn.textContent = 'Ingresar';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg; el.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('errorMsg').style.display = 'none';
+}
+
+loadSistemas();
+['username','password'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+});
+</script>
+</body>
+</html>

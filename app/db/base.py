@@ -3,8 +3,11 @@
 from app.models.base import Base  # noqa: F401
 
 # Import every model so their tables are registered in Base.metadata
-from app.models.application import Application  # noqa: F401
 from app.models.audit_log import AuditLog  # noqa: F401
+from app.models.cabecera import Cabecera  # noqa: F401
+from app.models.detalle import Detalle  # noqa: F401
+from app.models.diccionario import Diccionario  # noqa: F401
 from app.models.permission import Permission  # noqa: F401
 from app.models.role import Role  # noqa: F401
+from app.models.sistema import Sistema  # noqa: F401
 from app.models.user import User  # noqa: F401

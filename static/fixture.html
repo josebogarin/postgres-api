@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fixture — Lambda</title>
+<style>
+/* ── Variables ─────────────────────────────────────────────────── */
+:root {
+  --bg:#0f1117; --bg2:#181c26; --bg3:#1e2330; --bg4:#252b3b;
+  --border:#2e3548; --accent:#E05020; --accent2:#FF6B35;
+  --text:#e8ecf4; --muted:#7a8499; --success:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+  --radius:8px; --font:'Segoe UI',system-ui,sans-serif;
+  --sidebar-w:260px; --header-h:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+
+/* ── Header ── */
+.header{position:fixed;top:0;left:0;right:0;height:var(--header-h);z-index:100;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:0 16px;display:flex;align-items:center;gap:12px}
+.logo{font-size:20px;font-weight:800;color:var(--accent)}
+.header h1{font-size:15px;font-weight:600;flex:1}
+.ham-btn{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px}
+.sync-btn{background:none;border:1px solid var(--border);color:var(--muted);
+  padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap}
+.sync-btn:hover{border-color:var(--accent);color:var(--text)}
+
+/* ── Layout ── */
+.layout{display:flex;margin-top:var(--header-h);height:calc(100vh - var(--header-h))}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);
+  overflow-y:auto;flex-shrink:0;transition:transform .25s}
+.sidebar-title{padding:14px 16px 8px;font-size:11px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em}
+.comp-card{margin:3px 8px;border-radius:var(--radius);border:1px solid var(--border);
+  cursor:pointer;transition:all .15s;overflow:hidden}
+.comp-card:hover{border-color:var(--accent);background:var(--bg3)}
+.comp-card.active{border-color:var(--accent);background:var(--bg3)}
+.comp-card-top{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.comp-emoji{font-size:22px;line-height:1}
+.comp-info{flex:1;min-width:0}
+.comp-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.comp-season{font-size:11px;color:var(--muted);margin-top:2px}
+.comp-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;white-space:nowrap}
+.badge-live{background:#7c2d12;color:#fca5a5}
+.badge-done{background:#1c1917;color:#a8a29e}
+.badge-loaded{background:#14532d;color:#86efac;margin-left:4px}
+.comp-actions{padding:0 12px 12px;display:none}
+.comp-card.active .comp-actions{display:block}
+
+/* ── Main ── */
+.main{flex:1;overflow-y:auto;padding:18px 20px;min-width:0}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border:none;
+  border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.btn:hover{opacity:.85} .btn:disabled{opacity:.4;cursor:default}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-secondary{background:var(--bg4);color:var(--text);border:1px solid var(--border)}
+.btn-block{width:100%;justify-content:center}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:18px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:8px 14px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;
+  color:var(--muted);transition:all .15s;white-space:nowrap;flex-shrink:0}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── Grupos ── */
+.grupos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.grupo-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.grupo-header{padding:8px 12px;background:var(--bg3);font-size:13px;font-weight:600;
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.grupo-header .grupo-nom{flex:1}
+.fbtns{display:inline-flex;gap:4px}
+.fbtn{background:none;border:1px solid var(--border);color:var(--muted);font-size:10px;
+  padding:2px 7px;border-radius:5px;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:inherit}
+.fbtn:hover{color:var(--fg);border-color:var(--muted2)}
+.fbtn.sim:hover{border-color:var(--accent);color:var(--accent)}
+.fbtn.rst:hover{border-color:var(--amber);color:var(--amber)}
+.fbtn:disabled{opacity:.5;cursor:wait}
+.standings{width:100%;border-collapse:collapse;font-size:12px}
+.standings th{padding:4px 7px;text-align:center;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)}
+.standings th:first-child{text-align:left}
+.standings td{padding:4px 7px;text-align:center;border-bottom:1px solid var(--border)}
+.standings td:first-child{text-align:left}
+.standings tr:last-child td{border-bottom:none}
+.standings tr.clasifica td:first-child{border-left:3px solid var(--success)}
+.team-cell{display:flex;align-items:center;gap:5px}
+.team-cell img{width:16px;height:16px;object-fit:contain;flex-shrink:0}
+
+/* ── Partidos (grupos) ── */
+.partidos-list{padding:6px 8px}
+.partido-row{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:6px;
+  transition:background .12s;margin-bottom:2px;border:1px solid transparent}
+.partido-row:hover{background:var(--bg4)}
+.partido-row.jugado{cursor:zoom-in}
+.partido-row.jugado:hover{border-color:var(--accent)}
+.eq-cell{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.eq-cell.right{flex-direction:row-reverse}
+.eq-cell img{width:18px;height:18px;object-fit:contain;flex-shrink:0}
+.eq-cell span{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.res-box{display:flex;flex-direction:column;align-items:center;min-width:52px}
+.res-score{display:flex;align-items:center;gap:3px;background:var(--bg4);border:1px solid var(--border);
+  border-radius:5px;padding:3px 8px;font-size:13px;font-weight:700;white-space:nowrap}
+.res-score .sep{color:var(--muted);font-weight:400;font-size:11px}
+.pen-note{font-size:9px;color:var(--warn);margin-top:1px}
+.p-fecha{font-size:10px;color:var(--muted);text-align:center;min-width:52px;line-height:1.4}
+
+/* ── Bracket ── */
+.bracket{overflow-x:auto;padding-bottom:10px}
+.bracket-cols{display:flex;gap:0}
+.bracket-col{min-width:210px;display:flex;flex-direction:column}
+.bracket-col-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.06em;padding:5px 8px;text-align:center;border-bottom:1px solid var(--border)}
+.bracket-matches{display:flex;flex-direction:column;gap:6px;padding:8px 5px}
+.bm{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;cursor:pointer;transition:border-color .15s}
+.bm:hover{border-color:var(--accent)}
+.bm-leg{font-size:9px;color:var(--muted);padding:3px 8px;background:var(--bg3);
+  border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em}
+.bm-row{display:flex;align-items:center;gap:7px;padding:7px 9px;font-size:12px;
+  border-bottom:1px solid var(--border)}
+.bm-row:last-child{border-bottom:none}
+.bm-row.winner{background:rgba(34,197,94,.07)}
+.bm-row img{width:18px;height:18px;object-fit:contain;flex-shrink:0}
+.bm-row .bm-score{margin-left:auto;font-weight:700;font-size:13px;white-space:nowrap}
+.bm-row .bm-pen{font-size:9px;color:var(--warn);margin-left:3px}
+.bm-date{font-size:10px;color:var(--muted);padding:3px 9px;background:var(--bg3)}
+
+/* ═══════════════════════════════════════════════════════════
+   CALENDARIO
+═══════════════════════════════════════════════════════════ */
+.cal-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.cal-view-toggle{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.cal-view-toggle button{padding:6px 14px;background:none;border:none;color:var(--muted);
+  cursor:pointer;font-size:12px;font-weight:600;transition:all .15s}
+.cal-view-toggle button.active{background:var(--accent);color:#fff}
+.cal-month-nav{display:flex;align-items:center;gap:6px}
+.cal-month-nav button{background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center}
+.cal-month-nav button:hover{border-color:var(--accent)}
+.cal-month-label{font-size:14px;font-weight:700;min-width:150px;text-align:center}
+.cal-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;margin-top:6px}
+.cal-filter-label{font-size:11px;color:var(--muted);white-space:nowrap}
+.phase-pills{display:flex;flex-wrap:wrap;gap:4px}
+.phase-pill{padding:3px 9px;border-radius:20px;border:1px solid var(--border);
+  font-size:11px;cursor:pointer;transition:all .15s;user-select:none;white-space:nowrap}
+.phase-pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.phase-pill.off{color:var(--muted)}
+.team-select{padding:6px 10px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-size:13px;max-width:200px}
+.team-select:focus{outline:none;border-color:var(--accent)}
+
+/* ── Calendario vista MES ── */
+.cal-grid{display:flex;flex-direction:column;gap:2px}
+.cal-grid-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.cal-grid-header span{text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px 0}
+.cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-cell{min-height:72px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:6px;padding:4px;cursor:pointer;transition:border-color .15s;overflow:hidden}
+.cal-cell:hover{border-color:var(--accent)}
+.cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
+.cal-cell.today{border-color:var(--accent)}
+.cal-cell.selected{border-color:var(--accent);background:var(--bg3)}
+.cal-cell-num{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:3px}
+.cal-cell.today .cal-cell-num{color:var(--accent)}
+.cal-cell-match{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  padding:1px 3px;border-radius:3px;margin-bottom:1px;background:var(--bg4)}
+.cal-cell-match.played{background:rgba(224,80,32,.18);color:var(--accent2)}
+.cal-cell-match.live{background:rgba(239,68,68,.2);color:#fca5a5}
+.cal-cell-more{font-size:9px;color:var(--muted);padding-left:3px}
+
+/* ── Calendario vista DÍA / lista ── */
+.cal-day-header{display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:1px solid var(--border);margin-bottom:10px}
+.cal-day-header .dh-fecha{font-size:15px;font-weight:700}
+.cal-day-header .dh-count{font-size:12px;color:var(--muted)}
+.today-pill{background:var(--accent);color:#fff;font-size:10px;padding:1px 7px;border-radius:10px}
+.cal-match{display:grid;align-items:center;gap:8px;padding:9px 12px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:6px;transition:border-color .15s;
+  grid-template-columns: auto 1fr auto 1fr auto}
+.cal-match:hover{border-color:var(--border)}
+.cal-match.jugado{cursor:zoom-in}
+.cal-match.jugado:hover{border-color:var(--accent)}
+.cal-match.live-match{border-color:var(--danger)}
+.cal-fase-tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;
+  white-space:nowrap;text-align:center;grid-column:1/6;justify-self:start;margin-bottom:2px}
+.cal-team{display:flex;align-items:center;gap:7px;min-width:0}
+.cal-team.right{flex-direction:row-reverse;text-align:right}
+.cal-team img,.cal-team .flag{width:26px;height:26px;object-fit:contain;flex-shrink:0;border-radius:2px}
+.cal-team .flag{font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center}
+.cal-team .tname{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-center{display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:62px}
+.cal-score-big{display:flex;align-items:center;gap:4px;font-size:18px;font-weight:800}
+.cal-score-big .sep{font-size:13px;color:var(--muted);font-weight:400}
+.cal-score-big.live-score{color:var(--danger)}
+.cal-hora{font-size:12px;color:var(--muted);font-weight:500}
+.cal-sub{font-size:10px;color:var(--warn);margin-top:1px}
+.cal-no-day{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+
+/* ── Modal estadísticas ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:300;
+  display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  width:100%;max-width:760px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-header{padding:13px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px}
+.modal-header h2{font-size:14px;font-weight:600;flex:1}
+.btn-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+.btn-close:hover{color:var(--text)}
+.modal-body{overflow-y:auto;padding:18px;flex:1}
+.scoreboard{text-align:center;margin-bottom:20px}
+.sb-teams{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.sb-team{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:100px;max-width:140px}
+.sb-team img{width:48px;height:48px;object-fit:contain}
+.sb-name{font-size:13px;font-weight:600;text-align:center}
+.sb-score{font-size:44px;font-weight:800;line-height:1}
+.sb-sep{font-size:24px;color:var(--muted)}
+.sb-sub{font-size:11px;color:var(--muted);margin-top:5px}
+.sb-meta{margin-top:8px;font-size:11px;color:var(--muted)}
+.stats-section{margin-bottom:18px}
+.stats-section h3,.eventos-section h3{font-size:11px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.stats-header{display:grid;grid-template-columns:1fr 1fr 1fr;font-size:11px;color:var(--muted);
+  margin-bottom:8px;padding:0 4px}
+.stats-header .shn{font-weight:600;color:var(--text)}
+.stats-header .shn.right{text-align:right}
+.stat-row{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;margin-bottom:8px}
+.stat-val{font-size:12px;font-weight:600}
+.stat-val.right{text-align:right}
+.stat-lbl{font-size:11px;color:var(--muted);text-align:center;white-space:nowrap}
+.bar-wrap{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-top:2px}
+.bar-l .bar{float:right;height:100%;background:var(--accent);border-radius:2px}
+.bar-r .bar{height:100%;background:#3b82f6;border-radius:2px}
+.ev-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.ev-item:last-child{border-bottom:none}
+.ev-min{font-size:11px;color:var(--muted);width:32px;text-align:right;flex-shrink:0}
+.ev-icon{font-size:13px;flex-shrink:0;width:18px;text-align:center}
+.ev-info{flex:1}
+.ev-eq{font-size:10px;color:var(--muted)}
+
+/* ── Overlay sidebar móvil ── */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50}
+
+/* ── Loader / Empty ── */
+.loader{display:flex;align-items:center;justify-content:center;padding:60px;
+  color:var(--muted);gap:10px;flex-direction:column;font-size:14px}
+.spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty .big{font-size:48px;margin-bottom:14px}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+@media(max-width:1024px){
+  :root{--sidebar-w:230px}
+  .grupos-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+}
+@media(max-width:768px){
+  :root{--sidebar-w:260px}
+  .ham-btn{display:flex}
+  .sidebar{position:fixed;left:0;top:var(--header-h);bottom:0;z-index:60;
+    transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.visible{display:block}
+  .main{padding:12px}
+  .grupos-grid{grid-template-columns:1fr}
+  .cal-match{grid-template-columns:1fr auto 1fr;grid-template-rows:auto auto}
+  .cal-fase-tag{grid-column:1/4}
+  .cal-team.right{flex-direction:row}
+  .bracket-col{min-width:170px}
+  .tabs{margin-bottom:12px}
+  .cal-toolbar{gap:6px}
+  .cal-month-label{min-width:120px;font-size:13px}
+  .cal-cell{min-height:56px}
+  .cal-cell-match{display:none}
+  .cal-cell-more{display:block!important}
+  .modal{max-height:96vh}
+  .sb-score{font-size:36px}
+}
+@media(max-width:480px){
+  .header h1{display:none}
+  .cal-grid-header span{font-size:10px}
+  .cal-cell{min-height:44px;padding:3px}
+  .cal-cell-num{font-size:10px}
+  .cal-score-big{font-size:16px}
+  .cal-team .tname{font-size:12px}
+  .standings{font-size:11px}
+  .standings th,.standings td{padding:3px 5px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <button class="ham-btn" onclick="toggleSidebar()">☰</button>
+  <div class="logo">λ</div>
+  <h1>Fixture de Torneos</h1>
+  <button class="sync-btn" onclick="cargarApi()" title="Cargar resultados reales desde API-Football (todo el torneo)">🔌 API resultados</button>
+  <button class="sync-btn" onclick="abrirUsuarios()" title="Gestión de usuarios">👥 Usuarios</button>
+  <button class="sync-btn" onclick="abrirTester()" title="CRUD Tester">🔧 Tester</button>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="layout">
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-title">Competiciones</div>
+  <div id="compList"><div class="loader" style="padding:24px"><div class="spinner"></div></div></div>
+  <div style="border-top:1px solid var(--border);padding:10px 8px;display:flex;flex-direction:column;gap:4px;margin-top:8px">
+    <button class="sync-btn" style="width:100%;text-align:left;padding:8px 10px" onclick="abrirUsuarios()">👥 Usuarios</button>
+    <button class="sync-btn" style="width:100%;text-align:left;padding:8px 10px" onclick="abrirTester()">🔧 Tester</button>
+    <button class="sync-btn" style="width:100%;text-align:left;padding:8px 10px" onclick="window.open('/login','_blank')">🔑 Login</button>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<main class="main" id="mainArea">
+  <div class="empty"><div class="big">⚽</div>Seleccioná una competición.</div>
+</main>
+</div>
+
+<!-- ── Modal Estadísticas ── -->
+<div class="modal-overlay" id="statsModal" style="display:none" onclick="closeStats(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 id="statsTitle">Estadísticas</h2>
+      <button class="btn-close" onclick="closeStatsModal()">✕</button>
+    </div>
+    <div class="modal-body" id="statsBody"></div>
+  </div>
+</div>
+
+<script>
+const BASE='';
+let _token=null, _activas=[], _torneoActivo=null;
+let _tabKeys=[], _allPartidos=[], _allFases=[];
+
+/* ── Flags ─────────────────────────────────────────────────────────────────── */
+const FLAG_MAP={
+  'Argentina':'🇦🇷','Brasil':'🇧🇷','Brazil':'🇧🇷','Uruguay':'🇺🇾','Colombia':'🇨🇴',
+  'Peru':'🇵🇪','Perú':'🇵🇪','Chile':'🇨🇱','Ecuador':'🇪🇨','Paraguay':'🇵🇾',
+  'Bolivia':'🇧🇴','Venezuela':'🇻🇪','France':'🇫🇷','Francia':'🇫🇷',
+  'Spain':'🇪🇸','España':'🇪🇸','Germany':'🇩🇪','Alemania':'🇩🇪',
+  'Italy':'🇮🇹','Italia':'🇮🇹','Portugal':'🇵🇹','England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'Netherlands':'🇳🇱','Belgium':'🇧🇪','Croatia':'🇭🇷','Serbia':'🇷🇸',
+  'Denmark':'🇩🇰','Switzerland':'🇨🇭','Austria':'🇦🇹','Poland':'🇵🇱',
+  'Czech Republic':'🇨🇿','Hungary':'🇭🇺','Romania':'🇷🇴','Slovakia':'🇸🇰',
+  'Slovenia':'🇸🇮','Ukraine':'🇺🇦','Turkey':'🇹🇷','Scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'Wales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','USA':'🇺🇸','United States':'🇺🇸','Mexico':'🇲🇽',
+  'Canada':'🇨🇦','Costa Rica':'🇨🇷','Panama':'🇵🇦','Honduras':'🇭🇳',
+  'Jamaica':'🇯🇲','El Salvador':'🇸🇻','Morocco':'🇲🇦','Senegal':'🇸🇳',
+  'Nigeria':'🇳🇬','Cameroon':'🇨🇲','Ghana':'🇬🇭','Egypt':'🇪🇬',
+  'South Africa':'🇿🇦','Japan':'🇯🇵','South Korea':'🇰🇷','Australia':'🇦🇺',
+  'Saudi Arabia':'🇸🇦','Iran':'🇮🇷','Qatar':'🇶🇦','China':'🇨🇳',
+  'Russia':'🇷🇺','Sweden':'🇸🇪','Norway':'🇳🇴','Finland':'🇫🇮',
+  'Greece':'🇬🇷','Slovakia':'🇸🇰','Albania':'🇦🇱','Georgia':'🇬🇪',
+};
+function teamFlag(nombre){return FLAG_MAP[nombre]||'';}
+
+/* ── Auth ────────────────────────────────────────────────────────────────────*/
+let _isAdmin=false;
+async function init(){
+  const p=new URLSearchParams(location.search);
+  _token=p.get('token')||localStorage.getItem('tok_fix');
+  if(!_token) await loginSilent();
+  // Verificar rol del usuario
+  try{
+    const me=await api('/auth/me');
+    const roles=Array.isArray(me.roles)?me.roles.map(r=>r.name):[];
+    _isAdmin=roles.includes('superadmin')||roles.includes('admin');
+  }catch{}
+  await loadActivas();
+}
+function abrirUsuarios(){
+  const base = `${location.protocol}//${location.host}`;
+  window.open(`${base}/usuarios?token=${encodeURIComponent(_token||'')}&base=${encodeURIComponent(base)}`, '_blank');
+}
+function abrirTester(){
+  const base = `${location.protocol}//${location.host}`;
+  window.open(`${base}/tester?token=${encodeURIComponent(_token||'')}`, '_blank');
+}
+async function loginSilent(){
+  try{
+    const r=await fetch(`${BASE}/api/v1/auth/login`,{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:'admin',password:'faute'})});
+    if(r.ok){const d=await r.json();_token=d.access_token;localStorage.setItem('tok_fix',_token);}
+  }catch{}
+}
+async function api(path,opts={}){
+  const{headers:xh,...rest}=opts;
+  const h={'Content-Type':'application/json',...(xh||{})};
+  if(_token) h['Authorization']=`Bearer ${_token}`;
+  let r=await fetch(`${BASE}/api/v1${path}`,{headers:h,...rest});
+  if(r.status===401){
+    // Token expirado — renovar silenciosamente y reintentar
+    localStorage.removeItem('tok_fix');
+    _token=null;
+    await loginSilent();
+    if(_token){
+      h['Authorization']=`Bearer ${_token}`;
+      r=await fetch(`${BASE}/api/v1${path}`,{headers:h,...rest});
+    }
+  }
+  if(!r.ok){const e=await r.json().catch(()=>({detail:r.statusText}));throw new Error(e.detail||r.statusText);}
+  return r.json();
+}
+
+/* ── Sidebar móvil ───────────────────────────────────────────────────────────*/
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('visible');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('visible');
+}
+
+/* ── Competiciones ───────────────────────────────────────────────────────────*/
+async function loadActivas(){
+  try{
+    _activas=await api('/torneo/activas');
+    renderSidebar();
+    // Auto-seleccionar el primero con datos cargados
+    const autoT=_activas.find(t=>t.datos_cargados) || _activas[0];
+    if(autoT) await selectTorneo(autoT.id);
+  }catch(e){
+    document.getElementById('compList').innerHTML=
+      `<div style="padding:14px;font-size:12px;color:var(--danger)">Error: ${esc(e.message)}</div>`;
+  }
+}
+function renderSidebar(){
+  const el=document.getElementById('compList');
+  if(!_activas.length){
+    el.innerHTML=`<div style="padding:14px;font-size:12px;color:var(--muted)">Sin datos. Presioná 🔄 Sincronizar.</div>`;
+    return;
+  }
+  el.innerHTML=_activas.map(t=>{
+    const isAct=_torneoActivo?.id===t.id;
+    const badge=t.estado==='en_curso'
+      ?`<span class="comp-badge badge-live">En curso</span>`
+      :`<span class="comp-badge badge-done">Finalizado</span>`;
+    const loaded=t.datos_cargados?`<span class="comp-badge badge-loaded">✓ Datos</span>`:'';
+    const btn=t.datos_cargados?'🔄 Actualizar':'📥 Cargar datos';
+    return `<div class="comp-card${isAct?' active':''}" onclick="selectTorneo(${t.id});closeSidebar()">
+      <div class="comp-card-top">
+        <div class="comp-emoji">${t.emoji||'⚽'}</div>
+        <div class="comp-info">
+          <div class="comp-name">${esc(t.competicion)}</div>
+          <div class="comp-season">${t.anio} ${badge}${loaded}</div>
+        </div>
+      </div>
+      ${_isAdmin?`<div class="comp-actions">
+        <button class="btn btn-primary btn-block btn-sm" onclick="cargarDatos(event,${t.id})">${btn}</button>
+        ${t.datos_cargados?`<button class="btn btn-secondary btn-block btn-sm" style="margin-top:5px"
+          onclick="inferirPos(event,${t.id})">🔢 Inferir posiciones</button>`:''}
+      </div>`:''}
+
+    </div>`;
+  }).join('');
+}
+
+async function selectTorneo(id){
+  _torneoActivo=_activas.find(t=>t.id===id);
+  renderSidebar();
+  if(_torneoActivo?.datos_cargados) await renderFixture();
+  else document.getElementById('mainArea').innerHTML=`
+    <div class="empty">
+      <div class="big">${_torneoActivo?.emoji||'⚽'}</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px">${esc(_torneoActivo?.nombre||'')}</div>
+      <div>Presioná <strong>📥 Cargar datos</strong> en el panel izquierdo.</div>
+    </div>`;
+}
+
+async function sincronizar(){
+  const btn=document.querySelector('.sync-btn');
+  btn.textContent='⏳ Sincronizando…';btn.disabled=true;
+  try{
+    await api('/torneo/sincronizar',{method:'POST'});
+    await loadActivas();
+    btn.textContent='✅ Listo';
+    setTimeout(()=>{btn.textContent='🔄 Sincronizar';btn.disabled=false;},2000);
+  }catch(e){
+    alert('Error: '+e.message);btn.textContent='🔄 Sincronizar';btn.disabled=false;
+  }
+}
+
+async function cargarDatos(ev,id){
+  ev.stopPropagation();
+  const t=_activas.find(x=>x.id===id);
+  document.getElementById('mainArea').innerHTML=`<div class="loader"><div class="spinner"></div>
+    <div>Descargando <strong>${esc(t?.nombre||'')}</strong>…<br>
+    <small style="color:var(--muted)">Puede tardar 15–30 seg</small></div></div>`;
+  try{
+    await api(`/torneo/torneos/${id}/cargar`,{method:'POST'});
+    _activas=await api('/torneo/activas');
+    _torneoActivo=_activas.find(x=>x.id===id)||_torneoActivo;
+    renderSidebar();
+    await renderFixture();
+  }catch(e){
+    document.getElementById('mainArea').innerHTML=`<div class="empty"><div class="big">❌</div>${esc(e.message)}</div>`;
+  }
+}
+
+/* ── Tipos de fase ───────────────────────────────────────────────────────────*/
+const FASE_META={
+  clasificatoria:{label:'Clasificación',  icon:'🔑',esGrupo:false},
+  playoff_prev:  {label:'Playoff Previo', icon:'🔑',esGrupo:false},
+  grupo:         {label:'Fase de Grupos', icon:'🏟',esGrupo:true},
+  ronda32:       {label:'Ronda de 32',    icon:'⚔️',esGrupo:false},
+  ronda16:       {label:'Octavos de Final',icon:'⚔️',esGrupo:false},
+  cuartos:       {label:'Cuartos de Final',icon:'⚔️',esGrupo:false},
+  semis:         {label:'Semifinales',    icon:'🔥',esGrupo:false},
+  tercer_puesto: {label:'Tercer Puesto',  icon:'🥉',esGrupo:false},
+  final:         {label:'Final',          icon:'🏆',esGrupo:false},
+};
+// Traducciones de nombres de fase en inglés → español (para fases no mapeadas)
+const TRAD_FASE={
+  'Group Stage':'Fase de Grupos','League Stage':'Fase de Liga',
+  'Round of 32':'Ronda de 32','Round of 16':'Octavos de Final',
+  'Last 16':'Octavos de Final','1st Round':'Primera Ronda',
+  'Quarter-finals':'Cuartos de Final','Quarter Finals':'Cuartos de Final',
+  'Semi-finals':'Semifinales','Semi Finals':'Semifinales',
+  '3rd Place Final':'Tercer Puesto','Final':'Final',
+  'Play-offs':'Playoff','Playoff Round':'Playoff',
+  'Qualifying Rounds':'Clasificatoria','Preliminary Round':'Ronda Preliminar',
+  '1st Qualifying Round':'1ª Ronda Clasificatoria',
+  '2nd Qualifying Round':'2ª Ronda Clasificatoria',
+  '3rd Qualifying Round':'3ª Ronda Clasificatoria',
+};
+function tradFase(nombre){ return TRAD_FASE[nombre]||nombre; }
+const FASE_ICON={
+  clasificatoria:'🔑',playoff_prev:'🔑',grupo:'🏟',
+  ronda32:'⚔️',ronda16:'⚔️',cuartos:'⚔️',
+  semis:'🔥',tercer_puesto:'🥉',final:'🏆',
+};
+
+/* ── Render fixture ──────────────────────────────────────────────────────────*/
+async function renderFixture(){
+  if(!_torneoActivo) return;
+  const main=document.getElementById('mainArea');
+  main.innerHTML=`<div class="loader"><div class="spinner"></div>Cargando fixture…</div>`;
+  try{
+    const data=await api(`/torneo/torneos/${_torneoActivo.id}/fixture`);
+    const fases=(data.fases||[]).sort((a,b)=>a.orden-b.orden);
+    if(!fases.length){main.innerHTML=`<div class="empty"><div class="big">📭</div>Sin datos.</div>`;return;}
+
+    _allFases=fases;
+    _allPartidos=fases.flatMap(f=>(f.partidos||[]).map(p=>({
+      ...p, fase_nombre:f.nombre, fase_tipo:f.tipo
+    })));
+
+    // Separar fases de grupos de las eliminatorias
+    const grupoFases=fases.filter(f=>f.tipo==='grupo');
+    const elimFases=fases.filter(f=>f.tipo!=='grupo');
+    // Agrupar eliminatorias por tipo (o por id si es "otro")
+    const elimGroups=[];
+    for(const f of elimFases){
+      const key=f.tipo==='otro'?`otro_${f.id}`:f.tipo;
+      let tg=elimGroups.find(t=>t.key===key);
+      if(!tg){
+        const meta=FASE_META[f.tipo];
+        const label=meta?meta.label:tradFase(f.nombre);
+        const icon=FASE_ICON[f.tipo]||'⚽';
+        tg={key,label,icon,fases:[]};
+        elimGroups.push(tg);
+      }
+      tg.fases.push(f);
+    }
+    // tabGroups solo para compatibilidad con showTabKey / _tabKeys
+    const tabGroups=[];
+    if(grupoFases.length) tabGroups.push({key:'grupo',label:'Fase de Grupos',icon:'🏟',fases:grupoFases});
+    elimGroups.forEach(tg=>tabGroups.push(tg));
+
+    let html=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+      <span style="font-size:22px">${_torneoActivo.emoji||'⚽'}</span>
+      <h2 style="font-size:17px;font-weight:700;flex:1">${esc(_torneoActivo.nombre)}</h2>
+      ${_isAdmin?`<button onclick="cargarDatos(event,${_torneoActivo.id})"
+        style="font-size:11px;padding:4px 10px;border:1px solid var(--accent);background:var(--accent);color:#fff;
+               border-radius:6px;cursor:pointer;white-space:nowrap">🔌 Actualizar API</button>`:''}
+    </div>`;
+
+    // Panel de visibilidad apostador (solo admin)
+    if(_isAdmin) html+=`<details style="margin-bottom:14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <summary style="padding:8px 14px;cursor:pointer;font-size:12px;font-weight:600;
+        list-style:none;display:flex;align-items:center;gap:8px;user-select:none">
+        ⚙️ Configurar visibilidad para app apostador
+      </summary>
+      <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--border)">
+        ${fases.map(f=>`
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;
+            padding:4px 10px;background:var(--bg4);border-radius:6px;
+            border:1px solid ${f.visible_apostador!==false?'var(--success)':'var(--border)'}">
+            <input type="checkbox" id="vis_${f.id}" ${f.visible_apostador!==false?'checked':''}
+              onchange="toggleFaseVisibility(${f.id},this.checked)"
+              style="accent-color:var(--success)">
+            <span style="color:${f.visible_apostador!==false?'var(--success)':'var(--muted)'}"
+              id="vis_lbl_${f.id}">${esc(f.nombre)}</span>
+          </label>`).join('')}
+      </div>
+    </details>`;  // cierra if(_isAdmin)
+
+    // Barra de navegación: tab Grupos + combo eliminatorias + tab Calendario
+    const firstKey=tabGroups[0]?.key||'cal';
+    html+=`<div class="tabs" id="tabsBar">`;
+    if(grupoFases.length)
+      html+=`<div class="tab active" id="tab_grupo" onclick="showTabKey('grupo')">🏟 Fase de Grupos</div>`;
+    if(elimGroups.length){
+      const selAct=grupoFases.length?'':'active';
+      html+=`<select id="elimSelect" class="tab" style="cursor:pointer;border:none;
+        background:none;font-size:13px;padding:8px 10px;color:var(--muted);
+        border-bottom:2px solid transparent;outline:none"
+        onchange="showTabKey(this.value)">
+        <option value="" disabled ${selAct?'':'selected'} style="color:var(--muted)">⚔️ Eliminatorias…</option>
+        ${elimGroups.map(tg=>`<option value="${tg.key}">${tg.icon} ${tg.label}</option>`).join('')}
+      </select>`;
+    }
+    html+=`<div class="tab" id="tab_cal" onclick="showTabKey('cal')">📅 Calendario</div></div>`;
+
+    // Secciones
+    if(grupoFases.length){
+      html+=`<div id="sec_grupo">${renderGrupos(grupoFases)}</div>`;
+    }
+    elimGroups.forEach((tg,i)=>{
+      const vis=!grupoFases.length&&i===0;
+      html+=`<div id="sec_${tg.key}" style="${vis?'':'display:none'}">`;
+      html+=renderBracket(tg.fases);
+      html+=`</div>`;
+    });
+    html+=`<div id="sec_cal" style="display:none">${buildCalendario()}</div>`;
+
+    main.innerHTML=html;
+    _tabKeys=[...(grupoFases.length?['grupo']:[]),...elimGroups.map(t=>t.key),'cal'];
+    _calView='list'; _calMesActivo=''; _calDiaActivo='';
+  }catch(e){
+    main.innerHTML=`<div class="empty">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function showTabKey(key){
+  if(!key) return;
+  _tabKeys.forEach(k=>{
+    const sec=document.getElementById('sec_'+k);
+    const tab=document.getElementById('tab_'+k);
+    if(sec) sec.style.display=k===key?'':'none';
+    if(tab) tab.classList.toggle('active',k===key);
+  });
+  // Sincronizar combo de eliminatorias
+  const sel=document.getElementById('elimSelect');
+  if(sel){
+    const esElim=_tabKeys.includes(key)&&key!=='grupo'&&key!=='cal';
+    sel.style.color=esElim?'var(--accent)':'var(--muted)';
+    sel.style.borderBottomColor=esElim?'var(--accent)':'transparent';
+    if(esElim) sel.value=key; else sel.selectedIndex=0;
+  }
+  if(key==='cal' && !_calMesActivo){
+    const hoy=new Date().toISOString().slice(0,7);
+    const diasDisp=Object.keys(agruparPorDia(_allPartidos)).filter(d=>d!=='sin-fecha');
+    const meses=[...new Set(diasDisp.map(d=>d.slice(0,7)))].sort();
+    const mes=meses.find(m=>m>=hoy)||meses[meses.length-1]||'';
+    if(mes) { _calMesActivo=mes; _renderCal(); }
+  }
+}
+
+/* ── Grupos ──────────────────────────────────────────────────────────────────*/
+function renderGrupos(fases){
+  return `<div class="grupos-grid">${fases.map(f=>{
+    const partidos=f.partidos||[];
+    // Ordenar standings por pts desc, DG desc; inferir posición si es null
+    const standings=[...(f.standings||[])].sort((a,b)=>{
+      if((b.pts||0)!==(a.pts||0)) return (b.pts||0)-(a.pts||0);
+      const da=(a.gf||0)-(a.gc||0), db=(b.gf||0)-(b.gc||0);
+      if(db!==da) return db-da;
+      return (b.gf||0)-(a.gf||0);
+    });
+    inferirPosiciones(standings);
+    standings.sort((a,b)=>(a.posicion||99)-(b.posicion||99));
+    const sHtml=standings.length?`<table class="standings">
+      <thead><tr><th>#</th><th style="text-align:left">Equipo</th>
+        <th>PJ</th><th>PG</th><th>PE</th><th>PP</th>
+        <th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead>
+      <tbody>${standings.map(s=>{
+        const dg=(s.gf||0)-(s.gc||0);
+        const nm=esc(s.nombre_es||s.nombre);
+        const fl=teamFlag(s.nombre_es||s.nombre);
+        return `<tr class="${s.clasifica?'clasifica':''}">
+          <td>${s.posicion||''}</td>
+          <td><div class="team-cell">
+            ${s.logo_url?`<img src="${esc(s.logo_url)}" onerror="this.style.display='none'">`
+              :(fl?`<span style="font-size:14px">${fl}</span>`:'')}
+            <span>${nm}</span></div></td>
+          <td>${s.pj||0}</td><td>${s.pg||0}</td><td>${s.pe||0}</td><td>${s.pp||0}</td>
+          <td>${s.gf||0}</td><td>${s.gc||0}</td>
+          <td>${dg>0?'+'+dg:dg}</td><td><strong>${s.pts||0}</strong></td>
+        </tr>`;
+      }).join('')}</tbody></table>`:'';
+    const pHtml=partidos.length?`<div class="partidos-list">${partidos.map(renderPartidoRow).join('')}</div>`:'';
+    return `<div class="grupo-card"><div class="grupo-header"><span class="grupo-nom">${esc(f.nombre)}</span>${faseBtns(f.id)}</div>${sHtml}${pHtml}</div>`;
+  }).join('')}</div>`;
+}
+
+/* ── Botones por fase: simular / reset (solo admin) ─────────────────────────*/
+function faseBtns(faseId){
+  if(!_isAdmin) return '';
+  return `<span class="fbtns">
+    <button class="fbtn sim" onclick="event.stopPropagation();simularFase(${faseId},this)" title="Simular resultados aleatorios de esta fase">🎲 Simular</button>
+    <button class="fbtn rst" onclick="event.stopPropagation();resetFase(${faseId},this)" title="Reiniciar esta fase a 'programado'">↺ Reset</button>
+  </span>`;
+}
+async function simularFase(faseId,btn){
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  try{
+    const r=await api(`/bets/simular-fase/${faseId}`,{method:'POST'});
+    await renderFixture();
+    toast(`✅ ${r.fase}: ${r.partidos_actualizados} partidos simulados`);
+  }catch(e){alert('Error: '+e.message);if(btn){btn.disabled=false;btn.textContent='🎲 Simular';}}
+}
+async function resetFase(faseId,btn){
+  if(!confirm('¿Reiniciar esta fase? Se borran los resultados y vuelve a estado "programado" (las predicciones se conservan).')) return;
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  try{
+    const r=await api(`/bets/reset-fase/${faseId}`,{method:'POST'});
+    await renderFixture();
+    toast(`↺ ${r.fase}: ${r.partidos_reiniciados} partidos reiniciados`);
+  }catch(e){alert('Error: '+e.message);if(btn){btn.disabled=false;btn.textContent='↺ Reset';}}
+}
+async function cargarApi(){
+  if(!_torneoActivo){alert('Seleccioná un torneo primero');return;}
+  if(!confirm(`Cargar resultados reales desde API-Football para "${_torneoActivo.nombre}"?\nEsto actualiza TODO el torneo y requiere APIFOOTBALL_KEY configurada.`)) return;
+  const btn=event?.target;
+  if(btn){btn.disabled=true;btn.textContent='⏳ Cargando…';}
+  try{
+    const r=await api(`/torneo/torneos/${_torneoActivo.id}/cargar`,{method:'POST'});
+    await renderFixture();
+    toast('🔌 API: '+(typeof r==='object'?JSON.stringify(r):r));
+  }catch(e){alert('Error API: '+e.message);}
+  finally{if(btn){btn.disabled=false;btn.textContent='🔌 API resultados';}}
+}
+function toast(msg){
+  let t=document.getElementById('_toast');
+  if(!t){t=document.createElement('div');t.id='_toast';
+    t.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border);color:var(--fg);padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+    document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._h);t._h=setTimeout(()=>{t.style.opacity='0';},3500);
+  t.style.transition='opacity .4s';
+}
+
+function renderPartidoRow(p){
+  const jugado=p.estado==='finalizado';
+  const enJuego=p.estado==='en_juego';
+  const lN=esc(p.local_nombre_es||p.local_nombre||'?');
+  const vN=esc(p.visit_nombre_es||p.visit_nombre||'?');
+  let centro='';
+  if(jugado||enJuego){
+    let sub='';
+    if(p.penales_local!=null) sub=`<div class="pen-note">pen. ${p.penales_local}–${p.penales_visitante}</div>`;
+    centro=`<div class="res-box">
+      <div class="res-score">${p.goles_local??'–'}<span class="sep">–</span>${p.goles_visitante??'–'}</div>${sub}
+    </div>`;
+  }else{
+    centro=`<div class="p-fecha">${p.fecha?fmtHora(p.fecha):'–'}</div>`;
+  }
+  const oc=jugado?`onclick="openStats(${p.id})"`:'';
+  const lL=p.local_logo, vL=p.visit_logo;
+  const lF=teamFlag(p.local_nombre_es||p.local_nombre||'');
+  const vF=teamFlag(p.visit_nombre_es||p.visit_nombre||'');
+  return `<div class="partido-row${jugado?' jugado':''}" ${oc}>
+    <div class="eq-cell">
+      ${lL?`<img src="${esc(lL)}" onerror="this.style.display='none'">`:lF?`<span style="font-size:14px">${lF}</span>`:''}
+      <span>${lN}</span></div>
+    ${centro}
+    <div class="eq-cell right">
+      <span>${vN}</span>
+      ${vL?`<img src="${esc(vL)}" onerror="this.style.display='none'">`:vF?`<span style="font-size:14px">${vF}</span>`:''}
+    </div>
+  </div>`;
+}
+
+/* ── Bracket ─────────────────────────────────────────────────────────────────*/
+function renderBracket(fases){
+  const cols=[...fases].sort((a,b)=>a.orden-b.orden).map(fase=>{
+    const pares=agruparPares(fase.partidos||[]);
+    return {fase,pares};
+  });
+  return `<div class="bracket"><div class="bracket-cols">
+    ${cols.map(({fase,pares})=>`
+      <div class="bracket-col">
+        <div class="bracket-col-title" style="display:flex;align-items:center;gap:6px;justify-content:space-between">
+          <span>${esc(fase.nombre)}</span>${faseBtns(fase.id)}</div>
+        <div class="bracket-matches">${pares.map(par=>renderBM(par)).join('')}</div>
+      </div>`).join('')}
+  </div></div>`;
+}
+function agruparPares(partidos){
+  const ida=partidos.filter(p=>p.leg==='ida');
+  const vuelta=partidos.filter(p=>p.leg==='vuelta');
+  if(!ida.length) return partidos.map(p=>[p]);
+  return ida.map(i=>{
+    const v=vuelta.find(v2=>v2.equipo_local_id===i.equipo_visitante_id||v2.equipo_visitante_id===i.equipo_local_id);
+    return v?[i,v]:[i];
+  });
+}
+function renderBM(par){
+  const[p1,p2]=par;
+  const jugado=p1.estado==='finalizado'||(p2&&p2.estado==='finalizado');
+  const oc=jugado?`onclick="openStats(${p1.id})"`:'';
+  function row(p,side){
+    const nm=side==='local'?esc(p.local_nombre_es||p.local_nombre||'?'):esc(p.visit_nombre_es||p.visit_nombre||'?');
+    const logo=side==='local'?p.local_logo:p.visit_logo;
+    const fl=teamFlag(side==='local'?(p.local_nombre_es||p.local_nombre||''):(p.visit_nombre_es||p.visit_nombre||''));
+    const g1=side==='local'?p.goles_local:p.goles_visitante;
+    const g2=p2?(side==='visitante'?p2.goles_local:p2.goles_visitante):null;
+    const pen=side==='local'?p.penales_local:p.penales_visitante;
+    const sc=g1!=null?`<span class="bm-score">${g1}${g2!=null?`<small style="font-weight:400;color:var(--muted)">+</small>${g2}`:''}`+
+      `${pen!=null?`<span class="bm-pen">(${pen})</span>`:''}</span>`
+      :`<span class="bm-score" style="color:var(--muted)">–</span>`;
+    return `<div class="bm-row">
+      ${logo?`<img src="${esc(logo)}" onerror="this.style.display='none'">`:fl?`<span style="font-size:16px">${fl}</span>`:'<span style="width:18px"></span>'}
+      <span style="flex:1">${nm}</span>${sc}
+    </div>`;
+  }
+  const leg=p2?`<div class="bm-leg">Ida / Vuelta</div>`:(p1.leg==='ida'?`<div class="bm-leg">Ida</div>`:'');
+  const fecha=p1.fecha?`<div class="bm-date">${fmtFecha(p1.fecha)}</div>`:'';
+  return `<div class="bm" ${oc}>${leg}${fecha}${row(p1,'local')}${row(p1,'visitante')}</div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CALENDARIO
+══════════════════════════════════════════════════════════════ */
+let _calView='list'; // 'month' | 'list'
+let _calMesActivo='';
+let _calDiaActivo='';
+let _calFiltroEquipo='';
+let _calFasesActivas=new Set(); // tipos de fase activos (vacío = todos)
+
+function buildCalendario(){
+  // Construir combo de equipos
+  const equiposSet=new Map();
+  for(const p of _allPartidos){
+    const lN=p.local_nombre_es||p.local_nombre||'';
+    const vN=p.visit_nombre_es||p.visit_nombre||'';
+    if(lN) equiposSet.set(lN,{nombre:lN,logo:p.local_logo,flag:teamFlag(lN)});
+    if(vN) equiposSet.set(vN,{nombre:vN,logo:p.visit_logo,flag:teamFlag(vN)});
+  }
+  const equipos=[...equiposSet.values()].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  const equipoOpts=`<option value="">Todos los equipos</option>`+
+    equipos.map(e=>`<option value="${esc(e.nombre)}">${e.flag||''} ${esc(e.nombre)}</option>`).join('');
+
+  // Obtener fases únicas para pills
+  const tiposUnicos=[...new Set(_allPartidos.map(p=>p.fase_tipo))];
+  const fasePills=tiposUnicos.map(tipo=>{
+    const meta=FASE_META[tipo]||{label:tradFase(tipo),icon:'⚽'};
+    const on=_calFasesActivas.size===0||_calFasesActivas.has(tipo);
+    return `<span class="phase-pill ${on?'on':'off'}" data-tipo="${tipo}" onclick="toggleFasePill(this,'${tipo}')">${meta.icon} ${meta.label}</span>`;
+  }).join('');
+
+  return `
+  <div class="cal-toolbar">
+    <div class="cal-view-toggle">
+      <button id="btnViewList" class="${_calView==='list'?'active':''}" onclick="setCalView('list')">📋 Lista</button>
+      <button id="btnViewMonth" class="${_calView==='month'?'active':''}" onclick="setCalView('month')">📅 Mes</button>
+    </div>
+    <div class="cal-month-nav">
+      <button onclick="navMes(-1)">‹</button>
+      <div class="cal-month-label" id="calMonthLabel">—</div>
+      <button onclick="navMes(1)">›</button>
+    </div>
+    <select class="team-select" id="teamSelect" onchange="filtrarEquipo(this.value)">${equipoOpts}</select>
+  </div>
+  <div class="cal-filters">
+    <span class="cal-filter-label">Fases:</span>
+    <div class="phase-pills" id="fasePills">${fasePills}</div>
+  </div>
+  <div id="calContent" style="margin-top:12px"></div>`;
+}
+
+function setCalView(v){
+  _calView=v;
+  document.getElementById('btnViewList')?.classList.toggle('active',v==='list');
+  document.getElementById('btnViewMonth')?.classList.toggle('active',v==='month');
+  _renderCal();
+}
+
+function navMes(dir){
+  if(!_calMesActivo) return;
+  const[y,m]=_calMesActivo.split('-').map(Number);
+  const d=new Date(y,m-1+dir,1);
+  _calMesActivo=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  _calDiaActivo='';
+  _renderCal();
+}
+
+function filtrarEquipo(val){
+  _calFiltroEquipo=val;
+  _renderCal();
+}
+
+function toggleFasePill(el,tipo){
+  if(_calFasesActivas.has(tipo)){
+    _calFasesActivas.delete(tipo);
+    el.classList.remove('on'); el.classList.add('off');
+  }else{
+    _calFasesActivas.add(tipo);
+    el.classList.remove('off'); el.classList.add('on');
+  }
+  _renderCal();
+}
+
+function _partidosFiltrados(){
+  let ps=_allPartidos;
+  if(_calFiltroEquipo){
+    const q=_calFiltroEquipo.toLowerCase();
+    ps=ps.filter(p=>
+      (p.local_nombre_es||p.local_nombre||'').toLowerCase()===q||
+      (p.visit_nombre_es||p.visit_nombre||'').toLowerCase()===q
+    );
+  }
+  if(_calFasesActivas.size>0){
+    ps=ps.filter(p=>_calFasesActivas.has(p.fase_tipo));
+  }
+  return ps;
+}
+
+function _renderCal(){
+  if(!_calMesActivo) return;
+  const[y,m]=_calMesActivo.split('-').map(Number);
+  const label=new Date(y,m-1,1).toLocaleString('es-AR',{month:'long',year:'numeric'});
+  const lblEl=document.getElementById('calMonthLabel');
+  if(lblEl) lblEl.textContent=label.charAt(0).toUpperCase()+label.slice(1);
+
+  const content=document.getElementById('calContent');
+  if(!content) return;
+
+  const ps=_partidosFiltrados();
+  const porDia=agruparPorDia(ps);
+
+  if(_calView==='month'){
+    content.innerHTML=renderMesGrid(y,m,porDia);
+  }else{
+    // Vista lista: todos los días del mes seleccionado
+    const diasMes=Object.keys(porDia).filter(d=>d.startsWith(_calMesActivo)).sort();
+    if(_calDiaActivo && porDia[_calDiaActivo]){
+      content.innerHTML=renderDiaDetalle(_calDiaActivo, porDia[_calDiaActivo]);
+    }else{
+      if(!diasMes.length){
+        content.innerHTML=`<div class="cal-no-day">Sin partidos en este mes.</div>`;
+        return;
+      }
+      content.innerHTML=diasMes.map(d=>renderDiaDetalle(d,porDia[d])).join('');
+    }
+  }
+}
+
+/* ── Vista MES (grid) ────────────────────────────────────────────────────────*/
+function renderMesGrid(y,m,porDia){
+  const hoy=new Date().toISOString().slice(0,10);
+  const primer=new Date(y,m-1,1);
+  const ultimo=new Date(y,m,0).getDate();
+  let ini=primer.getDay(); // 0=Dom
+  ini=(ini+6)%7; // ajustar a Lun=0
+
+  const dias=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  let html=`<div class="cal-grid">
+    <div class="cal-grid-header">${dias.map(d=>`<span>${d}</span>`).join('')}</div>`;
+
+  let semana=`<div class="cal-week">`;
+  // Celdas vacías al inicio
+  for(let i=0;i<ini;i++) semana+=`<div class="cal-cell empty"></div>`;
+
+  for(let d=1;d<=ultimo;d++){
+    const key=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const psDia=porDia[key]||[];
+    const isHoy=key===hoy;
+    const isSel=key===_calDiaActivo;
+    const jugados=psDia.filter(p=>p.estado==='finalizado').length;
+    const vivos=psDia.filter(p=>p.estado==='en_juego').length;
+
+    let matchesHtml='';
+    const MAX_SHOW=2;
+    psDia.slice(0,MAX_SHOW).forEach(p=>{
+      const lN=p.local_nombre_es||p.local_nombre||'?';
+      const vN=p.visit_nombre_es||p.visit_nombre||'?';
+      const cl=p.estado==='en_juego'?'live':p.estado==='finalizado'?'played':'';
+      const score=p.goles_local!=null?`${p.goles_local}-${p.goles_visitante}`:'vs';
+      const lF=teamFlag(lN);const vF=teamFlag(vN);
+      const lS=lF||(lN.substring(0,3).toUpperCase());
+      const vS=vF||(vN.substring(0,3).toUpperCase());
+      matchesHtml+=`<div class="cal-cell-match ${cl}">${lS} ${score} ${vS}</div>`;
+    });
+    if(psDia.length>MAX_SHOW) matchesHtml+=`<div class="cal-cell-more">+${psDia.length-MAX_SHOW} más</div>`;
+
+    semana+=`<div class="cal-cell${isHoy?' today':''}${isSel?' selected':''}"
+      onclick="selDia('${key}')" style="${!psDia.length?'opacity:.5':''}">
+      <div class="cal-cell-num">${d}${vivos?'<span style="color:var(--danger);margin-left:3px">●</span>':''}</div>
+      ${matchesHtml}
+    </div>`;
+
+    const diaOfWeek=(ini+d-1)%7;
+    if(diaOfWeek===6&&d<ultimo){
+      html+=semana+`</div>`;
+      semana=`<div class="cal-week">`;
+    }
+  }
+  // Celdas vacías al final
+  const diaFin=(ini+ultimo-1)%7;
+  if(diaFin<6){
+    for(let i=diaFin+1;i<=6;i++) semana+=`<div class="cal-cell empty"></div>`;
+  }
+  html+=semana+`</div>`;
+  html+=`</div>`;
+
+  // Si hay día seleccionado, mostrar detalle debajo
+  if(_calDiaActivo && porDia[_calDiaActivo]){
+    html+=`<div style="margin-top:16px">${renderDiaDetalle(_calDiaActivo,porDia[_calDiaActivo])}</div>`;
+  }
+  return html;
+}
+
+function selDia(key){
+  _calDiaActivo=_calDiaActivo===key?'':key;
+  _renderCal();
+}
+
+/* ── Vista DÍA (lista) ───────────────────────────────────────────────────────*/
+function renderDiaDetalle(dia,partidos){
+  const hoy=new Date().toISOString().slice(0,10);
+  let label='Fecha por confirmar';
+  if(dia!=='sin-fecha'){
+    const d=new Date(dia+'T12:00:00');
+    label=d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    label=label.charAt(0).toUpperCase()+label.slice(1);
+  }
+  const esHoy=dia===hoy;
+  return `
+  <div style="margin-bottom:20px">
+    <div class="cal-day-header">
+      <div class="dh-fecha">${label}${esHoy?'<span class="today-pill" style="margin-left:8px">HOY</span>':''}</div>
+      <div class="dh-count">${partidos.length} partido${partidos.length>1?'s':''}</div>
+    </div>
+    ${partidos.map(p=>renderCalMatch(p)).join('')}
+  </div>`;
+}
+
+/* ── Tarjeta de partido en calendario ────────────────────────────────────────*/
+const FASE_TAG_BG={
+  clasificatoria:'#1e3a5f',playoff_prev:'#1e3a5f',grupo:'#1a2e1a',
+  ronda32:'#2e1a1a',ronda16:'#2e1a1a',cuartos:'#3d1c02',
+  semis:'#4a1c02',tercer_puesto:'#1a1a2e',final:'#4a3800',
+};
+
+function renderCalMatch(p){
+  const jugado=p.estado==='finalizado';
+  const vivo=p.estado==='en_juego';
+  const lN=esc(p.local_nombre_es||p.local_nombre||'?');
+  const vN=esc(p.visit_nombre_es||p.visit_nombre||'?');
+  const lL=p.local_logo,vL=p.visit_logo;
+  const lF=teamFlag(p.local_nombre_es||p.local_nombre||'');
+  const vF=teamFlag(p.visit_nombre_es||p.visit_nombre||'');
+
+  const logo=(logo,flag,side)=>{
+    if(logo) return `<img src="${esc(logo)}" onerror="this.style.display='none'" style="width:26px;height:26px;object-fit:contain;flex-shrink:0">`;
+    if(flag) return `<span style="font-size:22px;flex-shrink:0">${flag}</span>`;
+    return '';
+  };
+
+  let centro='';
+  if(jugado||vivo){
+    let sub='';
+    if(p.penales_local!=null) sub=`<div class="cal-sub">pen. ${p.penales_local}–${p.penales_visitante}</div>`;
+    else if(p.goles_local_prorroga!=null) sub=`<div class="cal-sub">p.e.</div>`;
+    centro=`<div class="cal-center">
+      <div class="cal-score-big${vivo?' live-score':''}">
+        ${p.goles_local??'–'}<span class="sep">–</span>${p.goles_visitante??'–'}
+      </div>${sub}</div>`;
+  }else{
+    const hora=p.fecha?fmtHora(p.fecha):'–:––';
+    centro=`<div class="cal-center"><div class="cal-hora">${hora}</div></div>`;
+  }
+
+  const tagBg=FASE_TAG_BG[p.fase_tipo]||'var(--bg4)';
+  const faseMeta=FASE_META[p.fase_tipo]||{label:tradFase(p.fase_nombre||p.fase_tipo),icon:'⚽'};
+  const oc=jugado?`onclick="openStats(${p.id})"`:'';
+
+  return `<div class="cal-match${jugado?' jugado':''}${vivo?' live-match':''}" ${oc}>
+    <span class="cal-fase-tag" style="background:${tagBg}">${faseMeta.icon} ${esc(p.fase_nombre)}</span>
+    <div class="cal-team" style="justify-content:flex-end">
+      ${logo(lL,lF,'left')}
+      <span class="tname" style="text-align:right">${lN}</span>
+    </div>
+    ${centro}
+    <div class="cal-team">
+      <span class="tname">${vN}</span>
+      ${logo(vL,vF,'right')}
+    </div>
+  </div>`;
+}
+
+/* ── Helpers ─────────────────────────────────────────────────────────────────*/
+function agruparPorDia(partidos){
+  const map={};
+  for(const p of partidos){
+    const key=p.fecha?new Date(p.fecha).toISOString().slice(0,10):'sin-fecha';
+    if(!map[key]) map[key]=[];
+    map[key].push(p);
+  }
+  for(const k of Object.keys(map))
+    map[k].sort((a,b)=>!a.fecha?1:!b.fecha?-1:new Date(a.fecha)-new Date(b.fecha));
+  return map;
+}
+function fmtFecha(iso){try{return new Date(iso).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}catch{return iso;}}
+function fmtHora(iso){try{return new Date(iso).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});}catch{return '';}}
+
+/* ── Modal estadísticas ──────────────────────────────────────────────────────*/
+async function openStats(id){
+  const modal=document.getElementById('statsModal');
+  modal.style.display='flex';
+  document.getElementById('statsBody').innerHTML=
+    `<div class="loader"><div class="spinner"></div>Cargando estadísticas…</div>`;
+  try{
+    const d=await api(`/torneo/partidos/${id}/estadisticas`);
+    document.getElementById('statsTitle').textContent=
+      `${d.partido?.local_nombre||'?'} vs ${d.partido?.visit_nombre||'?'}`;
+    document.getElementById('statsBody').innerHTML=renderStats(d);
+  }catch(e){
+    document.getElementById('statsBody').innerHTML=
+      `<div class="empty">Sin estadísticas disponibles.<br><small>${esc(e.message)}</small></div>`;
+  }
+}
+function closeStatsModal(){document.getElementById('statsModal').style.display='none';}
+function closeStats(e){if(e.target.id==='statsModal') closeStatsModal();}
+
+function renderStats(d){
+  const p=d.partido||{},st=d.estadisticas||[],ev=d.eventos||[];
+  let sub='';
+  if(p.goles_local_prorroga!=null) sub+=`<div class="sb-sub">Prórroga: ${p.goles_local_prorroga} – ${p.goles_visitante_prorroga}</div>`;
+  if(p.penales_local!=null) sub+=`<div class="sb-sub" style="color:var(--warn)">Penales: ${p.penales_local} – ${p.penales_visitante}</div>`;
+  const fecha=p.fecha?new Date(p.fecha).toLocaleString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+  const lF=teamFlag(p.local_nombre||'');const vF=teamFlag(p.visit_nombre||'');
+  let html=`<div class="scoreboard">
+    <div class="sb-teams">
+      <div class="sb-team">
+        ${p.local_logo?`<img src="${esc(p.local_logo)}" onerror="this.style.display='none'">`:lF?`<span style="font-size:40px">${lF}</span>`:''}
+        <div class="sb-name">${esc(p.local_nombre||'?')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="sb-score">${p.goles_local??'–'}</div>
+          <div class="sb-sep">–</div>
+          <div class="sb-score">${p.goles_visitante??'–'}</div>
+        </div>${sub}
+      </div>
+      <div class="sb-team">
+        ${p.visit_logo?`<img src="${esc(p.visit_logo)}" onerror="this.style.display='none'">`:vF?`<span style="font-size:40px">${vF}</span>`:''}
+        <div class="sb-name">${esc(p.visit_nombre||'?')}</div>
+      </div>
+    </div>
+    <div class="sb-meta">${fecha}${p.sede?' · '+esc(p.sede):''}${p.ciudad?' · '+esc(p.ciudad):''}</div>
+  </div>`;
+  if(st.length>=2) html+=renderStatsBars(st[0],st[1]);
+  if(ev.length) html+=renderEventos(ev);
+  if(!st.length&&!ev.length) html+=`<div style="text-align:center;padding:20px;color:var(--muted)">Sin estadísticas detalladas disponibles.</div>`;
+  return html;
+}
+
+function renderStatsBars(s1,s2){
+  const STATS=[
+    {k:'posesion',l:'Posesión',f:v=>v!=null?v+'%':'–'},
+    {k:'tiros_total',l:'Tiros totales',f:v=>v??'–'},
+    {k:'tiros_al_arco',l:'Al arco',f:v=>v??'–'},
+    {k:'pases_total',l:'Pases',f:v=>v??'–'},
+    {k:'pases_precision',l:'Precisión pases',f:v=>v!=null?v+'%':'–'},
+    {k:'corners',l:'Córners',f:v=>v??'–'},
+    {k:'faltas',l:'Faltas',f:v=>v??'–'},
+    {k:'tarjetas_amarillas',l:'Amarillas',f:v=>v??'–'},
+    {k:'tarjetas_rojas',l:'Rojas',f:v=>v??'–'},
+    {k:'fueras_de_juego',l:'Fuera de juego',f:v=>v??'–'},
+  ];
+  const n1=esc(s1.nombre_es||s1.nombre||'Local'),n2=esc(s2.nombre_es||s2.nombre||'Visitante');
+  let html=`<div class="stats-section"><h3>Estadísticas</h3>
+    <div class="stats-header"><span class="shn">${n1}</span><span></span><span class="shn right">${n2}</span></div>`;
+  STATS.forEach(({k,l,f})=>{
+    const v1=s1[k],v2=s2[k];if(v1==null&&v2==null)return;
+    const a=parseFloat(v1)||0,b=parseFloat(v2)||0,tot=a+b||1;
+    const p1=Math.round(a/tot*100),p2=Math.round(b/tot*100);
+    html+=`<div class="stat-row">
+      <div><div class="stat-val">${f(v1)}</div><div class="bar-wrap bar-l"><div class="bar" style="width:${p1}%"></div></div></div>
+      <div class="stat-lbl">${l}</div>
+      <div><div class="stat-val right">${f(v2)}</div><div class="bar-wrap bar-r"><div class="bar" style="width:${p2}%"></div></div></div>
+    </div>`;
+  });
+  return html+`</div>`;
+}
+function renderEventos(evs){
+  const IC={gol:'⚽',penal:'⚽',autogol:'🤦',penal_fallado:'❌',amarilla:'🟨',roja:'🟥',sustitucion:'🔄'};
+  let html=`<div class="eventos-section"><h3>Eventos</h3>`;
+  evs.forEach(ev=>{
+    const ic=IC[ev.tipo]||'•';
+    const min=ev.minuto?`${ev.minuto}${ev.minuto_extra?`+${ev.minuto_extra}`:''}′`:'';
+    const asi=ev.asistencia_nombre?` <span style="color:var(--muted)">(${esc(ev.asistencia_nombre)})</span>`:'';
+    html+=`<div class="ev-item">
+      <div class="ev-min">${min}</div>
+      <div class="ev-icon">${ic}</div>
+      <div class="ev-info"><div>${esc(ev.jugador_nombre||'')}${asi}</div>
+        <div class="ev-eq">${esc(ev.equipo_nombre||'')}</div></div>
+    </div>`;
+  });
+  return html+`</div>`;
+}
+
+async function inferirPos(ev, id){
+  ev.stopPropagation();
+  const btn=ev.currentTarget;
+  btn.textContent='⏳…'; btn.disabled=true;
+  try{
+    const r=await api(`/torneo/torneos/${id}/inferir-posiciones`,{method:'POST'});
+    btn.textContent=`✅ ${r.actualizadas} actualizada${r.actualizadas!==1?'s':''}`;
+    setTimeout(()=>{btn.textContent='🔢 Inferir posiciones';btn.disabled=false;},2500);
+    if(_torneoActivo?.id===id) await renderFixture();
+  }catch(e){
+    alert('Error: '+e.message);
+    btn.textContent='🔢 Inferir posiciones'; btn.disabled=false;
+  }
+}
+
+/* Inferir posiciones faltantes: preserva los # ya asignados, busca el hueco */
+function inferirPosiciones(arr){
+  const total = arr.length;
+  const usados = new Set(arr.map(s => s.posicion).filter(Boolean));
+  const faltantes = [];
+  for(let i=1; i<=total; i++) if(!usados.has(i)) faltantes.push(i);
+  let fi = 0;
+  // Asignar faltantes en orden a los que tienen posicion null/0
+  arr.forEach(s => { if(!s.posicion) s.posicion = faltantes[fi++]||null; });
+}
+
+async function toggleFaseVisibility(faseId, visible){
+  const lbl=document.getElementById('vis_lbl_'+faseId);
+  const label=document.getElementById('vis_'+faseId)?.closest('label');
+  try{
+    await api(`/torneo/fases/${faseId}?visible_apostador=${visible}`,{method:'PATCH'});
+    if(lbl){lbl.style.color=visible?'var(--success)':'var(--muted)';}
+    if(label){label.style.borderColor=visible?'var(--success)':'var(--border)';}
+    // actualizar _allFases
+    const f=_allFases.find(x=>x.id===faseId);
+    if(f) f.visible_apostador=visible;
+  }catch(e){alert('Error: '+e.message);}
+}
+
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+init();
+</script>
+</body>
+</html>

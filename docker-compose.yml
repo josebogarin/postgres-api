@@ -1,61 +1,38 @@
 services:
-  db:
-    image: postgres:16-alpine
+  # Contenedor PostgreSQL principal - mismo setup que el core-postgres en produccion
+  # NOTA: El backend corre con uvicorn directamente, NO como servicio Docker
+  # Arrancar backend: cd backend && .venv\Scripts\Activate.ps1 && uvicorn app.main:app --reload --port 8000
+  core-postgres:
+    image: postgres:16
+    container_name: core-postgres
+    restart: always
     environment:
       POSTGRES_USER: app_user
       POSTGRES_PASSWORD: superpassword
-      POSTGRES_DB: users_db
+      POSTGRES_DB: app_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app_user -d users_db"]
+      test: ["CMD-SHELL", "pg_isready -U app_user -d app_db"]
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - postgres-net
-
-  api:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: development
-    ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
-    env_file:
-      - .env
-    environment:
-      # Sobreescribe el host de la DB para que apunte al servicio Docker
-      DATABASE_URL: postgresql+asyncpg://app_user:superpassword@db:5432/users_db
-    command: >
-      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - postgres-net
 
   pgadmin:
     image: dpage/pgadmin4:latest
+    container_name: becbuc-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
     depends_on:
-      - db
-    networks:
-      - postgres-net
+      - core-postgres
     profiles:
       - tools
 
 volumes:
   postgres_data:
-
-networks:
-  postgres-net:
-    driver: bridge

@@ -27,6 +27,25 @@ class Settings(BaseSettings):
     # Primary database
     DATABASE_URL: str
 
+    # BECBUC
+    DATABASE_BECBUC_URL: str = ""
+
+    # API-Football
+    APIFOOTBALL_KEY: str = ""
+
+    # Monitor de partidos
+    MONITOR_ACTIVO: bool = True
+    MONITOR_LEAGUE_ID: int = 1
+    MONITOR_SEASON: int = 2026
+    MONITOR_STARTUP_MARGIN_SEG: int = 300
+    MONITOR_INTERVAL_FAR_SEG: int = 600
+    MONITOR_INTERVAL_NEAR_SEG: int = 150
+    MONITOR_INTERVAL_IMMIN_SEG: int = 45
+    MONITOR_INTERVAL_LIVE_SEG: int = 45
+    MONITOR_INTERVAL_HT_SEG: int = 90
+    MONITOR_GRACE_PERIOD_SEG: int = 600
+    MONITOR_MAX_CALLS_DIA: int = 80
+
     # Additional databases per application {"app_slug": "connection_url"}
     APP_DATABASES: dict[str, str] = {}
 
@@ -52,10 +71,17 @@ class Settings(BaseSettings):
         return v or []
 
     @model_validator(mode="after")
-    def validate_production_settings(self) -> "Settings":
+    def apply_settings_rules(self) -> "Settings":
+        # En desarrollo, permitir origen "null" (archivos HTML abiertos desde file://)
+        if self.APP_ENV == "development" and "null" not in self.BACKEND_CORS_ORIGINS:
+            self.BACKEND_CORS_ORIGINS = list(self.BACKEND_CORS_ORIGINS) + ["null"]
+
+        # En producciÃ³n, la SECRET_KEY debe estar cambiada
         if self.APP_ENV == "production" and self.SECRET_KEY == "change-me-in-production-use-openssl-rand-hex-32":
             raise ValueError("SECRET_KEY must be changed in production")
+
         return self
 
 
 settings = Settings()  # type: ignore[call-arg]
+

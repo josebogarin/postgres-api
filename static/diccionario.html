@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Editor de Diccionario</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#181c24;--surface2:#1e2330;--surface3:#252a38;
+  --border:#2a3045;--fg:#e2e8f0;--muted:#64748b;
+  --accent:#6366f1;--accent2:#22d3ee;--green:#22c55e;--red:#ef4444;
+  --yellow:#f59e0b;--radius:7px;
+}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── Header ── */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:50px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.h-title{font-size:1rem;font-weight:700;color:var(--accent2);white-space:nowrap;}
+.h-sep{flex:1;}
+.search-wrap{position:relative;display:flex;align-items:center;}
+.search-wrap input{background:var(--surface2);border:1px solid var(--border);color:var(--fg);border-radius:var(--radius);padding:6px 10px 6px 30px;font-size:0.8rem;outline:none;width:220px;transition:border-color .15s;}
+.search-wrap input:focus{border-color:var(--accent2);}
+.search-wrap .si{position:absolute;left:9px;color:var(--muted);font-size:0.8rem;pointer-events:none;}
+.search-clear{position:absolute;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;display:none;}
+.search-clear.show{display:block;}
+.btn{border:none;border-radius:var(--radius);padding:7px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-cancel{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.btn-cancel:hover:not(:disabled){color:var(--fg);border-color:var(--muted);}
+.btn-save{background:var(--green);color:#fff;}
+.btn-save:hover:not(:disabled){opacity:.85;}
+.pending-badge{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.4);color:var(--yellow);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;display:none;}
+.pending-badge.show{display:inline-block;}
+.btn-back{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:var(--radius);font-size:0.78rem;cursor:pointer;transition:all .15s;}
+.btn-back:hover{color:var(--fg);border-color:var(--muted);}
+.btn-nav{background:#4f46e5;border:none;color:#fff;padding:6px 13px;border-radius:var(--radius);font-size:0.78rem;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.btn-nav:hover{opacity:.85;}
+
+/* ── Layout ── */
+.layout{display:flex;flex:1;overflow:hidden;}
+
+/* ── Sidebar ── */
+.sidebar{width:240px;min-width:200px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar-section{padding:10px 12px 6px;font-size:0.68rem;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
+.sistema-sel{margin:0 10px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--accent2);border-radius:var(--radius);padding:7px 9px;font-size:0.82rem;font-weight:600;outline:none;cursor:pointer;width:calc(100% - 20px);}
+.sistema-sel:focus{border-color:var(--accent2);}
+
+/* Árbol de tablas */
+.tree-wrap{flex:1;overflow-y:auto;padding:4px 0;}
+.tree-item{display:flex;align-items:center;gap:7px;padding:6px 12px;cursor:pointer;border-radius:4px;margin:1px 6px;transition:background .12s;user-select:none;}
+.tree-item:hover{background:var(--surface2);}
+.tree-item.active{background:rgba(34,211,238,.1);color:var(--accent2);}
+.tree-icon{font-size:.75rem;flex-shrink:0;}
+.tree-name{flex:1;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tree-count{background:var(--surface2);border-radius:10px;padding:1px 7px;font-size:.65rem;color:var(--muted);}
+.tree-item.active .tree-count{background:rgba(34,211,238,.15);color:var(--accent2);}
+.tree-loading{padding:14px 12px;color:var(--muted);font-size:.78rem;}
+
+/* ── Panel principal ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.main-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:10px;}
+.main-empty .icon{font-size:2.5rem;}
+
+/* tabla sticky */
+.grid-wrap{flex:1;overflow:auto;position:relative;}
+table.dic-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:.8rem;}
+table.dic-table th{position:sticky;top:0;background:var(--surface);color:var(--accent2);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap;z-index:2;}
+table.dic-table th:nth-child(1),
+table.dic-table th:nth-child(2){position:sticky;left:0;z-index:3;background:var(--surface);}
+table.dic-table th:nth-child(2){left:52px;}
+table.dic-table td{padding:4px 6px;border-bottom:1px solid rgba(42,48,69,.6);vertical-align:middle;}
+table.dic-table td:nth-child(1),
+table.dic-table td:nth-child(2){position:sticky;background:var(--surface2);z-index:1;}
+table.dic-table td:nth-child(1){left:0;width:50px;text-align:center;}
+table.dic-table td:nth-child(2){left:52px;min-width:140px;color:var(--accent2);font-weight:600;}
+table.dic-table tr:hover td{background:var(--surface3);}
+table.dic-table tr:hover td:nth-child(1),
+table.dic-table tr:hover td:nth-child(2){background:var(--surface3);}
+table.dic-table tr.changed td{background:rgba(245,158,11,.05);}
+
+/* celdas editables */
+.cell-edit{background:transparent;border:1px solid transparent;color:var(--fg);border-radius:4px;padding:4px 7px;font-size:.8rem;outline:none;width:100%;transition:border-color .15s;font-family:inherit;}
+.cell-edit:focus{border-color:var(--accent2);background:var(--surface);}
+.cell-edit.changed{border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.04);}
+.cell-ro{padding:4px 7px;color:var(--muted);font-size:.8rem;}
+
+/* checkboxes */
+.cb-wrap{display:flex;justify-content:center;}
+input[type="checkbox"].cb{width:15px;height:15px;cursor:pointer;accent-color:var(--accent2);}
+
+/* barra inferior de estado */
+.grid-footer{padding:6px 14px;background:var(--surface);border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);display:flex;gap:14px;flex-shrink:0;}
+
+/* banner sin permiso */
+.access-banner{display:none;align-items:center;gap:10px;padding:8px 16px;background:rgba(239,68,68,.1);border-bottom:1px solid rgba(239,68,68,.3);color:#fca5a5;font-size:.8rem;flex-shrink:0;}
+.access-banner.show{display:flex;}
+.access-banner .ab-icon{font-size:1rem;}
+
+/* ── Pestañas ── */
+.tab-bar{display:none;gap:0;padding:0 14px;background:var(--surface);border-bottom:2px solid var(--border);flex-shrink:0;}
+.tab-bar.show{display:flex;}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;padding:10px 18px;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tab-btn:hover{color:var(--fg);}
+.tab-btn.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+
+/* ── Preview ── */
+.prev-toolbar{padding:8px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.prev-info{font-size:.78rem;color:var(--muted);}
+.prev-info b{color:var(--fg);}
+table.prev-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:.8rem;}
+table.prev-table th{position:sticky;top:0;background:var(--surface);color:var(--accent2);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap;z-index:2;cursor:default;}
+table.prev-table td{padding:5px 10px;border-bottom:1px solid rgba(42,48,69,.5);vertical-align:middle;white-space:nowrap;}
+table.prev-table tr:hover td{background:var(--surface2);}
+.prev-null{color:var(--muted);font-style:italic;}
+.prev-num{font-family:'Courier New',monospace;text-align:right;display:block;color:var(--accent2);}
+.prev-int{font-family:'Courier New',monospace;color:var(--accent);}
+.prev-bool-t{color:var(--green);font-weight:700;}
+.prev-bool-f{color:var(--red);}
+.prev-date{color:var(--yellow);font-family:'Courier New',monospace;font-size:.76rem;}
+.prev-long{cursor:help;}
+
+/* ── Instructivo ── */
+.instr-code{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:7px 12px;font-family:'Courier New',monospace;font-size:.76rem;color:var(--accent2);white-space:pre-wrap;word-break:break-all;position:relative;}
+.instr-copy{position:absolute;top:5px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.7rem;padding:2px 6px;border-radius:4px;}
+.instr-copy:hover{color:var(--fg);background:var(--surface2);}
+.instr-mv-block{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:12px 14px;}
+.instr-mv-title{font-weight:700;font-size:.82rem;color:var(--fg);margin-bottom:4px;}
+.instr-mv-desc{font-size:.78rem;color:var(--muted);margin-bottom:8px;}
+.instr-tag{display:inline-block;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:10px;padding:1px 8px;font-size:.7rem;color:#a5b4fc;margin-right:4px;}
+.instr-tr td{padding:7px 14px;border-bottom:1px solid rgba(42,48,69,.5);vertical-align:top;}
+.instr-tr:last-child td{border-bottom:none;}
+.instr-field{font-family:monospace;color:var(--accent2);font-size:.78rem;}
+.instr-badge{display:inline-block;border-radius:4px;padding:1px 7px;font-size:.68rem;font-weight:700;}
+
+/* ── Multivalor test ── */
+.mv-wrap{display:flex;align-items:center;gap:4px;}
+.mv-test-btn{flex-shrink:0;width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--muted);font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;}
+.mv-test-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+.mv-test-btn.has-sql{border-color:rgba(34,211,238,.4);color:var(--accent2);background:rgba(34,211,238,.08);}
+.mv-test-btn.has-sql:hover{background:rgba(34,211,238,.18);}
+
+/* ── Modal SQL tester ── */
+.sql-modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.65);align-items:center;justify-content:center;}
+.sql-modal.open{display:flex;}
+.sql-modal-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;width:640px;max-width:94vw;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.sql-modal-head{padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sql-modal-title{font-weight:700;color:var(--accent2);font-size:.9rem;}
+.sql-modal-close{margin-left:auto;background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:2px 6px;border-radius:4px;}
+.sql-modal-close:hover{color:var(--fg);background:var(--surface2);}
+.sql-modal-body{padding:14px 16px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:12px;}
+.sql-code{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:'Courier New',monospace;font-size:.78rem;color:var(--accent2);word-break:break-all;white-space:pre-wrap;}
+.sql-status{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600;}
+.sql-status.ok{color:var(--green);}
+.sql-status.err{color:var(--red);}
+.sql-status.warn{color:var(--yellow);}
+.sql-err-detail{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:6px;padding:10px 12px;font-size:.76rem;color:#fca5a5;font-family:'Courier New',monospace;white-space:pre-wrap;word-break:break-all;}
+.sql-result-table{border-collapse:collapse;width:100%;font-size:.76rem;}
+.sql-result-table th{background:var(--surface2);padding:5px 10px;text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--accent2);border-bottom:1px solid var(--border);}
+.sql-result-table td{padding:4px 10px;border-bottom:1px solid rgba(42,48,69,.5);color:var(--fg);}
+.sql-result-table tr:last-child td{border-bottom:none;}
+.sql-result-table td:first-child{color:var(--accent);font-family:monospace;}
+.sql-hint{font-size:.72rem;color:var(--muted);padding:6px 0 0;}
+.grid-footer b{color:var(--fg);}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* ── Modal Sincronizar ── */
+.sync-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);align-items:center;justify-content:center;}
+.sync-modal.open{display:flex;}
+.sync-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;width:min(520px,96vw);max-height:84vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.sync-head{padding:13px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sync-title{font-weight:700;color:var(--accent2);font-size:.9rem;flex:1;}
+.sync-close{background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:2px 7px;border-radius:4px;}
+.sync-close:hover{color:var(--fg);background:var(--surface2);}
+.sync-body{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:14px;}
+.sync-section-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.sync-section-title span{flex:1;height:1px;background:var(--border);}
+.sync-cb-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:5px;cursor:pointer;transition:background .12s;}
+.sync-cb-row:hover{background:var(--surface2);}
+.sync-cb-row input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0;}
+.sync-cb-label{font-size:.83rem;flex:1;}
+.sync-cb-badge{font-size:.65rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1px 7px;color:var(--muted);}
+.sync-empty{color:var(--muted);font-size:.8rem;padding:8px 0;}
+.sync-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sync-status{flex:1;font-size:.78rem;color:var(--muted);}
+.btn-sync-ok{background:var(--accent2);color:#000;border:none;border-radius:var(--radius);padding:8px 20px;font-size:.84rem;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.btn-sync-ok:hover:not(:disabled){opacity:.85;}
+.btn-sync-ok:disabled{opacity:.4;cursor:not-allowed;}
+.sync-sel-actions{display:flex;gap:8px;margin-bottom:4px;}
+.sync-sel-link{background:none;border:none;color:var(--accent2);font-size:.72rem;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;}
+.sync-sel-link:hover{color:var(--fg);}
+.sync-result{background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.25);border-radius:6px;padding:10px 14px;font-size:.8rem;color:var(--fg);line-height:1.7;}
+.sync-result b{color:var(--accent2);}
+.sync-result.err{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:#fca5a5;}
+
+/* ── Preview row editable ── */
+table.prev-table tbody tr.prev-editable{cursor:pointer;}
+table.prev-table tbody tr.prev-editable:hover td{background:rgba(34,211,238,.06);}
+
+/* ── Edit Modal (Vista Previa) ── */
+.prv-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;display:flex;align-items:center;justify-content:center;animation:pvFade .15s;}
+@keyframes pvFade{from{opacity:0}to{opacity:1}}
+.prv-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:min(680px,96vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:pvSlide .18s;}
+@keyframes pvSlide{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+.prv-header{padding:15px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.prv-title{font-size:.95rem;font-weight:700;color:var(--accent2);flex:1;}
+.prv-pk{font-size:.7rem;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-family:monospace;}
+.prv-close{background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:2px 7px;border-radius:4px;transition:all .15s;}
+.prv-close:hover{color:var(--red);background:rgba(239,68,68,.1);}
+.prv-body{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:14px;}
+.prv-footer{padding:13px 22px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.pf-group{display:flex;flex-direction:column;gap:5px;}
+.pf-label{font-size:.71rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:5px;}
+.pf-req{color:var(--red);}
+.pf-ro{color:#7986cb;font-size:.63rem;}
+.pf-inp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);padding:8px 11px;font-size:.84rem;outline:none;font-family:inherit;transition:border-color .15s;}
+.pf-inp:focus{border-color:var(--accent2);}
+.pf-inp[readonly],.pf-inp:disabled{opacity:.55;cursor:not-allowed;border-style:dashed;}
+.pf-textarea{resize:vertical;min-height:72px;line-height:1.5;}
+.pf-help{font-size:.7rem;color:var(--muted);}
+.pf-mv-row{display:flex;gap:6px;}
+.pf-mv-row .pf-inp{flex:1;}
+.pf-mv-btn{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--accent2);padding:0 13px;cursor:pointer;font-size:.82rem;font-weight:600;transition:all .15s;white-space:nowrap;}
+.pf-mv-btn:hover{background:var(--accent2);color:#000;border-color:var(--accent2);}
+.pf-bool{display:flex;align-items:center;gap:9px;padding:4px 0;}
+.pf-bool input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
+.pf-bool-lbl{font-size:.84rem;cursor:pointer;}
+.prv-btn-ok{background:var(--accent);border:none;border-radius:var(--radius);color:#fff;padding:8px 22px;font-size:.85rem;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.prv-btn-ok:hover{opacity:.85;}
+.prv-btn-ok:disabled{opacity:.45;cursor:not-allowed;}
+.prv-btn-cancel{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);padding:8px 18px;font-size:.85rem;cursor:pointer;transition:opacity .15s;}
+.prv-btn-cancel:hover{opacity:.8;}
+/* MV Picker */
+.pvpicker-overlay{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);}
+.pvpicker-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;width:min(440px,94vw);max-height:76vh;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(0,0,0,.5);}
+.pvpicker-head{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:700;}
+.pvpicker-search{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--fg);padding:7px 10px;font-size:.83rem;outline:none;}
+.pvpicker-search:focus{border-color:var(--accent2);}
+.pvpicker-list{flex:1;overflow-y:auto;}
+.pvpicker-item{padding:9px 18px;cursor:pointer;font-size:.84rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(42,48,69,.4);transition:background .12s;}
+.pvpicker-item:hover{background:rgba(34,211,238,.12);color:var(--accent2);}
+.pvpicker-val{font-family:monospace;font-size:.72rem;color:var(--muted);}
+.pvpicker-empty{padding:24px;text-align:center;color:var(--muted);font-size:.82rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="h-title">📖 Editor de Diccionario</span>
+  <div class="search-wrap">
+    <span class="si">🔍</span>
+    <input type="text" id="searchInput" placeholder="Buscar en campos..." oninput="onSearch()"/>
+    <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+  </div>
+  <span class="pending-badge" id="pendingBadge">0 cambios</span>
+  <button class="btn btn-cancel" id="cancelBtn" onclick="cancelChanges()" disabled>Cancelar</button>
+  <button class="btn btn-save"   id="saveBtn"   onclick="saveChanges()"  disabled>💾 Confirmar</button>
+  <span class="h-sep"></span>
+  <button id="btnNavPortal" class="btn-nav" onclick="openPortal()" style="display:none;background:#334155;">← Portal</button>
+  <button id="btnNavSync"   class="btn-nav" onclick="openSyncModal()" style="display:none;background:rgba(34,211,238,.15);border:1px solid rgba(34,211,238,.3);color:var(--accent2);">🔄 Sincronizar</button>
+  <button class="btn-back" onclick="window.close()">✕ Cerrar</button>
+</header>
+
+<div class="access-banner" id="accessBanner">
+  <span class="ab-icon">🔒</span>
+  <span id="accessMsg">Sin permisos de edición para este sistema.</span>
+</div>
+
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" id="tabBtnDic"     onclick="switchTab('dic')">📝 Diccionario</button>
+  <button class="tab-btn"        id="tabBtnPreview"    onclick="switchTab('preview')">👁 Vista Previa</button>
+  <button class="tab-btn"        id="tabBtnInstructivo" onclick="switchTab('instructivo')">📚 Instructivo</button>
+</div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-section">Sistema</div>
+    <select class="sistema-sel" id="sistemaSel" onchange="onSistemaChange()">
+      <option value="">Cargando…</option>
+    </select>
+
+    <div class="sidebar-section">Tablas</div>
+    <div class="tree-wrap" id="treeWrap">
+      <div class="tree-loading">Selecciona un sistema</div>
+    </div>
+    <div style="padding:8px 10px;border-top:1px solid var(--border);flex-shrink:0;">
+      <button id="btnSincronizar" onclick="openSyncModal()"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--accent2);border-radius:var(--radius);padding:7px 10px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;display:none;"
+        onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">
+        🔄 Sincronizar campos
+      </button>
+    </div>
+  </div>
+
+  <!-- Panel principal -->
+  <div class="main" id="mainPanel">
+    <div class="main-empty" id="emptyState">
+      <div class="icon">📋</div>
+      <p>Selecciona un sistema y luego una tabla</p>
+    </div>
+    <div style="display:none;flex:1;flex-direction:column;overflow:hidden;" id="gridContainer">
+      <div class="grid-wrap" id="gridWrap">
+        <table class="dic-table" id="dicTable">
+          <thead id="dicHead"></thead>
+          <tbody id="dicBody"></tbody>
+        </table>
+      </div>
+      <div class="grid-footer" id="gridFooter"></div>
+    </div>
+
+    <!-- Instructivo -->
+    <div style="display:none;flex:1;overflow-y:auto;padding:24px 32px;" id="instructivoContainer">
+      <div style="max-width:820px;margin:0 auto;">
+
+        <h2 style="color:var(--accent2);font-size:1.1rem;margin-bottom:4px">📚 Guía del Editor de Diccionario</h2>
+        <p style="color:var(--muted);font-size:.82rem;margin-bottom:24px">El diccionario define cómo se muestran y validan los campos de cada tabla en la BD del sistema.</p>
+
+        <!-- Campos del diccionario -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+          <div style="padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;color:var(--accent2)">📋 Campos del diccionario</div>
+          <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
+            <thead><tr style="background:var(--surface);">
+              <th style="padding:8px 14px;text-align:left;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Campo</th>
+              <th style="padding:8px 14px;text-align:left;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Descripción</th>
+              <th style="padding:8px 14px;text-align:left;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)">Ejemplo</th>
+            </tr></thead>
+            <tbody id="instrFieldsBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Sección multivalor -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+          <div style="padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;color:var(--accent2)">🔗 Multivalor — tipos y sintaxis</div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:16px;" id="instrMvBody"></div>
+        </div>
+
+        <!-- Tipos de dato -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;">
+          <div style="padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;color:var(--accent2)">🗂 Tipos de dato PostgreSQL</div>
+          <div style="padding:16px;" id="instrTiposBody"></div>
+        </div>
+
+        <!-- Tips -->
+        <div style="background:rgba(34,211,238,.05);border:1px solid rgba(34,211,238,.2);border-radius:8px;padding:16px;margin-bottom:20px;">
+          <div style="font-weight:700;color:var(--accent2);font-size:.85rem;margin-bottom:10px">💡 Consejos</div>
+          <ul style="color:var(--fg);font-size:.8rem;line-height:1.8;padding-left:18px;" id="instrTipsList"></ul>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Vista Previa -->
+    <div style="display:none;flex:1;flex-direction:column;overflow:hidden;" id="previewContainer">
+      <div class="prev-toolbar">
+        <span class="prev-info" id="prevInfo">—</span>
+        <button class="btn btn-cancel" onclick="loadPreview()" style="margin-left:auto">🔄 Recargar</button>
+      </div>
+      <div class="grid-wrap" id="prevWrap">
+        <table class="prev-table" id="prevTable">
+          <thead id="prevHead"></thead>
+          <tbody id="prevBody"></tbody>
+        </table>
+      </div>
+      <div class="grid-footer" id="prevFooter"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay sesión expirada -->
+<div id="sessionExpiredOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,17,23,.96);flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;">
+  <div style="font-size:3rem">⏰</div>
+  <div style="font-size:1.15rem;font-weight:700;color:var(--fg)">Sesión expirada</div>
+  <div style="color:var(--muted);font-size:.85rem;max-width:340px;line-height:1.6">
+    Tu sesión ha vencido o el token ya no es válido.<br>
+    Vuelve al <b style="color:var(--fg)">Tester</b> para iniciar sesión nuevamente y reabre el Diccionario.
+  </div>
+  <div style="display:flex;gap:10px;margin-top:6px;">
+    <button onclick="window.close()" style="background:var(--surface2);border:1px solid var(--border);color:var(--fg);border-radius:6px;padding:8px 20px;font-size:.82rem;cursor:pointer;">✕ Cerrar esta ventana</button>
+    <button onclick="window.history.back()" style="background:var(--accent);border:none;color:#fff;border-radius:6px;padding:8px 20px;font-size:.82rem;font-weight:600;cursor:pointer;">← Volver</button>
+  </div>
+</div>
+
+<!-- Modal Sincronizar -->
+<div class="sync-modal" id="syncModal" onclick="if(event.target===this)closeSyncModal()">
+  <div class="sync-box">
+    <div class="sync-head">
+      <span class="sync-title">🔄 Sincronizar campos con la BD</span>
+      <button class="sync-close" onclick="closeSyncModal()">✕</button>
+    </div>
+    <div class="sync-body" id="syncBody">
+      <div style="color:var(--muted);font-size:.82rem">⏳ Cargando tablas…</div>
+    </div>
+    <div class="sync-footer">
+      <span class="sync-status" id="syncStatus"></span>
+      <button class="btn btn-cancel" onclick="closeSyncModal()">Cancelar</button>
+      <button class="btn-sync-ok" id="btnSyncOk" onclick="runSync()" disabled>▶ Sincronizar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal verificador SQL -->
+<div class="sql-modal" id="sqlModal" onclick="if(event.target===this)closeSqlModal()">
+  <div class="sql-modal-box">
+    <div class="sql-modal-head">
+      <span class="sql-modal-title">🔍 Verificador SQL — Multivalor</span>
+      <button class="sql-modal-close" onclick="closeSqlModal()">✕</button>
+    </div>
+    <div class="sql-modal-body" id="sqlModalBody"></div>
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const params          = new URLSearchParams(window.location.search);
+let token             = params.get('token') || sessionStorage.getItem('dic_token') || '';
+let baseUrl           = (params.get('base') || window.location.origin).replace(/\/$/, '');
+const preselSistemaId = params.get('sistema_id') ? parseInt(params.get('sistema_id')) : null;
+const preselTabla     = params.get('tabla') || null;
+if (token) sessionStorage.setItem('dic_token', token);
+
+let _sessionExpired = false;
+
+const api = async (path, opts = {}) => {
+  const res = await fetch(baseUrl + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+      ...(opts.headers || {}),
+    },
+  });
+  if (res.status === 401 && !_sessionExpired) {
+    _sessionExpired = true;
+    document.getElementById('sessionExpiredOverlay').style.display = 'flex';
+  }
+  return res;
+};
+
+// ── Estado ──────────────────────────────────────────────────────────────────
+let allSistemas   = [];          // lista completa de sistemas
+let allEntries    = [];          // todos los registros del sistema actual
+let currentSistemaId  = null;
+let currentTabla      = null;
+let pendingChanges    = {};      // { id: { field: value, ... } }
+let displayedIds      = [];      // IDs actualmente en el DOM (para search)
+let currentUser       = null;    // usuario autenticado
+let canEdit           = false;   // puede editar el sistema seleccionado
+let currentTab        = 'dic';   // 'dic' | 'preview'
+let prevRawRows       = [];      // filas crudas del último renderPreview
+let prevRawCols       = [];      // columnas crudas del último renderPreview
+let prevPkCol         = 'id';    // columna PK para el modal de edición
+let _prvEdit          = null;    // estado del modal de edición de vista previa
+let prevMvCacheEdit   = {};      // opciones multivalor cacheadas en el modal
+
+// ── Columnas de la grilla ──────────────────────────────────────────────────
+// [key, label, type, width, readonly]
+// type: text | number | bool
+const COLS = [
+  ['orden_campo',    'Orden',       'number', 55,  false],
+  ['campo',          'Campo',       'text',   140, true ],
+  ['alias',          'Alias',       'text',   140, false],
+  ['tipo_dato',      'Tipo',        'text',   100, false],
+  ['es_visible',     'Visible',     'bool',   62,  false],
+  ['es_solo_lectura','Solo lect.',  'bool',   72,  false],
+  ['es_obligatorio', 'Oblig.',      'bool',   62,  false],
+  ['decimales',      'Dec.',        'number', 50,  false],
+  ['texto_ayuda',    'Ayuda',       'text',   180, false],
+  ['valor_defecto',  'Defecto',     'text',   120, false],
+  ['descripcion',    'Descripción', 'text',   200, false],
+  ['multivalor',     'Multivalor',  'text',   140, false],
+  ['grupo',          'Grupo',       'number',  60, false],
+  ['calculo',        'Cálculo',     'select',  90, false],
+];
+
+// ── Init ────────────────────────────────────────────────────────────────────
+async function init() {
+  // Cargar usuario y sistemas en paralelo
+  const [resSistemas, resMe] = await Promise.all([
+    api('/api/v1/sistema/?limit=200'),
+    api('/api/v1/auth/me'),
+  ]);
+
+  if (!resSistemas.ok) { alert('Error cargando sistemas'); return; }
+  allSistemas = await resSistemas.json();
+
+  if (resMe.ok) {
+    currentUser = await resMe.json();
+    applyNavAccess(currentUser);
+  }
+
+  const sel = document.getElementById('sistemaSel');
+  sel.innerHTML = '<option value="">— selecciona un sistema —</option>';
+  allSistemas.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id;
+    o.textContent = s.nombre + (s.nombre_bd ? ` (${s.nombre_bd})` : '');
+    sel.appendChild(o);
+  });
+
+  // Pre-seleccionar sistema enviado como parámetro
+  if (preselSistemaId) {
+    sel.value = String(preselSistemaId);
+    if (sel.value) await onSistemaChange();
+  }
+
+  // Pre-seleccionar tabla si se pasó como parámetro (ej: desde cabecera_detalle)
+  if (preselTabla && currentTabla !== preselTabla) {
+    selectTabla(preselTabla);
+  }
+}
+
+function computeCanEdit(sistemaId) {
+  if (!currentUser) return false;
+  const roles = (currentUser.roles || []).map(r => r.name);
+  if (roles.includes('superadmin')) return true;
+  if (roles.includes('admin')) return true;
+  return false;
+}
+
+function updateAccessBanner() {
+  const banner = document.getElementById('accessBanner');
+  const saveBtn  = document.getElementById('saveBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+
+  if (!currentSistemaId) {
+    banner.classList.remove('show');
+    return;
+  }
+
+  if (!canEdit) {
+    const roles = (currentUser?.roles || []).map(r => r.name).join(', ') || 'sin roles';
+    document.getElementById('accessMsg').textContent =
+      `Solo lectura — tu rol (${roles}) no tiene permiso para editar el diccionario de este sistema.`;
+    banner.classList.add('show');
+    saveBtn.disabled = true;
+    cancelBtn.disabled = true;
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// ── Cambio de sistema ────────────────────────────────────────────────────────
+async function onSistemaChange() {
+  if (!confirmDiscardIfDirty()) return;
+
+  const sel = document.getElementById('sistemaSel');
+  currentSistemaId = sel.value ? parseInt(sel.value) : null;
+  currentTabla = null;
+  allEntries = [];
+  pendingChanges = {};
+  updatePendingUI();
+
+  document.getElementById('gridContainer').style.display = 'none';
+  document.getElementById('previewContainer').style.display = 'none';
+  document.getElementById('emptyState').style.display = '';
+  document.getElementById('tabBar').classList.remove('show');
+  currentTab = 'dic';
+  document.getElementById('tabBtnDic').classList.add('active');
+  document.getElementById('tabBtnPreview').classList.remove('active');
+  document.getElementById('tabBtnInstructivo').classList.remove('active');
+  document.getElementById('instructivoContainer').style.display = 'none';
+
+  if (!currentSistemaId) {
+    renderTree([]);
+    return;
+  }
+
+  // Calcular permisos para este sistema
+  canEdit = computeCanEdit(currentSistemaId);
+  updateAccessBanner();
+  // Mostrar botón sincronizar solo para superadmin
+  const isSuperadmin = (currentUser?.roles || []).some(r => r.name === 'superadmin');
+  const btnSync = document.getElementById('btnSincronizar');
+  if (btnSync) btnSync.style.display = isSuperadmin ? '' : 'none';
+
+  // Cargar TODOS los registros del sistema (hasta 2000)
+  const res = await api(`/api/v1/diccionario/?id_sistema=${currentSistemaId}&limit=2000`);
+  if (!res.ok) { alert('Error cargando diccionario'); return; }
+  allEntries = await res.json();
+
+  // Agrupar por tabla para el árbol
+  renderTree(buildTablaGroups(allEntries));
+}
+
+function buildTablaGroups(entries) {
+  const groups = {};
+  entries.forEach(e => {
+    const t = e.tabla || '(sin tabla)';
+    groups[t] = (groups[t] || 0) + 1;
+  });
+  return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]));
+}
+
+// ── Árbol de tablas ──────────────────────────────────────────────────────────
+function renderTree(groups) {
+  const wrap = document.getElementById('treeWrap');
+  if (!groups.length) {
+    wrap.innerHTML = '<div class="tree-loading">Sin tablas en el diccionario.<br>Presiona 📖 en el tester para sembrarlo.</div>';
+    return;
+  }
+  wrap.innerHTML = groups.map(([tabla, count]) => `
+    <div class="tree-item ${tabla === currentTabla ? 'active' : ''}"
+         onclick="selectTabla(${esc(JSON.stringify(tabla))})">
+      <span class="tree-icon">📋</span>
+      <span class="tree-name" title="${esc(tabla)}">${esc(tabla)}</span>
+      <span class="tree-count">${count}</span>
+    </div>`).join('');
+}
+
+// ── Seleccionar tabla ────────────────────────────────────────────────────────
+function selectTabla(tabla) {
+  if (!confirmDiscardIfDirty()) return;
+  currentTabla = tabla;
+  pendingChanges = {};
+  updatePendingUI();
+
+  // Mostrar barra de pestañas
+  document.getElementById('tabBar').classList.add('show');
+
+  // Resaltar en árbol
+  document.querySelectorAll('.tree-item').forEach(el => {
+    el.classList.toggle('active', el.querySelector('.tree-name')?.title === tabla);
+  });
+
+  // Renderizar según la pestaña activa
+  if (currentTab === 'preview') {
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('gridContainer').style.display = 'none';
+    document.getElementById('previewContainer').style.display = 'flex';
+    loadPreview();
+  } else {
+    const rows = allEntries.filter(e => (e.tabla || '(sin tabla)') === tabla);
+    renderGrid(rows);
+  }
+}
+
+// ── Grilla ───────────────────────────────────────────────────────────────────
+function renderGrid(rows) {
+  document.getElementById('emptyState').style.display = 'none';
+  const gc = document.getElementById('gridContainer');
+  gc.style.display = 'flex';
+
+  // Cabecera
+  document.getElementById('dicHead').innerHTML =
+    '<tr><th style="left:0;width:50px">#</th>' +
+    '<th style="left:52px">Campo DB</th>' +
+    COLS.slice(2).map(([k,,, w]) =>
+      `<th style="min-width:${w}px">${COLS.find(c=>c[0]===k)?.[1]||k}</th>`
+    ).join('') + '</tr>';
+
+  // Cuerpo
+  displayedIds = rows.map(r => r.id);
+  document.getElementById('dicBody').innerHTML = rows.map(r => rowHtml(r)).join('');
+
+  updateFooter(rows.length, rows.length);
+}
+
+function rowHtml(r) {
+  const pending = pendingChanges[r.id] || {};
+  const isDirty = Object.keys(pending).length > 0;
+  let html = `<tr id="row-${r.id}" class="${isDirty ? 'changed' : ''}">`;
+
+  // Col 1: orden (sticky)
+  const ordenVal = pending.orden_campo !== undefined ? pending.orden_campo : (r.orden_campo ?? '');
+  if (canEdit) {
+    html += `<td><input class="cell-edit${pending.orden_campo !== undefined ? ' changed' : ''}"
+      type="number" style="width:44px;text-align:center"
+      value="${ordenVal}" data-id="${r.id}" data-field="orden_campo"
+      oninput="onCellChange(this)"/></td>`;
+  } else {
+    html += `<td><span class="cell-ro" style="text-align:center">${esc(ordenVal)}</span></td>`;
+  }
+
+  // Col 2: campo (readonly siempre, sticky)
+  html += `<td><span class="cell-ro">${esc(r.campo)}</span></td>`;
+
+  // Resto de columnas
+  for (const [key, label, type, width, readonly] of COLS.slice(2)) {
+    const cur = pending[key] !== undefined ? pending[key] : r[key];
+    if (!canEdit || readonly) {
+      // Solo lectura
+      if (type === 'bool') {
+        html += `<td><div class="cb-wrap"><input type="checkbox" class="cb" ${cur ? 'checked' : ''} disabled/></div></td>`;
+      } else {
+        html += `<td><span class="cell-ro">${esc(cur ?? '')}</span></td>`;
+      }
+    } else if (type === 'bool') {
+      const checked = cur === true || cur === 1 ? 'checked' : '';
+      html += `<td><div class="cb-wrap"><input type="checkbox" class="cb${pending[key] !== undefined ? ' changed' : ''}"
+        ${checked} data-id="${r.id}" data-field="${key}"
+        onchange="onCbChange(this)"/></div></td>`;
+    } else if (type === 'select') {
+      const opts = [['','—'],['suma','Suma'],['conteo','Conteo'],['promedio','Promedio']];
+      const sel  = opts.map(([v,l]) => `<option value="${v}"${cur===v?'selected':''}>${l}</option>`).join('');
+      html += `<td><select class="cell-edit${pending[key] !== undefined ? ' changed' : ''}"
+        style="min-width:${width-14}px" data-id="${r.id}" data-field="${key}"
+        onchange="onCellChange(this)">${sel}</select></td>`;
+    } else if (key === 'multivalor') {
+      const isSql = String(cur ?? '').trim().length > 0;
+      html += `<td><div class="mv-wrap">
+        <input class="cell-edit${pending[key] !== undefined ? ' changed' : ''}"
+          type="text" style="min-width:${width-38}px"
+          value="${esc(cur ?? '')}" data-id="${r.id}" data-field="${key}"
+          id="mv-${r.id}"
+          oninput="onCellChange(this);updateMvBtn(this)"/>
+        <button class="mv-test-btn${isSql ? ' has-sql' : ''}" id="mvbtn-${r.id}"
+          title="Probar SQL contra la BD del sistema"
+          onclick="testMultivalor(${r.id})">▶</button>
+      </div></td>`;
+    } else {
+      html += `<td><input class="cell-edit${pending[key] !== undefined ? ' changed' : ''}"
+        type="${type === 'number' ? 'number' : 'text'}"
+        style="min-width:${width-14}px"
+        value="${esc(cur ?? '')}" data-id="${r.id}" data-field="${key}"
+        oninput="onCellChange(this)"/></td>`;
+    }
+  }
+  html += '</tr>';
+  return html;
+}
+
+// ── Cambios ──────────────────────────────────────────────────────────────────
+function onCellChange(input) {
+  const id    = parseInt(input.dataset.id);
+  const field = input.dataset.field;
+  const type  = COLS.find(c => c[0] === field)?.[2];
+  let val = input.value;
+  if (type === 'number') val = val === '' ? null : Number(val);
+  if (type === 'select') val = val === '' ? null : val;
+
+  // Comparar con original
+  const orig = allEntries.find(e => e.id === id);
+  if (!orig) return;
+
+  if (!pendingChanges[id]) pendingChanges[id] = {};
+
+  if (val === (orig[field] ?? '') || (val === null && orig[field] == null)) {
+    delete pendingChanges[id][field];
+    if (!Object.keys(pendingChanges[id]).length) delete pendingChanges[id];
+  } else {
+    pendingChanges[id][field] = val;
+  }
+
+  input.classList.toggle('changed', pendingChanges[id]?.[field] !== undefined);
+  document.getElementById(`row-${id}`)?.classList.toggle('changed', !!pendingChanges[id]);
+  updatePendingUI();
+}
+
+function onCbChange(cb) {
+  const id    = parseInt(cb.dataset.id);
+  const field = cb.dataset.field;
+  const val   = cb.checked;
+
+  const orig = allEntries.find(e => e.id === id);
+  if (!orig) return;
+
+  if (!pendingChanges[id]) pendingChanges[id] = {};
+
+  if (val === (orig[field] ?? false)) {
+    delete pendingChanges[id][field];
+    if (!Object.keys(pendingChanges[id]).length) delete pendingChanges[id];
+  } else {
+    pendingChanges[id][field] = val;
+  }
+
+  cb.classList.toggle('changed', pendingChanges[id]?.[field] !== undefined);
+  document.getElementById(`row-${id}`)?.classList.toggle('changed', !!pendingChanges[id]);
+  updatePendingUI();
+}
+
+function updatePendingUI() {
+  const n = Object.keys(pendingChanges).length;
+  const badge = document.getElementById('pendingBadge');
+  badge.textContent = `${n} cambio${n !== 1 ? 's' : ''}`;
+  badge.classList.toggle('show', n > 0);
+  document.getElementById('saveBtn').disabled   = n === 0;
+  document.getElementById('cancelBtn').disabled = n === 0;
+}
+
+// ── Guardar ──────────────────────────────────────────────────────────────────
+async function saveChanges() {
+  const ids = Object.keys(pendingChanges);
+  if (!ids.length) return;
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando…';
+
+  let ok = 0;
+  const errors = [];
+
+  for (const id of ids) {
+    const body = pendingChanges[id];
+    const res = await api(`/api/v1/diccionario/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      const idx = allEntries.findIndex(e => e.id === parseInt(id));
+      // Merge para preservar campos como "tabla" que el servidor puede no devolver
+      if (idx >= 0) allEntries[idx] = { ...allEntries[idx], ...updated };
+      delete pendingChanges[id];
+      ok++;
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      const detail  = errData.detail
+        ? (typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail))
+        : `HTTP ${res.status} ${res.statusText}`;
+      const entry = allEntries.find(e => e.id === parseInt(id));
+      errors.push(`• [${entry?.campo || id}] ${detail}`);
+    }
+  }
+
+  btn.textContent = '💾 Confirmar';
+  updatePendingUI();
+
+  if (currentTabla) {
+    const rows = allEntries.filter(e => (e.tabla || '(sin tabla)') === currentTabla);
+    renderGrid(rows);
+    applySearch();
+  }
+
+  if (errors.length) {
+    alert(`⚠ ${ok} guardado${ok !== 1 ? 's' : ''}, ${errors.length} fallaron:\n\n${errors.join('\n')}`);
+  }
+}
+
+// ── Cancelar ─────────────────────────────────────────────────────────────────
+function cancelChanges() {
+  if (!Object.keys(pendingChanges).length) return;
+  pendingChanges = {};
+  updatePendingUI();
+  if (currentTabla) {
+    const rows = allEntries.filter(e => (e.tabla || '(sin tabla)') === currentTabla);
+    renderGrid(rows);
+    applySearch();
+  }
+}
+
+function confirmDiscardIfDirty() {
+  if (Object.keys(pendingChanges).length === 0) return true;
+  return confirm('Hay cambios sin guardar. ¿Descartarlos?');
+}
+
+// ── Búsqueda ─────────────────────────────────────────────────────────────────
+function onSearch() {
+  const q = document.getElementById('searchInput').value;
+  document.getElementById('searchClear').classList.toggle('show', q.length > 0);
+  applySearch();
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').classList.remove('show');
+  applySearch();
+}
+
+function applySearch() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  if (!currentTabla) return;
+
+  const rows = document.querySelectorAll('#dicBody tr');
+  let visible = 0;
+  rows.forEach(row => {
+    if (!q) { row.style.display = ''; visible++; return; }
+    const text = row.textContent.toLowerCase();
+    const show = text.includes(q);
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  const total = allEntries.filter(e => (e.tabla || '(sin tabla)') === currentTabla).length;
+  updateFooter(visible, total, q);
+}
+
+function updateFooter(visible, total, q = '') {
+  const foot = document.getElementById('gridFooter');
+  foot.innerHTML = q
+    ? `<span><b>${visible}</b> de <b>${total}</b> campos (filtro: "<em>${esc(q)}</em>")</span>`
+    : `<span><b>${total}</b> campos en esta tabla</span>`;
+}
+
+// ── Verificador SQL multivalor ────────────────────────────────────────────────
+// Parsea "val1|label1;val2|label2" o "val1;val2" → { val: label }
+// Soporta separadores: ; o salto de línea
+function parseStaticMultivalor(mv) {
+  const map = {};
+  // Normalizar: reemplazar \r\n y \n por ; para unificar
+  const normalized = mv.replace(/\r?\n/g, ';');
+  normalized.split(';').forEach(item => {
+    item = item.trim();
+    if (!item) return;
+    const pipe = item.indexOf('|');
+    if (pipe > 0) {                          // pipe > 0 descarta clave vacía
+      const val   = item.slice(0, pipe).trim();
+      const label = item.slice(pipe + 1).trim();
+      if (val) map[val] = label || val;
+    } else if (pipe < 0) {
+      map[item] = item;                      // valor = etiqueta
+    }
+    // pipe === 0 → clave vacía, se descarta
+  });
+  return map;
+}
+
+function updateMvBtn(input) {
+  const id  = input.dataset.id;
+  const btn = document.getElementById(`mvbtn-${id}`);
+  if (!btn) return;
+  const v = input.value.trim();
+  const active = v.toLowerCase().startsWith('select') || v.includes(';') || (v.length > 0 && !v.toLowerCase().startsWith('select'));
+  btn.classList.toggle('has-sql', v.length > 0);
+}
+
+async function testMultivalor(id) {
+  const entry   = allEntries.find(e => e.id === id);
+  const pending = pendingChanges[id] || {};
+  const sql     = (pending.multivalor !== undefined
+    ? pending.multivalor
+    : entry?.multivalor || '').trim();
+
+  const modal = document.getElementById('sqlModal');
+  const body  = document.getElementById('sqlModalBody');
+  modal.classList.add('open');
+
+  // Mostrar SQL en uso
+  body.innerHTML = `
+    <div>
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">SQL configurado</div>
+      <div class="sql-code">${esc(sql || '(vacío)')}</div>
+    </div>
+    <div class="sql-status warn">⏳ Ejecutando…</div>`;
+
+  if (!sql) {
+    body.innerHTML += '';
+    body.querySelector('.sql-status').className = 'sql-status warn';
+    body.querySelector('.sql-status').textContent = '⚠ El campo multivalor está vacío.';
+    return;
+  }
+
+  // Lista estática separada por ;
+  if (!sql.toLowerCase().startsWith('select')) {
+    const map     = parseStaticMultivalor(sql);
+    const entries = Object.entries(map);
+    if (!entries.length) {
+      body.querySelector('.sql-status').className = 'sql-status warn';
+      body.querySelector('.sql-status').textContent = '⚠ No se detectaron valores válidos.';
+      return;
+    }
+
+    // Tabla de opciones configuradas
+    let tableHtml = `
+      <table class="sql-result-table">
+        <thead><tr>
+          <th>Valor (en BD)</th>
+          <th>Etiqueta (mostrada)</th>
+          <th style="text-align:center">En BD</th>
+        </tr></thead><tbody>`;
+
+    // Intentar consultar valores únicos del campo en la BD real
+    let dbValues = null;
+    if (currentSistemaId && currentTabla && entry) {
+      const sistema = allSistemas.find(s => s.id === currentSistemaId);
+      const dbSlug  = sistema?.nombre_bd || null;
+      try {
+        const r = await api('/api/v1/admin/sql-db', {
+          method: 'POST',
+          body: JSON.stringify({
+            query: `SELECT DISTINCT "${entry.campo}" FROM "${currentTabla}" WHERE "${entry.campo}" IS NOT NULL ORDER BY 1`,
+            limit: 200,
+            db_slug: dbSlug,
+          }),
+        });
+        if (r.ok) {
+          const d = await r.json();
+          dbValues = new Set(d.rows.map(row => String(row[entry.campo])));
+        }
+      } catch { /* ignorar */ }
+    }
+
+    entries.forEach(([val, label]) => {
+      const enBD = dbValues
+        ? (dbValues.has(val)
+          ? '<span style="color:var(--green);font-weight:700">✓</span>'
+          : '<span style="color:var(--red)" title="Este valor no existe en la BD">✗</span>')
+        : '—';
+      tableHtml += `<tr><td>${esc(val)}</td><td>${esc(label)}</td><td style="text-align:center">${enBD}</td></tr>`;
+    });
+    tableHtml += '</tbody></table>';
+
+    // Valores en BD que no tienen opción configurada
+    let sinConfig = '';
+    if (dbValues) {
+      const configKeys = new Set(entries.map(([v]) => v));
+      const huerfanos  = [...dbValues].filter(v => !configKeys.has(v));
+      if (huerfanos.length) {
+        sinConfig = `
+          <div style="margin-top:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:8px 12px;">
+            <div style="color:var(--yellow);font-size:.75rem;font-weight:700;margin-bottom:4px">⚠ Valores en la BD sin etiqueta configurada:</div>
+            <div style="font-family:monospace;font-size:.78rem;color:var(--fg)">${huerfanos.map(v => `<span style="background:var(--surface2);border-radius:4px;padding:1px 8px;margin:2px;display:inline-block">${esc(v)}</span>`).join('')}</div>
+            <div style="font-size:.7rem;color:var(--muted);margin-top:4px">Agrégalos al multivalor para que se muestren con etiqueta.</div>
+          </div>`;
+      }
+    }
+
+    const allMatch = dbValues && entries.every(([v]) => dbValues.has(v)) && ![...dbValues].some(v => !new Set(entries.map(([k])=>k)).has(v));
+    body.querySelector('.sql-status').outerHTML =
+      `<div class="sql-status ${dbValues && !sinConfig ? 'ok' : 'warn'}">${dbValues && !sinConfig ? '✓' : '⚠'} Lista estática — ${entries.length} opción${entries.length !== 1 ? 'es' : ''}</div>
+       ${tableHtml}
+       ${sinConfig}
+       <div class="sql-hint">Formato: <code>valor1;valor2</code> o <code>val1|Etiqueta 1;val2|Etiqueta 2</code></div>`;
+    return;
+  }
+
+  if (!currentSistemaId) {
+    body.querySelector('.sql-status').className = 'sql-status warn';
+    body.querySelector('.sql-status').textContent = '⚠ Selecciona un sistema primero.';
+    return;
+  }
+
+  const sistema = allSistemas.find(s => s.id === currentSistemaId);
+  const dbSlug  = sistema?.nombre_bd || null;
+
+  let res, data;
+  try {
+    res  = await api('/api/v1/admin/sql-db', {
+      method: 'POST',
+      body: JSON.stringify({ query: sql, limit: 10, db_slug: dbSlug }),
+    });
+    data = await res.json();
+  } catch (e) {
+    body.querySelector('.sql-status').className = 'sql-status err';
+    body.querySelector('.sql-status').textContent = '⚠ Error de red al ejecutar.';
+    return;
+  }
+
+  if (!res.ok) {
+    // Extraer mensaje limpio del error PostgreSQL
+    const raw = data?.detail || JSON.stringify(data);
+    const match = raw.match(/asyncpg\.\w+:\s*(.+?)(?:\s*\[SQL:|$)/s);
+    const msg   = match ? match[1].trim() : raw;
+
+    body.querySelector('.sql-status').outerHTML =
+      `<div class="sql-status err">✗ Error de sintaxis SQL</div>
+       <div class="sql-err-detail">${esc(msg)}</div>
+       <div class="sql-hint">💡 En PostgreSQL usa <b>||</b> para concatenar texto, no <b>&amp;</b> ni <b>+</b>.<br>
+       Ejemplo: <code>SELECT id, nombre || ' - ' || estado FROM pedidos</code></div>`;
+    return;
+  }
+
+  // Éxito — mostrar preview de resultados
+  const cols = data.columns || [];
+  const rows = data.rows   || [];
+
+  if (cols.length < 2) {
+    body.querySelector('.sql-status').outerHTML =
+      `<div class="sql-status warn">⚠ El SELECT debe retornar al menos 2 columnas: <b>valor</b> y <b>etiqueta</b>.</div>`;
+    return;
+  }
+
+  const [keyCol, labelCol] = cols;
+  let tableHtml = `
+    <table class="sql-result-table">
+      <thead><tr>
+        <th>${esc(keyCol)} <span style="color:var(--muted)">(valor/ID)</span></th>
+        <th>${esc(labelCol)} <span style="color:var(--muted)">(etiqueta)</span></th>
+        ${cols.slice(2).map(c => `<th>${esc(c)}</th>`).join('')}
+      </tr></thead>
+      <tbody>`;
+  rows.forEach(row => {
+    tableHtml += '<tr>' + cols.map((c, i) =>
+      `<td>${esc(row[c] ?? '')}</td>`
+    ).join('') + '</tr>';
+  });
+  tableHtml += '</tbody></table>';
+
+  const total = data.count;
+  body.querySelector('.sql-status').outerHTML =
+    `<div class="sql-status ok">✓ SQL válido — ${total} registro${total !== 1 ? 's' : ''} encontrado${total !== 1 ? 's' : ''}</div>
+     ${tableHtml}
+     ${total > 10 ? `<div class="sql-hint">Mostrando los primeros 10 de ${total} registros.</div>` : ''}
+     <div class="sql-hint">Primera columna (<b>${esc(keyCol)}</b>) = valor almacenado en BD · Segunda columna (<b>${esc(labelCol)}</b>) = etiqueta mostrada al usuario.</div>`;
+}
+
+function closeSqlModal() {
+  document.getElementById('sqlModal').classList.remove('open');
+}
+
+// Cerrar modal con Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSqlModal();
+});
+
+// ── Pestañas ─────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabBtnDic').classList.toggle('active',          tab === 'dic');
+  document.getElementById('tabBtnPreview').classList.toggle('active',      tab === 'preview');
+  document.getElementById('tabBtnInstructivo').classList.toggle('active',  tab === 'instructivo');
+
+  const hasTabla = !!currentTabla;
+  document.getElementById('emptyState').style.display           = (hasTabla && tab !== 'instructivo') ? 'none' : (tab === 'instructivo' ? 'none' : '');
+  document.getElementById('gridContainer').style.display        = (hasTabla && tab === 'dic')          ? 'flex' : 'none';
+  document.getElementById('previewContainer').style.display     = (hasTabla && tab === 'preview')      ? 'flex' : 'none';
+  document.getElementById('instructivoContainer').style.display = tab === 'instructivo'                ? 'flex' : 'none';
+
+  if (tab === 'preview' && hasTabla) loadPreview();
+  if (tab === 'instructivo') buildInstructivo();
+}
+
+// ── Instructivo ───────────────────────────────────────────────────────────────
+function buildInstructivo() {
+  // Tabla de campos
+  const fields = [
+    ['campo',           'Nombre exacto de la columna en la BD. Solo lectura — viene del esquema.', 'precio_unitario'],
+    ['alias',           'Nombre amigable que ve el usuario en lugar del nombre técnico.',           'Precio Unitario'],
+    ['tipo_dato',       'Tipo PostgreSQL de la columna. Controla el formato en Vista Previa.',      'numeric'],
+    ['es_visible',      '✓ = aparece en pantallas. ✗ = campo oculto (p.ej. claves internas).',     '✓ (true)'],
+    ['es_solo_lectura', '✓ = el usuario puede ver pero no editar el campo.',                        '✓ para campos calculados'],
+    ['es_obligatorio',  '✓ = validación requerida; no puede quedar vacío al guardar.',              '✓ para nombre_cliente'],
+    ['orden_campo',     'Número de posición en el formulario. 1 aparece primero.',                  '3'],
+    ['decimales',       'Para campos numéricos: cuántos decimales mostrar en pantalla.',            '2  →  1,250.75'],
+    ['texto_ayuda',     'Texto de ayuda o placeholder que aparece dentro del campo.',               'Ingrese el monto sin IVA'],
+    ['valor_defecto',   'Valor inicial al crear un registro nuevo.',                                'pendiente'],
+    ['multivalor',      'Define las opciones válidas del campo. Ver sección siguiente.',            'pendiente;pagado'],
+    ['descripcion',     'Nota interna para documentar el propósito del campo.',                     'Monto facturado antes de impuesto'],
+  ];
+
+  document.getElementById('instrFieldsBody').innerHTML = fields.map(([campo, desc, ej]) => `
+    <tr class="instr-tr">
+      <td><span class="instr-field">${campo}</span></td>
+      <td style="color:var(--fg);font-size:.78rem;line-height:1.5">${desc}</td>
+      <td style="color:var(--muted);font-size:.75rem;font-family:monospace">${ej}</td>
+    </tr>`).join('');
+
+  // Sección multivalor
+  const mvBlocks = [
+    {
+      title: '① Lista simple — valores separados por punto y coma',
+      desc:  'Cada ítem es a la vez el valor almacenado en BD y la etiqueta mostrada al usuario.',
+      code:  'pendiente;pagado;cancelado;anulado',
+      tags:  ['Más simple', 'Sin JOIN'],
+    },
+    {
+      title: '② Lista con etiquetas — valor|Etiqueta',
+      desc:  'Separa el valor guardado en BD (izquierda del |) de la etiqueta visible (derecha). Usa ; entre opciones.',
+      code:  'pendiente|⏳ Pendiente;pagado|✅ Pagado;cancelado|❌ Cancelado;anulado|🚫 Anulado',
+      tags:  ['Recomendado', 'Con emojis'],
+    },
+    {
+      title: '③ SQL — SELECT de tabla de la misma BD',
+      desc:  'El SELECT debe retornar exactamente 2 columnas: la primera es el ID/valor y la segunda es la etiqueta.',
+      code:  'SELECT id, nombre FROM categorias ORDER BY nombre',
+      tags:  ['SQL', 'Dinámico'],
+    },
+    {
+      title: '④ SQL con JOIN — incluir datos de otra tabla',
+      desc:  'Combina campos de varias tablas para armar una etiqueta descriptiva con ||.',
+      code:  'SELECT p.id, c.nombre || \' · \' || p.estado\nFROM pedidos p\nJOIN clientes c ON c.id = p.id_cliente\nORDER BY c.nombre',
+      tags:  ['SQL', 'JOIN', '||'],
+    },
+    {
+      title: '⑤ SQL con COALESCE — manejar valores nulos',
+      desc:  'Evita que un NULL en la etiqueta rompa el resultado.',
+      code:  'SELECT id, nombre || \' - \' || COALESCE(descripcion, \'sin descripción\')\nFROM productos\nWHERE es_activo = true\nORDER BY nombre',
+      tags:  ['SQL', 'COALESCE', 'Robusto'],
+    },
+  ];
+
+  document.getElementById('instrMvBody').innerHTML = mvBlocks.map(b => `
+    <div class="instr-mv-block">
+      <div class="instr-mv-title">${b.title}</div>
+      <div class="instr-mv-desc">${b.desc}
+        <span style="margin-left:6px">${b.tags.map(t => `<span class="instr-tag">${t}</span>`).join('')}</span>
+      </div>
+      <div class="instr-code" id="code-${encodeURIComponent(b.title)}">${esc(b.code)}<button class="instr-copy" onclick="copyCode(this)">📋 copiar</button></div>
+    </div>`).join('');
+
+  // Tipos de dato
+  const tipos = [
+    ['text / varchar',  'Texto libre',          'Muestra el valor tal cual'],
+    ['integer / bigint','Número entero',         'Resaltado en azul, sin decimales'],
+    ['numeric / decimal','Número decimal',       'Usa el campo <b>decimales</b> para formatear. P.ej: 2 → 1,250.75'],
+    ['boolean',         'Verdadero / Falso',     '✓ sí en verde · ✗ no en rojo'],
+    ['timestamp',       'Fecha y hora',          'Formateado a fecha local. P.ej: 15/6/2024, 10:30 a. m.'],
+    ['date',            'Solo fecha',            'P.ej: 15/6/2024'],
+    ['uuid',            'Identificador único',   'Muestra el UUID como texto'],
+    ['jsonb / json',    'Objeto JSON',           'Muestra el JSON en texto plano'],
+  ];
+
+  document.getElementById('instrTiposBody').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:.78rem;">
+      <thead><tr>
+        <th style="padding:6px 12px;text-align:left;color:var(--muted);font-size:.7rem;border-bottom:1px solid var(--border)">Tipo</th>
+        <th style="padding:6px 12px;text-align:left;color:var(--muted);font-size:.7rem;border-bottom:1px solid var(--border)">Descripción</th>
+        <th style="padding:6px 12px;text-align:left;color:var(--muted);font-size:.7rem;border-bottom:1px solid var(--border)">Vista Previa</th>
+      </tr></thead>
+      <tbody>` +
+    tipos.map(([t, d, p]) => `
+      <tr>
+        <td style="padding:6px 12px;border-bottom:1px solid rgba(42,48,69,.4);font-family:monospace;color:var(--accent2)">${t}</td>
+        <td style="padding:6px 12px;border-bottom:1px solid rgba(42,48,69,.4);color:var(--fg)">${d}</td>
+        <td style="padding:6px 12px;border-bottom:1px solid rgba(42,48,69,.4);color:var(--muted);font-size:.75rem">${p}</td>
+      </tr>`).join('') +
+    `</tbody></table>`;
+
+  // Tips
+  const tips = [
+    'Usa el botón <b>▶</b> en la celda de multivalor para verificar el SQL <em>antes</em> de guardar.',
+    'El verificador ▶ también compara tus opciones contra los valores reales en la BD y señala los que no tienen etiqueta.',
+    'Para concatenar texto en PostgreSQL usa <code style="font-family:monospace">||</code> — no <code>+</code> ni <code>&amp;</code>.',
+    'Si un campo numérico no muestra decimales, asegúrate de que <b>tipo_dato</b> sea <code>numeric</code> y <b>decimales</b> tenga un valor (ej: 2).',
+    'Campos con <b>es_visible = false</b> no aparecen en Vista Previa ni en formularios, pero siguen en la BD.',
+    '<b>orden_campo</b> define el orden de las columnas en Vista Previa. El campo con orden 1 aparece primero a la izquierda.',
+    'El <b>alias</b> se muestra como encabezado de columna. El tooltip muestra el nombre real de la columna en la BD.',
+    'Para listas estáticas largas, una opción por línea (separado por Enter) también funciona.',
+  ];
+
+  document.getElementById('instrTipsList').innerHTML = tips.map(t => `<li style="margin-bottom:2px">${t}</li>`).join('');
+}
+
+function copyCode(btn) {
+  const pre = btn.parentElement;
+  const text = pre.textContent.replace('📋 copiar', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ copiado';
+    setTimeout(() => btn.textContent = '📋 copiar', 1800);
+  });
+}
+
+// ── Vista Previa ──────────────────────────────────────────────────────────────
+async function loadPreview() {
+  if (!currentTabla || currentTabla === '(sin tabla)') return;
+
+  const sistema = allSistemas.find(s => s.id === currentSistemaId);
+  const dbSlug  = sistema?.nombre_bd || null;
+
+  document.getElementById('prevInfo').textContent = '⏳ Cargando…';
+  document.getElementById('prevBody').innerHTML =
+    `<tr><td colspan="99" style="padding:24px;text-align:center;color:var(--muted)">⏳ Consultando ${esc(currentTabla)}…</td></tr>`;
+
+  // 1. Datos principales
+  const res = await api('/api/v1/admin/sql-db', {
+    method: 'POST',
+    body: JSON.stringify({
+      query: `SELECT * FROM "${currentTabla}" LIMIT 200`,
+      limit: 200,
+      db_slug: dbSlug,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    document.getElementById('prevBody').innerHTML =
+      `<tr><td colspan="99" style="padding:24px;text-align:center;color:var(--red)">⚠ Error: ${esc(err.detail || res.statusText)}</td></tr>`;
+    document.getElementById('prevInfo').textContent = 'Error al cargar datos';
+    return;
+  }
+
+  const data = await res.json();
+
+  // 2. Lookups multivalor — SQL query o lista estática separada por ;
+  const dicEntries = allEntries.filter(e => (e.tabla || '(sin tabla)') === currentTabla);
+  const mvEntries  = dicEntries.filter(e => e.multivalor && e.multivalor.trim());
+  const mvCache    = {};   // { campo: { "val": "label", ... } }
+
+  await Promise.all(mvEntries.map(async entry => {
+    const mv = entry.multivalor.trim();
+    if (mv.toLowerCase().startsWith('select')) {
+      // SQL query
+      try {
+        const r = await api('/api/v1/admin/sql-db', {
+          method: 'POST',
+          body: JSON.stringify({ query: mv, limit: 1000, db_slug: dbSlug }),
+        });
+        if (!r.ok) return;
+        const d = await r.json();
+        if (d.columns.length < 2) return;
+        const [keyCol, labelCol] = d.columns;
+        mvCache[entry.campo] = {};
+        d.rows.forEach(row => {
+          mvCache[entry.campo][String(row[keyCol])] = row[labelCol];
+        });
+      } catch { /* ignorar */ }
+    } else if (mv.includes(';') || mv.length > 0) {
+      // Lista estática: "val1;val2" o "val1|label1;val2|label2"
+      mvCache[entry.campo] = parseStaticMultivalor(mv);
+    }
+  }));
+
+  renderPreview(data.columns, data.rows, data.count, mvCache);
+}
+
+function renderPreview(dbCols, rows, count, mvCache = {}) {
+  // Guardar datos crudos para el modal de edición
+  prevRawCols = dbCols;
+  prevRawRows = rows;
+  prevMvCacheEdit = mvCache;
+
+  // Detectar PK (buscar columna "id" o la primera)
+  prevPkCol = dbCols.includes('id') ? 'id' : (dbCols[0] || 'id');
+
+  // Config del diccionario para la tabla actual
+  const dicEntries = allEntries.filter(e => (e.tabla || '(sin tabla)') === currentTabla);
+  const dicMap = {};
+  dicEntries.forEach(e => { dicMap[e.campo] = e; });
+
+  // Columnas visibles ordenadas por orden_campo
+  const visCols = dbCols
+    .map(col => ({ col, dic: dicMap[col] || null }))
+    .filter(({ dic }) => !dic || dic.es_visible !== false)
+    .sort((a, b) => (a.dic?.orden_campo ?? 9999) - (b.dic?.orden_campo ?? 9999));
+
+  if (!visCols.length) {
+    document.getElementById('prevBody').innerHTML =
+      '<tr><td colspan="99" style="padding:24px;text-align:center;color:var(--muted)">Sin columnas visibles. Marca <b>es_visible</b> en el diccionario.</td></tr>';
+    document.getElementById('prevInfo').textContent = '0 columnas visibles';
+    return;
+  }
+
+  // Cabecera
+  document.getElementById('prevHead').innerHTML =
+    '<tr>' + visCols.map(({ col, dic }) => {
+      const label   = dic?.alias || col;
+      const tipo    = dic?.tipo_dato || '';
+      const ayuda   = dic?.texto_ayuda || '';
+      const tooltip = [col, tipo, ayuda].filter(Boolean).join(' · ');
+      return `<th title="${esc(tooltip)}">${esc(label)}</th>`;
+    }).join('') + '</tr>';
+
+  // Filas — construir con createElement para poder agregar dblclick
+  const tbody = document.getElementById('prevBody');
+  tbody.innerHTML = '';
+  rows.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = 'prev-editable';
+    tr.title = 'Doble-click para editar';
+    tr.innerHTML = visCols.map(({ col, dic }) =>
+      `<td>${formatPreviewValue(row[col], dic, mvCache)}</td>`
+    ).join('');
+    tr.addEventListener('dblclick', () => openPrvEditModal(idx));
+    tbody.appendChild(tr);
+  });
+
+  // Footer y toolbar
+  const hidden = dbCols.length - visCols.length;
+  document.getElementById('prevFooter').innerHTML =
+    `<span><b>${count}</b> filas · <b>${visCols.length}</b> columnas visibles` +
+    (hidden ? ` · <span style="color:var(--muted)">${hidden} ocultas</span>` : '') +
+    ` · <span style="color:var(--muted);font-size:.7rem">doble-click para editar</span></span>`;
+  document.getElementById('prevInfo').innerHTML =
+    `<b>${esc(currentTabla)}</b> — ${count} filas`;
+}
+
+function formatPreviewValue(val, dic, mvCache = {}) {
+  if (val === null || val === undefined || val === '') {
+    return '<span class="prev-null">null</span>';
+  }
+
+  // Multivalor: resolver ID → label con el lookup precargado
+  if (dic?.multivalor && mvCache[dic.campo]) {
+    const label = mvCache[dic.campo][String(val)];
+    if (label !== undefined) {
+      return `<span style="background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.35);border-radius:12px;padding:2px 10px;font-size:.75rem;color:#a5b4fc" title="ID: ${esc(val)}">${esc(label)}</span>`;
+    }
+    // Si no encontró match, mostrar el valor crudo con indicador
+    return `<span style="color:var(--muted)" title="Sin coincidencia en lookup">${esc(val)}</span>`;
+  }
+
+  const tipo = (dic?.tipo_dato || '').toLowerCase();
+  const decs = dic?.decimales;
+
+  // Booleano
+  if (tipo === 'boolean') {
+    return val === 'true' || val === true
+      ? '<span class="prev-bool-t">✓ sí</span>'
+      : '<span class="prev-bool-f">✗ no</span>';
+  }
+
+  // Fecha/hora
+  if (tipo.includes('timestamp') || tipo.includes('date') || tipo.includes('time')) {
+    try {
+      const d = new Date(val);
+      if (!isNaN(d)) {
+        const s = tipo === 'date'
+          ? d.toLocaleDateString('es-CR')
+          : d.toLocaleString('es-CR', { dateStyle: 'short', timeStyle: 'short' });
+        return `<span class="prev-date" title="${esc(val)}">${esc(s)}</span>`;
+      }
+    } catch { /* caer a texto */ }
+  }
+
+  // Numérico con decimales
+  if (tipo.includes('numeric') || tipo.includes('decimal') ||
+      tipo.includes('float') || tipo.includes('double') ||
+      tipo.includes('real')  || tipo.includes('money')) {
+    const num = parseFloat(val);
+    if (!isNaN(num)) {
+      const d = decs != null ? decs : 2;
+      return `<span class="prev-num">${num.toLocaleString('es-CR', { minimumFractionDigits: d, maximumFractionDigits: d })}</span>`;
+    }
+  }
+
+  // Entero
+  if (tipo.includes('int') || tipo.includes('serial') || tipo.includes('bigint')) {
+    return `<span class="prev-int">${esc(val)}</span>`;
+  }
+
+  // Texto largo
+  const s = String(val);
+  if (s.length > 80) {
+    return `<span class="prev-long" title="${esc(s)}">${esc(s.slice(0, 80))}…</span>`;
+  }
+
+  return esc(s);
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Navegación por rol ────────────────────────────────────────────────────────
+function applyNavAccess(me) {
+  const roles = (me?.roles || []).map(r => r.name);
+  const isSuperadmin = roles.includes('superadmin');
+  const btnP = document.getElementById('btnNavPortal');
+  const btnS = document.getElementById('btnNavSync');
+  if (btnP) btnP.style.display = sessionStorage.getItem('pg_token') ? '' : 'none';
+  if (btnS) btnS.style.display = isSuperadmin ? '' : 'none';
+}
+
+function openPortal() {
+  window.open(window.location.origin + '/portal', 'pg_portal');
+}
+
+function openTester() {
+  window.open(`${baseUrl}/tester`, '_blank');
+}
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+init();
+
+// ════════════════════════════════════════════════════════════════════════════════
+// EDIT MODAL — Vista Previa doble-click
+// ════════════════════════════════════════════════════════════════════════════════
+
+// ── Fetch opciones multivalor ────────────────────────────────────────────────
+async function fetchPrvMvOptions(mv) {
+  mv = mv.trim();
+  if (mv.toLowerCase().startsWith('select')) {
+    const sistema = allSistemas.find(s => s.id === currentSistemaId);
+    const dbSlug  = sistema?.nombre_bd || null;
+    try {
+      const res = await api('/api/v1/admin/sql-db', {
+        method: 'POST',
+        body: JSON.stringify({ query: mv, limit: 500, db_slug: dbSlug })
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return (data.rows || []).map(row => {
+        const vals = Object.values(row);
+        return { val: String(vals[0] ?? ''), label: vals.length > 1 ? String(vals[1] ?? vals[0]) : String(vals[0] ?? '') };
+      });
+    } catch { return []; }
+  }
+  // Estático
+  const result = [];
+  mv.replace(/\r?\n/g, ';').split(';').forEach(item => {
+    item = item.trim(); if (!item) return;
+    const p = item.indexOf('|');
+    if (p > 0) result.push({ val: item.slice(0, p).trim(), label: item.slice(p + 1).trim() });
+    else if (p < 0) result.push({ val: item, label: item });
+  });
+  return result;
+}
+
+// ── Abrir modal de edición desde Vista Previa ────────────────────────────────
+async function openPrvEditModal(rowIdx) {
+  document.getElementById('prvEditOverlay')?.remove();
+
+  const row      = prevRawRows[rowIdx];
+  if (!row) return;
+  const pk       = row[prevPkCol];
+  const tabla    = currentTabla;
+
+  // Diccionario de la tabla actual (ya cargado en allEntries)
+  const dicEntries = allEntries.filter(e => (e.tabla || '(sin tabla)') === tabla);
+  const dicMap     = {};
+  dicEntries.forEach(d => { dicMap[d.campo] = d; });
+
+  // Columnas visibles ordenadas
+  let visible = prevRawCols.filter(c => {
+    const d = dicMap[c];
+    return d ? d.es_visible !== false : true;
+  }).sort((a, b) => {
+    const oa = dicMap[a]?.orden_campo ?? 9999;
+    const ob = dicMap[b]?.orden_campo ?? 9999;
+    return oa - ob || a.localeCompare(b);
+  });
+
+  _prvEdit = { tabla, pkCol: prevPkCol, pk, row, dicMap, mvOptions: {} };
+
+  const fieldsHtml = visible.map(c => buildPrvField(c, row[c])).join('');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'prv-overlay';
+  overlay.id = 'prvEditOverlay';
+  overlay.innerHTML = `
+    <div class="prv-card">
+      <div class="prv-header">
+        <span class="prv-title">✏️ ${esc(tabla)}</span>
+        <span class="prv-pk">${esc(prevPkCol)} = ${esc(pk)}</span>
+        <button class="prv-close" onclick="closePrvEdit()" title="Cerrar">✕</button>
+      </div>
+      <div class="prv-body" id="prvEditBody">${fieldsHtml}</div>
+      <div class="prv-footer">
+        <span id="prvEditMsg" style="flex:1;font-size:.78rem;color:var(--muted)"></span>
+        <button class="prv-btn-cancel" onclick="closePrvEdit()">✕ Cancelar</button>
+        <button class="prv-btn-ok" id="prvEditOkBtn" onclick="confirmPrvEdit()">💾 Confirmar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) closePrvEdit(); });
+  overlay._esc = e => { if (e.key === 'Escape') closePrvEdit(); };
+  document.addEventListener('keydown', overlay._esc);
+
+  // Cargar labels de multivalor en background
+  loadPrvMvLabels();
+}
+
+// ── Construir campo del formulario ───────────────────────────────────────────
+function buildPrvField(campo, val) {
+  if (!_prvEdit) return '';
+  const { dicMap, pkCol } = _prvEdit;
+  const d = dicMap[campo];
+
+  const label    = d?.alias || campo;
+  const mv       = d?.multivalor?.trim() || null;
+  const readOnly = d?.es_solo_lectura || campo === pkCol;
+  const required = d?.es_obligatorio  || false;
+  const help     = d?.texto_ayuda     || '';
+  const decimales= d?.decimales ?? null;
+  let tipo = (d?.tipo_dato || '').toLowerCase();
+
+  const labelHtml = `<div class="pf-label">
+    ${esc(label)}
+    ${required ? '<span class="pf-req">*</span>' : ''}
+    ${readOnly  ? '<span class="pf-ro">[solo lectura]</span>' : ''}
+  </div>`;
+
+  let inputHtml;
+  if (readOnly) {
+    inputHtml = `<input type="text" class="pf-inp" id="pfld-${campo}" value="${esc(val ?? '')}" readonly>`;
+  } else if (mv) {
+    inputHtml = `<div class="pf-mv-row">
+      <input type="hidden" id="pfld-${campo}" value="${esc(val ?? '')}">
+      <input type="text" class="pf-inp" id="pfld-display-${campo}" value="${esc(val ?? '')}" readonly placeholder="— seleccionar —">
+      <button class="pf-mv-btn" onclick="openPrvMvPicker('${esc(campo)}')" title="Buscar opción">🔍 Buscar</button>
+    </div>`;
+  } else if (tipo === 'boolean' || tipo === 'bool') {
+    const chk = val === true || val === 'true' || val === 't' || val === '1';
+    inputHtml = `<div class="pf-bool">
+      <input type="checkbox" id="pfld-${campo}" ${chk ? 'checked' : ''}
+             onchange="document.getElementById('pfld-bool-lbl-${campo}').textContent=this.checked?'Sí':'No'">
+      <label class="pf-bool-lbl" id="pfld-bool-lbl-${campo}" for="pfld-${campo}">${chk ? 'Sí' : 'No'}</label>
+    </div>`;
+  } else if (tipo === 'timestamptz' || tipo.includes('timestamp') || tipo === 'datetime') {
+    const dtv = val ? String(val).replace(' ', 'T').slice(0, 16) : '';
+    inputHtml = `<input type="datetime-local" class="pf-inp" id="pfld-${campo}" value="${dtv}">`;
+  } else if (tipo === 'date') {
+    const dv = val ? String(val).slice(0, 10) : '';
+    inputHtml = `<input type="date" class="pf-inp" id="pfld-${campo}" value="${dv}">`;
+  } else if (tipo === 'text') {
+    inputHtml = `<textarea class="pf-inp pf-textarea" id="pfld-${campo}" rows="4">${esc(val ?? '')}</textarea>`;
+  } else if (tipo.includes('int') || tipo === 'bigint' || tipo === 'smallint' || tipo === 'serial') {
+    inputHtml = `<input type="number" class="pf-inp" id="pfld-${campo}" value="${esc(val ?? '')}" step="1">`;
+  } else if (tipo === 'numeric' || tipo === 'decimal' || tipo === 'float' || tipo === 'real') {
+    const step = (decimales !== null && decimales >= 0) ? (1/Math.pow(10,decimales)).toFixed(decimales) : 'any';
+    inputHtml = `<input type="number" class="pf-inp" id="pfld-${campo}" value="${esc(val ?? '')}" step="${step}">`;
+  } else {
+    inputHtml = `<input type="text" class="pf-inp" id="pfld-${campo}" value="${esc(val ?? '')}">`;
+  }
+
+  return `<div class="pf-group">
+    ${labelHtml}
+    ${inputHtml}
+    ${help ? `<div class="pf-help">💡 ${esc(help)}</div>` : ''}
+  </div>`;
+}
+
+// ── Cargar labels de multivalor en background ────────────────────────────────
+async function loadPrvMvLabels() {
+  if (!_prvEdit) return;
+  for (const campo of Object.keys(_prvEdit.dicMap)) {
+    const d = _prvEdit.dicMap[campo];
+    if (!d?.multivalor) continue;
+    const opts = await fetchPrvMvOptions(d.multivalor);
+    _prvEdit.mvOptions[campo] = opts;
+    const hidden  = document.getElementById('pfld-' + campo);
+    const display = document.getElementById('pfld-display-' + campo);
+    if (!hidden || !display) continue;
+    const found = opts.find(o => String(o.val) === String(hidden.value));
+    if (found) display.value = found.label;
+  }
+}
+
+// ── Picker de multivalor ─────────────────────────────────────────────────────
+async function openPrvMvPicker(campo) {
+  if (!_prvEdit) return;
+  document.getElementById('pvPickerOverlay')?.remove();
+  const d = _prvEdit.dicMap[campo];
+  if (!d?.multivalor) return;
+
+  let opts = _prvEdit.mvOptions[campo];
+  if (!opts) { opts = await fetchPrvMvOptions(d.multivalor); _prvEdit.mvOptions[campo] = opts; }
+
+  const label = d.alias || campo;
+  const renderItems = (f = '') => {
+    const fl = f.toLowerCase();
+    const list = fl ? opts.filter(o => o.label.toLowerCase().includes(fl) || String(o.val).toLowerCase().includes(fl)) : opts;
+    if (!list.length) return '<div class="pvpicker-empty">Sin resultados</div>';
+    return list.map(o => `<div class="pvpicker-item" onclick="selectPrvMvOption('${esc(campo)}','${esc(o.val)}','${esc(o.label)}')">
+      <span>${esc(o.label)}</span><span class="pvpicker-val">${esc(o.val)}</span>
+    </div>`).join('');
+  };
+
+  const po = document.createElement('div');
+  po.className = 'pvpicker-overlay';
+  po.id = 'pvPickerOverlay';
+  po.innerHTML = `<div class="pvpicker-card">
+    <div class="pvpicker-head">
+      <span style="flex:1">🔍 ${esc(label)}</span>
+      <button onclick="document.getElementById('pvPickerOverlay')?.remove()"
+              style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem">✕</button>
+    </div>
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+      <input class="pvpicker-search" id="pvPickerSearch" placeholder="Buscar…"
+             oninput="filterPrvMvPicker('${esc(campo)}',this.value)">
+    </div>
+    <div class="pvpicker-list" id="pvPickerList">${renderItems()}</div>
+  </div>`;
+  document.body.appendChild(po);
+  po.addEventListener('click', e => { if (e.target === po) po.remove(); });
+  po._esc = e => { if (e.key === 'Escape') { po.remove(); e.stopPropagation(); } };
+  document.addEventListener('keydown', po._esc);
+  setTimeout(() => document.getElementById('pvPickerSearch')?.focus(), 40);
+}
+
+function filterPrvMvPicker(campo, f) {
+  const opts = _prvEdit?.mvOptions[campo] || [];
+  const fl   = f.toLowerCase();
+  const list = fl ? opts.filter(o => o.label.toLowerCase().includes(fl) || String(o.val).toLowerCase().includes(fl)) : opts;
+  const el   = document.getElementById('pvPickerList');
+  if (!el) return;
+  el.innerHTML = list.length
+    ? list.map(o => `<div class="pvpicker-item" onclick="selectPrvMvOption('${esc(campo)}','${esc(o.val)}','${esc(o.label)}')">
+        <span>${esc(o.label)}</span><span class="pvpicker-val">${esc(o.val)}</span>
+      </div>`).join('')
+    : '<div class="pvpicker-empty">Sin resultados</div>';
+}
+
+function selectPrvMvOption(campo, val, label) {
+  const h = document.getElementById('pfld-' + campo);
+  const d = document.getElementById('pfld-display-' + campo);
+  if (h) h.value = val;
+  if (d) d.value = label;
+  document.getElementById('pvPickerOverlay')?.remove();
+}
+
+// ── Cerrar modal ─────────────────────────────────────────────────────────────
+function closePrvEdit() {
+  const ov = document.getElementById('prvEditOverlay');
+  if (ov) { if (ov._esc) document.removeEventListener('keydown', ov._esc); ov.remove(); }
+  document.getElementById('pvPickerOverlay')?.remove();
+  _prvEdit = null;
+}
+
+// ── Confirmar edición (PATCH) ────────────────────────────────────────────────
+async function confirmPrvEdit() {
+  if (!_prvEdit) return;
+  const { tabla, pkCol, pk, dicMap } = _prvEdit;
+  const btn = document.getElementById('prvEditOkBtn');
+  const msg = document.getElementById('prvEditMsg');
+  btn.disabled = true; btn.textContent = '⏳ Guardando…'; msg.textContent = '';
+
+  const sistema = allSistemas.find(s => s.id === currentSistemaId);
+  const dbSlug  = sistema?.nombre_bd || null;
+
+  // Campos editables visibles (excluir PK y solo-lectura)
+  const editables = prevRawCols.filter(c => {
+    if (c === pkCol) return false;
+    const d = dicMap[c];
+    if (d?.es_solo_lectura) return false;
+    return d ? d.es_visible !== false : true;
+  });
+
+  const payload = {};
+  editables.forEach(campo => {
+    const d    = dicMap[campo];
+    const tipo = (d?.tipo_dato || '').toLowerCase();
+
+    if (d?.multivalor) {
+      const h = document.getElementById('pfld-' + campo);
+      if (h) payload[campo] = h.value || null;
+    } else if (tipo === 'boolean' || tipo === 'bool') {
+      const cb = document.getElementById('pfld-' + campo);
+      if (cb) payload[campo] = cb.checked;
+    } else {
+      const el = document.getElementById('pfld-' + campo);
+      if (!el) return;
+      const v = el.value.trim();
+      if (v === '') { payload[campo] = null; return; }
+      if (tipo.includes('int') || tipo === 'bigint' || tipo === 'smallint')
+        payload[campo] = parseInt(v, 10);
+      else if (tipo === 'numeric' || tipo === 'decimal' || tipo === 'float' || tipo === 'real')
+        payload[campo] = parseFloat(v);
+      else payload[campo] = v;
+    }
+  });
+
+  const sp = dbSlug ? `?db_slug=${encodeURIComponent(dbSlug)}` : '';
+  const res = await api(
+    `/api/v1/admin/tables/${encodeURIComponent(tabla)}/rows/${encodeURIComponent(pk)}${sp}`,
+    { method: 'PATCH', body: JSON.stringify(payload) }
+  );
+
+  if (res.ok) {
+    msg.style.color = 'var(--green)';
+    msg.textContent = '✓ Guardado correctamente';
+    btn.textContent = '✓ Listo';
+    setTimeout(() => { closePrvEdit(); loadPreview(); }, 700);
+  } else {
+    const err = await res.json().catch(() => ({}));
+    msg.style.color = 'var(--red)';
+    msg.textContent = `❌ ${err.detail || res.statusText}`;
+    btn.disabled = false; btn.textContent = '💾 Confirmar';
+  }
+}
+
+// ── Modal Sincronizar ─────────────────────────────────────────────────────────
+let _syncTables = [];  // { name, type: 'table'|'view' }[]
+
+async function openSyncModal() {
+  if (!currentSistemaId) return;
+  const modal = document.getElementById('syncModal');
+  const body  = document.getElementById('syncBody');
+  const okBtn = document.getElementById('btnSyncOk');
+  const status = document.getElementById('syncStatus');
+
+  modal.classList.add('open');
+  body.innerHTML = '<div style="color:var(--muted);font-size:.82rem">⏳ Cargando tablas…</div>';
+  okBtn.disabled = true;
+  status.textContent = '';
+
+  // Obtener tablas y vistas de la BD del sistema
+  const sistema = allSistemas.find(s => s.id === currentSistemaId);
+  const dbSlug  = sistema?.nombre_bd || null;
+  const sp = dbSlug ? `?db_slug=${encodeURIComponent(dbSlug)}` : '';
+
+  let tables = [], views = [];
+  try {
+    const res = await api(`/api/v1/admin/db-tables${sp}`);
+    if (res.ok) {
+      const d = await res.json();
+      tables = (d.tables || []).map(t => t.name).sort();
+      views  = (d.views  || []).map(v => v.name).sort();
+    }
+  } catch (_) {}
+
+  _syncTables = [
+    ...tables.map(n => ({ name: n, type: 'table' })),
+    ...views.map(n  => ({ name: n, type: 'view'  })),
+  ];
+
+  if (!_syncTables.length) {
+    body.innerHTML = '<div class="sync-empty">No se encontraron tablas ni vistas en esta BD.</div>';
+    return;
+  }
+
+  // Contar cuántos campos ya hay en el diccionario por tabla
+  const dicCounts = {};
+  allEntries.forEach(e => {
+    const t = e.tabla || '';
+    dicCounts[t] = (dicCounts[t] || 0) + 1;
+  });
+
+  function renderSection(items, label, icon) {
+    if (!items.length) return '';
+    const rows = items.map(({ name }) => {
+      const cnt = dicCounts[name];
+      const badge = cnt ? `<span class="sync-cb-badge">${cnt} en dic.</span>` : '';
+      return `<label class="sync-cb-row">
+        <input type="checkbox" class="sync-cb-item" value="${esc(name)}" checked onchange="updateSyncCount()">
+        <span class="sync-cb-label">${icon} ${esc(name)}</span>
+        ${badge}
+      </label>`;
+    }).join('');
+    return `<div>
+      <div class="sync-section-title">${label}<span></span></div>
+      <div class="sync-sel-actions">
+        <button class="sync-sel-link" onclick="syncSelectAll('${label}',true)">todo</button>
+        <button class="sync-sel-link" onclick="syncSelectAll('${label}',false)">ninguno</button>
+      </div>
+      ${rows}
+    </div>`;
+  }
+
+  body.innerHTML =
+    renderSection(tables.map(n => ({ name: n })), 'Tablas', '📋') +
+    renderSection(views.map(n  => ({ name: n })), 'Vistas', '👁');
+
+  updateSyncCount();
+}
+
+function syncSelectAll(sectionLabel, checked) {
+  // Encuentra todos los checkboxes bajo esa sección
+  const body = document.getElementById('syncBody');
+  const divs = body.querySelectorAll('.sync-section-title');
+  divs.forEach(d => {
+    if (d.textContent.trim().startsWith(sectionLabel)) {
+      const section = d.closest('div');
+      section.querySelectorAll('.sync-cb-item').forEach(cb => cb.checked = checked);
+    }
+  });
+  updateSyncCount();
+}
+
+function updateSyncCount() {
+  const checked = document.querySelectorAll('.sync-cb-item:checked');
+  const okBtn   = document.getElementById('btnSyncOk');
+  const status  = document.getElementById('syncStatus');
+  const n = checked.length;
+  okBtn.disabled = n === 0;
+  status.textContent = n === 0 ? 'Selecciona al menos una' : `${n} seleccionada${n !== 1 ? 's' : ''}`;
+}
+
+async function runSync() {
+  const selected = [...document.querySelectorAll('.sync-cb-item:checked')].map(cb => cb.value);
+  if (!selected.length) return;
+
+  const okBtn  = document.getElementById('btnSyncOk');
+  const status = document.getElementById('syncStatus');
+  const body   = document.getElementById('syncBody');
+
+  okBtn.disabled = true;
+  okBtn.textContent = '⏳ Sincronizando…';
+  status.textContent = '';
+
+  // Construir query string con múltiples tablas[]
+  const params = new URLSearchParams({ id_sistema: currentSistemaId });
+  selected.forEach(t => params.append('tablas', t));
+
+  try {
+    const res = await api(`/api/v1/admin/seed-diccionario?${params.toString()}`, { method: 'POST' });
+    const d   = await res.json().catch(() => ({}));
+
+    if (res.ok) {
+      const inserted = d.inserted ?? 0;
+      const skipped  = d.skipped  ?? 0;
+      const deleted  = d.deleted  ?? 0;
+      body.innerHTML = `<div class="sync-result">
+        ✅ Sincronización completada<br>
+        <b>${inserted}</b> campo${inserted !== 1 ? 's' : ''} nuevo${inserted !== 1 ? 's' : ''} insertado${inserted !== 1 ? 's' : ''}<br>
+        <b>${skipped}</b> ya existía${skipped !== 1 ? 'n' : ''} (sin cambios)<br>
+        ${deleted ? `<b>${deleted}</b> obsoleto${deleted !== 1 ? 's' : ''} eliminado${deleted !== 1 ? 's' : ''}<br>` : ''}
+        <span style="color:var(--muted);font-size:.75rem">Tablas procesadas: ${esc(selected.join(', '))}</span>
+      </div>`;
+      okBtn.textContent = '✓ Listo';
+      okBtn.disabled = false;
+      okBtn.onclick = closeSyncModal;
+      status.textContent = '';
+      // Recargar el diccionario para reflejar los cambios
+      if (currentSistemaId) {
+        const r = await api(`/api/v1/diccionario/?id_sistema=${currentSistemaId}&limit=2000`);
+        if (r.ok) {
+          allEntries = await r.json();
+          renderTree(buildTablaGroups(allEntries));
+          if (currentTabla) selectTabla(currentTabla);
+        }
+      }
+    } else {
+      const msg = d.detail || `Error ${res.status}`;
+      body.innerHTML = `<div class="sync-result err">❌ ${esc(msg)}</div>`;
+      okBtn.disabled = false;
+      okBtn.textContent = '▶ Sincronizar';
+    }
+  } catch (e) {
+    body.innerHTML = `<div class="sync-result err">❌ Error de red al conectar.</div>`;
+    okBtn.disabled = false;
+    okBtn.textContent = '▶ Sincronizar';
+  }
+}
+
+function closeSyncModal() {
+  document.getElementById('syncModal').classList.remove('open');
+  document.getElementById('btnSyncOk').textContent = '▶ Sincronizar';
+}
+</script>
+</body>
+</html>

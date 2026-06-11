@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cabecera-Detalle</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#181c24;--surface2:#1e2330;--surface3:#252a38;
+  --border:#2a3045;--fg:#e2e8f0;--muted:#64748b;--muted2:#475569;
+  --accent:#009688;--accent2:#00bcd4;--green:#22c55e;--red:#ef4444;
+  --yellow:#f59e0b;--purple:#6366f1;--indigo:#6366f1;--radius:7px;
+}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── Header ── */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:48px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.h-title{font-size:.95rem;font-weight:700;color:var(--accent2);white-space:nowrap;}
+.h-sistema{font-size:.72rem;color:var(--muted);white-space:nowrap;}
+.h-sep{flex:1;}
+.search-wrap{position:relative;display:flex;align-items:center;}
+.search-wrap input{background:var(--surface2);border:1px solid var(--border);color:var(--fg);border-radius:var(--radius);padding:6px 10px 6px 28px;font-size:.8rem;outline:none;width:180px;transition:border-color .15s;}
+.search-wrap input:focus{border-color:var(--accent2);}
+.search-ic{position:absolute;left:9px;color:var(--muted);pointer-events:none;display:flex;align-items:center;}
+.btn{border:none;border-radius:var(--radius);padding:6px 13px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover:not(:disabled){opacity:.85;}
+.btn-secondary{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.btn-secondary:hover:not(:disabled){color:var(--fg);border-color:var(--muted);}
+.btn-danger{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.25);}
+.btn-danger:hover:not(:disabled){background:rgba(239,68,68,.22);}
+.btn-ghost{background:none;color:var(--muted);border:1px solid transparent;}
+.btn-ghost:hover{background:var(--surface2);color:var(--fg);}
+.btn-sm{padding:4px 10px;font-size:.76rem;}
+.btn-nav{background:#4f46e5;border:none;color:#fff;padding:5px 12px;border-radius:var(--radius);font-size:.76rem;font-weight:600;cursor:pointer;}
+.btn-nav:hover{opacity:.85;}
+.btn-back{background:rgba(0,188,212,.1);border:1px solid rgba(0,188,212,.25);color:var(--accent2);padding:5px 12px;border-radius:var(--radius);font-size:.8rem;font-weight:600;cursor:pointer;display:none;align-items:center;gap:5px;}
+.btn-back:hover{background:rgba(0,188,212,.18);}
+.btn-back.visible{display:inline-flex;}
+
+/* ── Toolbar de grilla ── */
+.grid-toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:6px 14px;display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.row-count{font-size:.72rem;color:var(--muted);margin-left:4px;}
+
+/* ── Grilla cabecera ── */
+.grid-view{flex:1;overflow:auto;display:flex;flex-direction:column;}
+.grid-wrap{flex:1;overflow:auto;}
+table.cab-grid{border-collapse:collapse;width:max-content;min-width:100%;font-size:.8rem;}
+table.cab-grid thead th{position:sticky;top:0;background:var(--surface);color:var(--accent2);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:2px solid var(--border);white-space:nowrap;z-index:2;user-select:none;cursor:pointer;}
+table.cab-grid thead th:hover{color:var(--fg);}
+table.cab-grid thead th.th-act{cursor:default;width:80px;}
+table.cab-grid tbody tr{cursor:pointer;transition:background .08s;}
+table.cab-grid tbody tr:hover td{background:var(--surface2);}
+table.cab-grid tbody tr.selected td{background:rgba(0,188,212,.08);}
+table.cab-grid td{padding:7px 12px;border-bottom:1px solid rgba(42,48,69,.5);vertical-align:middle;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis;}
+table.cab-grid td.td-act{width:80px;text-align:right;white-space:nowrap;}
+.ra-btn{background:none;border:none;cursor:pointer;padding:3px 5px;border-radius:4px;color:var(--muted);opacity:0;transition:all .1s;display:inline-flex;align-items:center;}
+table.cab-grid tbody tr:hover .ra-btn{opacity:.6;}
+.ra-btn:hover{opacity:1 !important;}
+.ra-edit:hover{background:rgba(0,188,212,.12);color:var(--accent2);}
+.ra-del:hover{background:rgba(239,68,68,.12);color:var(--red);}
+.ra-copy:hover{background:rgba(99,102,241,.12);color:var(--indigo);}
+.ra-copy.copied{opacity:1 !important;color:var(--green);}
+.load-more-row{text-align:center;padding:12px;}
+
+/* ── Split view ── */
+.split-view{flex:1;display:none;overflow:hidden;}
+.split-view.active{display:flex;}
+.split-left{width:380px;min-width:280px;max-width:50%;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--surface);}
+.split-right{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* Ficha izquierda */
+.ficha-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.ficha-title{font-size:.82rem;font-weight:700;color:var(--accent2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ficha-body{flex:1;overflow-y:auto;padding:14px;}
+.ficha-foot{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:7px;align-items:center;flex-shrink:0;}
+.f-group{display:flex;flex-direction:column;gap:4px;margin-bottom:11px;}
+.f-label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:5px;}
+.f-req{color:var(--red);}
+.f-ro{color:#7986cb;font-size:.63rem;}
+.f-inp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);padding:7px 10px;font-size:.82rem;outline:none;font-family:inherit;transition:border-color .15s;}
+.f-inp:focus{border-color:var(--accent2);}
+.f-inp[readonly],.f-inp:disabled{opacity:.5;cursor:not-allowed;border-style:dashed;}
+.f-textarea{resize:vertical;min-height:58px;line-height:1.5;}
+.f-help{font-size:.68rem;color:var(--muted);}
+.f-bool{display:flex;align-items:center;gap:8px;padding:4px 0;}
+.f-bool input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+.f-bool-lbl{font-size:.82rem;cursor:pointer;}
+.ficha-mode-view .f-inp:not([readonly]):not(:disabled){opacity:.75;pointer-events:none;}
+
+/* Tabs + tabla detalles */
+.det-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;overflow-x:auto;}
+.det-tab{padding:8px 16px;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;}
+.det-tab:hover{color:var(--fg);}
+.det-tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.det-toolbar{padding:6px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;background:var(--surface2);flex-shrink:0;}
+.det-count{font-size:.72rem;color:var(--muted);margin-left:4px;}
+.det-table-wrap{flex:1;overflow:auto;}
+table.det-grid{border-collapse:collapse;width:max-content;min-width:100%;font-size:.79rem;}
+table.det-grid thead th{position:sticky;top:0;background:var(--surface);color:var(--accent2);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:7px 10px;border-bottom:2px solid var(--border);white-space:nowrap;z-index:2;}
+table.det-grid th.th-act{width:70px;cursor:default;}
+table.det-grid tbody tr{cursor:pointer;transition:background .08s;}
+table.det-grid tbody tr:hover td{background:var(--surface2);}
+table.det-grid tbody tr.selected td{background:rgba(0,188,212,.09);}
+table.det-grid td{padding:5px 10px;border-bottom:1px solid rgba(42,48,69,.5);vertical-align:middle;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;}
+table.det-grid td.td-act{width:70px;text-align:right;}
+
+/* Cell values */
+.null-val{color:var(--muted);font-style:italic;}
+.bool-t{color:var(--green);font-weight:700;}
+.bool-f{color:var(--red);}
+.badge-mv{background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.35);border-radius:12px;padding:2px 8px;font-size:.72rem;color:#a5b4fc;}
+.date-val{color:var(--yellow);font-family:monospace;font-size:.75rem;}
+.num-val{font-family:monospace;color:var(--accent2);}
+.int-val{font-family:monospace;color:var(--accent);}
+
+/* State messages */
+.state-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);gap:10px;padding:40px;text-align:center;}
+.state-msg .icon{font-size:2rem;}
+.state-msg .label{font-size:.85rem;}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;animation:moFade .15s;}
+@keyframes moFade{from{opacity:0}to{opacity:1}}
+.modal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:min(620px,96vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:moSlide .18s;}
+@keyframes moSlide{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.modal-title{font-size:.92rem;font-weight:700;color:var(--accent2);flex:1;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:2px 7px;border-radius:4px;}
+.modal-close:hover{color:var(--red);}
+.modal-body{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;}
+
+/* Session overlay */
+.session-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.session-overlay a{color:var(--accent2);}
+
+/* Resizer */
+.resizer{width:5px;cursor:col-resize;background:transparent;flex-shrink:0;transition:background .15s;}
+.resizer:hover,.resizer.dragging{background:var(--accent2);}
+
+/* ── Group Zone ── */
+.group-zone{background:var(--surface2);border-bottom:1px solid var(--border);padding:5px 12px;display:flex;align-items:center;gap:7px;min-height:32px;flex-shrink:0;flex-wrap:wrap;}
+.group-zone.drag-over{background:rgba(0,188,212,.08);border-bottom-color:var(--accent2);}
+.gz-hint{font-size:.71rem;color:var(--muted);user-select:none;pointer-events:none;}
+.gz-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(0,150,136,.15);border:1px solid rgba(0,150,136,.35);border-radius:20px;padding:2px 9px;font-size:.73rem;color:var(--accent);}
+.gz-pill-rm{background:none;border:none;cursor:pointer;color:var(--muted);padding:0 2px;font-size:.85rem;line-height:1;}
+.gz-pill-rm:hover{color:var(--red);}
+/* Group header rows */
+.tr-grp-hdr td{background:var(--surface2);border-bottom:1px solid var(--border);padding:5px 10px;font-size:.78rem;font-weight:600;}
+.tr-grp-hdr:hover td{background:var(--surface3);}
+.tr-grp-hdr .grp-arrow{display:inline-block;transition:transform .15s;margin-right:5px;color:var(--muted);}
+.tr-grp-hdr.collapsed .grp-arrow{transform:rotate(-90deg);}
+.tr-grp-total td{background:rgba(0,150,136,.06);border-bottom:1px solid var(--border);font-size:.76rem;}
+.tr-grp-total .tot-num{text-align:right;font-family:monospace;color:var(--accent2);}
+.tr-grp-total .tot-lbl{color:var(--muted);font-size:.7rem;}
+table thead th.dragging{opacity:.5;}
+table thead th.drag-target{border-left:2px solid var(--accent2);}
+</style>
+</head>
+<body>
+
+<div class="session-overlay" id="sessionOverlay">
+  <div style="font-size:2.5rem">🔒</div>
+  <div style="font-size:.95rem;font-weight:700;color:var(--fg)">Sesión expirada.</div>
+  <div style="font-size:.82rem;color:var(--muted)"><a href="/login">Iniciá sesión nuevamente</a></div>
+</div>
+
+<!-- ── Header ── -->
+<header>
+  <button class="btn-back" id="btnBack" onclick="backToGrid()">← Volver</button>
+  <span class="h-title" id="hTitle">🗂 —</span>
+  <span class="h-sistema" id="hSistema"></span>
+  <div class="h-sep"></div>
+  <div class="search-wrap" id="searchWrap">
+    <span class="search-ic">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </span>
+    <input type="text" id="cabSearch" placeholder="Buscar…" oninput="onCabSearch()">
+  </div>
+  <button class="btn btn-primary btn-sm" id="btnNew" onclick="openCabModal(null)" style="display:none;">+ Nuevo</button>
+</header>
+
+<!-- ── Vista grilla (modo lista) ── -->
+<div class="grid-view" id="gridView">
+  <div class="grid-toolbar">
+    <span style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;" id="gridLabel">Registros</span>
+    <span class="row-count" id="rowCount"></span>
+    <div style="flex:1;"></div>
+    <span style="font-size:.7rem;color:var(--muted);">ℹ Doble clic en una fila para ver y editar el registro</span>
+  </div>
+  <!-- Group zone cabecera -->
+  <div class="group-zone" id="cabGroupZone"
+       ondragover="onCabGzDragOver(event)" ondragleave="onCabGzDragLeave(event)" ondrop="onCabGzDrop(event)">
+    <span class="gz-hint" id="cabGzHint">⠿ Arrastrá una columna aquí para agrupar</span>
+    <span id="cabGzPills"></span>
+  </div>
+  <div class="grid-wrap" id="gridWrap">
+    <div class="state-msg"><span class="icon">⏳</span><span class="label">Cargando…</span></div>
+  </div>
+</div>
+
+<!-- ── Vista split (modo detalle) ── -->
+<div class="split-view" id="splitView">
+
+  <!-- Ficha cabecera (izquierda) -->
+  <div class="split-left" id="splitLeft">
+    <div class="ficha-hdr">
+      <span class="ficha-title" id="fichaTitle">—</span>
+      <button class="btn btn-secondary btn-sm" id="btnFichaDic" onclick="openDicForTable(tablaName)" title="Configurar campos con Diccionario" style="display:none;">📖</button>
+      <button class="btn btn-secondary btn-sm" id="btnFichaNew"  onclick="openCabModal(null)" title="Nuevo registro">+ Nuevo</button>
+      <button class="btn btn-secondary btn-sm" id="btnFichaCopy" onclick="copyFichaRow()" title="Copiar y pegar como nuevo">⧉ Copiar</button>
+      <button class="btn btn-secondary btn-sm" id="btnFichaEdit" onclick="toggleFichaEdit()">✏ Editar</button>
+      <button class="btn btn-danger    btn-sm" id="btnFichaDel"  onclick="deleteFichaRow()" title="Eliminar este registro">🗑</button>
+    </div>
+    <div class="ficha-body ficha-mode-view" id="fichaBody"></div>
+    <div class="ficha-foot" id="fichaFoot" style="display:none;">
+      <button class="btn btn-primary btn-sm" onclick="saveFicha()">💾 Guardar</button>
+      <button class="btn btn-ghost btn-sm" onclick="cancelFichaEdit()">Cancelar</button>
+      <span style="flex:1;"></span>
+      <span id="fichaErr" style="font-size:.75rem;color:#fca5a5;display:none;"></span>
+    </div>
+  </div>
+
+  <!-- Resizer -->
+  <div class="resizer" id="resizer"></div>
+
+  <!-- Detalles (derecha) -->
+  <div class="split-right" id="splitRight">
+    <div class="det-tabs" id="detTabs"></div>
+    <div class="det-toolbar" id="detToolbar">
+      <button class="btn btn-primary btn-sm"   id="btnNewDet"   onclick="openDetModal(null)"            style="display:none;">+ Nuevo</button>
+      <button class="btn btn-secondary btn-sm" id="btnEditDet"  disabled onclick="openDetModal(selectedDetRow)" style="display:none;">✏ Editar</button>
+      <button class="btn btn-danger btn-sm"    id="btnDelDet"   disabled onclick="confirmDeleteDet()"   style="display:none;">🗑 Eliminar</button>
+      <span class="det-count" id="detCount"></span>
+      <div style="flex:1;"></div>
+      <span style="font-size:.7rem;color:var(--muted);">ℹ Doble clic en una fila para editar</span>
+    </div>
+    <!-- Group zone detalle -->
+    <div class="group-zone" id="detGroupZone"
+         ondragover="onDetGzDragOver(event)" ondragleave="onDetGzDragLeave(event)" ondrop="onDetGzDrop(event)">
+      <span class="gz-hint" id="detGzHint">⠿ Arrastrá una columna para agrupar</span>
+      <span id="detGzPills"></span>
+    </div>
+    <div class="det-table-wrap" id="detTableWrap">
+      <div class="state-msg"><span class="icon">📋</span><span class="label">Seleccioná un detalle</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal ── -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-card">
+    <div class="modal-hdr">
+      <span class="modal-title" id="modalTitle">—</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="modalSaveBtn" onclick="saveModal()">Confirmar</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <span style="flex:1;"></span>
+      <span id="modalErr" style="font-size:.78rem;color:#fca5a5;display:none;max-width:260px;word-break:break-word;"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Params ────────────────────────────────────────────────────────────────────
+const _p        = new URLSearchParams(location.search);
+let   token     = _p.get('token') || sessionStorage.getItem('pg_token') || '';
+const baseUrl   = (_p.get('base') || '').replace(/\/$/, '') || location.origin;
+const tablaName = _p.get('tabla') || '';
+const sistemaId = parseInt(_p.get('sistema_id') || sessionStorage.getItem('pg_sistema_id') || '0') || null;
+const dbSlug    = _p.get('db_slug') || sessionStorage.getItem('pg_db_slug') || '';
+
+function slugAmp() { return dbSlug ? `&db_slug=${encodeURIComponent(dbSlug)}` : ''; }
+function slugQ()   { return dbSlug ? `?db_slug=${encodeURIComponent(dbSlug)}` : ''; }
+
+// ── Estado ────────────────────────────────────────────────────────────────────
+let cabSchema = [], cabDicMap = {}, cabMvCache = {}, cabPkCol = 'id', cabPkNumeric = true;
+let detalles  = [];   // [{nombre, alias, icon, schema, dicMap, mvCache, pkCol, campo_fk}]
+
+let cabRows   = [], cabTotal = 0, cabPage = 0, cabSearchQ = '';
+const CAB_LIMIT = 100;
+
+let selectedCabRow  = null;
+let selectedDetName = null;
+let selectedDetRow  = null;
+let detRows         = [];
+
+let fichaEditing    = false;
+let modalMode       = null;
+let copiedRow       = null;
+let canWrite        = false;
+
+// ── Agrupación cabecera ───────────────────────────────────────────────────────
+let cabGroupByCols     = [];
+let cabGroupsCollapsed = new Set();
+let cabAutoGroupCols   = [];
+let cabCalcCols        = [];
+let _cabGrpCounter     = 0;
+let _cabDraggedCol     = null;
+let _detDraggedCol     = null;
+
+function applyWriteAccess() {
+  const d = canWrite ? '' : 'none';
+  // Header: botón Nueva cabecera
+  const btnNew = document.getElementById('btnNew');
+  if (btnNew) btnNew.style.display = d;
+  // Ficha: todos los botones de acción
+  ['btnFichaNew','btnFichaCopy','btnFichaEdit','btnFichaDel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = d;
+  });
+  // Detalle toolbar
+  ['btnNewDet','btnEditDet','btnDelDet'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = d;
+  });
+}
+
+let _sessionExpired = false, _refreshing = false, _refreshPromise = null;
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function _refreshToken() {
+  const rt = sessionStorage.getItem('pg_refresh_token');
+  if (!rt) return false;
+  try {
+    const r = await fetch(baseUrl + '/api/v1/auth/refresh', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({refresh_token: rt}),
+    });
+    if (!r.ok) return false;
+    const d = await r.json();
+    token = d.access_token;
+    sessionStorage.setItem('pg_token', token);
+    if (d.refresh_token) sessionStorage.setItem('pg_refresh_token', d.refresh_token);
+    return true;
+  } catch { return false; }
+}
+
+async function api(path, opts = {}) {
+  const { headers: extraHeaders, ...restOpts } = opts;
+  const mk = () => fetch(baseUrl + path, {
+    headers: {'Content-Type':'application/json', ...(token?{'Authorization':'Bearer '+token}:{}), ...(extraHeaders||{})},
+    ...restOpts,
+  });
+  let res = await mk();
+  if (res.status === 401 && !_sessionExpired) {
+    if (!_refreshing) { _refreshing = true; _refreshPromise = _refreshToken().finally(()=>{ _refreshing=false; }); }
+    const ok = await _refreshPromise;
+    if (ok) res = await mk();
+    else { _sessionExpired = true; document.getElementById('sessionOverlay').style.display = 'flex'; }
+  }
+  return res;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function detDisplayName(det) {
+  const sfx = '_' + tablaName, pfx = tablaName + '_';
+  let n = det.nombre;
+  if (n.endsWith(sfx))        n = n.slice(0, -sfx.length);
+  else if (n.startsWith(pfx)) n = n.slice(pfx.length);
+  return n.charAt(0).toUpperCase() + n.slice(1);
+}
+
+function detIcon(nombre) {
+  const n = nombre.toLowerCase();
+  if (/item|producto|linea|detalle|articulo/.test(n)) return '📄';
+  if (/pago|cobro|cuota|abono|transacc/.test(n))     return '💳';
+  if (/envio|entrega|despacho/.test(n))               return '🚚';
+  if (/nota|observac|coment/.test(n))                 return '📝';
+  return '📋';
+}
+
+function formatCell(val, d) {
+  if (val===null||val===undefined||val==='') return '<span class="null-val">—</span>';
+  const tipo = (d?.tipo_dato||'').toLowerCase();
+  if (d?.multivalor && d._mvOpts) {
+    const f = d._mvOpts.find(o=>String(o.val)===String(val));
+    return `<span class="badge-mv">${esc(f?f.label:val)}</span>`;
+  }
+  if (tipo==='boolean'||tipo==='bool') {
+    const b = val===true||val==='true'||val==='t'||val==='1';
+    return b?'<span class="bool-t">✓ Sí</span>':'<span class="bool-f">✗ No</span>';
+  }
+  if (tipo.includes('timestamp')||tipo==='timestamptz') {
+    const dt = new Date(String(val).replace(' ','T'));
+    const f  = isNaN(dt) ? String(val).slice(0,16).replace('T',' ')
+      : `${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+    return `<span class="date-val">${esc(f)}</span>`;
+  }
+  if (tipo==='date') {
+    const d2 = new Date(String(val)+'T00:00:00');
+    const f  = isNaN(d2)?String(val).slice(0,10):`${String(d2.getDate()).padStart(2,'0')}/${String(d2.getMonth()+1).padStart(2,'0')}/${d2.getFullYear()}`;
+    return `<span class="date-val">${esc(f)}</span>`;
+  }
+  if (tipo==='numeric'||tipo==='decimal'||tipo==='float'||tipo==='real') {
+    const decs = d?.decimales??2;
+    return `<span class="num-val">${parseFloat(val).toLocaleString('es-AR',{minimumFractionDigits:decs,maximumFractionDigits:decs})}</span>`;
+  }
+  if (tipo.includes('int')||tipo==='bigint'||tipo==='smallint') {
+    return `<span class="int-val">${parseInt(val).toLocaleString('es-AR')}</span>`;
+  }
+  const s = String(val); return esc(s.length>80?s.slice(0,80)+'…':s);
+}
+
+function formatCellPlain(val, d) {
+  if (val===null||val===undefined||val==='') return '—';
+  const tipo = (d?.tipo_dato||'').toLowerCase();
+  if (d?.multivalor && d._mvOpts) { const f=d._mvOpts.find(o=>String(o.val)===String(val)); return f?f.label:String(val); }
+  if (tipo==='boolean'||tipo==='bool') return (val===true||val==='true'||val==='t')?'Sí':'No';
+  if (tipo.includes('timestamp')||tipo==='timestamptz') { const dt=new Date(String(val).replace(' ','T')); return isNaN(dt)?String(val).slice(0,10):`${String(dt.getDate()).padStart(2,'0')}/${String(dt.getMonth()+1).padStart(2,'0')}/${dt.getFullYear()}`; }
+  if (tipo==='date') { const d2=new Date(String(val)+'T00:00:00'); return isNaN(d2)?String(val).slice(0,10):`${String(d2.getDate()).padStart(2,'0')}/${String(d2.getMonth()+1).padStart(2,'0')}/${d2.getFullYear()}`; }
+  if (tipo==='numeric'||tipo==='decimal'||tipo==='float'||tipo==='real') { const decs=d?.decimales??2; return parseFloat(val).toLocaleString('es-AR',{minimumFractionDigits:decs,maximumFractionDigits:decs}); }
+  if (tipo.includes('int')||tipo==='bigint'||tipo==='smallint') return parseInt(val).toLocaleString('es-AR');
+  const s = String(val); return s.length>40?s.slice(0,40)+'…':s;
+}
+
+function visCols(schema, dicMap) {
+  return schema
+    .filter(c => dicMap[c.name]?dicMap[c.name].es_visible!==false:true)
+    .sort((a,b)=>(dicMap[a.name]?.orden_campo??999)-(dicMap[b.name]?.orden_campo??999));
+}
+
+function summaryLabel(row) {
+  const cols = visCols(cabSchema, cabDicMap).filter(c=>c.name!==cabPkCol).slice(0,3);
+  return cols.map(c=>formatCellPlain(row[c.name], cabDicMap[c.name])).filter(v=>v&&v!=='—').join(' · ');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  document.getElementById('hTitle').textContent   = '🗂 ' + tablaName;
+  document.getElementById('hSistema').textContent = sessionStorage.getItem('pg_sistema_nombre') || '';
+  document.getElementById('gridLabel').textContent = tablaName;
+
+  try {
+    const me = await (await api('/api/v1/auth/me')).json();
+    const roles = (me.roles||[]).map(r=>r.name||r);
+    const isAdmin     = roles.some(r=>r==='admin'||r==='superadmin');
+    const isSuperAdmin= roles.some(r=>r==='superadmin');
+    canWrite = isAdmin;
+
+    // Dic/Tester solo para admin/superadmin
+    if (isAdmin)      document.getElementById('btnFichaDic').style.display='';
+    // btnDic y btnTester se acceden desde el portal — no se muestran aquí
+
+    // Controles de escritura
+    applyWriteAccess();
+  } catch {}
+
+  const [schemaRes, dicRes, configRes] = await Promise.all([
+    api(`/api/v1/admin/db-table-schema?table_name=${encodeURIComponent(tablaName)}${slugAmp()}`),
+    sistemaId ? api(`/api/v1/diccionario/?id_sistema=${sistemaId}&tabla=${encodeURIComponent(tablaName)}&limit=2000`) : null,
+    sistemaId ? api(`/api/v1/admin/cabecera-config?tabla=${encodeURIComponent(tablaName)}&id_sistema=${sistemaId}`) : null,
+  ]);
+
+  if (schemaRes.ok) {
+    const sd = await schemaRes.json();
+    cabSchema = sd.columns || [];
+    const pk = cabSchema.find(c=>c.is_primary_key);
+    cabPkCol = pk?.name || cabSchema[0]?.name || 'id';
+    const pkt = (pk?.data_type||'').toLowerCase();
+    cabPkNumeric = pkt.includes('int')||pkt==='bigint'||pkt==='smallint'||pkt==='numeric'||pkt==='serial';
+  }
+
+  if (dicRes?.ok) {
+    const all = await dicRes.json();
+    (Array.isArray(all)?all:(all.items||[])).forEach(e=>{ cabDicMap[e.campo]=e; });
+  }
+
+  computeCabAutoGroupCols();
+  await loadMvCache(cabSchema, cabDicMap, cabMvCache);
+  Object.entries(cabMvCache).forEach(([c,opts])=>{ if(cabDicMap[c]) cabDicMap[c]._mvOpts=opts; });
+
+  if (configRes?.ok) {
+    const cfg = await configRes.json();
+    for (const det of (cfg.detalles||[])) {
+      const detObj = {
+        ...det, alias:detDisplayName(det), icon:detIcon(det.nombre),
+        schema:[], dicMap:{}, mvCache:{}, pkCol:'id', pkNumeric:true,
+        groupByCols:[], groupsCollapsed:new Set(), autoGroupCols:[], calcCols:[], grpCounter:0,
+      };
+      const [dsRes, detDicRes] = await Promise.all([
+        api(`/api/v1/admin/db-table-schema?table_name=${encodeURIComponent(det.nombre)}${slugAmp()}`),
+        sistemaId ? api(`/api/v1/diccionario/?id_sistema=${sistemaId}&tabla=${encodeURIComponent(det.nombre)}&limit=2000`) : null,
+      ]);
+      if (dsRes.ok) {
+        const ds = await dsRes.json();
+        detObj.schema = ds.columns||[];
+        const dpk = detObj.schema.find(c=>c.is_primary_key);
+        detObj.pkCol = dpk?.name||detObj.schema[0]?.name||'id';
+        const dpt = (dpk?.data_type||'').toLowerCase();
+        detObj.pkNumeric = dpt.includes('int')||dpt==='bigint'||dpt==='smallint'||dpt==='numeric'||dpt==='serial';
+      }
+      if (detDicRes?.ok) {
+        const all = await detDicRes.json();
+        (Array.isArray(all)?all:(all.items||[])).forEach(e=>{ detObj.dicMap[e.campo]=e; });
+      }
+      // Fallback: campos sin diccionario heredan del cabDicMap
+      detObj.schema.forEach(c=>{ if(!detObj.dicMap[c.name] && cabDicMap[c.name]) detObj.dicMap[c.name]=cabDicMap[c.name]; });
+      computeDetAutoGroupCols(detObj);
+      if (!detObj.campo_fk) {
+        const fkRes = await api(`/api/v1/admin/detect-fk?cabecera_table=${encodeURIComponent(tablaName)}&detalle_table=${encodeURIComponent(det.nombre)}${slugAmp()}`);
+        if (fkRes.ok) detObj.campo_fk = (await fkRes.json()).campo_fk||null;
+      }
+      await loadMvCache(detObj.schema, detObj.dicMap, detObj.mvCache);
+      Object.entries(detObj.mvCache).forEach(([c,opts])=>{ if(detObj.dicMap[c]) detObj.dicMap[c]._mvOpts=opts; });
+      detalles.push(detObj);
+    }
+  }
+
+  // Construir tabs de detalle
+  buildDetTabs();
+  initResizer();
+  await loadCabRows(0);
+}
+
+// ── MV Cache ──────────────────────────────────────────────────────────────────
+async function loadMvCache(schema, dicMap, mvCache) {
+  for (const col of schema) {
+    const mv = dicMap[col.name]?.multivalor;
+    if (!mv) continue;
+    if (mv.trim().toUpperCase().startsWith('SELECT')) {
+      try {
+        const r = await api('/api/v1/admin/sql-db',{method:'POST',body:JSON.stringify({query:mv,db_slug:dbSlug||null})});
+        if (r.ok) {
+          const d = await r.json();
+          if (d.rows?.length) {
+            const keys = d.columns||Object.keys(d.rows[0]);
+            mvCache[col.name] = d.rows.map(row=>({val:row[keys[0]],label:keys[1]?row[keys[1]]||row[keys[0]]:row[keys[0]]}));
+          } else mvCache[col.name]=[];
+        }
+      } catch { mvCache[col.name]=[]; }
+    } else {
+      mvCache[col.name] = mv.split(';').map(s=>{const[v,l]=s.split('|');return{val:(v||'').trim(),label:(l||v||'').trim()};}).filter(o=>o.val!=='');
+    }
+  }
+}
+
+// ── Cargar cabeceras ──────────────────────────────────────────────────────────
+async function loadCabRows(page=0) {
+  if (page===0) { cabRows=[]; }
+  cabPage = page;
+  const qs = new URLSearchParams({skip:page*CAB_LIMIT, limit:CAB_LIMIT});
+  if (dbSlug)     qs.set('db_slug', dbSlug);
+  if (cabSearchQ) qs.set('q', cabSearchQ);
+
+  const wrap = document.getElementById('gridWrap');
+  if (page===0) wrap.innerHTML = '<div class="state-msg"><span class="icon">⏳</span><span class="label">Cargando…</span></div>';
+
+  const res = await api(`/api/v1/admin/tables/${encodeURIComponent(tablaName)}/rows?${qs}`);
+  if (!res.ok) { wrap.innerHTML='<div class="state-msg"><span class="icon">⚠</span><span class="label">Error al cargar</span></div>'; return; }
+
+  const data = await res.json();
+  cabTotal = data.total||0;
+  if (page===0) cabRows = data.items||[];
+  else          cabRows = [...cabRows, ...(data.items||[])];
+
+  document.getElementById('rowCount').textContent = `${cabTotal.toLocaleString('es-AR')} reg.`;
+  renderGrid();
+}
+
+let _sTimer;
+function onCabSearch() {
+  clearTimeout(_sTimer);
+  _sTimer = setTimeout(()=>{ cabSearchQ = document.getElementById('cabSearch').value.trim().replace(/\*/g,'%'); loadCabRows(0); }, 350);
+}
+
+// ── Grilla cabecera ───────────────────────────────────────────────────────────
+function buildCabDataRow(row, cols, idx) {
+  const pk = row[cabPkCol];
+  const tr = document.createElement('tr');
+  tr.dataset.pk  = String(pk);
+  tr.dataset.idx = idx;
+  cols.forEach(c => {
+    const td = document.createElement('td');
+    td.title = row[c.name] !== null && row[c.name] !== undefined ? String(row[c.name]) : '';
+    td.innerHTML = formatCell(row[c.name], cabDicMap[c.name]);
+    tr.appendChild(td);
+  });
+  const tdAct = document.createElement('td');
+  tdAct.className = 'td-act';
+  if (canWrite) {
+    tdAct.innerHTML = `
+      <button class="ra-btn ra-copy"  title="Copiar" onclick="copyGridRow(event,'${esc(String(pk))}')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+      <button class="ra-btn ra-edit" title="Editar"  onclick="editCabFromGrid(event,${idx})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+      <button class="ra-btn ra-del"  title="Eliminar" onclick="deleteCabFromGrid(event,${idx})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+      </button>`;
+  }
+  tr.appendChild(tdAct);
+  tr.addEventListener('click', e => {
+    if (e.target.closest('.ra-btn')) return;
+    document.querySelectorAll('#gridWrap tr.selected').forEach(t=>t.classList.remove('selected'));
+    tr.classList.add('selected');
+    selectedCabRow = cabRows[+tr.dataset.idx];
+  });
+  tr.addEventListener('dblclick', e => {
+    if (e.target.closest('.ra-btn')) return;
+    selectedCabRow = cabRows[+tr.dataset.idx];
+    openDetailView(selectedCabRow);
+  });
+  return tr;
+}
+
+function renderGrid() {
+  const wrap = document.getElementById('gridWrap');
+  const cols = visCols(cabSchema, cabDicMap);
+
+  if (!cabRows.length) {
+    wrap.innerHTML = '<div class="state-msg"><span class="icon">📋</span><span class="label">Sin registros. Hacé clic en "+ Nuevo" para agregar.</span></div>';
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.className = 'cab-grid';
+
+  // Thead con headers arrastrables
+  const thead = document.createElement('thead');
+  const hr = document.createElement('tr');
+  cols.forEach(c => {
+    const th = document.createElement('th');
+    th.textContent = cabDicMap[c.name]?.alias || c.name;
+    th.draggable = true;
+    th.dataset.col = c.name;
+    th.addEventListener('dragstart', e => { _cabDraggedCol = c.name; e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain', c.name); th.classList.add('dragging'); });
+    th.addEventListener('dragend',   () => th.classList.remove('dragging'));
+    th.addEventListener('dragover',  e => { e.preventDefault(); th.classList.add('drag-target'); });
+    th.addEventListener('dragleave', () => th.classList.remove('drag-target'));
+    th.addEventListener('drop',      e => { e.preventDefault(); th.classList.remove('drag-target'); });
+    hr.appendChild(th);
+  });
+  const thAct = document.createElement('th'); thAct.className = 'th-act';
+  hr.appendChild(thAct);
+  thead.appendChild(hr);
+  table.appendChild(thead);
+
+  // Tbody con agrupación o filas normales
+  const tbody = document.createElement('tbody');
+  const activeGrp = cabGroupByCols.filter(c => cols.some(col=>col.name===c));
+  if (activeGrp.length > 0) {
+    _cabGrpCounter = 0;
+    renderNestedGroupsG(cabRows, cols.map(c=>c.name), tbody, activeGrp, 0, [], {
+      dicMap: cabDicMap, mvCache: cabMvCache, calcCols: cabCalcCols,
+      counter: {val:0}, collapsed: cabGroupsCollapsed, pfx:'cab',
+      rowBuilder: (row, idx) => buildCabDataRow(row, cols, idx),
+      rowIndex:   r => cabRows.indexOf(r),
+      totalCols:  cols.length + 1,
+    });
+  } else {
+    cabRows.forEach((row, i) => tbody.appendChild(buildCabDataRow(row, cols, i)));
+  }
+
+  // Fila "cargar más"
+  if (cabRows.length < cabTotal) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="${cols.length+1}" class="load-more-row">
+      <button class="btn btn-secondary btn-sm" onclick="loadCabRows(${cabPage+1})">Cargar más… (${cabRows.length} / ${cabTotal.toLocaleString('es-AR')})</button>
+    </td>`;
+    tbody.appendChild(tr);
+  }
+
+  table.appendChild(tbody);
+  wrap.innerHTML = '';
+  wrap.appendChild(table);
+}
+
+// ── Acciones desde grilla ─────────────────────────────────────────────────────
+function editCabFromGrid(e, idx) {
+  e.stopPropagation();
+  selectedCabRow = cabRows[idx];
+  openCabModal(selectedCabRow);
+}
+
+async function deleteCabFromGrid(e, idx) {
+  e.stopPropagation();
+  selectedCabRow = cabRows[idx];
+  await confirmDeleteCab();
+}
+
+function copyGridRow(e, pk) {
+  e.stopPropagation();
+  const row = cabRows.find(r=>String(r[cabPkCol])===String(pk));
+  if (!row) return;
+  copiedRow = Object.fromEntries(Object.entries(row).filter(([k])=>k!==cabPkCol));
+  document.querySelectorAll('.ra-copy').forEach(b=>b.classList.remove('copied'));
+  const btn = e.currentTarget;
+  if (btn) { btn.classList.add('copied'); btn.title='¡Copiado!'; }
+  // Abrir modal con datos copiados
+  openCabModalFromCopy();
+}
+
+function openCabModalFromCopy() {
+  if (!copiedRow) return;
+  modalMode = 'new-cab';
+  document.getElementById('modalTitle').textContent = `+ Nueva (copia) — ${tablaName}`;
+  buildModalFields(cabSchema, cabDicMap, cabMvCache, cabPkCol, copiedRow, true);
+  showModal();
+}
+
+// ── Vista split: abrir detalle ────────────────────────────────────────────────
+function openDetailView(row) {
+  selectedCabRow = row;
+  selectedDetRow = null;
+  fichaEditing   = false;
+
+  // Mostrar split, ocultar grid
+  document.getElementById('gridView').style.display  = 'none';
+  document.getElementById('splitView').classList.add('active');
+  document.getElementById('btnBack').classList.add('visible');
+  document.getElementById('searchWrap').style.display = 'none';
+  if (canWrite) document.getElementById('btnNew').style.display = 'none';
+
+  renderFicha(row, false);
+
+  // Cargar primer detalle si existe
+  if (detalles.length) {
+    selectDetTab(detalles[0].nombre);
+  } else {
+    document.getElementById('detTableWrap').innerHTML =
+      '<div class="state-msg"><span class="icon">📋</span><span class="label">Sin detalles configurados</span></div>';
+  }
+}
+
+function backToGrid() {
+  document.getElementById('splitView').classList.remove('active');
+  document.getElementById('gridView').style.display  = '';
+  document.getElementById('btnBack').classList.remove('visible');
+  document.getElementById('searchWrap').style.display = '';
+  if (canWrite) document.getElementById('btnNew').style.display = '';
+  cancelFichaEdit();
+}
+
+// ── Tabs de detalle ───────────────────────────────────────────────────────────
+function buildDetTabs() {
+  const tabs = document.getElementById('detTabs');
+  if (!detalles.length) { tabs.style.display='none'; return; }
+  tabs.innerHTML = detalles.map(d =>
+    `<div class="det-tab" id="tab-${esc(d.nombre)}" onclick="selectDetTab('${d.nombre.replace(/'/g,"\\'")}')">${d.icon} ${esc(d.alias)}</div>`
+  ).join('');
+}
+
+function selectDetTab(nombre) {
+  selectedDetName = nombre;
+  selectedDetRow  = null;
+  document.querySelectorAll('.det-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`tab-${nombre}`)?.classList.add('active');
+  const editBtn = document.getElementById('btnEditDet');
+  const delBtn  = document.getElementById('btnDelDet');
+  if (editBtn) editBtn.disabled = true;
+  if (delBtn)  delBtn.disabled  = true;
+  // Actualizar group zone para este detalle
+  const det = detalles.find(d=>d.nombre===nombre);
+  if (det) updateDetGroupZoneUI(det);
+  if (selectedCabRow) loadDetRows(selectedCabRow, nombre);
+}
+
+// ── Ficha ─────────────────────────────────────────────────────────────────────
+function renderFicha(row, editing) {
+  const pk = row[cabPkCol];
+  document.getElementById('fichaTitle').textContent = `${tablaName} #${pk} — ${summaryLabel(row)||''}`;
+  document.getElementById('btnFichaEdit').textContent = editing ? '✕ Cancelar' : '✏ Editar';
+
+  const body = document.getElementById('fichaBody');
+  body.className = 'ficha-body' + (editing ? '' : ' ficha-mode-view');
+  body.innerHTML = '';
+
+  visCols(cabSchema, cabDicMap).forEach(col => {
+    const campo = col.name, d = cabDicMap[campo]||{};
+    const isPk  = campo === cabPkCol;
+    const val   = row[campo];
+    const readOnly = d.es_solo_lectura || isPk || !editing;
+    const tipo  = (d.tipo_dato||col.data_type||'').toLowerCase();
+    const alias = d.alias || campo;
+
+    const div = document.createElement('div');
+    div.className = 'f-group';
+    let lbl = `<label class="f-label" for="fc-${campo}">${esc(alias)}`;
+    if (editing && d.es_obligatorio) lbl += ` <span class="f-req">*</span>`;
+    if (isPk) lbl += ` <span class="f-ro">PK</span>`;
+    lbl += '</label>';
+
+    let inp = '';
+    if (d.multivalor && editing) {
+      const opts = cabMvCache[campo]||[];
+      inp = opts.length
+        ? `<select class="f-inp" id="fc-${campo}"><option value="">—</option>${opts.map(o=>`<option value="${esc(o.val)}" ${String(val)===String(o.val)?'selected':''}>${esc(o.label)}</option>`).join('')}</select>`
+        : `<input type="text" class="f-inp" id="fc-${campo}" value="${esc(val??'')}">`;
+    } else if (tipo==='boolean'||tipo==='bool') {
+      const chk = val===true||val==='true'||val==='t';
+      inp = `<div class="f-bool"><input type="checkbox" id="fc-${campo}" ${chk?'checked':''} ${readOnly?'disabled':''}><label class="f-bool-lbl" for="fc-${campo}">${esc(alias)}</label></div>`;
+    } else if (tipo==='text'||tipo==='jsonb') {
+      inp = `<textarea class="f-inp f-textarea" id="fc-${campo}" ${readOnly?'readonly':''}>${esc(val??'')}</textarea>`;
+    } else if (tipo.includes('int')||tipo==='bigint'||tipo==='smallint'||tipo==='serial') {
+      inp = `<input type="number" class="f-inp" id="fc-${campo}" value="${esc(val??'')}" step="1" ${readOnly?'readonly':''}>`;
+    } else if (tipo==='numeric'||tipo==='decimal'||tipo==='float'||tipo==='real') {
+      const step = (d.decimales??2)>0?(1/Math.pow(10,d.decimales??2)).toFixed(d.decimales??2):'any';
+      inp = `<input type="number" class="f-inp" id="fc-${campo}" value="${esc(val??'')}" step="${step}" ${readOnly?'readonly':''}>`;
+    } else if (tipo==='date') {
+      inp = `<input type="date" class="f-inp" id="fc-${campo}" value="${esc(val?String(val).slice(0,10):'')}" ${readOnly?'readonly':''}>`;
+    } else if (tipo.includes('timestamp')||tipo==='timestamptz') {
+      inp = `<input type="datetime-local" class="f-inp" id="fc-${campo}" value="${esc(val?String(val).replace(' ','T').slice(0,16):'')}" ${readOnly?'readonly':''}>`;
+    } else {
+      inp = `<input type="text" class="f-inp" id="fc-${campo}" value="${esc(val??'')}" ${readOnly?'readonly':''}>`;
+    }
+
+    div.innerHTML = lbl + inp + (d.texto_ayuda&&editing?`<div class="f-help">${esc(d.texto_ayuda)}</div>`:'');
+    body.appendChild(div);
+  });
+
+  document.getElementById('fichaFoot').style.display = editing ? '' : 'none';
+  document.getElementById('fichaErr').style.display  = 'none';
+}
+
+function toggleFichaEdit() {
+  fichaEditing = !fichaEditing;
+  renderFicha(selectedCabRow, fichaEditing);
+}
+
+function copyFichaRow() {
+  if (!selectedCabRow) return;
+  copiedRow = {...selectedCabRow};
+  delete copiedRow[cabPkCol];
+  openCabModalFromCopy();
+}
+
+async function deleteFichaRow() {
+  if (!selectedCabRow) return;
+  await confirmDeleteCab();
+  // After delete, grid is re-rendered and split view is hidden by confirmDeleteCab
+}
+
+function cancelFichaEdit() {
+  fichaEditing = false;
+  if (selectedCabRow) renderFicha(selectedCabRow, false);
+}
+
+async function saveFicha() {
+  if (!selectedCabRow) return;
+  const errEl = document.getElementById('fichaErr');
+  errEl.style.display = 'none';
+
+  const payload = {};
+  visCols(cabSchema, cabDicMap).forEach(col => {
+    const campo = col.name, d = cabDicMap[campo]||{};
+    if (campo === cabPkCol || d.es_solo_lectura) return;
+    const el = document.getElementById('fc-'+campo); if (!el) return;
+    const tipo = (d.tipo_dato||col.data_type||'').toLowerCase();
+    payload[campo] = (tipo==='boolean'||tipo==='bool') ? el.checked : (el.value!==''?el.value:null);
+  });
+
+  const pk = selectedCabRow[cabPkCol];
+  const qs = dbSlug ? `?db_slug=${encodeURIComponent(dbSlug)}` : '';
+  const r  = await api(`/api/v1/admin/tables/${encodeURIComponent(tablaName)}/rows/${pk}${qs}`, {method:'PATCH',body:JSON.stringify(payload)});
+  if (!r.ok) {
+    const e = await r.json().catch(()=>({}));
+    errEl.textContent = e.detail||'Error al guardar';
+    errEl.style.display = '';
+    return;
+  }
+  // Actualizar fila en cabRows
+  const updated = await r.json();
+  const idx = cabRows.findIndex(r=>String(r[cabPkCol])===String(pk));
+  if (idx>=0) cabRows[idx] = updated;
+  selectedCabRow = updated;
+  fichaEditing   = false;
+  renderFicha(updated, false);
+  renderGrid(); // actualizar grilla en background
+}
+
+// ── Tabla detalles ────────────────────────────────────────────────────────────
+async function loadDetRows(cabRow, detNombre) {
+  const det = detalles.find(d=>d.nombre===detNombre);
+  if (!det) return;
+
+  const wrap = document.getElementById('detTableWrap');
+  const countEl = document.getElementById('detCount');
+  wrap.innerHTML = '<div class="state-msg"><span class="icon">⏳</span><span class="label">Cargando…</span></div>';
+  if (countEl) countEl.textContent = '';
+
+  if (!det.campo_fk) {
+    wrap.innerHTML = `<div class="state-msg"><span class="icon">⚠</span><span class="label">FK no detectada para ${esc(det.nombre)}</span></div>`;
+    return;
+  }
+
+  const pkVal    = cabRow[cabPkCol];
+  const pkForSql = cabPkNumeric ? pkVal : `'${String(pkVal).replace(/'/g,"''")}'`;
+  const sql      = `SELECT * FROM "${det.nombre}" WHERE "${det.campo_fk}" = ${pkForSql} ORDER BY ${det.pkCol} LIMIT 1000`;
+
+  const res = await api('/api/v1/admin/sql-db',{method:'POST',body:JSON.stringify({query:sql,db_slug:dbSlug||null})});
+  if (!res.ok) {
+    const e = await res.json().catch(()=>({}));
+    wrap.innerHTML = `<div class="state-msg"><span class="icon">⚠</span><span class="label">${esc(e.detail||'Error al cargar')}</span></div>`;
+    return;
+  }
+
+  const data = await res.json();
+  detRows = data.rows||[];
+  if (countEl) countEl.textContent = `${detRows.length} reg.`;
+  renderDetTable(det);
+}
+
+function buildDetDataRow(row, cols, idx, det) {
+  const tr = document.createElement('tr');
+  tr.dataset.idx = idx;
+  cols.forEach(c => {
+    const td = document.createElement('td');
+    td.title = row[c.name] !== null && row[c.name] !== undefined ? String(row[c.name]) : '';
+    td.innerHTML = formatCell(row[c.name], det.dicMap[c.name]);
+    tr.appendChild(td);
+  });
+  const tdAct = document.createElement('td'); tdAct.className='td-act';
+  if (canWrite) {
+    tdAct.innerHTML = `
+      <button class="ra-btn ra-edit" title="Editar"   onclick="editDetFromGrid(event,${idx})">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+      <button class="ra-btn ra-del" title="Eliminar"  onclick="deleteDetFromGrid(event,${idx})">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+      </button>`;
+  }
+  tr.appendChild(tdAct);
+  tr.addEventListener('click', () => {
+    document.querySelectorAll('#detTableWrap tr.selected').forEach(t=>t.classList.remove('selected'));
+    tr.classList.add('selected');
+    selectedDetRow = detRows[+tr.dataset.idx];
+    const eb = document.getElementById('btnEditDet'), db = document.getElementById('btnDelDet');
+    if (eb) eb.disabled = false;
+    if (db) db.disabled = false;
+  });
+  tr.addEventListener('dblclick', () => {
+    selectedDetRow = detRows[+tr.dataset.idx];
+    openDetModal(selectedDetRow);
+  });
+  return tr;
+}
+
+function renderDetTable(det) {
+  const wrap = document.getElementById('detTableWrap');
+  const cols = visCols(det.schema, det.dicMap);
+
+  if (!detRows.length) {
+    wrap.innerHTML = '<div class="state-msg"><span class="icon">📄</span><span class="label">Sin registros en este detalle</span></div>';
+    updateDetGroupZoneUI(det);
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.className = 'det-grid';
+
+  // Thead con headers arrastrables
+  const thead = document.createElement('thead');
+  const hr = document.createElement('tr');
+  cols.forEach(c => {
+    const th = document.createElement('th');
+    th.textContent = det.dicMap[c.name]?.alias || c.name;
+    th.draggable = true;
+    th.dataset.col = c.name;
+    th.addEventListener('dragstart', e => { _detDraggedCol = c.name; e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain', c.name); th.classList.add('dragging'); });
+    th.addEventListener('dragend',   () => th.classList.remove('dragging'));
+    th.addEventListener('dragover',  e => { e.preventDefault(); th.classList.add('drag-target'); });
+    th.addEventListener('dragleave', () => th.classList.remove('drag-target'));
+    th.addEventListener('drop',      e => { e.preventDefault(); th.classList.remove('drag-target'); });
+    hr.appendChild(th);
+  });
+  const thAct = document.createElement('th'); thAct.className='th-act';
+  hr.appendChild(thAct);
+  thead.appendChild(hr);
+  table.appendChild(thead);
+
+  // Tbody con agrupación o filas normales
+  const tbody = document.createElement('tbody');
+  const activeGrp = (det.groupByCols||[]).filter(c => cols.some(col=>col.name===c));
+  if (activeGrp.length > 0) {
+    det.grpCounter = 0;
+    renderNestedGroupsG(detRows, cols.map(c=>c.name), tbody, activeGrp, 0, [], {
+      dicMap: det.dicMap, mvCache: det.mvCache, calcCols: det.calcCols||[],
+      counter: {val:0}, collapsed: det.groupsCollapsed, pfx: det.nombre,
+      rowBuilder: (row, idx) => buildDetDataRow(row, cols, idx, det),
+      rowIndex:   r => detRows.indexOf(r),
+      totalCols:  cols.length + 1,
+    });
+  } else {
+    detRows.forEach((row, i) => tbody.appendChild(buildDetDataRow(row, cols, i, det)));
+  }
+
+  table.appendChild(tbody);
+  wrap.innerHTML = '';
+  wrap.appendChild(table);
+  updateDetGroupZoneUI(det);
+}
+
+function editDetFromGrid(e, idx) {
+  e.stopPropagation();
+  selectedDetRow = detRows[idx];
+  openDetModal(selectedDetRow);
+}
+
+async function deleteDetFromGrid(e, idx) {
+  e.stopPropagation();
+  selectedDetRow = detRows[idx];
+  await confirmDeleteDet();
+}
+
+// ── Modales ───────────────────────────────────────────────────────────────────
+function openCabModal(row) {
+  modalMode = row ? 'edit-cab' : 'new-cab';
+  document.getElementById('modalTitle').textContent = row ? `✏ Editar — ${tablaName}` : `+ Nueva — ${tablaName}`;
+  buildModalFields(cabSchema, cabDicMap, cabMvCache, cabPkCol, row, !row);
+  showModal();
+}
+
+function openDetModal(row) {
+  if (!selectedCabRow) return;
+  const det = detalles.find(d=>d.nombre===selectedDetName);
+  if (!det) return;
+  modalMode = row ? 'edit-det' : 'new-det';
+  document.getElementById('modalTitle').textContent = row ? `✏ Editar — ${det.alias}` : `+ Nuevo — ${det.alias}`;
+  buildModalFields(det.schema, det.dicMap, det.mvCache, det.pkCol, row, !row, det.campo_fk, selectedCabRow[cabPkCol]);
+  showModal();
+}
+
+function showModal() {
+  document.getElementById('modalOverlay').classList.add('active');
+  document.getElementById('modalErr').style.display = 'none';
+  document.getElementById('modalSaveBtn').disabled  = false;
+  document.getElementById('modalSaveBtn').textContent = 'Confirmar';
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+
+function buildModalFields(schema, dicMap, mvCache, pkCol, row, isNew, fkField=null, fkValue=null) {
+  const body = document.getElementById('modalBody');
+  body.innerHTML = '';
+  schema.forEach(col => {
+    const campo = col.name, d = dicMap[campo]||{}, isPk = campo===pkCol, isFk = campo===fkField;
+    const val   = row ? row[campo] : (isFk ? fkValue : (d.valor_defecto??''));
+    const readOnly = d.es_solo_lectura || isPk || isFk;
+    const tipo  = (d.tipo_dato||col.data_type||'').toLowerCase(), alias = d.alias||campo;
+    const div = document.createElement('div'); div.className='f-group';
+    let lbl = `<label class="f-label" for="mf-${campo}">${esc(alias)}`;
+    if (d.es_obligatorio) lbl += ` <span class="f-req">*</span>`;
+    if (readOnly && !isFk) lbl += ` <span class="f-ro">SOLO LECTURA</span>`;
+    lbl += '</label>';
+    let inp = '';
+    if (isFk) {
+      const opts = cabRows.map(r=>{
+        const pk=r[cabPkCol], l2=summaryLabel(r)||String(pk);
+        return `<option value="${esc(pk)}" ${String(pk)===String(val??'')?'selected':''}>#${esc(String(pk))} — ${esc(l2)}</option>`;
+      }).join('');
+      inp = `<select class="f-inp" id="mf-${campo}"><option value="">— seleccionar —</option>${opts}</select>`;
+    } else if (readOnly||isPk) {
+      inp = `<input type="text" class="f-inp" id="mf-${campo}" value="${esc(val??'')}" readonly>`;
+    } else if (d.multivalor) {
+      const opts = mvCache[campo]||[];
+      inp = opts.length
+        ? `<select class="f-inp" id="mf-${campo}"><option value="">— seleccionar —</option>${opts.map(o=>`<option value="${esc(o.val)}" ${String(val)===String(o.val)?'selected':''}>${esc(o.label)}</option>`).join('')}</select>`
+        : `<input type="text" class="f-inp" id="mf-${campo}" value="${esc(val??'')}">`;
+    } else if (tipo==='boolean'||tipo==='bool') {
+      const chk = val===true||val==='true'||val==='t';
+      inp = `<div class="f-bool"><input type="checkbox" id="mf-${campo}" ${chk?'checked':''}><label class="f-bool-lbl" for="mf-${campo}">${esc(alias)}</label></div>`;
+    } else if (tipo==='text'||tipo==='jsonb') {
+      inp = `<textarea class="f-inp f-textarea" id="mf-${campo}">${esc(val??'')}</textarea>`;
+    } else if (tipo.includes('int')||tipo==='bigint'||tipo==='smallint'||tipo==='serial') {
+      inp = `<input type="number" class="f-inp" id="mf-${campo}" value="${esc(val??'')}" step="1" ${isPk&&isNew?'placeholder="Auto"':''}>`;
+    } else if (tipo==='numeric'||tipo==='decimal'||tipo==='float'||tipo==='real') {
+      const step = (d.decimales??2)>0?(1/Math.pow(10,d.decimales??2)).toFixed(d.decimales??2):'any';
+      inp = `<input type="number" class="f-inp" id="mf-${campo}" value="${esc(val??'')}" step="${step}">`;
+    } else if (tipo==='date') {
+      inp = `<input type="date" class="f-inp" id="mf-${campo}" value="${esc(val?String(val).slice(0,10):'')}">`;
+    } else if (tipo.includes('timestamp')||tipo==='timestamptz') {
+      inp = `<input type="datetime-local" class="f-inp" id="mf-${campo}" value="${esc(val?String(val).replace(' ','T').slice(0,16):'')}">`;
+    } else {
+      inp = `<input type="text" class="f-inp" id="mf-${campo}" value="${esc(val??'')}">`;
+    }
+    div.innerHTML = lbl + inp + (d.texto_ayuda?`<div class="f-help">${esc(d.texto_ayuda)}</div>`:'');
+    body.appendChild(div);
+  });
+}
+
+async function saveModal() {
+  const btn = document.getElementById('modalSaveBtn'), errEl = document.getElementById('modalErr');
+  btn.disabled = true; btn.textContent = '⏳ Guardando…'; errEl.style.display = 'none';
+  try {
+    const isCab = modalMode==='new-cab'||modalMode==='edit-cab';
+    const isNew = modalMode==='new-cab'||modalMode==='new-det';
+    const det   = isCab ? null : detalles.find(d=>d.nombre===selectedDetName);
+    const schema = isCab?cabSchema:det.schema, dicMap = isCab?cabDicMap:det.dicMap;
+    const pkCol  = isCab?cabPkCol:det.pkCol, tName = isCab?tablaName:det.nombre;
+    const payload = collectPayload(schema, dicMap, pkCol, isNew);
+    if (!isCab && det?.campo_fk && selectedCabRow) payload[det.campo_fk] = selectedCabRow[cabPkCol];
+    const qs = dbSlug ? `?db_slug=${encodeURIComponent(dbSlug)}` : '';
+    let res;
+    if (isNew) res = await api(`/api/v1/admin/tables/${encodeURIComponent(tName)}/rows${qs}`,{method:'POST',body:JSON.stringify(payload)});
+    else {
+      const pk = isCab ? selectedCabRow[cabPkCol] : selectedDetRow[det.pkCol];
+      res = await api(`/api/v1/admin/tables/${encodeURIComponent(tName)}/rows/${pk}${qs}`,{method:'PATCH',body:JSON.stringify(payload)});
+    }
+    if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.detail||'Error al guardar'); }
+    const saved = await res.json().catch(()=>({}));
+    closeModal();
+    if (isCab) {
+      if (isNew) {
+        await loadCabRows(0);
+      } else {
+        // Actualizar fila en array
+        const idx = cabRows.findIndex(r=>String(r[cabPkCol])===String(selectedCabRow[cabPkCol]));
+        if (idx>=0) { cabRows[idx]=saved; selectedCabRow=saved; }
+        renderGrid();
+        if (document.getElementById('splitView').classList.contains('active')) renderFicha(saved, false);
+      }
+    } else {
+      await loadDetRows(selectedCabRow, selectedDetName);
+    }
+  } catch(e) { errEl.textContent=e.message; errEl.style.display=''; }
+  btn.disabled=false; btn.textContent='Confirmar';
+}
+
+function collectPayload(schema, dicMap, pkCol, isNew) {
+  const payload = {};
+  schema.forEach(col => {
+    const campo = col.name, d = dicMap[campo]||{}, isPk = campo===pkCol;
+    if (isPk&&isNew) return;
+    if (d.es_solo_lectura) return;
+    const el = document.getElementById('mf-'+campo); if (!el) return;
+    const tipo = (d.tipo_dato||col.data_type||'').toLowerCase();
+    payload[campo] = (tipo==='boolean'||tipo==='bool') ? el.checked : (el.value!==''?el.value:null);
+  });
+  return payload;
+}
+
+// ── Eliminar ──────────────────────────────────────────────────────────────────
+async function confirmDeleteCab() {
+  if (!selectedCabRow) return;
+  const pk = selectedCabRow[cabPkCol];
+  const detNombres = detalles.filter(d=>d.campo_fk).map(d=>d.alias).join(', ');
+  const msg = detNombres
+    ? `¿Eliminar este registro?\nSe eliminarán también todos los detalles de: ${detNombres}.\n\nEsta acción no se puede deshacer.`
+    : '¿Eliminar este registro?';
+  if (!confirm(msg)) return;
+  const pkForSql = cabPkNumeric ? pk : `'${String(pk).replace(/'/g,"''")}'`;
+  for (const det of detalles) {
+    if (!det.campo_fk) continue;
+    await api('/api/v1/admin/sql-db',{method:'POST',body:JSON.stringify({query:`DELETE FROM "${det.nombre}" WHERE "${det.campo_fk}" = ${pkForSql}`,db_slug:dbSlug||null})});
+  }
+  const qs = dbSlug?`?db_slug=${encodeURIComponent(dbSlug)}`:'';
+  const r  = await api(`/api/v1/admin/tables/${encodeURIComponent(tablaName)}/rows/${pk}${qs}`,{method:'DELETE'});
+  if (!r.ok&&r.status!==204) { const e=await r.json().catch(()=>({})); alert('Error: '+(e.detail||r.status)); return; }
+  selectedCabRow=null;
+  if (document.getElementById('splitView').classList.contains('active')) backToGrid();
+  await loadCabRows(0);
+}
+
+async function confirmDeleteDet() {
+  if (!selectedDetRow||!selectedDetName) return;
+  const det = detalles.find(d=>d.nombre===selectedDetName);
+  if (!det||!confirm(`¿Eliminar este registro de ${det.alias}?`)) return;
+  const pk = selectedDetRow[det.pkCol];
+  const qs = dbSlug?`?db_slug=${encodeURIComponent(dbSlug)}`:'';
+  const r  = await api(`/api/v1/admin/tables/${encodeURIComponent(det.nombre)}/rows/${pk}${qs}`,{method:'DELETE'});
+  if (!r.ok&&r.status!==204) { const e=await r.json().catch(()=>({})); alert('Error: '+(e.detail||r.status)); return; }
+  selectedDetRow=null;
+  const eb=document.getElementById('btnEditDet'), db=document.getElementById('btnDelDet');
+  if (eb) eb.disabled=true;
+  if (db) db.disabled=true;
+  await loadDetRows(selectedCabRow, selectedDetName);
+}
+
+// ── Resizer ───────────────────────────────────────────────────────────────────
+function initResizer() {
+  const resizer = document.getElementById('resizer');
+  const left    = document.getElementById('splitLeft');
+  let startX, startW;
+
+  resizer.addEventListener('mousedown', e => {
+    startX = e.clientX; startW = left.offsetWidth;
+    resizer.classList.add('dragging');
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    e.preventDefault();
+  });
+
+  function onDrag(e) {
+    const newW = Math.max(220, Math.min(startW + e.clientX - startX, window.innerWidth * 0.6));
+    left.style.width = newW + 'px';
+  }
+  function stopDrag() {
+    resizer.classList.remove('dragging');
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+  }
+}
+
+// ── Agrupación — funciones genéricas ─────────────────────────────────────────
+
+function computeCabAutoGroupCols() {
+  cabAutoGroupCols = Object.values(cabDicMap)
+    .filter(d => (d.grupo ?? 0) > 0 && d.campo)
+    .sort((a,b) => (a.grupo - b.grupo) || a.campo.localeCompare(b.campo))
+    .map(d => d.campo);
+  cabCalcCols = Object.values(cabDicMap)
+    .filter(d => d.calculo && d.campo)
+    .map(d => ({campo:d.campo, calculo:d.calculo}));
+  if (cabAutoGroupCols.length > 0 && cabGroupByCols.length === 0)
+    cabGroupByCols = [...cabAutoGroupCols];
+  updateCabGroupZoneUI();
+}
+
+function computeDetAutoGroupCols(det) {
+  det.autoGroupCols = Object.values(det.dicMap)
+    .filter(d => (d.grupo ?? 0) > 0 && d.campo)
+    .sort((a,b) => (a.grupo - b.grupo) || a.campo.localeCompare(b.campo))
+    .map(d => d.campo);
+  det.calcCols = Object.values(det.dicMap)
+    .filter(d => d.calculo && d.campo)
+    .map(d => ({campo:d.campo, calculo:d.calculo}));
+  if (det.autoGroupCols.length > 0 && det.groupByCols.length === 0)
+    det.groupByCols = [...det.autoGroupCols];
+}
+
+function renderNestedGroupsG(rows, colNames, tbody, groupCols, depth, ancestorIds, ctx) {
+  const campo     = groupCols[0];
+  const remaining = groupCols.slice(1);
+  const colLabel  = ctx.dicMap[campo]?.alias || campo;
+
+  const order = [], groups = new Map();
+  rows.forEach(row => {
+    const val = row[campo];
+    const key = String(val ?? '\x00');
+    if (!groups.has(key)) {
+      order.push(key);
+      let label = val === null || val === undefined ? '(vacío)' : String(val);
+      const opts = ctx.mvCache[campo];
+      if (opts) { const o = opts.find(o=>String(o.val)===String(val??'')); if(o) label=o.label; }
+      groups.set(key, {label, rows:[]});
+    }
+    groups.get(key).rows.push(row);
+  });
+
+  const calcVisible = (ctx.calcCols||[]).filter(cc => colNames.includes(cc.campo));
+  ctx.counter.val = ctx.counter.val || 0;
+
+  order.forEach(key => {
+    const grp      = groups.get(key);
+    const collKey  = `${ctx.pfx}:${depth}:${campo}:${key}`;
+    const collapsed= ctx.collapsed.has(collKey);
+    const id       = ctx.counter.val++;
+    const myAncs   = [...ancestorIds, id];
+
+    // Fila cabecera de grupo
+    const hdrTr = document.createElement('tr');
+    hdrTr.className = 'tr-grp-hdr' + (collapsed ? ' collapsed' : '');
+    hdrTr.dataset.grpId     = `${ctx.pfx}_${id}`;
+    hdrTr.dataset.ancestors = ancestorIds.map(a=>`${ctx.pfx}_${a}`).join(',');
+    hdrTr.style.cursor = 'pointer';
+    hdrTr.onclick = () => toggleNestedGroupG(collKey, `${ctx.pfx}_${id}`, ctx.collapsed);
+    const hdrTd = document.createElement('td');
+    hdrTd.colSpan = ctx.totalCols;
+    hdrTd.innerHTML =
+      `<span style="padding-left:${depth*18}px"></span>` +
+      `<span class="grp-arrow">▼</span>` +
+      `<span style="color:var(--muted);font-size:.7rem;margin-right:4px;">${esc(colLabel)}:</span>` +
+      `<b>${esc(grp.label)}</b>` +
+      ` <span style="color:var(--muted);font-weight:400;font-size:.75rem;">(${grp.rows.length})</span>`;
+    hdrTr.appendChild(hdrTd);
+    tbody.appendChild(hdrTr);
+
+    // Hijos
+    const childVisible = !collapsed;
+    if (remaining.length > 0) {
+      renderNestedGroupsG(grp.rows, colNames, tbody, remaining, depth+1, myAncs, ctx);
+    } else {
+      grp.rows.forEach(row => {
+        const idx = ctx.rowIndex(row);
+        const tr  = ctx.rowBuilder(row, idx >= 0 ? idx : 0);
+        tr.dataset.ancestors = myAncs.map(a=>`${ctx.pfx}_${a}`).join(',');
+        if (!childVisible) tr.style.display = 'none';
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Totales
+    if (calcVisible.length > 0) {
+      const totTr = document.createElement('tr');
+      totTr.className = 'tr-grp-total';
+      totTr.dataset.ancestors = myAncs.map(a=>`${ctx.pfx}_${a}`).join(',');
+      if (!childVisible) totTr.style.display = 'none';
+      colNames.forEach(c => {
+        const td = document.createElement('td');
+        const cc = calcVisible.find(x=>x.campo===c);
+        if (c === campo) {
+          td.innerHTML = `<span style="padding-left:${(depth+1)*18}px" class="tot-lbl">∑</span>`;
+        } else if (cc) {
+          const d    = ctx.dicMap[c];
+          const isInt = (d?.tipo_dato||'').toLowerCase().includes('int');
+          const decs  = isInt ? 0 : (d?.decimales ?? 2);
+          const vals  = grp.rows.map(r=>parseFloat(r[c])).filter(v=>!isNaN(v));
+          let result  = '';
+          if (cc.calculo==='suma')     result = vals.reduce((a,b)=>a+b,0).toLocaleString('es-AR',{minimumFractionDigits:decs,maximumFractionDigits:decs});
+          else if (cc.calculo==='conteo')  result = grp.rows.length.toLocaleString('es-AR');
+          else if (cc.calculo==='promedio') {
+            const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+            result = avg.toLocaleString('es-AR',{minimumFractionDigits:decs,maximumFractionDigits:decs});
+          }
+          td.className='tot-num'; td.textContent=result;
+        }
+        totTr.appendChild(td);
+      });
+      totTr.appendChild(document.createElement('td'));
+      tbody.appendChild(totTr);
+    }
+  });
+}
+
+function toggleNestedGroupG(collKey, domId, collapsed) {
+  if (collapsed.has(collKey)) collapsed.delete(collKey);
+  else collapsed.add(collKey);
+  const nowCollapsed = collapsed.has(collKey);
+  const hdr = document.querySelector(`tr[data-grp-id="${domId}"]`);
+  if (hdr) hdr.classList.toggle('collapsed', nowCollapsed);
+  document.querySelectorAll(`tr[data-ancestors]`).forEach(tr => {
+    const ancs = tr.dataset.ancestors ? tr.dataset.ancestors.split(',').filter(Boolean) : [];
+    if (!ancs.length) return;
+    const anyCollapsed = ancs.some(aid => {
+      const h = document.querySelector(`tr[data-grp-id="${aid}"]`);
+      return h && h.classList.contains('collapsed');
+    });
+    tr.style.display = anyCollapsed ? 'none' : '';
+  });
+}
+
+// ── Group zone cabecera ───────────────────────────────────────────────────────
+function updateCabGroupZoneUI() {
+  const hint  = document.getElementById('cabGzHint');
+  const pills = document.getElementById('cabGzPills');
+  if (!hint || !pills) return;
+  hint.style.display = cabGroupByCols.length ? 'none' : '';
+  if (cabGroupByCols.length) {
+    const fromDic = JSON.stringify(cabGroupByCols) === JSON.stringify(cabAutoGroupCols);
+    let html = cabGroupByCols.map((c,i) => {
+      const label = cabDicMap[c]?.alias || c;
+      return `<div class="gz-pill">
+        <span style="color:var(--muted);font-size:.68rem;margin-right:2px;">${i+1}</span>
+        <b>${esc(label)}</b>
+        <button class="gz-pill-rm" onclick="removeCabGroupCol('${esc(c)}')" title="Quitar">✕</button>
+      </div>`;
+    }).join('');
+    html += `<button class="gz-pill-rm" onclick="clearCabGroupBy()" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#fca5a5;border-radius:12px;padding:2px 8px;font-size:.72rem;cursor:pointer;" title="Quitar todo">✕ Todo</button>`;
+    if (canWrite && sistemaId) {
+      html += `<button onclick="saveGroupToDicG(tablaName,cabDicMap,cabGroupByCols,cabAutoGroupCols,(a)=>{cabAutoGroupCols=a;updateCabGroupZoneUI();})" style="background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.3);color:var(--accent2);border-radius:12px;padding:2px 9px;font-size:.72rem;cursor:pointer;">✓ Guardar en dic.</button>`;
+    }
+    pills.innerHTML = html;
+  } else {
+    pills.innerHTML = '';
+  }
+}
+
+function onCabGzDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect='move'; document.getElementById('cabGroupZone').classList.add('drag-over'); }
+function onCabGzDragLeave(e) { if (!e.currentTarget.contains(e.relatedTarget)) document.getElementById('cabGroupZone').classList.remove('drag-over'); }
+function onCabGzDrop(e) {
+  e.preventDefault();
+  document.getElementById('cabGroupZone').classList.remove('drag-over');
+  const col = e.dataTransfer.getData('text/plain') || _cabDraggedCol;
+  if (col && !cabGroupByCols.includes(col)) { cabGroupByCols.push(col); cabGroupsCollapsed.clear(); updateCabGroupZoneUI(); renderGrid(); }
+  _cabDraggedCol = null;
+}
+function removeCabGroupCol(c) { cabGroupByCols = cabGroupByCols.filter(x=>x!==c); cabGroupsCollapsed.clear(); updateCabGroupZoneUI(); renderGrid(); }
+function clearCabGroupBy()    { cabGroupByCols = []; cabGroupsCollapsed.clear(); updateCabGroupZoneUI(); renderGrid(); }
+
+// ── Group zone detalle ────────────────────────────────────────────────────────
+function currentDet() { return detalles.find(d=>d.nombre===selectedDetName); }
+
+function updateDetGroupZoneUI(det) {
+  if (!det) return;
+  const hint  = document.getElementById('detGzHint');
+  const pills = document.getElementById('detGzPills');
+  if (!hint || !pills) return;
+  hint.style.display = det.groupByCols.length ? 'none' : '';
+  if (det.groupByCols.length) {
+    let html = det.groupByCols.map((c,i) => {
+      const label = det.dicMap[c]?.alias || c;
+      return `<div class="gz-pill">
+        <span style="color:var(--muted);font-size:.68rem;margin-right:2px;">${i+1}</span>
+        <b>${esc(label)}</b>
+        <button class="gz-pill-rm" onclick="removeDetGroupCol('${esc(det.nombre)}','${esc(c)}')" title="Quitar">✕</button>
+      </div>`;
+    }).join('');
+    html += `<button class="gz-pill-rm" onclick="clearDetGroupBy('${esc(det.nombre)}')" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#fca5a5;border-radius:12px;padding:2px 8px;font-size:.72rem;cursor:pointer;" title="Quitar todo">✕ Todo</button>`;
+    if (canWrite && sistemaId) {
+      html += `<button onclick="saveGroupToDicDet('${esc(det.nombre)}')" style="background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.3);color:var(--accent2);border-radius:12px;padding:2px 9px;font-size:.72rem;cursor:pointer;">✓ Guardar en dic.</button>`;
+    }
+    pills.innerHTML = html;
+  } else {
+    pills.innerHTML = '';
+  }
+}
+
+function onDetGzDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect='move'; document.getElementById('detGroupZone').classList.add('drag-over'); }
+function onDetGzDragLeave(e) { if (!e.currentTarget.contains(e.relatedTarget)) document.getElementById('detGroupZone').classList.remove('drag-over'); }
+function onDetGzDrop(e) {
+  e.preventDefault();
+  document.getElementById('detGroupZone').classList.remove('drag-over');
+  const col = e.dataTransfer.getData('text/plain') || _detDraggedCol;
+  const det = currentDet();
+  if (!det || !col) { _detDraggedCol=null; return; }
+  if (!det.groupByCols.includes(col)) { det.groupByCols.push(col); det.groupsCollapsed.clear(); renderDetTable(det); }
+  _detDraggedCol = null;
+}
+function removeDetGroupCol(nombre, c) {
+  const det = detalles.find(d=>d.nombre===nombre); if (!det) return;
+  det.groupByCols = det.groupByCols.filter(x=>x!==c); det.groupsCollapsed.clear(); renderDetTable(det);
+}
+function clearDetGroupBy(nombre) {
+  const det = detalles.find(d=>d.nombre===nombre); if (!det) return;
+  det.groupByCols = []; det.groupsCollapsed.clear(); renderDetTable(det);
+}
+
+// ── Guardar agrupación en diccionario ────────────────────────────────────────
+async function saveGroupToDicG(tName, dicMap, groupByCols, autoGroupCols, onDone) {
+  if (!sistemaId || _sessionExpired) return;
+  let ok = 0, created = 0;
+  const hasEntries = Object.values(dicMap).some(d => d.id);
+  if (!hasEntries) {
+    const sp = dbSlug ? `?id_sistema=${sistemaId}&db_slug=${encodeURIComponent(dbSlug)}&tablas=${encodeURIComponent(tName)}`
+                      : `?id_sistema=${sistemaId}&tablas=${encodeURIComponent(tName)}`;
+    const sr = await api(`/api/v1/admin/seed-diccionario${sp}`, {method:'POST'});
+    if (!sr.ok) { alert('Error al importar campos al diccionario'); return; }
+    const rd = await api(`/api/v1/diccionario/?id_sistema=${sistemaId}&tabla=${encodeURIComponent(tName)}&limit=2000`);
+    if (rd.ok) { const all = await rd.json(); all.forEach(e=>{ dicMap[e.campo]=e; }); }
+  }
+  for (let i = 0; i < groupByCols.length; i++) {
+    const campo = groupByCols[i], nuevoGrupo = i+1, entry = dicMap[campo];
+    if (entry?.id) {
+      if ((entry.grupo ?? 0) !== nuevoGrupo) {
+        const r = await api(`/api/v1/diccionario/${entry.id}`, {method:'PATCH', body:JSON.stringify({grupo:nuevoGrupo})});
+        if (_sessionExpired) return;
+        if (r.ok) { ok++; dicMap[campo] = {...entry, ...await r.json()}; }
+        else { const e=await r.json().catch(()=>({})); alert(`Error al actualizar "${campo}" (${r.status}): ${e.detail||'error'}`); return; }
+      } else ok++;
+    } else {
+      const r = await api('/api/v1/diccionario/', {method:'POST', body:JSON.stringify({campo, id_sistema:Number(sistemaId), tabla:tName, grupo:nuevoGrupo, alias:campo, es_visible:true, es_solo_lectura:false, es_obligatorio:false})});
+      if (_sessionExpired) return;
+      if (r.ok) { created++; dicMap[campo] = await r.json(); }
+      else { const e=await r.json().catch(()=>({})); alert(`Error al crear "${campo}" (${r.status}): ${e.detail||'error'}`); return; }
+    }
+  }
+  const toReset = Object.values(dicMap).filter(d => d.id && (d.grupo??0) > 0 && !groupByCols.includes(d.campo));
+  for (const d of toReset) {
+    const r = await api(`/api/v1/diccionario/${d.id}`, {method:'PATCH', body:JSON.stringify({grupo:0})});
+    if (r.ok) { ok++; dicMap[d.campo] = {...d, grupo:0}; }
+  }
+  const newAuto = Object.values(dicMap).filter(d=>(d.grupo??0)>0).sort((a,b)=>a.grupo-b.grupo).map(d=>d.campo);
+  if (onDone) onDone(newAuto);
+  const msg = [ok&&`${ok} actualizado${ok!==1?'s':''}`, created&&`${created} creado${created!==1?'s':''}`].filter(Boolean).join(', ');
+  alert(`✓ Agrupación guardada (${msg||'sin cambios'})`);
+}
+
+async function saveGroupToDicDet(nombre) {
+  const det = detalles.find(d=>d.nombre===nombre); if (!det) return;
+  await saveGroupToDicG(det.nombre, det.dicMap, det.groupByCols, det.autoGroupCols||[], newAuto => {
+    det.autoGroupCols = newAuto;
+    updateDetGroupZoneUI(det);
+  });
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+function openDic() {
+  const p = new URLSearchParams({token, base:baseUrl});
+  if (sistemaId) p.set('id_sistema', sistemaId);
+  if (dbSlug)    p.set('db_slug', dbSlug);
+  window.open(`${baseUrl}/diccionario?${p}`, '_blank');
+}
+
+function openDicForTable(tabla) {
+  const p = new URLSearchParams({token, base:baseUrl});
+  if (sistemaId) p.set('id_sistema', sistemaId);
+  if (dbSlug)    p.set('db_slug', dbSlug);
+  if (tabla)     p.set('tabla', tabla);   // pre-filtrar por tabla
+  window.open(`${baseUrl}/diccionario?${p}`, '_blank');
+}
+function openTester() { window.open(`${baseUrl}/tester`, '_blank'); }
+
+init();
+</script>
+</body>
+</html>

@@ -1,5 +1,3 @@
-import uuid
-
 from fastapi import APIRouter, Query
 
 from app.api.deps import CurrentSuperuser, DBSession
@@ -26,8 +24,16 @@ async def create_role(body: RoleCreate, db: DBSession, _: CurrentSuperuser):
     return await role_crud.create(db, obj_in=body)
 
 
+@router.get("/{role_id}", response_model=RoleResponse)
+async def get_role(role_id: int, db: DBSession, _: CurrentSuperuser):
+    role = await role_crud.get(db, id=role_id)
+    if not role:
+        raise NotFoundError("Role")
+    return role
+
+
 @router.patch("/{role_id}", response_model=RoleResponse)
-async def update_role(role_id: uuid.UUID, body: RoleUpdate, db: DBSession, _: CurrentSuperuser):
+async def update_role(role_id: int, body: RoleUpdate, db: DBSession, _: CurrentSuperuser):
     role = await role_crud.get(db, id=role_id)
     if not role:
         raise NotFoundError("Role")
@@ -35,5 +41,5 @@ async def update_role(role_id: uuid.UUID, body: RoleUpdate, db: DBSession, _: Cu
 
 
 @router.delete("/{role_id}", status_code=204)
-async def delete_role(role_id: uuid.UUID, db: DBSession, _: CurrentSuperuser):
+async def delete_role(role_id: int, db: DBSession, _: CurrentSuperuser):
     await role_crud.delete(db, id=role_id)

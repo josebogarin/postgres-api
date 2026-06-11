@@ -1,21 +1,22 @@
-import uuid
+from datetime import datetime
 
 from pydantic import EmailStr, field_validator
 
-from app.schemas.application import ApplicationResponse
-from app.schemas.base import BaseSchema, TimestampSchema, UUIDSchema
+from app.schemas.base import BaseSchema
 from app.schemas.role import RoleResponse
 
 
 class UserBase(BaseSchema):
+    username: str
     email: EmailStr
-    full_name: str | None = None
+    nombre: str | None = None
+    telefono: str | None = None
     is_active: bool = True
 
 
 class UserCreate(UserBase):
     password: str
-    is_superuser: bool = False
+    must_change_password: bool = False
 
     @field_validator("password")
     @classmethod
@@ -26,27 +27,48 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseSchema):
-    full_name: str | None = None
-    email: EmailStr | None = None
-    is_active: bool | None = None
-    password: str | None = None
+    username: str = None
+    email: EmailStr = None
+    nombre: str = None
+    telefono: str = None
+    is_active: bool = None
+    password: str = None
+    must_change_password: bool = None
 
 
-class UserResponse(UserBase, UUIDSchema, TimestampSchema):
-    is_superuser: bool
-    is_verified: bool
+class UserResponse(UserBase):
+    id: int
+    must_change_password: bool = False
+    created_at: datetime = None
     roles: list[RoleResponse] = []
-    applications: list[ApplicationResponse] = []
+
+    model_config = {"from_attributes": True}
 
 
-class UserListResponse(UserBase, UUIDSchema):
-    is_superuser: bool
-    is_verified: bool
+class UserListResponse(UserBase):
+    id: int
+    must_change_password: bool = False
+    roles: list[RoleResponse] = []
+
+    model_config = {"from_attributes": True}
+
+
+class ChangePasswordRequest(BaseSchema):
+    current_password: str
+    new_password: str
+    confirm_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("La contrasena debe tener al menos 8 caracteres")
+        return v
 
 
 class AssignRoleRequest(BaseSchema):
-    role_id: uuid.UUID
+    role_id: int
 
 
-class AssignApplicationRequest(BaseSchema):
-    application_id: uuid.UUID
+class AssignSistemaRequest(BaseSchema):
+    sistema_id: int
