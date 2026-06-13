@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>BECBUC En Vivo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0f172a; color: #e5e7eb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+    /* ── HEADER ── */
+    #hdr {
+      position: sticky; top: 0; z-index: 10;
+      background: #111827; border-bottom: 1px solid #1f2937;
+      padding: 10px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    #hdr-brand { font-size: 15px; font-weight: 700; color: #6ee7b7; letter-spacing: 0.5px; }
+    #hdr-right { display: flex; align-items: center; gap: 8px; }
+    #hdr-clock { font-size: 12px; color: #6b7280; font-variant-numeric: tabular-nums; }
+    .hdr-btn {
+      border-radius: 6px; font-size: 12px; padding: 6px 12px; cursor: pointer;
+      border: 1px solid; font-weight: 500;
+    }
+    #btn-refresh { background: #065f46; color: #6ee7b7; border-color: #047857; }
+    #btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+    #btn-portal  { background: #1e3a8a; color: #93c5fd; border-color: #1d4ed8; }
+    #btn-portal:hover { background: #1d4ed8; }
+
+    /* status bar */
+    #status-bar {
+      background: #0f172a; border-bottom: 1px solid #1f2937;
+      padding: 6px 16px; font-size: 12px; color: #6b7280;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sb-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .sb-dot.live  { background: #ef4444; animation: blink 1.2s infinite; }
+    .sb-dot.prox  { background: #3b82f6; }
+    .sb-dot.idle  { background: #374151; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* toast */
+    #toast {
+      position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+      padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 500;
+      z-index: 100; display: none; white-space: nowrap;
+    }
+    #toast.ok   { background: #065f46; color: #6ee7b7; border: 1px solid #047857; }
+    #toast.warn { background: #78350f; color: #fbbf24; border: 1px solid #92400e; }
+    #toast.err  { background: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; }
+
+    /* screens */
+    #screen-loading, #screen-error, #screen-nomatches {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 60vh; gap: 16px; padding: 24px;
+    }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid #1f2937;
+      border-top-color: #6ee7b7; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-retry {
+      background: #065f46; color: #6ee7b7; border: 1px solid #047857;
+      padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;
+    }
+
+    /* ── MAIN ── */
+    #screen-main { display: none; }
+    #main { max-width: 640px; margin: 0 auto; padding: 14px 12px 40px; }
+
+    /* ── MATCH CARD ── */
+    #match-card {
+      background: #1f2937; border-radius: 14px;
+      border: 1px solid #374151; margin-bottom: 16px; overflow: hidden;
+    }
+    #match-header {
+      padding: 9px 16px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #374151;
+    }
+    #match-meta { font-size: 11px; color: #9ca3af; letter-spacing: 0.4px; font-weight: 500; }
+    #match-badge {
+      font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600;
+    }
+    #match-badge.live { background: rgba(127,29,29,.6); color: #ef4444; }
+    #match-badge.prox { background: rgba(30,58,138,.6); color: #93c5fd; }
+    #match-badge.fin  { background: #1f2937; color: #6b7280; border: 1px solid #374151; }
+
+    #match-body { padding: 20px 16px 14px; }
+    #match-teams { display: flex; align-items: center; justify-content: space-between; }
+    .team-block { text-align: center; flex: 1; }
+    .team-flag { font-size: 38px; line-height: 1; }
+    .team-name { font-size: 11px; color: #9ca3af; margin-top: 6px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+    #score-block { text-align: center; padding: 0 10px; }
+    #score-main { font-size: 50px; font-weight: 700; color: #fff; letter-spacing: 10px; line-height: 1; font-variant-numeric: tabular-nums; }
+    #score-sub { margin-top: 8px; font-size: 13px; color: #6b7280; }
+    #score-sub.live-min { color: #ef4444; font-weight: 600; }
+
+    #py-banner {
+      background: #78350f; color: #fbbf24; text-align: center;
+      padding: 6px; font-size: 12px; font-weight: 600;
+      border-top: 1px solid #92400e; display: none;
+    }
+
+    #match-stats {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      padding: 10px 16px 12px; border-top: 1px solid #1f2937;
+    }
+    .stat-chip {
+      background: #111827; border: 1px solid #374151; border-radius: 20px;
+      padding: 5px 12px; font-size: 12px; color: #9ca3af;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .stat-chip b { color: #d1fae5; }
+
+    /* ── TABLA ── */
+    .sec-title {
+      font-size: 11px; font-weight: 700; color: #4b5563;
+      letter-spacing: 0.8px; margin-bottom: 8px; text-transform: uppercase;
+    }
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #374151; margin-bottom: 6px; }
+    table { width: 100%; border-collapse: collapse; min-width: 480px; }
+    thead th {
+      background: #111827; color: #6b7280; font-size: 10px; font-weight: 700;
+      padding: 8px 7px; text-align: center; white-space: nowrap; letter-spacing: 0.4px;
+    }
+    thead th.nm { text-align: left; min-width: 90px; }
+    thead th.lv { color: #6ee7b7; }
+    thead th.tt { color: #fff; }
+    tbody tr { border-top: 1px solid #1f2937; }
+    tbody tr:nth-child(even) { background: #1a2535; }
+    tbody tr:nth-child(odd)  { background: #1f2937; }
+    tbody td { padding: 8px 7px; text-align: center; font-size: 12px; vertical-align: middle; }
+    tbody td.nm { text-align: left; color: #e5e7eb; font-weight: 500; }
+    .pred-tag { font-size: 11px; font-weight: 600; color: #6b7280; }
+    .pts-hit  { color: #6ee7b7; font-weight: 700; }
+    .pts-zero { color: #374151; }
+    .pts-lv   { color: #34d399; font-weight: 700; font-size: 14px; }
+    .pts-tt   { color: #fff; font-weight: 700; font-size: 14px; }
+    .tbl-hint { font-size: 10px; color: #374151; padding: 4px 2px; }
+
+    /* ── TOP 5 ── */
+    #rank-section { margin-top: 20px; margin-bottom: 8px; }
+    #rank-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    @media (max-width: 400px) { #rank-grid { grid-template-columns: repeat(3, 1fr); } }
+    .rk {
+      background: #1f2937; border-radius: 10px; padding: 10px 6px;
+      text-align: center; border-top: 3px solid #374151;
+    }
+    .rk.p1 { border-top-color: #fbbf24; }
+    .rk.p2 { border-top-color: #94a3b8; }
+    .rk.p3 { border-top-color: #b45309; }
+    .rk-pos  { font-size: 20px; margin-bottom: 4px; }
+    .rk-name { font-size: 11px; color: #9ca3af; font-weight: 500; margin-bottom: 4px;
+               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rk-pts  { font-size: 18px; font-weight: 700; color: #6ee7b7; }
+    .rk-delta { display: inline-block; font-size: 10px; padding: 1px 7px;
+               border-radius: 10px; margin-top: 4px; font-weight: 600; }
+    .rk-delta.pos  { background: #065f46; color: #6ee7b7; }
+    .rk-delta.zero { background: #1f2937; color: #4b5563; border: 1px solid #374151; }
+
+    /* footer */
+    #footer { text-align: center; font-size: 11px; color: #374151; padding: 14px; }
+  </style>
+</head>
+<body>
+
+<div id="hdr">
+  <div id="hdr-brand">⚽ BECBUC EN VIVO</div>
+  <div id="hdr-right">
+    <span id="hdr-clock"></span>
+    <button class="hdr-btn" id="btn-refresh" onclick="recargar()">🔄 Actualizar</button>
+    <button class="hdr-btn" id="btn-portal"  onclick="irAlPortal()">🏠 Portal</button>
+  </div>
+</div>
+
+<div id="status-bar">
+  <div class="sb-dot idle" id="sb-dot"></div>
+  <span id="sb-text">Conectando…</span>
+</div>
+
+<div id="toast"></div>
+
+<!-- SCREENS -->
+<div id="screen-loading">
+  <div class="spinner"></div>
+  <div style="font-size:14px;color:#6b7280;">Cargando…</div>
+</div>
+
+<div id="screen-error" style="display:none;">
+  <div style="font-size:32px;">⚠️</div>
+  <div style="color:#fca5a5;font-size:14px;" id="err-msg">Error de conexión</div>
+  <button class="btn-retry" onclick="init()">Reintentar</button>
+</div>
+
+<div id="screen-nomatches" style="display:none; text-align:center;">
+  <div style="font-size:48px;">📡</div>
+  <div style="color:#6b7280;font-size:16px;margin-top:12px;">Sin partidos pendientes</div>
+  <div style="color:#374151;font-size:12px;margin-top:6px;">Todos los partidos del torneo han finalizado.</div>
+</div>
+
+<div id="screen-main">
+<div id="main">
+
+  <!-- PARTIDO -->
+  <div id="match-card">
+    <div id="match-header">
+      <span id="match-meta">—</span>
+      <span id="match-badge" class="prox">PRÓXIMAMENTE</span>
+    </div>
+    <div id="match-body">
+      <div id="match-teams">
+        <div class="team-block">
+          <div class="team-flag" id="flag-l">🏳</div>
+          <div class="team-name" id="name-l">—</div>
+        </div>
+        <div id="score-block">
+          <div id="score-main">—  :  —</div>
+          <div id="score-sub">—</div>
+        </div>
+        <div class="team-block">
+          <div class="team-flag" id="flag-v">🏳</div>
+          <div class="team-name" id="name-v">—</div>
+        </div>
+      </div>
+    </div>
+    <div id="py-banner">🇵🇾 Partido Paraguay — puntaje doble ×2</div>
+    <div id="match-stats"></div>
+  </div>
+
+  <!-- PREDICCIONES -->
+  <div id="table-section">
+    <div class="sec-title">Predicciones × Puntaje proyectado</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="nm">Apostador</th>
+            <th>Pred.</th>
+            <th>H</th><th>I</th><th>J</th><th>K</th>
+            <th>L</th><th>M</th><th>N</th><th>O</th>
+            <th class="lv">+Pts</th>
+            <th class="tt">Total▼</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+    </div>
+    <div class="tbl-hint">Puntaje calculado localmente · Sin guardar en BD</div>
+  </div>
+
+  <!-- RANKING TOP 5 -->
+  <div id="rank-section">
+    <div class="sec-title">Ranking proyectado</div>
+    <div id="rank-grid"></div>
+  </div>
+
+  <div id="footer">
+    Actualización automática cada 60 s · Última: <span id="last-sync">—</span>
+  </div>
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════
+const BASE_URL  = '';
+const USER      = 'Jose';
+const PASS      = 'Catalina';
+const TOKEN_KEY = 'bec_live_token';
+const TOKEN_TS  = 'bec_live_token_ts';
+const TOKEN_TTL = 24 * 60 * 60 * 1000;   // 24 horas
+const REFRESH_MS = 60_000;
+
+// ════════════════════════════════════════════════
+// ESTADO
+// ════════════════════════════════════════════════
+let _token     = null;
+let _torneoId  = null;
+let _partido   = null;
+let _apostoles = [];
+let _results   = [];
+let _timer     = null;
+
+// ════════════════════════════════════════════════
+// TOKEN PERSISTENTE 24h
+// ════════════════════════════════════════════════
+function loadCachedToken() {
+  const t  = localStorage.getItem(TOKEN_KEY);
+  const ts = parseInt(localStorage.getItem(TOKEN_TS) || '0', 10);
+  if (t && Date.now() - ts < TOKEN_TTL) { _token = t; return true; }
+  return false;
+}
+
+function saveToken(t) {
+  _token = t;
+  localStorage.setItem(TOKEN_KEY, t);
+  localStorage.setItem(TOKEN_TS, String(Date.now()));
+}
+
+async function ensureToken() {
+  if (loadCachedToken()) return;
+  const r = await fetch(BASE_URL + '/api/v1/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+    body: JSON.stringify({ username: USER, password: PASS }),
+  });
+  if (!r.ok) throw new Error('Login fallido (' + r.status + ')');
+  const d = await r.json();
+  saveToken(d.access_token);
+}
+
+// ════════════════════════════════════════════════
+// API
+// ════════════════════════════════════════════════
+async function api(url) {
+  const r = await fetch(BASE_URL + url, {
+    headers: {
+      'Authorization': 'Bearer ' + _token,
+      'ngrok-skip-browser-warning': 'true',
+    },
+  });
+  if (r.status === 401) {
+    // token expirado → re-login automático
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_TS);
+    await ensureToken();
+    return api(url);
+  }
+  if (!r.ok) {
+    let msg = r.statusText;
+    try { const b = await r.json(); msg = b.detail || msg; } catch(_) {}
+    throw new Error(msg);
+  }
+  return r.json();
+}
+
+// ════════════════════════════════════════════════
+// PORTAL — navegar con el mismo token
+// ════════════════════════════════════════════════
+function irAlPortal() {
+  // Pasar el token via sessionStorage para que el portal lo use directamente
+  if (_token) {
+    sessionStorage.setItem('bec_token', _token);
+    localStorage.setItem('tok_fix', _token);
+  }
+  window.location.href = '/static/login.html';
+}
+
+// ════════════════════════════════════════════════
+// MOTOR DE SCORING (JS puro, sin BD)
+// ════════════════════════════════════════════════
+const FASE_PTS = {
+  grupos:   { H:4,  I:8  },
+  '16avos': { H:6,  I:12 },
+  '8avos':  { H:8,  I:16 },
+  '4tos':   { H:10, I:20 },
+  semi:     { H:12, I:24 },
+  tercero:  { H:14, I:28 },
+  final:    { H:20, I:40 },
+};
+
+function scoreApostador(partido, ap, allMinutos) {
+  const ft   = FASE_PTS[partido.fase_tipo] || FASE_PTS.grupos;
+  const mult = partido.es_paraguay ? 2 : 1;
+  const d    = { H:0, I:0, J:0, K:0, L:0, M:0, N:0, O:0 };
+
+  const gl = partido.goles_local, gv = partido.goles_visitante;
+  const pl = ap.pred_local,       pv = ap.pred_visitante;
+
+  if (gl !== null && gl !== undefined) {
+    const sign = v => v > 0 ? 1 : v < 0 ? -1 : 0;
+    if (pl !== null && pl !== undefined && sign(gl - gv) === sign(pl - pv)) d.H = ft.H * mult;
+    if (pl === gl && pv === gv) d.I = ft.I * mult;
+  }
+
+  const eq = (real, pred) =>
+    real !== null && real !== undefined &&
+    pred !== null && pred !== undefined && pred === real;
+
+  if (eq(partido.amarillas,       ap.pred_amarillas))        d.J = 1 * mult;
+  if (eq(partido.rojas,           ap.pred_rojas))            d.K = 1 * mult;
+  if (eq(partido.decisiones_var,  ap.pred_var))              d.L = 1 * mult;
+  if (eq(partido.penales_partido, ap.pred_penales_partido))  d.M = 1 * mult;
+
+  if (partido.minuto_primer_gol !== null && partido.minuto_primer_gol !== undefined
+      && ap.pred_minuto_gol !== null && ap.pred_minuto_gol !== undefined) {
+    const real    = partido.minuto_primer_gol;
+    const myDiff  = Math.abs(ap.pred_minuto_gol - real);
+    const minDiff = Math.min(...allMinutos.map(m => Math.abs(m - real)));
+    if (myDiff === minDiff) d.N = 1 * mult;
+  }
+
+  if (partido.penales_tanda_local !== null && partido.penales_tanda_local !== undefined) {
+    if (ap.pred_penales_local_tanda    === partido.penales_tanda_local)     d.O += 2 * mult;
+    if (ap.pred_penales_visitante_tanda === partido.penales_tanda_visitante) d.O += 2 * mult;
+  }
+
+  const total = Object.values(d).reduce((a, b) => a + b, 0);
+  return { detail: d, total };
+}
+
+function calcularTodos() {
+  const allMin = _apostoles
+    .map(a => a.pred_minuto_gol)
+    .filter(m => m !== null && m !== undefined);
+
+  _results = _apostoles.map(ap => {
+    const sc = scoreApostador(_partido, ap, allMin);
+    return {
+      apostador_id: ap.apostador_id,
+      nombre:       ap.nombre,
+      puntos_base:  ap.puntos_total,
+      detail:       sc.detail,
+      pts_partido:  sc.total,
+      total_proy:   ap.puntos_total + sc.total,
+    };
+  });
+  _results.sort((a, b) => b.total_proy - a.total_proy);
+}
+
+// ════════════════════════════════════════════════
+// FLAGS
+// ════════════════════════════════════════════════
+const ISO_MAP = {
+  'argentina':'AR','brazil':'BR','brasil':'BR','colombia':'CO','ecuador':'EC',
+  'uruguay':'UY','paraguay':'PY','chile':'CL','bolivia':'BO','peru':'PE','perú':'PE','venezuela':'VE',
+  'spain':'ES','españa':'ES','france':'FR','francia':'FR','germany':'DE','alemania':'DE',
+  'portugal':'PT','netherlands':'NL','países bajos':'NL','italy':'IT','italia':'IT',
+  'belgium':'BE','bélgica':'BE','croatia':'HR','croacia':'HR','switzerland':'CH','suiza':'CH',
+  'austria':'AT','denmark':'DK','dinamarca':'DK','serbia':'RS','turkey':'TR','türkiye':'TR',
+  'turquía':'TR','czechia':'CZ','ukraine':'UA','ucrania':'UA','poland':'PL','polonia':'PL',
+  'hungary':'HU','hungría':'HU','romania':'RO','rumania':'RO','norway':'NO','noruega':'NO',
+  'sweden':'SE','suecia':'SE','finland':'FI','iceland':'IS','islandia':'IS','russia':'RU',
+  'united states':'US','usa':'US','estados unidos':'US','mexico':'MX','méxico':'MX',
+  'canada':'CA','canadá':'CA','honduras':'HN','panama':'PA','panamá':'PA',
+  'costa rica':'CR','jamaica':'JM','haiti':'HT','haití':'HT','el salvador':'SV',
+  'japan':'JP','japón':'JP','south korea':'KR','corea del sur':'KR','australia':'AU',
+  'saudi arabia':'SA','arabia saudita':'SA','iran':'IR','qatar':'QA','iraq':'IQ',
+  'morocco':'MA','marruecos':'MA','senegal':'SN','egypt':'EG','egipto':'EG',
+  'nigeria':'NG','south africa':'ZA','sudáfrica':'ZA','cameroon':'CM','camerún':'CM',
+  'ghana':'GH','tunisia':'TN','túnez':'TN','algeria':'DZ','argelia':'DZ',
+  'new zealand':'NZ','nueva zelanda':'NZ',
+};
+const SPECIAL = { 'england':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','wales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','gales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿' };
+
+function isoFlag(code) {
+  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt(0)));
+}
+function flag(iso, nombre) {
+  if (iso && iso.length === 2) return isoFlag(iso);
+  const k = (nombre || '').toLowerCase().trim();
+  if (SPECIAL[k]) return SPECIAL[k];
+  const m = ISO_MAP[k];
+  return m ? isoFlag(m) : '🏳';
+}
+
+// ════════════════════════════════════════════════
+// INIT & CARGA
+// ════════════════════════════════════════════════
+async function init() {
+  showScreen('loading');
+  startClock();
+  try {
+    await ensureToken();
+    const torneos = await api('/api/v1/torneo/activas');
+    if (!torneos || torneos.length === 0) throw new Error('Sin torneo activo');
+    _torneoId = torneos[0].id;
+    await cargar();
+    startAutoRefresh();
+  } catch (e) {
+    showScreen('error');
+    document.getElementById('err-msg').textContent = e.message || 'Error de conexión';
+  }
+}
+
+async function cargar() {
+  try {
+    const data = await api('/api/v1/bets/live-panel/' + _torneoId);
+    if (!data.partido) { showScreen('nomatches'); return; }
+    _partido   = data.partido;
+    _apostoles = data.apostadores || [];
+    calcularTodos();
+    render();
+    showScreen('main');
+    updateStatusBar();
+    document.getElementById('last-sync').textContent =
+      new Date().toLocaleTimeString('es-CR');
+  } catch (e) {
+    showToast('Error al actualizar: ' + e.message, 'err');
+  }
+}
+
+async function recargar() {
+  const btn = document.getElementById('btn-refresh');
+  btn.disabled = true;
+  await cargar();
+  btn.disabled = false;
+}
+
+function startAutoRefresh() {
+  if (_timer) clearInterval(_timer);
+  _timer = setInterval(cargar, REFRESH_MS);
+}
+
+// ════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════
+function render() {
+  const p = _partido;
+
+  const fechaStr = p.fecha
+    ? new Date(p.fecha).toLocaleString('es-CR', {
+        weekday:'short', day:'numeric', month:'short',
+        hour:'2-digit', minute:'2-digit'
+      })
+    : '';
+  document.getElementById('match-meta').textContent =
+    (p.fase_nombre || '').toUpperCase() + (fechaStr ? '  ·  ' + fechaStr : '');
+
+  const badge = document.getElementById('match-badge');
+  if      (p.estado === 'en_juego')    { badge.className = 'live'; badge.textContent = '● EN VIVO'; }
+  else if (p.estado === 'finalizado')  { badge.className = 'fin';  badge.textContent = 'FINALIZADO'; }
+  else                                 { badge.className = 'prox'; badge.textContent = 'PRÓXIMAMENTE'; }
+
+  document.getElementById('flag-l').textContent = flag(p.bandera_local,      p.equipo_local);
+  document.getElementById('flag-v').textContent = flag(p.bandera_visitante,   p.equipo_visitante);
+  document.getElementById('name-l').textContent = (p.equipo_local     || '—').toUpperCase();
+  document.getElementById('name-v').textContent = (p.equipo_visitante || '—').toUpperCase();
+
+  const gl = p.goles_local, gv = p.goles_visitante;
+  document.getElementById('score-main').textContent =
+    (gl !== null && gl !== undefined) ? gl + '  :  ' + gv : '—  :  —';
+
+  const sub = document.getElementById('score-sub');
+  if (p.estado === 'en_juego') {
+    sub.className = 'live-min';
+    sub.textContent = p.minuto_actual ? p.minuto_actual + "'" : 'EN VIVO';
+  } else if (p.estado === 'finalizado') {
+    sub.className = ''; sub.textContent = 'Partido finalizado';
+  } else {
+    sub.className = ''; sub.textContent = fechaStr || 'Por confirmar';
+  }
+
+  document.getElementById('py-banner').style.display = p.es_paraguay ? 'block' : 'none';
+
+  const chips = [
+    ['🟨', 'Amarillas',   p.amarillas],
+    ['🟥', 'Rojas',       p.rojas],
+    ['📺', 'VAR',         p.decisiones_var],
+    ['🥅', 'Pen. partido', p.penales_partido],
+    ['⏱',  'Min. gol',    p.minuto_primer_gol !== null && p.minuto_primer_gol !== undefined
+                              ? p.minuto_primer_gol + "'" : null],
+  ].filter(([,,v]) => v !== null && v !== undefined);
+
+  document.getElementById('match-stats').innerHTML = chips.length
+    ? chips.map(([ico, lbl, v]) =>
+        `<div class="stat-chip">${ico} ${lbl} <b>${v}</b></div>`).join('')
+    : '<span style="font-size:11px;color:#374151;padding:2px 0;">Sin estadísticas aún</span>';
+
+  // Tabla
+  document.getElementById('tbl-body').innerHTML = _results.map(r => {
+    const ap   = _apostoles.find(a => a.apostador_id === r.apostador_id) || {};
+    const pred = (ap.pred_local !== null && ap.pred_local !== undefined &&
+                  ap.pred_visitante !== null && ap.pred_visitante !== undefined)
+                  ? ap.pred_local + '-' + ap.pred_visitante : '—';
+    const cells = ['H','I','J','K','L','M','N','O'].map(k => {
+      const v = r.detail[k];
+      return v > 0
+        ? `<td><span class="pts-hit">${v}</span></td>`
+        : `<td><span class="pts-zero">—</span></td>`;
+    }).join('');
+    return `<tr>
+      <td class="nm">${esc(r.nombre)}</td>
+      <td><span class="pred-tag">${pred}</span></td>
+      ${cells}
+      <td><span class="pts-lv">${r.pts_partido > 0 ? '+' + r.pts_partido : '0'}</span></td>
+      <td><span class="pts-tt">${r.total_proy}</span></td>
+    </tr>`;
+  }).join('');
+
+  // Ranking top 5
+  const medals  = ['🥇','🥈','🥉','4°','5°'];
+  const classes = ['p1','p2','p3','',''];
+  document.getElementById('rank-grid').innerHTML = _results.slice(0, 5).map((r, i) => {
+    const d = r.pts_partido;
+    return `<div class="rk ${classes[i]}">
+      <div class="rk-pos">${medals[i]}</div>
+      <div class="rk-name">${esc(r.nombre)}</div>
+      <div class="rk-pts">${r.total_proy}</div>
+      <div class="rk-delta ${d === 0 ? 'zero' : 'pos'}">${d > 0 ? '+' + d : d}</div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+// STATUS BAR
+// ════════════════════════════════════════════════
+function updateStatusBar() {
+  const p = _partido;
+  if (!p) return;
+  const dot = document.getElementById('sb-dot');
+  const txt = document.getElementById('sb-text');
+  const l = p.equipo_local || '?', v = p.equipo_visitante || '?';
+  if (p.estado === 'en_juego') {
+    dot.className = 'sb-dot live';
+    txt.textContent = `EN VIVO · ${l} ${p.goles_local ?? '—'} - ${p.goles_visitante ?? '—'} ${v}` +
+                      (p.minuto_actual ? ` · ${p.minuto_actual}'` : '');
+  } else if (p.estado === 'finalizado') {
+    dot.className = 'sb-dot idle';
+    txt.textContent = `FIN · ${l} ${p.goles_local} - ${p.goles_visitante} ${v}`;
+  } else {
+    dot.className = 'sb-dot prox';
+    txt.textContent = `Próximo: ${l} vs ${v}`;
+  }
+}
+
+// ════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════
+function showScreen(id) {
+  ['loading','error','nomatches','main'].forEach(s => {
+    const el = document.getElementById('screen-' + s);
+    if (el) el.style.display = s === id ? (s === 'main' ? 'block' : 'flex') : 'none';
+  });
+}
+
+function showToast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = type; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+function startClock() {
+  const el = document.getElementById('hdr-clock');
+  const tick = () => { el.textContent = new Date().toLocaleTimeString('es-CR'); };
+  tick(); setInterval(tick, 1000);
+}
+
+function esc(s) {
+  return String(s || '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])
+  );
+}
+
+init();
+</script>
+</body>
+</html>

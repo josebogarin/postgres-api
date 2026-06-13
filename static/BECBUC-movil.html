@@ -1689,9 +1689,10 @@ async function _renderPronosGlobalesM(el){
   const eqSel=(id,val)=>`<select id="glm-${id}" class="glm-sel"${dis}>${eqOpts(val)}</select>`;
 
   const faseOpts=(val)=>{
-    const order=[{t:'grupo',n:'Fase de Grupos'},{t:'ronda32',n:'32avos de Final'},{t:'ronda16',n:'16avos de Final'},{t:'cuartos',n:'Cuartos de Final'},{t:'semis',n:'Semifinales'},{t:'tercer_puesto',n:'Tercer Puesto'},{t:'final',n:'Final'}];
+    const normVal=val==='tercer_puesto'?'final':val;
+    const order=[{t:'grupo',n:'Fase de Grupos'},{t:'ronda32',n:'32avos de Final'},{t:'ronda16',n:'16avos de Final'},{t:'cuartos',n:'Cuartos de Final'},{t:'semis',n:'Semifinales'},{t:'final',n:'Final / 3er Puesto'}];
     let o=`<option value="">— elegir —</option>`;
-    for(const f of order) o+=`<option value="${f.t}"${val===f.t?' selected':''}>${f.n}</option>`;
+    for(const f of order) o+=`<option value="${f.t}"${normVal===f.t?' selected':''}>${f.n}</option>`;
     return o;
   };
 
@@ -2938,7 +2939,7 @@ function _renderRankingTotal(el){
           <input type="checkbox" id="rkShowAllM" ${showAll?'checked':''} onchange="_onRkFilterChangeM()">
           <span>Todos</span>
         </label>
-        <button class="sm-btn" onclick="_exportTransparenciaM(this)" style="font-size:.68rem;padding:4px 10px">⬇ Excel</button>
+        <button class="sm-btn" onclick="downloadRankingExcelM(this)" style="font-size:.68rem;padding:4px 10px">📥 Excel ranking</button>
       </div>
     </div>
   </div>`;
@@ -2997,6 +2998,28 @@ function _renderRankingTotal(el){
 
 function setRkModoM(modo){/* kept for compatibility */}
 
+async function downloadRankingExcelM(btn){
+  if(!_torneoId){alert('Seleccioná un torneo primero.');return;}
+  const orig=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent='⏳…';}
+  try{
+    const resp=await fetch(`/api/v1/bets/ranking-export/${_torneoId}`,{
+      headers:{Authorization:`Bearer ${token}`}
+    });
+    if(!resp.ok)throw new Error(`Error ${resp.status}`);
+    const blob=await resp.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const cd=resp.headers.get('Content-Disposition')||'';
+    const m=cd.match(/filename="([^"]+)"/);
+    a.href=url;
+    a.download=m?m[1]:`ranking_torneo${_torneoId}.xlsx`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }catch(e){alert(`Error al descargar Excel: ${e.message}`);}
+  finally{if(btn){btn.disabled=false;btn.textContent=orig||'📥 Excel ranking';}}
+}
+
 function _onRkFilterChangeM(){
   const el=document.getElementById('page-ranking');
   if(el) _renderRankingTotal(el);
@@ -3038,7 +3061,7 @@ async function toggleRkAposM(aid, el) {
   ];
   try{
     const param=_isAdmin&&aid!==myId?`?for_apostador_id=${aid}`:'';
-    const rows=await api(`/api/v1/bets/mis-apuestas/${_torneoId}${param}`);
+    const rows=await api(`/api/v1/bets/mis-partidos/${_torneoId}${param}`);
     const shown=rows.filter(p=>p.goles_local!=null);
     let grandTotal=0, h='', lastFase='';
     for(const p of shown){
@@ -3676,7 +3699,7 @@ async function confirmarFpM(){
 </script>
 </body>
 </html>
-��️ ${r.puntajes_error}`);
+��️ ${r.puntajes_error}`);
     msg.innerHTML=`<span style="color:var(--green);font-size:.73rem">${steps.join(' → ')}</span>`;
     document.getElementById('amFpMsg').innerHTML=msg.innerHTML;
   }catch(e){

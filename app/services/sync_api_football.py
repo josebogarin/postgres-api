@@ -393,6 +393,7 @@ async def sync_torneo(
     torneo_id: int,
     force: bool = False,
     max_detalle: int = DEFAULT_MAX_DETALLE,
+    fecha_filtro=None,   # date | None — si se provee, solo sincroniza partidos de esa fecha
 ) -> dict:
     """
     Sincroniza resultados de API-Football para el torneo dado.
@@ -473,19 +474,23 @@ async def sync_torneo(
         }
 
     # ── 2. Cargar partidos DB con api_fixture_id ──────────────────────────────
+    _ff_extra = "AND DATE(p.fecha AT TIME ZONE 'UTC') = :ffecha" if fecha_filtro else ""
+    _ff_params = {"ffecha": str(fecha_filtro)} if fecha_filtro else {}
+    _sql2 = (
+        "SELECT p.id, p.api_fixture_id, p.estado,"
+        " p.equipo_local_id, p.equipo_visitante_id,"
+        " COALESCE(el.nombre_es, el.nombre, '?') AS local_nombre,"
+        " COALESCE(ev.nombre_es, ev.nombre, '?') AS visit_nombre,"
+        " p.fecha"
+        " FROM partido p"
+        " LEFT JOIN equipo el ON el.id = p.equipo_local_id"
+        " LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id"
+        " WHERE p.torneo_id = :tid AND p.api_fixture_id IS NOT NULL"
+        + (" " + _ff_extra if _ff_extra else "")
+    )
     r2 = await db.execute(
-        text("""
-            SELECT p.id, p.api_fixture_id, p.estado,
-                   p.equipo_local_id, p.equipo_visitante_id,
-                   COALESCE(el.nombre_es, el.nombre, '?') AS local_nombre,
-                   COALESCE(ev.nombre_es, ev.nombre, '?') AS visit_nombre,
-                   p.fecha
-            FROM partido p
-            LEFT JOIN equipo el ON el.id = p.equipo_local_id
-            LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
-            WHERE p.torneo_id = :tid AND p.api_fixture_id IS NOT NULL
-        """),
-        {"tid": torneo_id},
+        text(_sql2),
+        {"tid": torneo_id, **_ff_params},
     )
     db_partidos: dict[int, dict] = {
         row["api_fixture_id"]: dict(row) for row in r2.mappings()
@@ -934,7 +939,7 @@ async def _update_partido_full(
             "dv":      decisiones_var,
             "mpg":     minuto_primer_gol,
             "ecid":    equipo_clasif_id,
-            "pp":      penales_partido_total,  # siempre 0+ si hay eventos procesados
+            "pp":      penales_partido_total,
             "pid":     partido_id,
         },
     )

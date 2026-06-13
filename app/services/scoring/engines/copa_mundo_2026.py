@@ -167,8 +167,28 @@ class CopasMundoScoringEngine:
             score.pts_mayor_goleada += CONFIG.pts_mayor_goleada_perdedor
 
         # F — Etapa Paraguay (6 pts)
-        pred_etapa = (apuesta_global.get("pred_etapa_paraguay") or "")
-        real_etapa = (torneo_resultados.get("etapa_paraguay") or "")
+        # Normalización: acepta texto libre y variantes del select histórico.
+        # tercer_puesto → final (la fase 3P tiene f.tipo='final' en la BD).
+        _ETAPA_NORM: dict[str, str] = {
+            # valores canónicos (ya correctos)
+            "grupo": "grupo", "ronda32": "ronda32", "ronda16": "ronda16",
+            "cuartos": "cuartos", "semis": "semis", "final": "final",
+            # alias UI histórico
+            "tercer_puesto": "final",
+            # variantes texto libre
+            "grupos": "grupo", "fase de grupos": "grupo", "fase grupos": "grupo",
+            "group stage": "grupo", "32avos": "ronda32", "32avos de final": "ronda32",
+            "16avos": "ronda16", "16avos de final": "ronda16", "octavos": "ronda16",
+            "cuartos de final": "cuartos", "quarter": "cuartos", "qf": "cuartos",
+            "semifinal": "semis", "semifinales": "semis", "semi": "semis", "sf": "semis",
+            "finalista": "final", "tercer puesto": "final", "3er puesto": "final",
+            "3rd place": "final",
+        }
+        def _norm_etapa(v: str) -> str:
+            return _ETAPA_NORM.get(v.lower().strip(), v.lower().strip())
+
+        pred_etapa = _norm_etapa(apuesta_global.get("pred_etapa_paraguay") or "")
+        real_etapa = _norm_etapa(torneo_resultados.get("etapa_paraguay") or "")
         if pred_etapa and real_etapa and pred_etapa == real_etapa:
             score.pts_etapa_paraguay = CONFIG.pts_etapa_paraguay
 

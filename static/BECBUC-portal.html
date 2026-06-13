@@ -7642,17 +7642,18 @@ async function renderBetGlobales(el) {
     };
     const eqSel = (id, val) => `<select id="gl-${id}" class="gl-sel"${dis}>${eqOpts(val)}</select>`;
     const faseOpts = (val) => {
+      // tercer_puesto se normaliza a 'final' en el scoring engine
+      const normVal = val === 'tercer_puesto' ? 'final' : val;
       const order = [
-        { t:'grupo',        n:'Fase de Grupos' },
-        { t:'ronda32',      n:'32avos de Final' },
-        { t:'ronda16',      n:'16avos de Final' },
-        { t:'cuartos',      n:'Cuartos de Final' },
-        { t:'semis',        n:'Semifinales' },
-        { t:'tercer_puesto',n:'Tercer Puesto' },
-        { t:'final',        n:'Final' },
+        { t:'grupo',   n:'Fase de Grupos' },
+        { t:'ronda32', n:'32avos de Final' },
+        { t:'ronda16', n:'16avos de Final' },
+        { t:'cuartos', n:'Cuartos de Final' },
+        { t:'semis',   n:'Semifinales' },
+        { t:'final',   n:'Final / 3er Puesto' },
       ];
       let o = '<option value="">— elegir —</option>';
-      for (const f of order) o += `<option value="${f.t}"${val === f.t ? ' selected' : ''}>${f.n}</option>`;
+      for (const f of order) o += `<option value="${f.t}"${normVal === f.t ? ' selected' : ''}>${f.n}</option>`;
       return o;
     };
 
@@ -7947,6 +7948,11 @@ async function renderBetRanking(el) {
                color:${partidoActive?'#fff':'var(--muted)'};font-weight:${partidoActive?'700':'normal'}">
         ⚽ Por partido
       </button>
+      <button onclick="downloadRankingExcel()"
+        style="font-size:.67rem;padding:3px 9px;border-radius:5px;cursor:pointer;
+               border:1px solid var(--border);background:transparent;color:var(--muted)">
+        📥 Excel
+      </button>
       <div id="rkPronPartidoSelWrap" style="display:${partidoActive?'flex':'none'};align-items:center;gap:6px">
         <select id="rkPronPartidoSel" onchange="onRkPronPartidoChange(this.value)"
           style="background:var(--surface2);color:var(--text);border:1px solid var(--border);
@@ -8134,7 +8140,7 @@ async function _rkLoadNodeContent(aid) {
   }
   try {
     const param = _isAdmin && aid !== myAposId ? `?for_apostador_id=${aid}` : '';
-    const rows  = await api(`/api/v1/bets/mis-apuestas/${_betTorneoId}${param}`);
+    const rows  = await api(`/api/v1/bets/mis-partidos/${_betTorneoId}${param}`);
     const shown = rows.filter(p => p.goles_local != null);
     let grandTotal = 0;
     let h = '', lastFase = '', fasePts = 0, faseLabel = '';
@@ -8225,6 +8231,33 @@ async function _rkLoadNodeContent(aid) {
     detail.dataset.loaded = '1';
   } catch(e) {
     detail.innerHTML = `<div style="padding:6px 14px;color:var(--muted);font-size:.65rem">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function downloadRankingExcel() {
+  if (!_betTorneoId) { alert('Seleccioná un torneo primero.'); return; }
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Generando…'; }
+  try {
+    const resp = await fetch(`/api/v1/bets/ranking-export/${_betTorneoId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!resp.ok) throw new Error(`Error ${resp.status}`);
+    const blob = await resp.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const cd   = resp.headers.get('Content-Disposition') || '';
+    const m    = cd.match(/filename="([^"]+)"/);
+    a.href     = url;
+    a.download = m ? m[1] : `ranking_torneo${_betTorneoId}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert(`Error al descargar Excel: ${e.message}`);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📥 Excel'; }
   }
 }
 

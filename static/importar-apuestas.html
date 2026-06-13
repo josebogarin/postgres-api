@@ -238,9 +238,9 @@ details summary:hover{color:#94a3b8}
   </div>
   <div id="summaryWrap" class="section-hidden" style="margin-top:16px">
     <div class="summary-grid">
-      <div class="sum-card sum-created"><div class="sum-num" id="sumCreated">0</div><div class="sum-lbl">Nuevas</div></div>
-      <div class="sum-card sum-updated"><div class="sum-num" id="sumUpdated">0</div><div class="sum-lbl">Actualizadas</div></div>
-      <div class="sum-card sum-dup"><div class="sum-num" id="sumDup">0</div><div class="sum-lbl">Sin cambios</div></div>
+      <div class="sum-card sum-updated"><div class="sum-num" id="sumDeleted">0</div><div class="sum-lbl">Eliminadas</div></div>
+      <div class="sum-card sum-created"><div class="sum-num" id="sumCreated">0</div><div class="sum-lbl">Insertadas</div></div>
+      <div class="sum-card sum-dup"><div class="sum-num" id="sumPuntajes">—</div><div class="sum-lbl">Puntajes</div></div>
       <div class="sum-card sum-err"><div class="sum-num" id="sumErr">0</div><div class="sum-lbl">Errores</div></div>
     </div>
     <div id="errDetail" class="msg-box msg-error section-hidden" style="margin-top:10px"></div>
@@ -253,7 +253,7 @@ details summary:hover{color:#94a3b8}
 const params = new URLSearchParams(location.search);
 let token = params.get('token') || sessionStorage.getItem('bec_token') || localStorage.getItem('tok_fix') || '';
 let baseUrl = params.get('base') || location.origin;
-let torneoId = null;
+let torneoId = 2;  // default: Copa del Mundo 2026 (sobreescrito por init() si hay URL param)
 const DEFAULT_PASSWORD = 'becbuc2026';
 
 // ── Definición de campos del sistema ─────────────────────────────────────────
@@ -306,9 +306,10 @@ function toSafeInt(v, nullToZero) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
-  // Aceptar torneo_id desde URL para no depender de /torneo/activas
+  // Aceptar torneo_id desde URL; default=2 (Copa del Mundo 2026)
   const urlTorneoId = parseInt(params.get('torneo_id') || params.get('torneo') || '');
   if (urlTorneoId) torneoId = urlTorneoId;
+  if (!torneoId) torneoId = 2;  // default Copa del Mundo 2026
 
   if (!token) { document.querySelector('.sub').textContent = 'Sin token. Abri esta pagina desde el portal.'; return; }
   try {
@@ -1249,10 +1250,12 @@ async function doImport() {
     if (!resp.ok) throw new Error(data.detail || resp.statusText);
 
     // Mostrar resumen de apuestas
-    document.getElementById('sumCreated').textContent = data.creadas       || 0;
-    document.getElementById('sumUpdated').textContent = data.actualizadas  || 0;
-    document.getElementById('sumDup').textContent     = data.sin_cambios   || 0;
-    document.getElementById('sumErr').textContent     = (data.errores || []).length;
+    document.getElementById('sumDeleted').textContent  = data.eliminadas        || 0;
+    document.getElementById('sumCreated').textContent  = data.creadas           || 0;
+    document.getElementById('sumPuntajes').textContent = data.puntajes_ok
+      ? `✅ ${data.puntajes_procesados || 0}`
+      : (data.puntajes_ok === false ? '⚠️' : '—');
+    document.getElementById('sumErr').textContent      = (data.errores || []).length;
     document.getElementById('summaryWrap').classList.remove('section-hidden');
 
     if ((data.errores || []).length) {
@@ -1447,6 +1450,9 @@ function updateEditRow(input) {
   }
 }
 
+// Auto-iniciar al cargar la página
+init();
+
 // ── Check existentes + doImport ───────────────────────────────────────────────
 async function checkExistingBets(aliasesList) {
   try {
@@ -1501,7 +1507,9 @@ async function doImport() {
   statusEl.textContent = d.detail || 'Error al importar';
       return;
     }
-    let msg = '✅ ' + (d.creadas||0) + ' nuevas · ' + (d.actualizadas||0) + ' actualizadas · ' + (d.sin_cambios||0) + ' sin cambios';
+    let msg = `✅ ${d.eliminadas||0} eliminadas · ${d.creadas||0} insertadas`;
+    if (d.puntajes_ok) msg += ` · 📊 ${d.puntajes_procesados||0} puntajes calculados`;
+    else if (d.puntajes_ok === false) msg += ' · ⚠️ puntajes fallaron';
     if (d.brackets_reiniciados) msg += ' · 🔄 Brackets reiniciados';
     statusEl.style.color = '#86efac';
     statusEl.textContent = msg;
