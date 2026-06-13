@@ -52,7 +52,7 @@ class MonitorConfig:
     tick_seg: int = 30                     # cada 30 s revisa qué partidos necesitan poll
 
     # ── Cuota API ───────────────────────────────────────────────────────────
-    max_api_calls_dia: int = 80            # reservar 20 de las 100 diarias para uso manual
+    max_api_calls_dia: int = 7500          # plan pago: ~7500 calls/día
 
     # ── HTTP ────────────────────────────────────────────────────────────────
     api_timeout: float = 15.0

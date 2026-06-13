@@ -683,10 +683,37 @@ function _renderActionBar(seccion){
     ?'🎲 Simular todo (grupos → final)'
     :'🎲 Simular playoffs';
   if (!_isAdmin) return `<span id="sim-msg-${seccion}"></span>`;
+  const extraBtns = seccion === 'playoffs'
+    ? `<button class="btn btn-secondary btn-sm" onclick="resetPlayoff(event)" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#fca5a5;">🔄 Reset Playoff</button>`
+    : '';
   return `<div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
     <button class="btn btn-secondary btn-sm" onclick="${randFn}">${randLabel}</button>
+    ${extraBtns}
     <span id="sim-msg-${seccion}" style="font-size:11px;color:var(--muted);margin-left:4px;"></span>
   </div>`;
+}
+
+async function resetPlayoff(ev){
+  const btn = ev.currentTarget;
+  const msg = document.getElementById('sim-msg-playoffs');
+  const tid = _torneoActivo?.id;
+  if(!tid){ alert('Sin torneo activo.'); return; }
+  if(!confirm('¿Resetear el bracket de playoffs?\nEsto limpia todos los partidos KO a TBD y recalcula R32 desde los standings reales.\nLas apuestas KO se inicializan para todos los apostadores.')) return;
+  btn.disabled = true;
+  if(msg) msg.textContent = '⏳ Reseteando playoff…';
+  try{
+    const r = await api(`/bets/reset-playoff/${tid}`, {method:'POST'});
+    await renderFixture();
+    showMainTab('playoffs');
+    if(msg) msg.textContent = r.r32_armada
+      ? `✅ R32 armada. Mejores terceros: ${(r.mejores_terceros_reales||[]).map(t=>t.nombre||t.nombre_es||'?').join(', ')||'—'}. Apuestas KO: ${r.apuestas_ko_inicializadas||0}.`
+      : `✅ Brackets reseteados a TBD (grupos incompletos).`;
+  }catch(e){
+    if(msg) msg.textContent = '❌ ' + e.message;
+    alert('Error en reset playoff: ' + e.message);
+  }finally{
+    btn.disabled = false;
+  }
 }
 
 function showMainTab(key){

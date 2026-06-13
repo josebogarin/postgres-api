@@ -37,6 +37,84 @@ from app.core.config import settings
 
 logger = logging.getLogger("sync_api_football")
 
+
+async def _log(db: AsyncSession, endpoint: str, params: dict,
+               resp: httpx.Response | None, t0: float,
+               error: str | None = None, contexto: str | None = None) -> None:
+    """
+    Inserta un registro en api_sync_log. Best-effort: nunca interrumpe la transacción
+    externa. No hace commit — la función llamante decide cuándo comitear.
+    """
+    try:
+        ms = int((time.time() - t0) * 1000)
+        quota = None
+        if resp is not None:
+            try:
+                quota = int(resp.headers.get("x-ratelimit-requests-remaining", -1))
+                if quota < 0:
+                    quota = None
+            except Exception:
+                pass
+        _ctx = contexto
+        if not _ctx and error:
+            _ctx = ("⛔ Límite cuota"
+                    if ("quota" in error.lower() or "cuota" in error.lower())
+                    else "❌ Error API")
+        await db.execute(text("SAVEPOINT _log_sp"))
+        try:
+            await db.execute(
+                text("""
+                    INSERT INTO api_sync_log
+                        (endpoint, params, status_code, response_ms, quota_remaining,
+                         error_msg, payload_size, origen, contexto)
+                    VALUES
+                        (:ep, :params::jsonb, :sc, :ms, :quota, :err, :size, 'sync', :ctx)
+                """),
+                {
+                    "ep":    endpoint,
+                    "params": json.dumps(params),
+                    "sc":    resp.status_code if resp is not None else None,
+                    "ms":    ms,
+                    "quota": quota,
+                    "err":   error,
+                    "size":  None,
+                    "ctx":   _ctx,
+                },
+            )
+            await db.execute(text("RELEASE SAVEPOINT _log_sp"))
+        except Exception:
+            try:
+                await db.execute(text("ROLLBACK TO SAVEPOINT _log_sp"))
+            except Exception:
+                pass
+        # Sin commit — el llamador commit cuando corresponda
+    except Exception:
+        pass  # Los errores de logging nunca interrumpen el sync
+
+
+async def _log_warn(db: AsyncSession, contexto: str) -> None:
+    """Inserta una advertencia sintética en api_sync_log (sin llamada HTTP)."""
+    try:
+        await db.execute(text("SAVEPOINT _logwarn_sp"))
+        try:
+            await db.execute(
+                text("""
+                    INSERT INTO api_sync_log
+                        (endpoint, params, status_code, response_ms,
+                         quota_remaining, error_msg, payload_size, origen, contexto)
+                    VALUES ('sync', '{}', NULL, NULL, NULL, NULL, NULL, 'sync', :ctx)
+                """),
+                {"ctx": contexto},
+            )
+            await db.execute(text("RELEASE SAVEPOINT _logwarn_sp"))
+        except Exception:
+            try:
+                await db.execute(text("ROLLBACK TO SAVEPOINT _logwarn_sp"))
+            except Exception:
+                pass
+    except Exception:
+        pass
+
 API_BASE = "https://v3.football.api-sports.io"
 STATUS_FINAL = {"FT", "AET", "PEN"}
 
@@ -444,22 +522,30 @@ async def sync_torneo(
 
     async with httpx.AsyncClient(timeout=30) as client:
         # ── 4a. Finalizados ──────────────────────────────────────────────────
+        _t0 = time.time()
+        _p_ft = {"league": api_league_id, "season": api_season, "status": "FT-AET-PEN"}
         try:
-            resp = await client.get(
-                f"{API_BASE}/fixtures",
-                params={
-                    "league": api_league_id,
-                    "season": api_season,
-                    "status": "FT-AET-PEN",
-                },
-                headers=_headers(),
-            )
+            resp = await client.get(f"{API_BASE}/fixtures", params=_p_ft, headers=_headers())
             resp.raise_for_status()
             api_calls += 1
+            await _log(db, "/fixtures", _p_ft, resp, _t0, contexto="📋 Bulk finalizados")
         except httpx.HTTPStatusError as e:
+            await _log(db, "/fixtures", _p_ft, e.response, _t0,
+                       error=f"HTTP {e.response.status_code}", contexto="📋 Bulk finalizados")
             raise ValueError(f"API-Football error {e.response.status_code}: {e.response.text[:300]}")
         except httpx.RequestError as e:
+            await _log(db, "/fixtures", _p_ft, None, _t0,
+                       error=str(e), contexto="📋 Bulk finalizados")
             raise ValueError(f"Error de conexión a API-Football: {e}")
+
+        # Capturar cuota restante para advertencias post-sync
+        _quota_remaining: int | None = None
+        try:
+            _q = int(resp.headers.get("x-ratelimit-requests-remaining", -1))
+            if _q >= 0:
+                _quota_remaining = _q
+        except Exception:
+            pass
 
         data = resp.json()
         if data.get("errors"):
@@ -470,20 +556,22 @@ async def sync_torneo(
 
         # ── 4b. En vivo ──────────────────────────────────────────────────────
         live_fixtures: list[dict] = []
+        _t0_live = time.time()
+        _p_live = {"live": "all", "league": api_league_id, "season": api_season}
         try:
-            resp_live = await client.get(
-                f"{API_BASE}/fixtures",
-                params={"live": "all", "league": api_league_id, "season": api_season},
-                headers=_headers(),
-            )
+            resp_live = await client.get(f"{API_BASE}/fixtures", params=_p_live, headers=_headers())
             resp_live.raise_for_status()
             api_calls += 1
             live_fixtures = [
                 f for f in resp_live.json().get("response", [])
                 if f["fixture"]["id"] not in finished_ids
             ]
+            await _log(db, "/fixtures", _p_live, resp_live, _t0_live,
+                       contexto=f"🔴 En vivo ({len(live_fixtures)} partidos)")
             logger.info(f"Partidos en vivo encontrados: {len(live_fixtures)}")
         except Exception as e:
+            await _log(db, "/fixtures", _p_live, None, _t0_live,
+                       error=str(e), contexto="🔴 En vivo")
             logger.warning(f"Error al fetch live fixtures: {e}")
 
         # Partidos que hay que actualizar: finalizados + en vivo
@@ -587,19 +675,20 @@ async def sync_torneo(
             # Fetch individual con eventos y estadísticas
             t0 = time.time()
             tag = "🔴 LIVE" if is_live else "FT"
+            _p_det = {"id": fix_id}
             logger.info(f"  Fetch detalle API [{tag}]: fixture={fix_id} — {match_name}")
             try:
-                resp2 = await client.get(
-                    f"{API_BASE}/fixtures",
-                    params={"id": fix_id},
-                    headers=_headers(),
-                )
+                resp2 = await client.get(f"{API_BASE}/fixtures", params=_p_det, headers=_headers())
                 resp2.raise_for_status()
                 api_calls += 1
                 detalle_count += 1
+                await _log(db, "/fixtures", _p_det, resp2, t0,
+                           contexto=f"{tag} {match_name}")
             except Exception as e:
                 elapsed = time.time() - t0
                 mm, ss = divmod(elapsed, 60)
+                await _log(db, "/fixtures", _p_det, None, t0,
+                           error=str(e), contexto=f"{tag} {match_name}")
                 errores.append({"partido_id": partido_id, "error": f"fetch individual: {e}"})
                 logger.warning(f"  Error fetch {match_name} ({int(mm):02d}:{ss:05.2f}): {e}")
                 continue
@@ -612,15 +701,29 @@ async def sync_torneo(
             fix_full = fixtures_resp[0]
             try:
                 await _update_partido_full(db, partido_id, fix_full, team_id_map)
+                await db.commit()
                 actualizados.append(partido_id)
                 elapsed = time.time() - t0
                 mm, ss = divmod(elapsed, 60)
                 logger.info(f"  ✓ Actualizado: {match_name} (partido_id={partido_id}) [{int(mm):02d}:{ss:05.2f}]")
             except Exception as e:
+                await db.rollback()
                 elapsed = time.time() - t0
                 mm, ss = divmod(elapsed, 60)
                 errores.append({"partido_id": partido_id, "error": str(e)})
                 logger.warning(f"  ✗ Error actualizando {match_name} [{int(mm):02d}:{ss:05.2f}]: {e}")
+
+    # ── Advertencias post-sync en el log ─────────────────────────────────────
+    if _quota_remaining is not None and _quota_remaining < 20:
+        await _log_warn(db, f"⚠ Cuota baja: {_quota_remaining} llamadas restantes hoy")
+    if errores:
+        first_err = errores[0]["error"][:60]
+        await _log_warn(db, f"⚠ {len(errores)} partido(s) con error: {first_err}")
+    if len(actualizados) == 0 and len(to_detail) > 0:
+        await _log_warn(db, f"⚠ 0 actualizados de {len(to_detail)} candidatos — revisar API")
+    if mapeo_summary and mapeo_summary.get("partidos_mapeados", 0) > 0:
+        n = mapeo_summary["partidos_mapeados"]
+        await _log_warn(db, f"ℹ Auto-mapeo: {n} partido(s) mapeados automáticamente")
 
     return {
         "ok": True,
@@ -734,6 +837,10 @@ async def _update_partido_full(
 
     rojas_events = 0  # fallback si statistics llegan tarde (partidos en vivo)
 
+    # Penales cobrados durante el partido (ítem M): convertidos + fallados.
+    # NO incluye la tanda de penales (ítem O), que se cuenta aparte por score.penalty.
+    penales_partido_total = 0
+
     # Rastrear goles anulados por VAR para no usarlos como minuto_primer_gol
     goles_anulados_minutos: set[int] = set()
     for ev in events_sorted:
@@ -751,6 +858,15 @@ async def _update_partido_full(
         if ev_type == "Card" and ev_detail in ("Red Card", "Second Yellow card"):
             rojas_events += 1
 
+        # Penal cobrado durante el juego (convertido o fallado)
+        if ev_type == "Goal" and ev_detail == "Penalty":
+            penales_partido_total += 1
+        elif ev_type == "Miss" and ev_detail in ("Missed Penalty", "Penalty Missed"):
+            penales_partido_total += 1
+        elif ev_type == "Goal" and ev_detail in ("Missed Penalty", "Penalty Missed"):
+            # Algunos payloads de API-Football reportan penal fallado como type "Goal"
+            penales_partido_total += 1
+
     for ev in events_sorted:
         ev_type   = ev.get("type", "")
         ev_detail = ev.get("detail", "")
@@ -762,12 +878,21 @@ async def _update_partido_full(
             if minuto_primer_gol is None and elapsed is not None:
                 minuto_primer_gol = elapsed
 
-    decisiones_var = var_count if var_count > 0 else None
+    decisiones_var = var_count  # siempre 0+ — null impide comparar con pronóstico
 
     # Si las statistics aún no reflejan las rojas (partido en vivo), usar conteo de eventos
     if rojas_events > 0 and (rojas_total is None or rojas_total < rojas_events):
         rojas_total = rojas_events
     elapsed_now = fix["fixture"]["status"].get("elapsed")
+
+    # Para partidos finalizados con eventos procesados: los nulos pasan a 0
+    # (null en BD impide comparar correctamente con pronósticos)
+    STATUS_MAP_CHECK = {"FT", "AET", "PEN"}
+    if status_short in STATUS_MAP_CHECK:
+        if amarillas_total is None:
+            amarillas_total = 0
+        if rojas_total is None:
+            rojas_total = 0
 
     STATUS_MAP = {
         "FT": "finalizado", "AET": "finalizado", "PEN": "finalizado",
@@ -780,10 +905,6 @@ async def _update_partido_full(
     }
     estado = STATUS_MAP.get(status_short, "en_juego")
 
-    # Serializar eventos y estadísticas como JSON para guardar en JSONB
-    eventos_json      = json.dumps(events_sorted) if events_sorted else None
-    estadisticas_json = json.dumps(fix.get("statistics", [])) if fix.get("statistics") else None
-
     await db.execute(
         text("""
             UPDATE partido SET
@@ -795,11 +916,10 @@ async def _update_partido_full(
                 minuto_actual         = :min_act,
                 amarillas             = COALESCE(:am, amarillas),
                 rojas                 = COALESCE(:ro, rojas),
-                decisiones_var        = COALESCE(:dv, decisiones_var),
+                decisiones_var        = :dv,
                 minuto_primer_gol     = COALESCE(:mpg, minuto_primer_gol),
                 equipo_clasificado_id = COALESCE(:ecid, equipo_clasificado_id),
-                eventos_api           = COALESCE(CAST(:ev AS jsonb), eventos_api),
-                estadisticas_api      = COALESCE(CAST(:st AS jsonb), estadisticas_api)
+                penales_partido       = :pp
             WHERE id = :pid
         """),
         {
@@ -814,8 +934,8 @@ async def _update_partido_full(
             "dv":      decisiones_var,
             "mpg":     minuto_primer_gol,
             "ecid":    equipo_clasif_id,
-            "ev":      eventos_json,
-            "st":      estadisticas_json,
+            "pp":      penales_partido_total,  # siempre 0+ si hay eventos procesados
             "pid":     partido_id,
         },
     )
+    await db.commit()

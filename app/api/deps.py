@@ -52,8 +52,29 @@ async def get_current_admin(
     return current_user
 
 
+_bearer_optional = HTTPBearer(auto_error=False)
+
+
+async def get_optional_current_user(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_optional)] = None,
+) -> "User | None":
+    if credentials is None:
+        return None
+    try:
+        payload = decode_token(credentials.credentials)
+        if payload.get("type") != "access":
+            return None
+        user_id = int(payload["sub"])
+        user = await user_crud.get(db, id=user_id)
+        return user if (user and user.is_active) else None
+    except Exception:
+        return None
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
 CurrentSuperuser = Annotated[User, Depends(get_current_superuser)]
 CurrentAdmin = Annotated[User, Depends(get_current_admin)]
+OptionalCurrentUser = Annotated["User | None", Depends(get_optional_current_user)]
 DBSession = Annotated[AsyncSession, Depends(get_db)]
 BECBUCSession = Annotated[AsyncSession, Depends(get_becbuc_db)]

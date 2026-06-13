@@ -190,7 +190,21 @@ details summary:hover{color:#94a3b8}
   </div>
 </div>
 
-<!-- PASO 5b: PRONÓSTICOS GLOBALES (individual format only) -->
+<!-- PASO 5b: PRONÓSTICOS GLOBALES CONSOLIDADO (todos los apostadores) -->
+<div class="card section-hidden" id="cardGlobalesConsolidado" style="border-color:#7c3aed44">
+  <div class="card-title" style="color:#a78bfa">🌐 Pronósticos Globales A-G — Todos los apostadores</div>
+  <div id="globalesConsolidadoContent" style="font-size:.82rem;color:#94a3b8;margin-bottom:12px"></div>
+  <div class="btn-row" style="flex-wrap:wrap;gap:8px">
+    <button class="btn" id="btnImportGlobalesConsolidado" onclick="importarGlobalesConsolidado()"
+      style="background:#7c3aed;border:none;color:#fff;padding:9px 20px;border-radius:8px;font-weight:700;cursor:pointer">
+      🌐 Importar globales de todos los apostadores
+    </button>
+    <span id="globalesConsolidadoStatus" style="color:#94a3b8;font-size:.75rem;align-self:center"></span>
+  </div>
+  <div id="globalesConsolidadoLog" style="margin-top:10px;max-height:160px;overflow-y:auto;font-size:.72rem;font-family:monospace;color:#94a3b8"></div>
+</div>
+
+<!-- PASO 5b-ind: PRONÓSTICOS GLOBALES (individual format only) -->
 <div class="card section-hidden" id="cardGlobales" style="border-color:#7c3aed44">
   <div class="card-title" style="color:#a78bfa">🌐 Pronósticos Globales A-G detectados</div>
   <div id="globalesContent" style="font-size:.82rem;color:#94a3b8;margin-bottom:12px"></div>
@@ -278,7 +292,8 @@ let editRows      = [];   // copia editable para la tabla de revision pre-import
 let usrStatusMap  = {};   // alias -> 'new' | 'exists' | 'created' | 'error'
 let fileFormatType = 'consolidado';  // 'consolidado' | 'individual'
 let skippedCount   = 0;
-let parsedGlobales = null; // { apostador, pred_campeon, pred_finalista1, ... } o null
+let parsedGlobales    = null;  // { apostador, pred_campeon, pred_finalista1, ... } o null
+let allParsedGlobales = [];   // para formato consolidado: array de {apostador, pred_...}
 
 // ── Helper numerico ───────────────────────────────────────────────────────────
 // Convierte cualquier valor Excel a entero seguro.
@@ -291,17 +306,31 @@ function toSafeInt(v, nullToZero) {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
+  // Aceptar torneo_id desde URL para no depender de /torneo/activas
+  const urlTorneoId = parseInt(params.get('torneo_id') || params.get('torneo') || '');
+  if (urlTorneoId) torneoId = urlTorneoId;
+
   if (!token) { document.querySelector('.sub').textContent = 'Sin token. Abri esta pagina desde el portal.'; return; }
   try {
     const r = await fetch(baseUrl + '/api/v1/torneo/activas', { headers: { 'Authorization': 'Bearer ' + token } });
     const activas = await r.json();
     if (activas && activas.length) {
-      torneoId = activas[0].id;
-      document.getElementById('torneoLabel').textContent = 'Torneo activo: ' + activas[0].nombre;
+      if (!torneoId) torneoId = activas[0].id;
+      document.getElementById('torneoLabel').innerHTML =
+        'Torneo: ' + activas[0].nombre +
+        ' <span style="color:#64748b">(id=' + torneoId + ')</span>' +
+        (urlTorneoId ? ' <span style="color:#7dd3fc">← desde URL</span>' : '');
     } else {
-      document.getElementById('torneoLabel').textContent = 'Sin torneo activo';
+      document.getElementById('torneoLabel').innerHTML =
+        'Sin torneo activo en BD. ' +
+        (torneoId ? '<span style="color:#7dd3fc">Usando torneo_id=' + torneoId + ' desde URL.</span>'
+                  : '<span style="color:#f87171">Pasá ?torneo_id=2 en la URL o abrí desde el portal.</span>');
     }
-  } catch(e) { document.getElementById('torneoLabel').textContent = 'Error conectando al servidor'; }
+  } catch(e) {
+    document.getElementById('torneoLabel').innerHTML =
+      'Error conectando al servidor. ' +
+      (torneoId ? '<span style="color:#7dd3fc">Usando torneo_id=' + torneoId + ' desde URL.</span>' : '');
+  }
 }
 
 // ── Drag & Drop ───────────────────────────────────────────────────────────────
@@ -574,8 +603,9 @@ function clearFile() {
   document.getElementById('dropZone').classList.remove('section-hidden');
   document.getElementById('fileLoaded').classList.add('section-hidden');
   document.getElementById('fileInput').value = '';
-  ['cardMatriz','cardApostadores','cardUsuarios','cardGlobales','cardImport'].forEach(id =>
+  ['cardMatriz','cardApostadores','cardUsuarios','cardGlobales','cardGlobalesConsolidado','cardImport'].forEach(id =>
     document.getElementById(id).classList.add('section-hidden'));
+  allParsedGlobales = [];
 }
 
 // ── Pronósticos Globales A-G ──────────────────────────────────────────────────
@@ -665,6 +695,195 @@ async function importarGlobales() {
   }
 }
 
+// ── Traducción equipos ES → EN (para globales de TBL MASTER) ─────────────────
+const EQUIPO_ES_EN = {
+  'espana':'Spain','espanya':'Spain','espana':'Spain',
+  'brasil':'Brazil','brazil':'Brazil',
+  'francia':'France','france':'France',
+  'alemania':'Germany','germany':'Germany',
+  'inglaterra':'England','england':'England',
+  'paises bajos':'Netherlands','holanda':'Netherlands','netherlands':'Netherlands',
+  'belgica':'Belgium','belgium':'Belgium',
+  'portugal':'Portugal','argentina':'Argentina',
+  'curazao':'Curaçao','curacao':'Curaçao',
+  'nueva zelanda':'New Zealand','nueva zelandia':'New Zealand','new zealand':'New Zealand',
+  'marruecos':'Morocco','morocco':'Morocco',
+  'costa de marfil':'Ivory Coast','ivory coast':'Ivory Coast',
+  'arabia saudita':'Saudi Arabia','arabia saudi':'Saudi Arabia','saudi arabia':'Saudi Arabia',
+  'corea del sur':'South Korea','south korea':'South Korea',
+  'sudafrica':'South Africa','south africa':'South Africa',
+  'turquia':'Türkiye','turkiye':'Türkiye','turkey':'Türkiye',
+  'egipto':'Egypt','egypt':'Egypt',
+  'noruega':'Norway','norway':'Norway',
+  'suecia':'Sweden','sweden':'Sweden',
+  'suiza':'Switzerland','switzerland':'Switzerland',
+  'escocia':'Scotland','scotland':'Scotland',
+  'estados unidos':'USA','eeuu':'USA','usa':'USA',
+  'canada':'Canada','haiti':'Haiti',
+  'iran':'Iran','irak':'Iraq','iraq':'Iraq',
+  'jordania':'Jordan','jordan':'Jordan',
+  'japon':'Japan','japan':'Japan',
+  'bosnia':'Bosnia & Herzegovina','bosnia & herzegovina':'Bosnia & Herzegovina',
+  'republica checa':'Czech Republic','czech republic':'Czech Republic',
+  'uzbekistan':'Uzbekistan','panama':'Panama',
+  'congo':'Congo DR','congo dr':'Congo DR',
+  'argelia':'Algeria','algeria':'Algeria',
+  'cabo verde':'Cape Verde Islands','cape verde islands':'Cape Verde Islands',
+  'mexico':'Mexico','uruguay':'Uruguay',
+  'croacia':'Croatia','croatia':'Croatia',
+  'colombia':'Colombia','senegal':'Senegal',
+  'ecuador':'Ecuador','ghana':'Ghana',
+  'australia':'Australia','paraguay':'Paraguay',
+  'qatar':'Qatar','austria':'Austria',
+  'tunez':'Tunisia','túnez':'Tunisia','tunisia':'Tunisia',
+  'noruega':'Norway','suecia':'Sweden',
+};
+
+function normTeam(s) {
+  return (s || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function traducirEquipo(nombre) {
+  if (!nombre) return nombre;
+  const k = normTeam(nombre);
+  return EQUIPO_ES_EN[k] || nombre;
+}
+
+// ── Globales consolidado: parse P111-P118 del TBL MASTER ─────────────────────
+const GLOBAL_P_MAP = {
+  'P111':'campeon','P112':'otro_finalista','P113':'goleador',
+  'P114':'peor_equipo','P115':'etapa_paraguay','P116':'goles_paraguay',
+  'P117':'goleada_ganador','P118':'goleada_perdedor',
+};
+const FASE_MAP_G = {
+  'grupo':'grupos','grupos':'grupos',
+  '16avos':'16avos','8vos':'8vos',
+  '4tos':'4tos','cuartos':'4tos',
+  'semi':'semis','semifinal':'semis','semis':'semis',
+  '3p':'3p','final':'final',
+};
+
+function parseGlobalesFromConsolidado(rawRows) {
+  const aliasCol = mapping['apostador']   || 'ALIAS';
+  const pidCol   = mapping['partido_num'] || 'ID PARTIDO';
+  const valorCol = mapping['equipo_local'] || 'EQUIPO 1';
+
+  const byAlias = {};
+  for (const row of rawRows) {
+    const pid = String(row[pidCol] || '').trim();
+    if (!GLOBAL_P_MAP[pid]) continue;
+    const campo = GLOBAL_P_MAP[pid];
+    const aliasRaw = row[aliasCol] || '';
+    const alias = String(aliasRaw).replace(/\xa0| /g,'').trim().toLowerCase();
+    if (!alias) continue;
+    const valor = row[valorCol];
+    if (valor === null || valor === undefined || String(valor).trim() === '') continue;
+    if (!byAlias[alias]) byAlias[alias] = { apostador: alias };
+    byAlias[alias][campo] = String(valor).trim();
+  }
+
+  const toInt = v => { const n = parseInt(v); return isNaN(n) ? null : n; };
+
+  allParsedGlobales = Object.values(byAlias).map(d => {
+    const campTr = traducirEquipo(d.campeon);
+    const fin2Tr = traducirEquipo(d.otro_finalista);
+    const poorTr = traducirEquipo(d.peor_equipo);
+    const etapaK = normTeam(d.etapa_paraguay || '');
+    const etapaN = FASE_MAP_G[etapaK] || d.etapa_paraguay || null;
+    return {
+      apostador:             d.apostador,
+      pred_campeon:          campTr || null,
+      pred_finalista1:       campTr || null,
+      pred_finalista2:       fin2Tr || null,
+      pred_goleador:         d.goleador || null,
+      pred_peor_equipo:      poorTr || null,
+      pred_etapa_paraguay:   etapaN,
+      pred_goles_paraguay:   toInt(d.goles_paraguay),
+      pred_goleada_ganador:  toInt(d.goleada_ganador),
+      pred_goleada_perdedor: toInt(d.goleada_perdedor),
+    };
+  });
+  return allParsedGlobales;
+}
+
+function renderGlobalesConsolidadoCard(gls) {
+  const card = document.getElementById('cardGlobalesConsolidado');
+  const content = document.getElementById('globalesConsolidadoContent');
+  const sinTrad = gls.flatMap(g => {
+    const falta = [];
+    ['pred_campeon','pred_finalista2','pred_peor_equipo'].forEach(k => {
+      const val = g[k];
+      if (val && EQUIPO_ES_EN[normTeam(val)] === undefined && !Object.values(EQUIPO_ES_EN).includes(val)) falta.push(val);
+    });
+    return falta;
+  });
+  const uniq = [...new Set(sinTrad)];
+  content.innerHTML =
+    `<div style="margin-bottom:8px"><b style="color:#7dd3fc">${gls.length}</b> apostadores con globales detectados (P111-P118)</div>` +
+    `<div style="margin-bottom:6px;font-size:.74rem;color:#64748b">Preview (primeros 3):</div>` +
+    gls.slice(0,3).map(g =>
+      `<div style="padding:4px 0;border-bottom:1px solid #1e2530;font-size:.75rem">
+        <b style="color:#a78bfa">${g.apostador}</b> &nbsp;
+        A:<span style="color:#e2e8f0">${g.pred_campeon||'?'}</span> &nbsp;
+        B2:<span style="color:#e2e8f0">${g.pred_finalista2||'?'}</span> &nbsp;
+        C:<span style="color:#e2e8f0">${g.pred_goleador||'?'}</span> &nbsp;
+        D:<span style="color:#e2e8f0">${g.pred_peor_equipo||'?'}</span> &nbsp;
+        G:<span style="color:#e2e8f0">${g.pred_goles_paraguay??'?'}</span>
+      </div>`
+    ).join('') +
+    (uniq.length ? `<div style="margin-top:8px;font-size:.72rem;color:#f59e0b">⚠ Equipos sin traducción (se envían como están): ${uniq.join(', ')}</div>` : '');
+  document.getElementById('globalesConsolidadoStatus').textContent = '';
+  document.getElementById('globalesConsolidadoLog').innerHTML = '';
+  card.classList.remove('section-hidden');
+}
+
+async function importarGlobalesConsolidado() {
+  if (!allParsedGlobales.length || !torneoId) {
+    alert(!torneoId ? 'Sin torneo activo. Abrí la página desde el portal o añadí ?torneo_id=2 en la URL.' : 'Sin globales detectados.');
+    return;
+  }
+  const btn    = document.getElementById('btnImportGlobalesConsolidado');
+  const status = document.getElementById('globalesConsolidadoStatus');
+  const log    = document.getElementById('globalesConsolidadoLog');
+  btn.disabled = true;
+  log.innerHTML = '';
+  let ok = 0, err = 0;
+
+  for (let i = 0; i < allParsedGlobales.length; i++) {
+    const body = allParsedGlobales[i];
+    status.textContent = `Importando ${i+1}/${allParsedGlobales.length}: ${body.apostador}...`;
+    try {
+      const resp = await fetch(baseUrl + '/api/v1/bets/importar-globales-apostador/' + torneoId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(body),
+      });
+      const d = await resp.json();
+      if (resp.ok && d.guardado) {
+        const noRes = Object.keys(d.no_resueltos_input || {});
+        const line = noRes.length
+          ? `<span style="color:#fcd34d">[${body.apostador}] ⚠ sin resolver: ${noRes.join(', ')}</span>`
+          : `<span style="color:#86efac">[${body.apostador}] ✓</span>`;
+        log.innerHTML += line + '<br>';
+        ok++;
+      } else {
+        log.innerHTML += `<span style="color:#fca5a5">[${body.apostador}] ✗ ${d.detail||JSON.stringify(d)}</span><br>`;
+        err++;
+      }
+    } catch(e) {
+      log.innerHTML += `<span style="color:#fca5a5">[${body.apostador}] ✗ ${e.message}</span><br>`;
+      err++;
+    }
+    log.scrollTop = log.scrollHeight;
+  }
+
+  btn.disabled = false;
+  status.style.color = err ? '#fca5a5' : '#86efac';
+  status.textContent = `✅ ${ok} OK${err ? `, ✗ ${err} errores` : ''}`;
+}
+
 // ── Analisis de columnas ──────────────────────────────────────────────────────
 function normalize(s) {
   return String(s || '').toLowerCase()
@@ -745,6 +964,14 @@ function analyzeFile() {
   document.getElementById('cardApostadores').classList.remove('section-hidden');
   document.getElementById('cardUsuarios').classList.remove('section-hidden');
   renderImportCard(allReqOk);
+
+  // Para TBL MASTER consolidado: extraer globales A-G de filas P111-P118
+  if (fileFormatType === 'consolidado' && parsedRows.length > 0) {
+    const gls = parseGlobalesFromConsolidado(parsedRows);
+    const cardGC = document.getElementById('cardGlobalesConsolidado');
+    if (gls.length > 0) renderGlobalesConsolidadoCard(gls);
+    else cardGC.classList.add('section-hidden');
+  }
 }
 
 // ── Construir filas limpias ───────────────────────────────────────────────────
@@ -970,6 +1197,97 @@ async function checkExistingUsers() {
     status.textContent = Object.keys(apMap).length + ' apostadores - ' + newCount + ' nuevos - ' + (Object.keys(apMap).length - newCount) + ' ya existen';
   } catch(e) { status.textContent = 'Error: ' + e.message; }
   finally    { btn.disabled = false; }
+}
+
+// ── Habilitar/deshabilitar card de importacion ────────────────────────────────
+function renderImportCard(allReqOk) {
+  const card = document.getElementById('cardImport');
+  const btn  = document.getElementById('btnImport');
+  if (card) card.classList.remove('section-hidden');
+  if (btn)  btn.disabled = !allReqOk;
+}
+
+// ── Importar apuestas de grupos + reset playoff automático ────────────────────
+async function doImport() {
+  if (!torneoId) { alert('Sin torneo activo. Abrí la página desde el portal o añadí ?torneo_id=N en la URL.'); return; }
+  const btn    = document.getElementById('btnImport');
+  const status = document.getElementById('importStatus');
+  const msgEl  = document.getElementById('importMsg');
+  btn.disabled = true;
+  status.textContent = '⏳ Importando apuestas…';
+  if (msgEl) { msgEl.textContent = ''; msgEl.classList.remove('show'); }
+
+  try {
+    // Construir payload desde editRows (copia editable con goles nulos → 0)
+    const payload = editRows.map(r => ({
+      apostador:            r.apostador,
+      nombre:               r.nombre    || null,
+      email:                r.email     || null,
+      telefono:             r.telefono  || null,
+      partido_num:          r.partido_num,
+      goles_local:          r.goles_local          != null ? r.goles_local          : 0,
+      goles_visitante:      r.goles_visitante      != null ? r.goles_visitante      : 0,
+      pred_minuto_gol:      r.pred_minuto_gol      ?? null,
+      pred_amarillas:       r.pred_amarillas       ?? null,
+      pred_var:             r.pred_var             ?? null,
+      pred_rojas:           r.pred_rojas           ?? null,
+      pred_penales_partido: r.pred_penales_partido ?? null,
+    }));
+
+    // Detectar si hay usuarios nuevos para crearlos automáticamente
+    const hayNuevos = Object.values(usrStatusMap).some(v => v === 'new');
+
+    const resp = await fetch(
+      `${baseUrl}/api/v1/bets/importar-apuestas-grupos/${torneoId}?crear_usuarios=${hayNuevos}`,
+      {
+        method:  'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      }
+    );
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || resp.statusText);
+
+    // Mostrar resumen de apuestas
+    document.getElementById('sumCreated').textContent = data.creadas       || 0;
+    document.getElementById('sumUpdated').textContent = data.actualizadas  || 0;
+    document.getElementById('sumDup').textContent     = data.sin_cambios   || 0;
+    document.getElementById('sumErr').textContent     = (data.errores || []).length;
+    document.getElementById('summaryWrap').classList.remove('section-hidden');
+
+    if ((data.errores || []).length) {
+      const ed = document.getElementById('errDetail');
+      if (ed) { ed.textContent = data.errores.map(e => JSON.stringify(e)).join('\n'); ed.classList.remove('section-hidden'); }
+    }
+
+    status.textContent = '';
+
+    // ── Paso automático: reset playoff ────────────────────────────────────────
+    if (msgEl) { msgEl.textContent = '⏳ Inicializando playoff…'; msgEl.classList.add('show'); msgEl.style.background='rgba(59,130,246,.08)'; msgEl.style.color='#93c5fd'; msgEl.style.border='1px solid rgba(93,196,247,.2)'; }
+    try {
+      const rp = await fetch(`${baseUrl}/api/v1/bets/reset-playoff/${torneoId}`, {
+        method: 'POST', headers: { 'Authorization': 'Bearer ' + token },
+      });
+      const rpd = await rp.json();
+      if (msgEl) {
+        if (rpd.r32_armada) {
+          const terceros = (rpd.mejores_terceros_reales || []).map(t => t.nombre_es || t.nombre || '?').join(', ');
+          msgEl.textContent = `✅ Importación completa. R32 armada · Mejores terceros: ${terceros || '—'} · Apuestas KO: ${rpd.apuestas_ko_inicializadas || 0}`;
+          msgEl.style.background='rgba(0,166,81,.08)'; msgEl.style.color='#86efac'; msgEl.style.border='1px solid rgba(0,166,81,.2)';
+        } else {
+          msgEl.textContent = `✅ Importación completa. Brackets reseteados a TBD (grupos incompletos aún — R32 se armará cuando se carguen todos los resultados).`;
+          msgEl.style.background='rgba(251,191,36,.08)'; msgEl.style.color='#fbbf24'; msgEl.style.border='1px solid rgba(251,191,36,.2)';
+        }
+      }
+    } catch(rpe) {
+      if (msgEl) { msgEl.textContent = `✅ Importación OK · ⚠ Reset playoff falló: ${rpe.message}`; msgEl.style.background='rgba(251,191,36,.08)'; msgEl.style.color='#fbbf24'; msgEl.style.border='1px solid rgba(251,191,36,.2)'; }
+    }
+
+    btn.disabled = false;
+  } catch(e) {
+    status.textContent = '❌ Error: ' + e.message;
+    btn.disabled = false;
+  }
 }
 
 function renderUserList(apMap) {

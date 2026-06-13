@@ -6,7 +6,7 @@ Cliente HTTP abstactado para API-Football v3.
 Características:
 - Retry con backoff exponencial ante errores de red o 5xx.
 - Log automático de cada llamada en api_sync_log.
-- Control de cuota diaria (100 req/día en plan gratuito).
+- Control de cuota diaria (plan pago: ~7500 calls/día).
 - Métodos orientados a casos de uso del monitor (no genéricos).
 """
 
@@ -82,7 +82,7 @@ class ApiFootballClient:
         self._calls_today: int = 0
         self._calls_date: date | None = None
         # Callback para persistir logs — se inyecta desde el scheduler
-        self._log_callback: Any = None   # async def (endpoint, params, result) -> None
+        self._log_callback: Any = None   # async def (endpoint, params, result, origen, contexto) -> None
 
     async def __aenter__(self) -> "ApiFootballClient":
         self._client = httpx.AsyncClient(
@@ -117,8 +117,9 @@ class ApiFootballClient:
         self,
         endpoint: str,
         params: dict[str, Any],
-        max_calls: int = 80,
+        max_calls: int = 7500,
         origen: str = "monitor",
+        contexto: str | None = None,
     ) -> ApiResult:
         """
         GET con retry/backoff. Registra en api_sync_log vía callback.
@@ -145,7 +146,7 @@ class ApiFootballClient:
                         response_ms=ms,
                         quota_remaining=quota,
                     )
-                    await self._maybe_log(endpoint, params, result, origen)
+                    await self._maybe_log(endpoint, params, result, origen, contexto)
                     return result
 
                 last_error = f"HTTP {resp.status_code}"
@@ -155,7 +156,7 @@ class ApiFootballClient:
                     quota_remaining=quota,
                     error=last_error,
                 )
-                await self._maybe_log(endpoint, params, result, origen)
+                await self._maybe_log(endpoint, params, result, origen, contexto)
 
                 if resp.status_code < 500:
                     # 4xx: no reintentar
@@ -172,7 +173,7 @@ class ApiFootballClient:
                 await asyncio.sleep(wait)
 
         result = ApiResult(error=last_error)
-        await self._maybe_log(endpoint, params, result, origen)
+        await self._maybe_log(endpoint, params, result, origen, contexto)
         return result
 
     # ── Métodos de negocio ───────────────────────────────────────────────────
@@ -182,7 +183,7 @@ class ApiFootballClient:
         league_id: int,
         season: int,
         fecha: date,
-        max_calls: int = 80,
+        max_calls: int = 7500,
     ) -> ApiResult:
         """Obtiene todos los fixtures de una fecha (para planificación diaria)."""
         return await self._get(
@@ -199,7 +200,8 @@ class ApiFootballClient:
     async def get_fixture_detail(
         self,
         api_fixture_id: int,
-        max_calls: int = 80,
+        max_calls: int = 7500,
+        contexto: str | None = None,
     ) -> ApiResult:
         """
         Obtiene un fixture individual con eventos, estadísticas y scores live.
@@ -212,6 +214,7 @@ class ApiFootballClient:
                 "timezone": "UTC",
             },
             max_calls=max_calls,
+            contexto=contexto,
         )
 
     async def check_api_available(self) -> tuple[bool, str]:
@@ -246,10 +249,11 @@ class ApiFootballClient:
         params: dict,
         result: ApiResult,
         origen: str,
+        contexto: str | None = None,
     ) -> None:
         if self._log_callback:
             try:
-                await self._log_callback(endpoint, params, result, origen)
+                await self._log_callback(endpoint, params, result, origen, contexto)
             except Exception:
                 pass  # No propagar errores de logging
 
@@ -283,7 +287,7 @@ def parse_fixture_summary(fix: dict) -> dict:
         "penales_visitante": (score.get("penalty") or {}).get("away"),
         # Equipos (para verificar el mapeo)
         "api_home_id":     (teams.get("home") or {}).get("id"),
-        "api_away_id":     (teams.get("away") or {}).get("id"),
+          "api_away_id":     (teams.get("away") or {}).get("id"),
         "home_winner":     (teams.get("home") or {}).get("winner"),
         "away_winner":     (teams.get("away") or {}).get("winner"),
     }

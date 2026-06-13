@@ -32,15 +32,23 @@ async def log_api_call(
     params: dict,
     result: ApiResult,
     origen: str = "monitor",
+    contexto: str | None = None,
 ) -> None:
     """Persiste un registro de llamada API en api_sync_log."""
+    # Derivar contexto de error si no viene del caller
+    _ctx = contexto
+    if not _ctx and result.error:
+        if "cuota" in (result.error or "").lower() or (result.quota_remaining is not None and result.quota_remaining <= 0):
+            _ctx = "⛔ Límite de mensajes diarios superado"
+        elif result.error:
+            _ctx = "🔴 API no responde"
     try:
         await db.execute(
             text("""
                 INSERT INTO api_sync_log
-                    (endpoint, params, status_code, response_ms, quota_remaining, error_msg, payload_size, origen)
+                    (endpoint, params, status_code, response_ms, quota_remaining, error_msg, payload_size, origen, contexto)
                 VALUES
-                    (:ep, :params::jsonb, :sc, :ms, :quota, :err, :size, :origen)
+                    (:ep, :params::jsonb, :sc, :ms, :quota, :err, :size, :origen, :ctx)
             """),
             {
                 "ep":     endpoint,
@@ -51,6 +59,7 @@ async def log_api_call(
                 "err":    result.error,
                 "size":   len(json.dumps(result.data)) if result.data else None,
                 "origen": origen,
+                "ctx":    _ctx,
             },
         )
         await db.commit()
@@ -61,28 +70,38 @@ async def log_api_call(
 
 async def get_api_log_recent(db: AsyncSession, limit: int = 50) -> list[dict]:
     """Últimas N entradas del log de API para el panel de diagnóstico."""
-    r = await db.execute(
-        text("""
-            SELECT id, endpoint, params, status_code, response_ms,
-                   quota_remaining, error_msg, origen, created_at
-            FROM api_sync_log
-            ORDER BY created_at DESC
-            LIMIT :limit
-        """),
-        {"limit": limit},
-    )
-    return [dict(row._mapping) for row in r]
+    try:
+        r = await db.execute(
+            text("""
+                SELECT id, endpoint, params, status_code, response_ms,
+                       quota_remaining, error_msg, origen, contexto, created_at
+                FROM api_sync_log
+                ORDER BY created_at DESC
+                LIMIT :limit
+            """),
+            {"limit": limit},
+        )
+        return [dict(row._mapping) for row in r]
+    except Exception as exc:
+        log.warning("monitor.get_api_log_recent.error", error=str(exc))
+        await db.rollback()
+        return []
 
 
 async def count_api_calls_today(db: AsyncSession) -> int:
     """Cuántas llamadas se hicieron hoy (UTC)."""
-    r = await db.execute(
-        text("""
-            SELECT COUNT(*) FROM api_sync_log
-            WHERE created_at >= date_trunc('day', NOW() AT TIME ZONE 'UTC')
-        """)
-    )
-    return r.scalar() or 0
+    try:
+        r = await db.execute(
+            text("""
+                SELECT COUNT(*) FROM api_sync_log
+                WHERE created_at >= date_trunc('day', NOW() AT TIME ZONE 'UTC')
+            """)
+        )
+        return r.scalar() or 0
+    except Exception as exc:
+        log.warning("monitor.count_api_calls_today.error", error=str(exc))
+        await db.rollback()
+        return 0
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -91,8 +110,13 @@ async def count_api_calls_today(db: AsyncSession) -> int:
 
 async def get_monitor_config(db: AsyncSession) -> dict[str, str]:
     """Retorna todos los parámetros de monitor_config como dict str→str."""
-    r = await db.execute(text("SELECT key, value FROM monitor_config"))
-    return {row.key: row.value for row in r}
+    try:
+        r = await db.execute(text("SELECT key, value FROM monitor_config"))
+        return {row.key: row.value for row in r}
+    except Exception as exc:
+        log.warning("monitor.get_monitor_config.error", error=str(exc))
+        await db.rollback()
+        return {}
 
 
 async def set_monitor_config(db: AsyncSession, key: str, value: str) -> None:
@@ -270,9 +294,15 @@ async def get_partidos_jornada(
         text("""
             SELECT
                 p.id, p.fecha, p.estado AS db_estado, p.api_fixture_id,
+                COALESCE(p.amarillas, 0) AS amarillas,
+                COALESCE(p.rojas, 0) AS rojas,
+                COALESCE(p.decisiones_var, 0) AS decisiones_var,
+                COALESCE(p.penales_partido, 0) AS penales_partido,
                 COALESCE(el.nombre_es, el.nombre) AS local_nombre,
                 COALESCE(ev.nombre_es, ev.nombre) AS visita_nombre,
                 el.logo_url AS local_logo, ev.logo_url AS visita_logo,
+                COALESCE(el.codigo_iso, '') AS local_iso,
+                COALESCE(ev.codigo_iso, '') AS visita_iso,
                 mpe.api_status_raw, mpe.estado_interno, mpe.minuto_actual,
                 mpe.goles_local, mpe.goles_visitante,
                 mpe.es_terminal, mpe.ultima_consulta, mpe.proxima_consulta,
@@ -395,16 +425,17 @@ async def get_partidos_del_dia(
     r = await db.execute(
         text("""
             SELECT
-                p.id, p.fecha, p.estado, p.api_fixture_id,
+                               p.id, p.fecha, p.estado,
                 p.goles_local, p.goles_visitante,
-                el.id AS local_id, ev.id AS visita_id,
                 COALESCE(el.nombre_es, el.nombre) AS local_nombre,
-                COALESCE(ev.nombre_es, ev.nombre) AS visita_nombre
+                COALESCE(ev.nombre_es, ev.nombre) AS visita_nombre,
+                el.logo_url AS local_logo, ev.logo_url AS visita_logo
             FROM partido p
-            JOIN equipo el ON el.id = p.equipo_local_id
-            JOIN equipo ev ON ev.id = p.equipo_visitante_id
+            JOIN fase f ON f.id = p.fase_id
+            LEFT JOIN equipo el ON el.id = p.equipo_local_id
+            LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
             WHERE p.torneo_id = :tid
-              AND (p.fecha AT TIME ZONE 'UTC')::date = :fecha
+              AND DATE(p.fecha AT TIME ZONE 'UTC') = :fecha
             ORDER BY p.fecha NULLS LAST
         """),
         {"tid": torneo_id, "fecha": fecha},

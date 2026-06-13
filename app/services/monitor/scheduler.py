@@ -94,9 +94,9 @@ class MonitorScheduler:
         await self._client.__aenter__()
 
         # Inyectar callback de logging
-        async def _log_cb(ep: str, params: dict, result: Any, origen: str) -> None:
+        async def _log_cb(ep: str, params: dict, result: Any, origen: str, contexto: str | None = None) -> None:
             async with AsyncBecbucSession() as db:
-                await log_api_call(db, ep, params, result, origen)
+                await log_api_call(db, ep, params, result, origen, contexto=contexto)
 
         self._client.set_log_callback(_log_cb)
 
@@ -290,6 +290,7 @@ class MonitorScheduler:
                     api_fixture_id=partido_row["api_fixture_id"],
                     jornada_id=self._jornada_id,
                     partido_fecha_utc=fecha_utc,
+                    prev_estado=partido_row.get("estado_interno"),
                 )
         except Exception as exc:
             self._last_error = str(exc)

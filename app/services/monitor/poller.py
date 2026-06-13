@@ -40,6 +40,31 @@ if TYPE_CHECKING:
 
 log = structlog.get_logger(__name__)
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Contexto de llamada (para el log)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_ESTADO_LABELS: dict[str, str] = {
+    "1H":        "⚽ Primer tiempo",
+    "HT":        "⏱ Medio tiempo",
+    "2H":        "⚽ Segundo tiempo",
+    "ET":        "⏱ Prórroga",
+    "P":         "🥅 Penales",
+    "FT":        "🏁 Finalizado",
+    "AET":       "🏁 Finalizado (prórroga)",
+    "PEN":       "🏁 Finalizado (penales)",
+    "NS":        "📋 Programado",
+    "programado":"📋 Programado",
+    "en_juego":  "⚽ En juego",
+    "finalizado":"🏁 Finalizado",
+}
+
+
+def _derive_context(estado: str | None) -> str | None:
+    if not estado:
+        return None
+    return _ESTADO_LABELS.get(estado)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Cálculo de intervalo
@@ -93,15 +118,18 @@ async def poll_partido(
     api_fixture_id: int,
     jornada_id: int,
     partido_fecha_utc: datetime | None,
+    prev_estado: str | None = None,
 ) -> dict:
     """
     Consulta la API para un partido específico y actualiza la BD.
 
     Retorna un resumen: {api_status, estado_interno, changed, error}.
     """
+    contexto = _derive_context(prev_estado)
     result = await client.get_fixture_detail(
         api_fixture_id=api_fixture_id,
         max_calls=config.max_api_calls_dia,
+        contexto=contexto,
     )
 
     now_utc = datetime.now(tz=timezone.utc)

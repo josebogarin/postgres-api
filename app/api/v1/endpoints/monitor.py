@@ -88,7 +88,7 @@ async def monitor_status(current: CurrentUser, db: DBSession) -> dict:
             "disponible":    api_ok,
             "mensaje":       api_msg,
             "calls_hoy":     calls_hoy,
-            "calls_max_dia": sched_status.get("max_calls_dia", 80) if sched else 80,
+            "calls_max_dia": sched_status.get("max_calls_dia", 7500) if sched else 7500,
         },
         "timestamp": datetime.now(tz=timezone.utc).isoformat(),
     }

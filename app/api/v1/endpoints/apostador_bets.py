@@ -30,7 +30,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CurrentUser, BECBUCSession as DBSession
+from app.api.deps import CurrentUser, OptionalCurrentUser, BECBUCSession as DBSession
 from app.db.session import engine as _app_engine
 
 from app.services.bracket_service import (
@@ -45,6 +45,22 @@ from app.services.scoring import registry as scoring_registry
 from app.services.scoring.calculator import ScoringCalculator
 
 router = APIRouter()
+
+# ── Online tracking (in-memory, se resetea al reiniciar servidor) ─────────────
+import time as _time
+
+_ONLINE_TTL = 120  # segundos para considerar "activo"
+
+# {user_id: (timestamp_float, source_str)}  source: "web" | "movil"
+_online_users: dict[int, tuple[float, str]] = {}
+
+
+def _is_online(user_id: int) -> str | None:
+    """Retorna la fuente ('web'|'movil') si el usuario está activo, None si no."""
+    entry = _online_users.get(user_id)
+    if entry and (_time.monotonic() - entry[0]) < _ONLINE_TTL:
+        return entry[1]
+    return None
 
 
 # ── Schemas ─────────────────────────────────────────────────────────────────
@@ -168,6 +184,14 @@ async def _audit_log(action: str, resource: str, *, current=None,
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────────
+
+@router.post("/heartbeat", summary="Registra presencia del usuario (online indicator)")
+async def heartbeat(source: str = "web", current_user: OptionalCurrentUser = None):
+    """source: 'web' | 'movil'. TTL = _ONLINE_TTL segundos. Auth opcional."""
+    if current_user is not None:
+        _online_users[current_user.id] = (_time.monotonic(), source)
+    return {"ok": True}
+
 
 @router.get("/partidos/{torneo_id}", summary="Partidos de grupo pendientes de jugar")
 async def partidos_pendientes(torneo_id: int, db: DBSession) -> list[dict]:
@@ -384,6 +408,22 @@ async def resetear_apuestas(torneo_id: int, current: CurrentUser, db: DBSession)
         {"uid": uid, "tid": tid},
     )
 
+    # 5. Borrar ítems de auditoría del usuario (partido + global)
+    try:
+        await db.execute(
+            text(f"""
+                DELETE FROM puntaje_item
+                WHERE apostador_id = :uid
+                  AND (
+                    partido_id IN ({partido_ids_subq})
+                    OR (torneo_id = :tid AND partido_id IS NULL)
+                  )
+            """),
+            {"uid": uid, "tid": tid},
+        )
+    except Exception:
+        pass  # tabla puede no existir aún
+
     await db.commit()
     return {"ok": True, "actualizadas": r.rowcount}
 
@@ -442,6 +482,7 @@ async def grupos_standings(torneo_id: int, db: DBSession) -> list[dict]:
                     COALESCE(p.decisiones_var, NULL)     AS decisiones_var,
                     COALESCE(p.minuto_primer_gol, NULL)  AS minuto_primer_gol,
                     COALESCE(p.rojas, NULL)              AS rojas,
+                    COALESCE(p.penales_partido, NULL)    AS penales_partido,
                     p.minuto_actual,
                     el.nombre    AS local_nombre,
                     el.nombre_es AS local_nombre_es,
@@ -588,74 +629,128 @@ async def mi_bracket(
 
 @router.get("/stats/{torneo_id}", summary="Estadísticas generales del torneo (para KPIs extra)")
 async def stats_torneo(torneo_id: int, db: DBSession) -> dict:
-    """Devuelve stats que requieren cruce de DBs: total apostadores, líder, último."""
+    """
+    KPIs rápidos del torneo:
+    - total_apostadores, con_apuestas, total_pronosticos
+    - pts_lider, pts_ultimo, lider_nombre, ultimo_nombre
+    - fase_activa, pts_max_fase (puntos posibles en fase activa)
+    """
     total_apostadores = 0
-    lider_nombre = "—"
-    ultimo_nombre = "—"
-    lider_pts = 0
-    ultimo_pts = 0
+    user_map: dict[int, str] = {}
 
-    # Total apostadores registrados (app_db)
     async with _app_engine.connect() as conn:
         r = await conn.execute(text("""
-            SELECT COUNT(*) FROM users u
+            SELECT u.id, u.username FROM users u
             JOIN user_roles ur ON ur.user_id = u.id
             JOIN roles ro ON ro.id = ur.role_id
             WHERE ro.name = 'apostador' AND u.is_active = TRUE
         """))
-        total_apostadores = r.scalar() or 0
+        for row in r:
+            user_map[row[0]] = row[1]
+        total_apostadores = len(user_map)
 
-    # Ranking para líder y último (becbuc)
+    # Ranking usando puntaje_detalle + puntaje_global
     try:
         rq = await db.execute(
             text("""
-                SELECT a.apostador_id,
-                    COALESCE(SUM(a.puntos), 0) AS total
-                FROM apuesta a
-                JOIN partido p ON p.id = a.partido_id
-                WHERE p.torneo_id = :tid
-                GROUP BY a.apostador_id
-                ORDER BY total DESC
+                SELECT
+                    pd.apostador_id,
+                    COALESCE(SUM(pd.pts_resultado),0) + COALESCE(SUM(pd.pts_marcador),0) +
+                    COALESCE(SUM(pd.pts_amarillas),0) + COALESCE(SUM(pd.pts_rojas),0) +
+                    COALESCE(SUM(pd.pts_var),0)       + COALESCE(SUM(pd.pts_minuto),0) +
+                    COALESCE(SUM(pd.pts_penales_partido),0) + COALESCE(SUM(pd.pts_penales_tanda),0)
+                        AS pts_partidos
+                FROM puntaje_detalle pd
+                WHERE pd.torneo_id = :tid
+                GROUP BY pd.apostador_id
             """),
             {"tid": torneo_id}
         )
-        ranking_rows = [(row[0], row[1]) for row in rq]
+        pts_map = {row[0]: int(row[1] or 0) for row in rq}
     except Exception:
         await db.rollback()
-        try:
-            rq = await db.execute(
-                text("""
-                    SELECT a.apostador_id, COALESCE(SUM(a.puntos), 0) AS total
-                    FROM apuesta a
-                    JOIN partido p ON p.id = a.partido_id
-                    WHERE p.torneo_id = :tid
-                    GROUP BY a.apostador_id ORDER BY total DESC
-                """),
-                {"tid": torneo_id}
-            )
-            ranking_rows = [(row[0], row[1]) for row in rq]
-        except Exception:
-            ranking_rows = []
+        pts_map = {}
 
-    if ranking_rows:
-        lider_id,  lider_pts  = ranking_rows[0]
-        ultimo_id, ultimo_pts = ranking_rows[-1]
-        ids = list({lider_id, ultimo_id})
-        async with _app_engine.connect() as conn:
-            ur = await conn.execute(
-                text("SELECT id, username FROM users WHERE id = ANY(:ids)"),
-                {"ids": ids}
-            )
-            user_map = {row[0]: row[1] for row in ur}
-        lider_nombre  = user_map.get(lider_id,  f"#{lider_id}")
-        ultimo_nombre = user_map.get(ultimo_id, f"#{ultimo_id}")
+    # Globales
+    try:
+        gq = await db.execute(
+            text("SELECT apostador_id, pts_total FROM puntaje_global WHERE torneo_id = :tid"),
+            {"tid": torneo_id}
+        )
+        for row in gq:
+            pts_map[row[0]] = pts_map.get(row[0], 0) + int(row[1] or 0)
+    except Exception:
+        await db.rollback()
+
+    # Total pronósticos guardados (apuestas con al menos un score)
+    try:
+        tq = await db.execute(
+            text("""
+                SELECT COUNT(*) FROM apuesta a
+                JOIN partido p ON p.id = a.partido_id
+                WHERE p.torneo_id = :tid
+                  AND (a.pred_local IS NOT NULL OR a.pred_visitante IS NOT NULL)
+            """),
+            {"tid": torneo_id}
+        )
+        total_pronosticos = int(tq.scalar() or 0)
+    except Exception:
+        await db.rollback()
+        total_pronosticos = 0
+
+    # Con apuestas = apostadores que tienen al menos 1 pronóstico
+    try:
+        cq = await db.execute(
+            text("""
+                SELECT COUNT(DISTINCT a.apostador_id) FROM apuesta a
+                JOIN partido p ON p.id = a.partido_id
+                WHERE p.torneo_id = :tid
+                  AND (a.pred_local IS NOT NULL OR a.pred_visitante IS NOT NULL)
+            """),
+            {"tid": torneo_id}
+        )
+        con_apuestas = int(cq.scalar() or 0)
+    except Exception:
+        await db.rollback()
+        con_apuestas = 0
+
+    # Lider / último
+    lider_nombre, lider_pts, ultimo_nombre, ultimo_pts = "—", 0, "—", 0
+    if pts_map:
+        sorted_pts = sorted(pts_map.items(), key=lambda x: -x[1])
+        lid_id, lider_pts   = sorted_pts[0]
+        ult_id, ultimo_pts  = sorted_pts[-1]
+        lider_nombre  = user_map.get(lid_id,  f"#{lid_id}")
+        ultimo_nombre = user_map.get(ult_id,  f"#{ult_id}")
+
+    # Fase activa (nombre de la próxima fase con partidos pendientes)
+    try:
+        fq = await db.execute(
+            text("""
+                SELECT f.nombre, f.tipo FROM fase f
+                JOIN partido p ON p.fase_id = f.id
+                WHERE f.torneo_id = :tid AND p.estado != 'finalizado'
+                ORDER BY p.fecha NULLS LAST
+                LIMIT 1
+            """),
+            {"tid": torneo_id}
+        )
+        fr = fq.first()
+        fase_activa = fr[0] if fr else "—"
+    except Exception:
+        await db.rollback()
+        fase_activa = "—"
 
     return {
-        "total_apostadores": total_apostadores,
-        "lider_nombre":      lider_nombre,
-        "lider_pts":         int(lider_pts),
-        "ultimo_nombre":     ultimo_nombre,
-        "ultimo_pts":        int(ultimo_pts),
+        "total_apostadores":  total_apostadores,
+        "con_apuestas":       con_apuestas,
+        "sin_apuestas":       max(0, total_apostadores - con_apuestas),
+        "total_pronosticos":  total_pronosticos,
+        "lider_nombre":       lider_nombre,
+        "lider_pts":          lider_pts,
+        "ultimo_nombre":      ultimo_nombre,
+        "ultimo_pts":         ultimo_pts,
+        "fase_activa":        fase_activa,
     }
 
 
@@ -740,6 +835,7 @@ async def mis_partidos(torneo_id: int, current: CurrentUser, db: DBSession) -> l
             JOIN equipo  ev ON ev.id = p.equipo_visitante_id
             LEFT JOIN apuesta a ON a.partido_id = p.id AND a.apostador_id = :uid
             LEFT JOIN puntaje_detalle pd ON pd.partido_id = p.id AND pd.apostador_id = :uid
+            LEFT JOIN monitor_partido_estado mpe ON mpe.partido_id = p.id
             WHERE p.torneo_id = :tid
             ORDER BY f.orden, p.jornada NULLS LAST, p.fecha NULLS LAST, p.id
         """
@@ -771,6 +867,449 @@ async def mis_partidos(torneo_id: int, current: CurrentUser, db: DBSession) -> l
     return rows
 
 
+@router.get("/puntaje-items/{torneo_id}", summary="Auditoría granular: una fila por ítem de puntuación (H-P partido, A-G global)")
+async def get_puntaje_items(
+    torneo_id: int,
+    partido_id: int | None = None,
+    apostador_id: int | None = None,
+    categoria: str | None = None,   # 'partido' | 'global'
+    item: str | None = None,         # H-P o A-G
+    current: CurrentUser = None,
+    db: DBSession = None,
+) -> list[dict]:
+    """
+    Devuelve los ítems de auditoría de puntaje.
+    - Apostadores: ven solo sus propios ítems.
+    - Admin: pueden filtrar por apostador_id (o ver todos si omiten el filtro).
+    Filtros opcionales: partido_id, categoria ('partido'/'global'), item ('H'-'P'/'A'-'G').
+    """
+    from fastapi import Query
+    is_admin = await _check_admin(current)
+    uid = apostador_id if (is_admin and apostador_id) else current.id
+
+    conditions = ["pi.torneo_id = :tid"]
+    params: dict = {"tid": torneo_id}
+
+    if not is_admin:
+        # Usuario normal solo ve sus propios datos
+        conditions.append("pi.apostador_id = :uid")
+        params["uid"] = current.id
+    elif apostador_id:
+        conditions.append("pi.apostador_id = :uid")
+        params["uid"] = apostador_id
+
+    if partido_id is not None:
+        conditions.append("pi.partido_id = :pid")
+        params["pid"] = partido_id
+
+    if categoria:
+        conditions.append("pi.categoria = :cat")
+        params["cat"] = categoria
+
+    if item:
+        conditions.append("pi.item = :item")
+        params["item"] = item.upper()
+
+    where = " AND ".join(conditions)
+    try:
+        r = await db.execute(
+            text(f"""
+                SELECT pi.id, pi.torneo_id, pi.partido_id, pi.apostador_id,
+                       pi.categoria, pi.item,
+                       pi.fase_tipo, pi.fase_nombre, pi.fecha_partido,
+                       pi.local_nombre, pi.visit_nombre,
+                       pi.resultado, pi.apuesta, pi.puntaje, pi.multiplicador,
+                       pi.updated_at
+                FROM puntaje_item pi
+                WHERE {where}
+                ORDER BY pi.apostador_id, pi.partido_id NULLS LAST, pi.item
+            """),
+            params,
+        )
+        return [dict(row) for row in r.mappings()]
+    except Exception as e:
+        raise HTTPException(500, f"Error al leer puntaje_item: {e}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GET /bets/ranking-partido/{torneo_id}?partido_id=N
+# Ranking de apostadores para un partido específico (desde puntaje_detalle).
+# ─────────────────────────────────────────────────────────────────────────────
+@router.get("/ranking-partido/{torneo_id}")
+async def ranking_partido(torneo_id: int, partido_id: int, db: DBSession) -> list[dict]:
+    """Ranking de apostadores para un partido concreto usando puntaje_detalle."""
+    try:
+        r = await db.execute(
+            text("""
+                SELECT
+                    pd.apostador_id,
+                    pd.pts_resultado,
+                    pd.pts_marcador,
+                    COALESCE(pd.pts_amarillas,       0)::int AS pts_amarillas,
+                    COALESCE(pd.pts_rojas,           0)::int AS pts_rojas,
+                    COALESCE(pd.pts_var,             0)::int AS pts_var,
+                    COALESCE(pd.pts_minuto,          0)::int AS pts_minuto,
+                    COALESCE(pd.pts_penales_tanda,   0)::int AS pts_penales_tanda,
+                    COALESCE(pd.pts_equipo,          0)::int AS pts_equipo,
+                    pd.pts_total,
+                    a.pred_local,
+                    a.pred_visitante,
+                    a.pred_amarillas      AS ap_amarillas,
+                    a.pred_rojas          AS ap_rojas,
+                    a.pred_var            AS ap_var,
+                    a.pred_minuto_gol     AS ap_minuto,
+                    p.goles_local,
+                    p.goles_visitante,
+                    p.amarillas           AS real_amarillas,
+                    p.decisiones_var      AS real_var,
+                    p.minuto_primer_gol   AS real_minuto,
+                    el.nombre             AS equipo_local,
+                    ev.nombre             AS equipo_visitante
+                FROM puntaje_detalle pd
+                JOIN apuesta a  ON a.apostador_id = pd.apostador_id AND a.partido_id = pd.partido_id
+                JOIN partido p  ON p.id = pd.partido_id
+                LEFT JOIN equipo el ON el.id = p.equipo_local_id
+                LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+                WHERE pd.torneo_id = :tid AND pd.partido_id = :pid
+                ORDER BY pd.pts_total DESC, pd.apostador_id
+            """),
+            {"tid": torneo_id, "pid": partido_id},
+        )
+        rows = [dict(row) for row in r.mappings()]
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(500, f"Error ranking-partido: {e}")
+
+    if not rows:
+        return []
+
+    # Resolver nombres de usuario desde app_db
+    ids = [row["apostador_id"] for row in rows]
+    async with _app_engine.connect() as conn:
+        ur = await conn.execute(
+            text("SELECT id, username FROM users WHERE id = ANY(:ids)"),
+            {"ids": ids},
+        )
+        user_map = {row["id"]: row["username"] for row in ur.mappings()}
+
+    for i, row in enumerate(rows):
+        row["nombre"]   = user_map.get(row["apostador_id"], f"Usuario {row['apostador_id']}")
+        row["posicion"] = i + 1
+
+    return rows
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GET /bets/ranking-detalle/{torneo_id}
+# Flat apostador×partido data for client-side Excel generation
+# ─────────────────────────────────────────────────────────────────────────────
+@router.get("/ranking-detalle/{torneo_id}", summary="Detalle plano apostador×partido para Excel")
+async def ranking_detalle(torneo_id: int, current: CurrentUser, db: DBSession) -> dict:
+    """Todos los puntajes apostador×partido en formato plano + ranking summary."""
+    try:
+        r = await db.execute(
+            text("""
+                SELECT
+                    pd.partido_id,
+                    pd.apostador_id,
+                    p.goles_local, p.goles_visitante,
+                    COALESCE(el.nombre_es, el.nombre) AS equipo_local,
+                    COALESCE(ev.nombre_es, ev.nombre) AS equipo_visitante,
+                    f.nombre AS fase,
+                    COALESCE(pd.pts_resultado,     0)::int AS pts_resultado,
+                    COALESCE(pd.pts_marcador,      0)::int AS pts_marcador,
+                    COALESCE(pd.pts_amarillas,     0)::int AS pts_amarillas,
+                    COALESCE(pd.pts_rojas,         0)::int AS pts_rojas,
+                    COALESCE(pd.pts_var,           0)::int AS pts_var,
+                    COALESCE(pd.pts_minuto,        0)::int AS pts_minuto,
+                    COALESCE(pd.pts_penales_tanda, 0)::int AS pts_penales_tanda,
+                    COALESCE(pd.pts_total,         0)::int AS pts_total,
+                    a.pred_local, a.pred_visitante
+                FROM puntaje_detalle pd
+                JOIN partido p  ON p.id = pd.partido_id
+                JOIN fase f     ON f.id = p.fase_id
+                LEFT JOIN equipo el ON el.id = p.equipo_local_id
+                LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+                LEFT JOIN apuesta a ON a.apostador_id = pd.apostador_id AND a.partido_id = pd.partido_id
+                WHERE pd.torneo_id = :tid
+                ORDER BY pd.partido_id, pd.apostador_id
+            """),
+            {"tid": torneo_id},
+        )
+        rows = [dict(row) for row in r.mappings()]
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(500, f"Error ranking-detalle: {e}")
+
+    # Resolve apostador names from app_db
+    ids = list({row["apostador_id"] for row in rows})
+    nombre_map: dict = {}
+    if ids:
+        async with _app_engine.connect() as conn:
+            ur = await conn.execute(
+                text("SELECT id, username FROM users WHERE id = ANY(:ids)"),
+                {"ids": ids},
+            )
+            nombre_map = {row["id"]: row["username"] for row in ur.mappings()}
+
+    for row in rows:
+        row["nombre"] = nombre_map.get(row["apostador_id"], f"Usuario {row['apostador_id']}")
+
+    return {"detalle": rows}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GET /bets/live-analytics/{partido_id}
+# Analytics en tiempo real: apostadores agrupados por pronóstico + items H-O
+# ─────────────────────────────────────────────────────────────────────────────
+@router.get("/live-analytics/{partido_id}", summary="Analytics en vivo de un partido")
+async def live_analytics(
+    partido_id: int,
+    db:          DBSession,
+    current:     CurrentUser,
+) -> dict:
+    """
+    Retorna grupos de apostadores por pronóstico de marcador + análisis por ítem.
+    Visible para todos los usuarios autenticados.
+    """
+    # ── Partido ──────────────────────────────────────────────────────────────
+    r = await db.execute(text("""
+        SELECT p.id, p.estado,
+               p.goles_local, p.goles_visitante,
+               p.minuto_actual,
+               COALESCE(p.amarillas,      0) AS amarillas,
+               COALESCE(p.decisiones_var, 0) AS decisiones_var,
+               COALESCE(p.rojas,          0) AS rojas,
+               p.minuto_primer_gol,
+               p.penales_local,
+               p.penales_visitante,
+               el.nombre     AS nombre_local,
+               el.nombre_es  AS nombre_local_es,
+               COALESCE(el.codigo_iso,'') AS local_iso,
+               el.logo_url   AS local_logo,
+               ev.nombre     AS nombre_visitante,
+               ev.nombre_es  AS nombre_visitante_es,
+               COALESCE(ev.codigo_iso,'') AS visita_iso,
+               ev.logo_url   AS visita_logo,
+               f.tipo        AS fase_tipo,
+               f.nombre      AS fase_nombre
+        FROM partido p
+        JOIN equipo el ON el.id = p.equipo_local_id
+        JOIN equipo ev ON ev.id = p.equipo_visitante_id
+        JOIN fase   f  ON f.id  = p.fase_id
+        WHERE p.id = :pid
+    """), {"pid": partido_id})
+    row = r.mappings().first()
+    if not row:
+        raise HTTPException(404, "Partido no encontrado")
+    partido = dict(row)
+
+    # ── Apuestas del partido ─────────────────────────────────────────────────
+    ra = await db.execute(text("""
+        SELECT a.apostador_id,
+               a.pred_local, a.pred_visitante,
+               a.pred_amarillas,
+               a.pred_var,
+               a.pred_minuto_gol,
+               a.pred_rojas,
+               a.pred_penales_local_tanda,
+               a.pred_penales_visitante_tanda
+        FROM apuesta a
+        WHERE a.partido_id = :pid
+          AND a.pred_local IS NOT NULL
+    """), {"pid": partido_id})
+    apuestas_raw = [dict(r) for r in ra.mappings()]
+
+    if not apuestas_raw:
+        return {
+            "partido":           dict(partido),
+            "total_apostadores": 0,
+            "grupos_marcador":   [],
+            "items":             [],
+        }
+
+    # ── Nombres desde app_db ─────────────────────────────────────────────────
+    ids = [a["apostador_id"] for a in apuestas_raw]
+    async with _app_engine.connect() as conn:
+        ur = await conn.execute(
+            text("SELECT id, username FROM users WHERE id = ANY(:ids)"),
+            {"ids": ids},
+        )
+        user_map = {row["id"]: row["username"] for row in ur.mappings()}
+    for a in apuestas_raw:
+        a["nombre"] = user_map.get(a["apostador_id"], f"#{a['apostador_id']}")
+
+    # ── Grupos por marcador ──────────────────────────────────────────────────
+    gl = partido["goles_local"]
+    gv = partido["goles_visitante"]
+    hay_score = gl is not None and gv is not None
+
+    def _res(lo, vi):
+        if lo > vi:  return "local"
+        if vi > lo:  return "visitante"
+        return "empate"
+
+    grupos: dict[tuple, list] = {}
+    for a in apuestas_raw:
+        grupos.setdefault((a["pred_local"], a["pred_visitante"]), []).append(a)
+
+    grupos_marcador = []
+    for (pl, pv), aps in grupos.items():
+        es_exacto    = hay_score and pl == gl and pv == gv
+        es_resultado = hay_score and _res(pl, pv) == _res(gl, gv)
+        grupos_marcador.append({
+            "marcador":       f"{pl}–{pv}",
+            "pred_local":     pl,
+            "pred_visitante": pv,
+            "es_exacto":      es_exacto,
+            "es_resultado":   es_resultado,
+            "apostadores":    [{"id": a["apostador_id"], "nombre": a["nombre"]} for a in aps],
+            "count":          len(aps),
+        })
+    grupos_marcador.sort(key=lambda g: (not g["es_exacto"], not g["es_resultado"], -g["count"]))
+
+    # ── Items ────────────────────────────────────────────────────────────────
+    items = []
+    total = len(apuestas_raw)
+
+    def _chip(a):
+        return {"id": a["apostador_id"], "nombre": a["nombre"]}
+
+    # H — Resultado
+    if hay_score:
+        rr = _res(gl, gv)
+        ok = [a for a in apuestas_raw if _res(a["pred_local"], a["pred_visitante"]) == rr]
+        no = [a for a in apuestas_raw if _res(a["pred_local"], a["pred_visitante"]) != rr]
+        items.append({"codigo": "H", "label": "Resultado", "real": rr,
+                      "aciertos": [_chip(a) for a in ok],
+                      "otros": [{**_chip(a), "pred": f"{a['pred_local']}–{a['pred_visitante']}"} for a in no],
+                      "total": total})
+
+    # I — Marcador exacto
+    if hay_score:
+        ok = [a for a in apuestas_raw if a["pred_local"] == gl and a["pred_visitante"] == gv]
+        no = [a for a in apuestas_raw if not (a["pred_local"] == gl and a["pred_visitante"] == gv)]
+        items.append({"codigo": "I", "label": "Marcador exacto", "real": f"{gl}–{gv}",
+                      "aciertos": [_chip(a) for a in ok],
+                      "otros": [{**_chip(a), "pred": f"{a['pred_local']}–{a['pred_visitante']}"} for a in no],
+                      "total": total})
+
+    # J — Amarillas
+    am = partido["amarillas"]
+    with_pred = [a for a in apuestas_raw if a["pred_amarillas"] is not None]
+    ok = [a for a in with_pred if a["pred_amarillas"] == am]
+    no = [a for a in with_pred if a["pred_amarillas"] != am]
+    sp = [a for a in apuestas_raw if a["pred_amarillas"] is None]
+    items.append({"codigo": "J", "label": "Amarillas", "real": am,
+                  "aciertos": [_chip(a) for a in ok],
+                  "otros": [{**_chip(a), "pred": a["pred_amarillas"]} for a in no],
+                  "sin_pred": [_chip(a) for a in sp], "total": total})
+
+    # K — Rojas
+    ro = partido["rojas"]
+    with_pred = [a for a in apuestas_raw if a["pred_rojas"] is not None]
+    ok = [a for a in with_pred if a["pred_rojas"] == ro]
+    no = [a for a in with_pred if a["pred_rojas"] != ro]
+    sp = [a for a in apuestas_raw if a["pred_rojas"] is None]
+    items.append({"codigo": "K", "label": "Tarjetas rojas", "real": ro,
+                  "aciertos": [_chip(a) for a in ok],
+                  "otros": [{**_chip(a), "pred": a["pred_rojas"]} for a in no],
+                  "sin_pred": [_chip(a) for a in sp], "total": total})
+
+    # L — VAR
+    var = partido["decisiones_var"]
+    with_pred = [a for a in apuestas_raw if a["pred_var"] is not None]
+    ok = [a for a in with_pred if a["pred_var"] == var]
+    no = [a for a in with_pred if a["pred_var"] != var]
+    sp = [a for a in apuestas_raw if a["pred_var"] is None]
+    items.append({"codigo": "L", "label": "Decisiones VAR", "real": var,
+                  "aciertos": [_chip(a) for a in ok],
+                  "otros": [{**_chip(a), "pred": a["pred_var"]} for a in no],
+                  "sin_pred": [_chip(a) for a in sp], "total": total})
+
+    # N — Minuto primer gol
+    mg = partido["minuto_primer_gol"]
+    if mg is not None:
+        with_pred = [a for a in apuestas_raw if a["pred_minuto_gol"] is not None]
+        ranking_n = sorted(with_pred, key=lambda a: abs(a["pred_minuto_gol"] - mg))
+        sp = [a for a in apuestas_raw if a["pred_minuto_gol"] is None]
+        items.append({"codigo": "N", "label": "Minuto primer gol", "real": mg,
+                      "ranking": [{**_chip(a), "pred": a["pred_minuto_gol"],
+                                   "diff": abs(a["pred_minuto_gol"] - mg)} for a in ranking_n],
+                      "sin_pred": [_chip(a) for a in sp], "total": total})
+
+    # O — Tanda de penales (solo si hubo)
+    pl_t = partido["penales_local"]
+    pv_t = partido["penales_visitante"]
+    if pl_t is not None and pv_t is not None:
+        with_pred = [a for a in apuestas_raw
+                     if a["pred_penales_local_tanda"] is not None
+                     and a["pred_penales_visitante_tanda"] is not None]
+        ok = [a for a in with_pred
+              if a["pred_penales_local_tanda"] == pl_t and a["pred_penales_visitante_tanda"] == pv_t]
+        no = [a for a in with_pred
+              if not (a["pred_penales_local_tanda"] == pl_t and a["pred_penales_visitante_tanda"] == pv_t)]
+        sp = [a for a in apuestas_raw
+              if a["pred_penales_local_tanda"] is None or a["pred_penales_visitante_tanda"] is None]
+        items.append({"codigo": "O", "label": "Tanda de penales", "real": f"{pl_t}–{pv_t}",
+                      "aciertos": [_chip(a) for a in ok],
+                      "otros": [{**_chip(a),
+                                  "pred": f"{a['pred_penales_local_tanda']}–{a['pred_penales_visitante_tanda']}"}
+                                 for a in no],
+                      "sin_pred": [_chip(a) for a in sp], "total": total})
+
+    return {
+        "partido":           dict(partido),
+        "total_apostadores": total,
+        "grupos_marcador":   grupos_marcador,
+        "items":             items,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GET /bets/partidos-finalizados/{torneo_id}
+# Lista de partidos finalizados con su numero de orden (para selector de UI).
+# ─────────────────────────────────────────────────────────────────────────────
+@router.get("/partidos-finalizados/{torneo_id}")
+async def partidos_finalizados(torneo_id: int, db: DBSession) -> list[dict]:
+    """Devuelve los partidos finalizados del torneo con su número de orden (ROW_NUMBER)."""
+    try:
+        r = await db.execute(
+            text("""
+                WITH numerados AS (
+                    SELECT
+                        p.id,
+                        ROW_NUMBER() OVER (ORDER BY f.orden, p.id) AS numero,
+                        COALESCE(el.nombre_es, el.nombre) AS equipo_local,
+                        COALESCE(ev.nombre_es, ev.nombre) AS equipo_visitante,
+                        el.logo_url AS local_logo,
+                        ev.logo_url AS visit_logo,
+                        p.goles_local,
+                        p.goles_visitante,
+                        p.amarillas,
+                        p.rojas,
+                        p.decisiones_var,
+                        p.penales_partido,
+                        f.nombre   AS fase,
+                        p.estado
+                    FROM partido p
+                    JOIN fase f ON f.id = p.fase_id
+                    LEFT JOIN equipo el ON el.id = p.equipo_local_id
+                    LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+                    WHERE f.torneo_id = :tid
+                )
+                SELECT * FROM numerados
+                WHERE estado = 'finalizado'
+                ORDER BY numero
+            """),
+            {"tid": torneo_id},
+        )
+        return [dict(row) for row in r.mappings()]
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(500, f"Error partidos-finalizados: {e}")
+
+
 @router.get("/ranking/{torneo_id}", summary="Ranking de apostadores en el torneo con desglose por categoría")
 async def ranking(torneo_id: int, db: DBSession) -> list[dict]:
     _sql_base = """
@@ -780,7 +1319,7 @@ async def ranking(torneo_id: int, db: DBSession) -> list[dict]:
             COALESCE(SUM(a.puntos_bonus),  0)::int AS puntos_bonus_partido,
             (COALESCE(SUM(a.puntos),0)
              + COALESCE(SUM(a.puntos_bonus),0))::int AS puntos_partidos_total,
-            COUNT(a.id)::int                       AS apuestas_total,
+            COUNT(CASE WHEN p.estado='finalizado' THEN a.id END)::int AS apuestas_total,
             SUM(CASE WHEN p.estado='finalizado' AND a.puntos>0 AND a.puntos%3=0  THEN 1 ELSE 0 END)::int AS plenos,
             SUM(CASE WHEN p.estado='finalizado' AND a.puntos>0 AND a.puntos%3<>0 THEN 1 ELSE 0 END)::int AS aciertos,
             SUM(CASE WHEN p.estado='finalizado' AND a.puntos=0  THEN 1 ELSE 0 END)::int AS fallos,
@@ -883,6 +1422,8 @@ async def ranking(torneo_id: int, db: DBSession) -> list[dict]:
         # Merge per-category breakdown
         cats = cat_pts.get(uid, _ZERO_CATS)
         row.update({k: cats.get(k, 0) for k in _ZERO_CATS})
+        # Online status
+        row["online_source"] = _is_online(uid)
 
     rows.sort(key=lambda r: (-(r.get("puntos_total") or 0),
                              -(r.get("apuestas_total") or 0),
@@ -941,10 +1482,22 @@ async def _reset_puntajes_todos(db: AsyncSession, torneo_id: int) -> dict:
         log.warning("reset_puntajes.global_skip", error=str(_e))
         # NO rollback
 
+    # 4. Borrar puntaje_item completo del torneo
+    items_borradas = 0
+    try:
+        r_i = await db.execute(
+            text("DELETE FROM puntaje_item WHERE torneo_id = :tid"),
+            {"tid": torneo_id},
+        )
+        items_borradas = r_i.rowcount or 0
+    except Exception as _e:
+        log.warning("reset_puntajes.items_skip", error=str(_e))
+
     return {
         "apuestas_zeroed":  apuestas_zeroed,
         "detalle_borradas": detalle_borradas,
         "global_borradas":  global_borradas,
+        "items_borradas":   items_borradas,
     }
 
 
@@ -1296,6 +1849,19 @@ async def reset_torneo(torneo_id: int, current: CurrentUser, db: DBSession) -> d
     # 5) Borrar pronósticos globales A-G y sus puntajes
     await db.execute(text("DELETE FROM apuesta_global WHERE torneo_id=:tid"), {"tid": torneo_id})
     await db.execute(text("DELETE FROM puntaje_global  WHERE torneo_id=:tid"), {"tid": torneo_id})
+
+    # 5b) Borrar puntaje_item (partido vía partido_id IN subq + globales vía torneo_id)
+    try:
+        await db.execute(
+            text(f"DELETE FROM puntaje_item WHERE partido_id IN ({part_subq})"),
+            {"tid": torneo_id},
+        )
+        await db.execute(
+            text("DELETE FROM puntaje_item WHERE torneo_id=:tid AND partido_id IS NULL"),
+            {"tid": torneo_id},
+        )
+    except Exception:
+        pass  # tabla puede no existir aún
 
     # 6) Resetear bracket KO a TBD
     try:
@@ -1979,6 +2545,7 @@ async def partidos_en_vivo(torneo_id: int, current: CurrentUser, db: DBSession) 
                 p.goles_local, p.goles_visitante,
                 p.penales_local, p.penales_visitante,
                 p.amarillas, p.rojas, p.decisiones_var,
+                p.penales_partido,
                 p.minuto_primer_gol,
                 p.minuto_actual,
                 COALESCE(el.nombre_es, el.nombre) AS local_nombre,
@@ -1989,10 +2556,14 @@ async def partidos_en_vivo(torneo_id: int, current: CurrentUser, db: DBSession) 
                 f.tipo       AS fase_tipo,
                 p.eventos_api::text      AS eventos_api_raw,
                 p.estadisticas_api::text AS estadisticas_api_raw,
+                -- estado del monitor (para detectar HT / descanso)
+                mpe.estado_interno AS estado_monitor,
+                mpe.api_status_raw,
                 -- predicción del apostador actual
                 ap.pred_local, ap.pred_visitante,
                 ap.pred_penales_local_tanda, ap.pred_penales_visitante_tanda,
                 ap.pred_amarillas, ap.pred_rojas, ap.pred_var, ap.pred_minuto_gol,
+                ap.pred_penales_partido,
                 -- puntaje calculado para este partido
                 pd.pts_resultado, pd.pts_marcador,
                 pd.pts_amarillas, pd.pts_rojas, pd.pts_var, pd.pts_minuto,
@@ -2007,11 +2578,14 @@ async def partidos_en_vivo(torneo_id: int, current: CurrentUser, db: DBSession) 
             LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
             LEFT JOIN apuesta ap ON ap.partido_id = p.id AND ap.apostador_id = :uid
             LEFT JOIN puntaje_detalle pd ON pd.partido_id = p.id AND pd.apostador_id = :uid
+            LEFT JOIN monitor_partido_estado mpe ON mpe.partido_id = p.id
             WHERE p.torneo_id = :tid
               AND p.fecha IS NOT NULL
               AND (
                   p.estado = 'en_juego'
-                  OR DATE(p.fecha AT TIME ZONE 'UTC') = CURRENT_DATE
+                  OR (p.estado != 'finalizado'
+                      AND p.fecha BETWEEN (NOW() AT TIME ZONE 'UTC') - INTERVAL '4 hours'
+                                      AND (NOW() AT TIME ZONE 'UTC') + INTERVAL '20 hours')
                   OR (p.estado = 'finalizado'
                       AND p.fecha >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '3 hours')
               )
@@ -2597,6 +3171,46 @@ async def calcular_puntajes(torneo_id: int, current: CurrentUser, db: DBSession)
         except Exception:
             pass  # ADD COLUMN IF NOT EXISTS no debería fallar; no corromper la sesión
 
+    # ── Crear tabla puntaje_item si no existe (idempotente) ──────────────────
+    for ddl in [
+        """
+        CREATE TABLE IF NOT EXISTS puntaje_item (
+            id           SERIAL PRIMARY KEY,
+            torneo_id    INT         NOT NULL,
+            partido_id   INT,
+            apostador_id INT         NOT NULL,
+            categoria    VARCHAR(10) NOT NULL,
+            item         VARCHAR(2)  NOT NULL,
+            fase_tipo    VARCHAR(30),
+            fase_nombre  VARCHAR(80),
+            fecha_partido TIMESTAMPTZ,
+            local_nombre VARCHAR(100),
+            visit_nombre VARCHAR(100),
+            resultado    TEXT,
+            apuesta      TEXT,
+            puntaje      INT  NOT NULL DEFAULT 0,
+            multiplicador INT NOT NULL DEFAULT 1,
+            updated_at   TIMESTAMPTZ DEFAULT NOW()
+        )
+        """,
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_puntaje_item_partido
+            ON puntaje_item (partido_id, apostador_id, item)
+            WHERE partido_id IS NOT NULL
+        """,
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_puntaje_item_global
+            ON puntaje_item (torneo_id, apostador_id, item)
+            WHERE partido_id IS NULL
+        """,
+        "CREATE INDEX IF NOT EXISTS idx_puntaje_item_torneo ON puntaje_item (torneo_id)",
+        "CREATE INDEX IF NOT EXISTS idx_puntaje_item_apostador ON puntaje_item (torneo_id, apostador_id)",
+    ]:
+        try:
+            await db.execute(text(ddl))
+        except Exception:
+            pass
+
     # ── Resolver engine según competicion.codigo del torneo ──────────────────
     r_torneo = await db.execute(
         text("""
@@ -2657,6 +3271,8 @@ async def sync_resultados(
     force: bool = False,
     max_detalle: int = 10,
     reset_resultados: bool = False,
+    resync_ayer: bool = False,
+    resync_fecha: str | None = None,
 ) -> dict:
     """
     Cadena completa automática:
@@ -2671,6 +3287,8 @@ async def sync_resultados(
       max_detalle=N         → máximo de peticiones individuales por run (default 10).
       reset_resultados=true → resetea scores, puntajes y bracket antes de sincronizar.
                               Útil para borrar datos de prueba al iniciar la competencia real.
+      resync_ayer=true      → re-sincroniza solo los partidos de ayer (penales, tarjetas, etc.)
+      resync_fecha=YYYY-MM-DD → re-sincroniza partidos de esa fecha específica.
     """
     if not await _check_admin(current):
         raise HTTPException(403, "Se requiere rol admin o superadmin")
@@ -2716,10 +3334,25 @@ async def sync_resultados(
         reset_summary = {"reset_resultados": True, **reset_pts}
 
     from app.services.sync_api_football import sync_torneo
+    from datetime import date as _date, timedelta as _td
+
+    # ── Resolver fecha_filtro (resync_ayer / resync_fecha) ────────────────────
+    fecha_filtro: "_date | None" = None
+    if resync_ayer:
+        fecha_filtro = (_date.today() - _td(days=1))
+    elif resync_fecha:
+        try:
+            fecha_filtro = _date.fromisoformat(resync_fecha)
+        except ValueError:
+            raise HTTPException(400, f"resync_fecha inválido: '{resync_fecha}'. Usar formato YYYY-MM-DD.")
+    if fecha_filtro is not None:
+        force = True  # siempre forzar cuando se filtra por fecha
 
     # ── Paso 1: auto-mapeo + sincronizar resultados con API-Football ──────────
     try:
-        sync_summary = await sync_torneo(db, torneo_id, force=force, max_detalle=max_detalle)
+        sync_summary = await sync_torneo(
+            db, torneo_id, force=force, max_detalle=max_detalle, fecha_filtro=fecha_filtro
+        )
     except ValueError as e:
         raise HTTPException(400, str(e))
 
@@ -2793,6 +3426,7 @@ async def sync_resultados(
             "evento":      "sincronización API-Football",
             "force":       force,
             "reset_resultados": reset_resultados,
+            "fecha_filtro": str(fecha_filtro) if fecha_filtro else None,
             **reset_summary,
             "actualizados": actualizados,
             "api_calls":   sync_summary.get("api_calls", 0),
@@ -2802,12 +3436,13 @@ async def sync_resultados(
     )
 
     return {
-        "ok":          True,
-        "actualizados": actualizados,          # top-level para compat con portal JS
-        "sync":        sync_summary,
-        "bracket_ok":  bracket_ok,
-        "puntajes_ok": puntajes_ok,
-        "puntajes":    puntajes_summary,
+        "ok":           True,
+        "actualizados": actualizados,
+        "sync":         sync_summary,
+        "bracket_ok":   bracket_ok,
+        "puntajes_ok":  puntajes_ok,
+        "puntajes":     puntajes_summary,
+        "fecha_filtro": str(fecha_filtro) if fecha_filtro else None,
     }
 
 
@@ -3419,6 +4054,50 @@ async def _resetear_ko_a_tbd(db, torneo_id: int) -> None:
             )
 
 
+async def _resetear_ko_post_r32(db, torneo_id: int) -> None:
+    """Resetea SOLO las fases KO POSTERIORES a ronda32 (ronda16 en adelante) a TBD.
+    Útil cuando se arma la R32 provisional pero el resto aún no está definido."""
+    tbd = await ko_scoring._tbd_id(db)
+    if tbd is None:
+        return
+
+    r = await db.execute(
+        text("""
+            SELECT p.id
+            FROM partido p
+            JOIN fase f ON f.id = p.fase_id
+            WHERE f.torneo_id = :tid
+              AND f.tipo IN ('ronda16', 'cuartos', 'semis', 'tercer_puesto', 'final')
+        """),
+        {"tid": torneo_id},
+    )
+    for row in r.mappings():
+        await db.execute(
+            text("""
+                UPDATE partido
+                SET equipo_local_id        = :tbd,
+                    equipo_visitante_id     = :tbd,
+                    estado                  = 'programado',
+                    goles_local             = NULL,
+                    goles_visitante         = NULL,
+                    goles_local_prorroga    = NULL,
+                    goles_visitante_prorroga= NULL,
+                    penales_local           = NULL,
+                    penales_visitante       = NULL,
+                    minuto_primer_gol       = NULL,
+                    amarillas               = NULL,
+                    decisiones_var          = NULL,
+                    equipo_clasificado_id   = NULL
+                WHERE id = :pid
+            """),
+            {"tbd": tbd, "pid": row["id"]},
+        )
+        await db.execute(
+            text("UPDATE apuesta SET puntos = 0, puntos_bonus = 0 WHERE partido_id = :pid"),
+            {"pid": row["id"]},
+        )
+
+
 async def _avanzar_bracket(db, torneo_id: int, maps: dict, hasta_tipo: str | None = None):
     """Avanza el bracket real asignando equipos a las fases KO según resultados.
 
@@ -3459,6 +4138,42 @@ async def avanzar_bracket(torneo_id: int, current: CurrentUser, db: DBSession) -
                      resource_id=str(torneo_id),
                      details={"evento": "avance manual del bracket desde resultados"})
     return {"ok": True, "mensaje": "Bracket real actualizado desde resultados"}
+
+
+@router.post("/avanzar-bracket-provisional/{torneo_id}",
+             summary="Arma R32 provisional desde standings actuales + limpia ronda16+ a TBD (admin)")
+async def avanzar_bracket_provisional(torneo_id: int, current: CurrentUser, db: DBSession) -> dict:
+    """Avanza el bracket provisionalmente aunque haya partidos de grupos pendientes.
+    - Calcula standings actuales (parciales si es necesario)
+    - Selecciona mejores terceros provisionales
+    - Llena ronda32 con equipos proyectados
+    - Resetea ronda16 en adelante a 'a definir' (TBD)
+    """
+    if not await _check_admin(current):
+        raise HTTPException(403, "Se requiere rol admin o superadmin")
+
+    maps = await ko_scoring.build_num_maps(db, torneo_id)
+    standings = await _calc_standings_reales(db, torneo_id)
+    r32_fills = 0
+    if standings:
+        mejores, _ = seleccionar_mejores_terceros(standings)
+        r32_fills = await ko_scoring.avanzar_ronda32(db, torneo_id, maps["num2pid"], standings, mejores)
+    # Reset ronda16+ to TBD regardless
+    await _resetear_ko_post_r32(db, torneo_id)
+    await db.commit()
+    await _audit_log("avance:bracket:provisional", "bets", current=current, method="POST",
+                     path=f"/api/v1/bets/avanzar-bracket-provisional/{torneo_id}",
+                     resource_id=str(torneo_id),
+                     details={"evento": "avance provisional R32 con standings actuales",
+                              "r32_fills": r32_fills})
+    grupos_completos = await _grupos_completos(db, torneo_id)
+    return {
+        "ok": True,
+        "grupos_completos": grupos_completos,
+        "r32_fills": r32_fills,
+        "mensaje": f"R32 proyectado ({r32_fills} partidos actualizados). Ronda16+ limpiados a 'a definir'."
+                   + ("" if grupos_completos else " ⚠️ Grupos incompletos — proyección provisional.")
+    }
 
 
 @router.post("/simular-secuencial/{torneo_id}/{fase_id}",
@@ -3747,9 +4462,11 @@ async def _build_auditoria_workbook(db, torneo_id: int):
                    pd.partido_id, pd.multiplicador,
                    pd.pred_local, pd.pred_visitante, pd.real_local, pd.real_visitante,
                    pd.pts_marcador_base, pd.pts_marcador,
+                   COALESCE(pd.pts_resultado, 0)         AS pts_resultado,
                    pd.pts_minuto, pd.pts_amarillas, pd.pts_var,
-                   COALESCE(pd.pts_rojas, 0)         AS pts_rojas,
-                   COALESCE(pd.pts_penales_tanda, 0) AS pts_penales_tanda,
+                   COALESCE(pd.pts_rojas, 0)             AS pts_rojas,
+                   COALESCE(pd.pts_penales_partido, 0)   AS pts_penales_partido,
+                   COALESCE(pd.pts_penales_tanda, 0)     AS pts_penales_tanda,
                    pd.pts_bonus, pd.pts_total,
                    p.jornada,
                    COALESCE(el.nombre_es, el.nombre) AS local_nombre,
@@ -3822,13 +4539,20 @@ async def _build_auditoria_workbook(db, torneo_id: int):
     wb.remove(wb.active)
 
     # ── Hoja 1: Puntaje general ──
-    sub: dict[int, dict] = defaultdict(lambda: {"marc": 0, "bonus": 0})
+    # Columnas: H=resultado, I=marcador exacto, J=amarillas, K=rojas, L=VAR, N=minuto, M=penales partido
+    _CAT_KEYS = ["pts_resultado", "pts_marcador", "pts_amarillas", "pts_rojas",
+                 "pts_var", "pts_minuto", "pts_penales_partido"]
+    sub: dict[int, dict] = defaultdict(lambda: {k: 0 for k in _CAT_KEYS})
     for d in detalle:
         s = sub[d["apostador_id"]]
-        s["marc"]  += (d["pts_marcador"] or 0)
-        s["bonus"] += (d["pts_bonus"] or 0)
-    gen_cols = ["#", "Apostador", "Marcador", "Bonus partido", "Globales", "Total"]
-    gen_w    = [4, 26, 11, 14, 10, 9]
+        for k in _CAT_KEYS:
+            s[k] += (d.get(k) or 0)
+    gen_cols = ["#", "Apostador",
+                "H\nResultado", "I\nExacto", "J\nAmar.", "K\nRojas", "L\nVAR", "N\nMinuto", "M\nPen.P.",
+                "Sub", "Glob", "Total"]
+    gen_w    = [4, 26, 7, 7, 7, 7, 7, 7, 7, 8, 8, 9]
+    TITLE_FILL = PatternFill("solid", start_color="1a2840")
+    HDR_CAT_FONT = Font(name="Calibri", color="94a3b8", bold=True, size=8)
     ws_g = wb.create_sheet("Puntaje general")
     ws_g.sheet_view.showGridLines = False
     for i, w in enumerate(gen_w, start=1):
@@ -3838,21 +4562,40 @@ async def _build_auditoria_workbook(db, torneo_id: int):
         name="Calibri", color="E05020", bold=True, size=13)
     ws_g["A2"] = f"Generado: {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M UTC')}"
     ws_g["A2"].font = Font(name="Calibri", color="888888", size=9)
+    # Leyenda de columnas fila 3
+    leyenda = [
+        "", "",
+        "H=Resultado (gana/pierde/empata)", "I=Marcador exacto", "J=Amarillas exactas",
+        "K=Rojas exactas", "L=Decisiones VAR", "N=Minuto 1er gol", "M=Penales en el partido",
+        "Sub=H+I+J+K+L+N+M", "Glob=A-G globales", "Total=Sub+Glob"
+    ]
+    for col, txt in enumerate(leyenda, start=1):
+        c = ws_g.cell(3, col, txt)
+        c.font = Font(name="Calibri", color="64748b", italic=True, size=7)
+    ws_g.row_dimensions[4].height = 28
     for col, h in enumerate(gen_cols, start=1):
         c = ws_g.cell(4, col, h)
-        c.font = W_FONT; c.fill = HDR_FILL; c.alignment = CENTER; c.border = BORDER
+        c.font = HDR_CAT_FONT if col > 2 else W_FONT
+        c.fill = HDR_FILL; c.alignment = CENTER; c.border = BORDER
+        c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     filas = []
     for uid, nombre in user_map.items():
-        s = sub.get(uid, {"marc": 0, "bonus": 0})
+        s = sub.get(uid, {k: 0 for k in _CAT_KEYS})
         pg = pts_glob_map.get(uid, {})
         globales = pg.get("pts_total") or 0
-        total = s["marc"] + s["bonus"] + globales
-        filas.append((nombre, s["marc"], s["bonus"], globales, total))
+        sub_pts = sum(s[k] for k in _CAT_KEYS)
+        total = sub_pts + globales
+        filas.append((nombre, s, globales, sub_pts, total))
     filas.sort(key=lambda x: (-x[4], x[0].lower()))
-    for idx, f in enumerate(filas, start=1):
+    for idx, (nombre, s, globales, sub_pts, total) in enumerate(filas, start=1):
         ri = idx + 4
-        vals = [idx, f[0], f[1], f[2], f[3], f[4]]
-        fill = TOP_FILL if idx == 1 and f[4] > 0 else (ALT_FILL if ri % 2 == 0 else GRP_FILL)
+        vals = [idx, nombre,
+                s["pts_resultado"] or "", s["pts_marcador"] or "",
+                s["pts_amarillas"] or "", s["pts_rojas"] or "",
+                s["pts_var"] or "", s["pts_minuto"] or "",
+                s["pts_penales_partido"] or "",
+                sub_pts or "", globales or "", total]
+        fill = TOP_FILL if idx == 1 and total > 0 else (ALT_FILL if ri % 2 == 0 else GRP_FILL)
         for col, val in enumerate(vals, start=1):
             c = ws_g.cell(ri, col, val)
             c.font = N_FONT; c.fill = fill; c.border = BORDER
@@ -3866,8 +4609,8 @@ async def _build_auditoria_workbook(db, torneo_id: int):
     fases = [ft for ft in _PHASE_ORDER if ft in por_fase] + \
             [ft for ft in por_fase if ft not in _PHASE_ORDER]
 
-    cols   = ["Apostador", "Pronóstico", "Marcador", "Min", "Amar", "VAR", "Rojas", "P.Tanda", "Bonus", "Total"]
-    cols_w = [26, 11, 10, 6, 6, 6, 6, 7, 8, 8]
+    cols   = ["Apostador", "Pronóstico", "H\nRes.", "I\nExact.", "J\nAmar.", "K\nRojas", "L\nVAR", "N\nMin.", "M\nPen.P.", "O\nP.Tanda", "Total"]
+    cols_w = [26, 11, 7, 7, 7, 7, 7, 7, 7, 8, 8]
     cat_meta = {
         3: ("✅ PLENO — marcador exacto",   PLENO_FILL, PLENO_FONT),
         1: ("➕ GANADOR — acertó resultado", GANA_FILL,  GANA_FONT),
@@ -3916,9 +4659,11 @@ async def _build_auditoria_workbook(db, torneo_id: int):
                 c.font = Font(name="Calibri", color="FFD27F" if mult == 1 else "7EE0A0", bold=True, size=11)
                 c.fill = PART_FILL; c.alignment = LEFT
                 ri += 1
+                ws.row_dimensions[ri].height = 28
                 for col, h in enumerate(cols, start=1):
                     c = ws.cell(ri, col, h)
-                    c.font = W_FONT; c.fill = HDR_FILL; c.alignment = CENTER; c.border = BORDER
+                    c.font = W_FONT; c.fill = HDR_FILL; c.border = BORDER
+                    c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
                 ri += 1
 
                 buckets = {3: [], 1: [], 0: []}
@@ -3941,10 +4686,26 @@ async def _build_auditoria_workbook(db, torneo_id: int):
                         nombre = user_map.get(d["apostador_id"], f"Usuario {d['apostador_id']}")
                         pred = (f"{d['pred_local']}-{d['pred_visitante']}"
                                 if d["pred_local"] is not None else "—")
-                        vals = [nombre, pred, d["pts_marcador"], d.get("pts_minuto"),
-                                d.get("pts_amarillas"), d.get("pts_var"),
-                                d.get("pts_rojas") or None, d.get("pts_penales_tanda") or None,
-                                d["pts_bonus"], d["pts_total"]]
+                        pts_total_row = (
+                            (d.get("pts_resultado") or 0) +
+                            (d.get("pts_marcador") or 0) +
+                            (d.get("pts_amarillas") or 0) +
+                            (d.get("pts_rojas") or 0) +
+                            (d.get("pts_var") or 0) +
+                            (d.get("pts_minuto") or 0) +
+                            (d.get("pts_penales_partido") or 0) +
+                            (d.get("pts_penales_tanda") or 0)
+                        )
+                        vals = [nombre, pred,
+                                d.get("pts_resultado") or None,
+                                d.get("pts_marcador") or None,
+                                d.get("pts_amarillas") or None,
+                                d.get("pts_rojas") or None,
+                                d.get("pts_var") or None,
+                                d.get("pts_minuto") or None,
+                                d.get("pts_penales_partido") or None,
+                                d.get("pts_penales_tanda") or None,
+                                pts_total_row or None]
                         fill = ALT_FILL if ri % 2 == 0 else GRP_FILL
                         for col, val in enumerate(vals, start=1):
                             c = ws.cell(ri, col, val if val is not None else "")
@@ -4598,7 +5359,7 @@ async def importar_apuestas_grupos(
                     user_id = new_u.scalar_one()
                 user_map[alias] = user_id
 
-        # 3. Upsert apuesta — en db (becbuc)
+        # 3. Upsert apuesta
         exist_r = await db.execute(
             text("""
                 SELECT id, pred_local, pred_visitante, pred_minuto_gol,
@@ -4631,33 +5392,27 @@ async def importar_apuestas_grupos(
                         pred_var=:var, pred_rojas=:ro,
                         pred_penales_partido=:pp,
                         updated_at=now()
-                    WHERE id=:id
+                    WHERE partido_id=:pid AND apostador_id=:uid
                 """),
                 {
-                    "id": exist.id,
                     "l": row.goles_local, "v": row.goles_visitante,
                     "mg": row.pred_minuto_gol, "am": row.pred_amarillas,
                     "var": row.pred_var, "ro": row.pred_rojas,
                     "pp": row.pred_penales_partido,
+                    "pid": partido_id, "uid": user_id,
                 },
             )
             actualizadas += 1
         else:
             await db.execute(
                 text("""
-                    INSERT INTO apuesta
-                        (partido_id, apostador_id,
-                         pred_local, pred_visitante,
-                         pred_minuto_gol, pred_amarillas, pred_var,
-                         pred_rojas, pred_penales_partido,
-                         puntos, puntos_bonus, updated_at)
-                    VALUES
-                        (:pid, :uid,
-                         :l, :v, :mg, :am, :var, :ro, :pp,
-                         0, 0, now())
+                    INSERT INTO apuesta (apostador_id, partido_id,
+                        pred_local, pred_visitante, pred_minuto_gol,
+                        pred_amarillas, pred_var, pred_rojas, pred_penales_partido)
+                    VALUES (:uid, :pid, :l, :v, :mg, :am, :var, :ro, :pp)
                     ON CONFLICT (apostador_id, partido_id) DO UPDATE SET
                         pred_local=EXCLUDED.pred_local,
-                        pred_visitante=EXCLUDED.pred_visitante,
+                                  pred_visitante=EXCLUDED.pred_visitante,
                         pred_minuto_gol=EXCLUDED.pred_minuto_gol,
                         pred_amarillas=EXCLUDED.pred_amarillas,
                         pred_var=EXCLUDED.pred_var,
@@ -4666,7 +5421,7 @@ async def importar_apuestas_grupos(
                         updated_at=now()
                 """),
                 {
-                    "pid": partido_id, "uid": user_id,
+                    "uid": user_id, "pid": partido_id,
                     "l": row.goles_local, "v": row.goles_visitante,
                     "mg": row.pred_minuto_gol, "am": row.pred_amarillas,
                     "var": row.pred_var, "ro": row.pred_rojas,
@@ -4676,292 +5431,193 @@ async def importar_apuestas_grupos(
             creadas += 1
 
     await db.commit()
-
-    # Resetear brackets KO a TBD tras importar grupos
-    brackets_reiniciados = 0
-    try:
-        await _resetear_ko_a_tbd(db, torneo_id)
-        await db.commit()
-        brackets_reiniciados = 1
-    except Exception as _be:
-        log.warning("importar_apuestas_grupos.ko_reset_skip", error=str(_be))
-
-    sin_mapeo         = [e for e in errores if e.get("sin_mapeo")]
-    usuarios_faltantes = [e for e in errores if e.get("usuario_faltante")]
-    otros_errores      = [e for e in errores if not e.get("sin_mapeo") and not e.get("usuario_faltante")]
-
-    advertencias = []
-    if sin_mapeo:
-        advertencias.append(
-            f"{len(sin_mapeo)} filas con partido_num fuera del rango P1-P{total_partidos_grupos} "
-            f"(fase grupos tiene {total_partidos_grupos} partidos)"
-        )
-    if usuarios_faltantes and not crear_usuarios:
-        advertencias.append(
-            f"{len(usuarios_faltantes)} apostador(es) no existen en el sistema. "
-            "Confirmá la creación y volvé a importar con crear_usuarios=true."
-        )
-
     return {
         "ok": True,
         "creadas": creadas,
         "actualizadas": actualizadas,
         "sin_cambios": sin_cambios,
-        "errores": otros_errores,
-        "sin_mapeo": sin_mapeo,
-        "usuarios_faltantes": usuarios_faltantes,
-        "advertencias": advertencias,
+        "errores": errores,
         "total_partidos_grupos": total_partidos_grupos,
-        "brackets_reiniciados": brackets_reiniciados,
     }
 
 
-@router.get("/contar-apuestas/{torneo_id}", summary="Conteo de apuestas y globales por apostador (admin)")
-async def contar_apuestas_por_apostador(
+# ── Sync histórico: importar todos los partidos jugados ──────────────────────
+
+@router.post("/sync-historico/{torneo_id}", summary="Importar resultados históricos (admin)")
+async def sync_historico(
     torneo_id: int,
     current: CurrentUser,
     db: DBSession,
-    apostadores: str = "",
+    max_detalle: int = 50,
 ) -> dict:
-    """Devuelve {alias: {apuestas, globales, usuario_existe}} para verificar antes de importar."""
+    """
+    Importa todos los resultados finalizados desde API-Football (partidos jugados
+    hasta hoy). A diferencia del sync normal:
+
+    - force=True siempre: re-procesa aunque esté marcado 'finalizado'.
+    - max_detalle=50: más llamadas para traer estadísticas completas.
+    - Incluye auto-mapeo si los api_fixture_id no están configurados.
+    - Retorna lista detallada de cada partido importado para verificación.
+
+    Cadena: auto-mapeo → sync force → standings → bracket → puntajes.
+    """
     if not await _check_admin(current):
-        raise HTTPException(403, "Solo administradores")
+        raise HTTPException(403, "Se requiere rol admin o superadmin")
 
-    aliases = [a.strip().lower() for a in apostadores.split(",") if a.strip()]
-    if not aliases:
-        return {}
+    from app.services.sync_api_football import sync_torneo
 
-    # Resolver user ids desde app_db
-    params = {f"a{i}": a for i, a in enumerate(aliases)}
-    placeholders = ", ".join(f":a{i}" for i in range(len(aliases)))
-    async with _app_engine.connect() as conn:
-        ur = await conn.execute(
-            text(f"SELECT id, lower(username) AS uname FROM users WHERE lower(username) IN ({placeholders})"),
-            params,
-        )
-        user_map = {row.uname: row.id for row in ur}
+    try:
+        sync_summary = await sync_torneo(db, torneo_id, force=True, max_detalle=max_detalle)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
-    result = {}
-    for alias in aliases:
-        uid = user_map.get(alias)
-        if not uid:
-            result[alias] = {"apuestas": 0, "globales": 0, "usuario_existe": False}
-            continue
-
-        cnt = await db.execute(
-            text("""
-                SELECT COUNT(*) FROM apuesta a
-                JOIN partido p ON p.id = a.partido_id
-                WHERE p.torneo_id = :tid AND a.apostador_id = :uid
-            """),
-            {"tid": torneo_id, "uid": uid},
-        )
-        ap_count = int(cnt.scalar() or 0)
-
-        gc = await db.execute(
-            text("SELECT COUNT(*) FROM apuesta_global WHERE torneo_id=:tid AND apostador_id=:uid"),
-            {"tid": torneo_id, "uid": uid},
-        )
-        gl_count = int(gc.scalar() or 0)
-
-        result[alias] = {"apuestas": ap_count, "globales": gl_count, "usuario_existe": True}
-
-    return result
-
-
-@router.post("/inicializar-brackets/{torneo_id}", summary="Inicializar brackets KO a TBD (admin)")
-async def inicializar_brackets(torneo_id: int, current: CurrentUser, db: DBSession):
-    """Resetea todos los partidos KO del torneo a TBD. Solo admin."""
-    if not await _check_admin(current):
-        raise HTTPException(403, "Solo administradores pueden inicializar brackets")
-    torneo_r = await db.execute(text("SELECT id FROM torneo WHERE id=:id"), {"id": torneo_id})
-    if not torneo_r.one_or_none():
-        raise HTTPException(404, f"Torneo {torneo_id} no encontrado")
-    await _resetear_ko_a_tbd(db, torneo_id)
     await db.commit()
-    return {"ok": True, "torneo_id": torneo_id, "msg": "Brackets KO reiniciados a TBD correctamente."}
 
+    actualizados = sync_summary.get("actualizados", 0)
 
-@router.post("/importar-globales-apostador/{torneo_id}", summary="Importar pronósticos globales A-G para un apostador (admin)")
-async def importar_globales_apostador(
-    torneo_id: int,
-    body: dict,
-    current: CurrentUser,
-    db: DBSession,
-) -> dict:
-    """
-    Guarda los pronósticos globales A-G para el apostador indicado en body['apostador'].
-    Resuelve nombres de equipos a IDs por coincidencia de nombre (normalizado).
-    Solo admin. Campos aceptados en body:
-      apostador (username, requerido),
-      pred_campeon, pred_finalista1, pred_finalista2, pred_peor_equipo,
-      pred_goleada_ganador, pred_goleada_perdedor  (nombres de equipo, texto)
-      pred_goleador (text), pred_etapa_paraguay (text), pred_goles_paraguay (int)
-    """
-    import unicodedata, re as _re
+    # Standings
+    try:
+        await _recalc_participacion(db, torneo_id)
+        await db.commit()
+    except Exception as e:
+        sync_summary["participacion_error"] = str(e)
 
-    if not await _check_admin(current):
-        raise HTTPException(403, "Solo administradores pueden importar globales")
+    # Bracket
+    bracket_ok = False
+    try:
+        maps = await ko_scoring.build_num_maps(db, torneo_id)
+        await _avanzar_bracket(db, torneo_id, maps)
+        await db.commit()
+        bracket_ok = True
+    except Exception as e:
+        sync_summary["bracket_error"] = str(e)
 
-    alias = body.get("apostador", "").strip().lower()
-    if not alias:
-        raise HTTPException(400, "Campo 'apostador' requerido")
-
-    # Resolver apostador_id desde app_db
-    async with _app_engine.connect() as conn:
-        ur = await conn.execute(text("SELECT id FROM users WHERE lower(username)=:a"), {"a": alias})
-        urow = ur.one_or_none()
-    if not urow:
-        raise HTTPException(404, f"Apostador '{alias}' no encontrado en el sistema")
-    apostador_id = urow[0]
-
-    # Normalizar nombre para matching
-    def _norm(s: str) -> str:
-        if not s:
-            return ""
-        s = str(s).lower().strip()
-        s = unicodedata.normalize("NFD", s)
-        s = "".join(c for c in s if unicodedata.category(c) != "Mn")
-        s = _re.sub(r"[^a-z0-9 ]", " ", s)
-        return _re.sub(r"\s+", " ", s).strip()
-
-    # Cargar equipos del torneo para resolución de nombres.
-    # Intento 1: participaciones en fases de grupo.
-    r_eq = await db.execute(
-        text("""
-            SELECT e.id, e.nombre, e.nombre_es
-            FROM equipo e
-            JOIN participacion pa ON pa.equipo_id = e.id
-            JOIN fase f ON f.id = pa.fase_id
-            WHERE f.torneo_id = :tid AND f.tipo = 'grupo'
-            GROUP BY e.id, e.nombre, e.nombre_es
-        """),
-        {"tid": torneo_id},
-    )
-    equipos = list(r_eq.mappings())
-
-    # Intento 2: cualquier partido del torneo (no hay participaciones cargadas aún).
-    if not equipos:
-        r_eq2 = await db.execute(
+    # Puntajes
+    puntajes_ok = False
+    puntajes_summary: dict = {}
+    try:
+        await _ensure_detalle_table(db)
+        r_torneo = await db.execute(
             text("""
-                SELECT DISTINCT e.id, e.nombre, e.nombre_es
-                FROM equipo e
-                WHERE e.id IN (
-                    SELECT equipo_local_id    FROM partido WHERE torneo_id=:tid AND equipo_local_id IS NOT NULL
-                    UNION
-                    SELECT equipo_visitante_id FROM partido WHERE torneo_id=:tid AND equipo_visitante_id IS NOT NULL
-                )
+                SELECT COALESCE(c.codigo, '') AS competicion_codigo
+                FROM torneo t
+                LEFT JOIN competicion c ON c.id = t.competicion_id
+                WHERE t.id = :tid
             """),
             {"tid": torneo_id},
         )
-        equipos = list(r_eq2.mappings())
+        row_torneo = r_torneo.mappings().first()
+        competicion_codigo = (row_torneo or {}).get("competicion_codigo") or None
+        engine = scoring_registry.get_engine(competicion_codigo)
+        calc = ScoringCalculator(db)
+        result = await calc.calculate(torneo_id, engine)
+        if result:
+            global_result = await calc.calculate_global(torneo_id, engine)
+            await db.commit()
+            puntajes_ok = True
+            puntajes_summary = {
+                "plenos":              result["plenos"],
+                "aciertos":            result["aciertos"],
+                "fallos":              result["fallos"],
+                "globales_procesadas": global_result.get("procesadas", 0),
+            }
+    except Exception as e:
+        sync_summary["puntajes_error"] = str(e)
 
-    # Intento 3: todos los equipos en la BD (último recurso).
-    if not equipos:
-        r_eq3 = await db.execute(text("SELECT id, nombre, nombre_es FROM equipo"))
-        equipos = list(r_eq3.mappings())
+    # Detalle de cada partido importado (para verificación en UI)
+    partidos_importados: list[dict] = []
+    ids_act = sync_summary.get("ids_actualizados") or []
+    if ids_act:
+        ids_sql = ",".join(str(i) for i in ids_act)
+        r_p = await db.execute(
+            text(f"""
+                SELECT p.id,
+                       COALESCE(el.nombre_es, el.nombre, '?') AS local,
+                       COALESCE(ev.nombre_es, ev.nombre, '?') AS visitante,
+                       p.goles_local, p.goles_visitante, p.estado,
+                       p.amarillas, p.rojas, p.decisiones_var,
+                       p.penales_local, p.penales_visitante, p.minuto_primer_gol,
+                       p.api_fixture_id
+                FROM partido p
+                LEFT JOIN equipo el ON el.id = p.equipo_local_id
+                LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+                WHERE p.id IN ({ids_sql})
+                ORDER BY p.fecha
+            """)
+        )
+        for row in r_p.mappings():
+            gl = row["goles_local"]
+            gv = row["goles_visitante"]
+            pl = row["penales_local"]
+            pv = row["penales_visitante"]
+            partidos_importados.append({
+                "partido_id":     row["id"],
+                "nombre":         f"{row['local']} vs {row['visitante']}",
+                "resultado":      f"{gl if gl is not None else '?'}-{gv if gv is not None else '?'}",
+                "penales":        f"({pl}-{pv})" if pl is not None else None,
+                "estado":         row["estado"],
+                "amarillas":      row["amarillas"],
+                "rojas":          row["rojas"],
+                "var":            row["decisiones_var"],
+                "minuto_gol":     row["minuto_primer_gol"],
+                "api_fixture_id": row["api_fixture_id"],
+            })
 
-    def _resolve_equipo(name_text: str) -> int | None:
-        if not name_text:
-            return None
-        norm_input = _norm(name_text)
-        # Exact match first
-        for e in equipos:
-            for campo in [e["nombre_es"] or "", e["nombre"] or ""]:
-                if _norm(campo) == norm_input:
-                    return e["id"]
-        # Substring match
-        for e in equipos:
-            for campo in [e["nombre_es"] or "", e["nombre"] or ""]:
-                nc = _norm(campo)
-                if norm_input in nc or nc in norm_input:
-                    return e["id"]
-        return None
-
-    campeon_id      = _resolve_equipo(body.get("pred_campeon"))
-    finalista1_id   = _resolve_equipo(body.get("pred_finalista1"))
-    finalista2_id   = _resolve_equipo(body.get("pred_finalista2"))
-    peor_equipo_id  = _resolve_equipo(body.get("pred_peor_equipo"))
-    goleada_gan_id  = _resolve_equipo(body.get("pred_goleada_ganador"))
-    goleada_per_id  = _resolve_equipo(body.get("pred_goleada_perdedor"))
-
-    goleador     = body.get("pred_goleador") or None
-    etapa_py     = body.get("pred_etapa_paraguay") or None
-    goles_py_raw = body.get("pred_goles_paraguay")
-    try:
-        goles_py = int(goles_py_raw) if goles_py_raw is not None else None
-    except (ValueError, TypeError):
-        goles_py = None
-
-    await db.execute(
-        text("""
-            INSERT INTO apuesta_global
-              (torneo_id, apostador_id,
-               pred_campeon_id, pred_finalista1_id, pred_finalista2_id,
-               pred_goleador, pred_peor_equipo_id,
-               pred_goleada_ganador, pred_goleada_perdedor,
-               pred_etapa_paraguay, pred_goles_paraguay,
-               updated_at)
-            VALUES
-              (:tid, :uid,
-               :campeon, :fin1, :fin2,
-               :goleador, :peor,
-               :gol_g, :gol_p,
-               :etapa, :goles,
-               NOW())
-            ON CONFLICT (torneo_id, apostador_id) DO UPDATE SET
-               pred_campeon_id      = EXCLUDED.pred_campeon_id,
-               pred_finalista1_id   = EXCLUDED.pred_finalista1_id,
-               pred_finalista2_id   = EXCLUDED.pred_finalista2_id,
-               pred_goleador        = EXCLUDED.pred_goleador,
-               pred_peor_equipo_id  = EXCLUDED.pred_peor_equipo_id,
-               pred_goleada_ganador = EXCLUDED.pred_goleada_ganador,
-               pred_goleada_perdedor= EXCLUDED.pred_goleada_perdedor,
-               pred_etapa_paraguay  = EXCLUDED.pred_etapa_paraguay,
-               pred_goles_paraguay  = EXCLUDED.pred_goles_paraguay,
-               updated_at           = NOW()
-        """),
-        {
-            "tid":     torneo_id,
-            "uid":     apostador_id,
-            "campeon": campeon_id,
-            "fin1":    finalista1_id,
-            "fin2":    finalista2_id,
-            "goleador":goleador,
-            "peor":    peor_equipo_id,
-            "gol_g":   goleada_gan_id,
-            "gol_p":   goleada_per_id,
-            "etapa":   etapa_py,
-            "goles":   goles_py,
+    await _audit_log(
+        "sync:historico", "bets",
+        current=current, method="POST",
+        path=f"/api/v1/bets/sync-historico/{torneo_id}",
+        resource_id=str(torneo_id),
+        details={
+            "evento":       "importación histórica API-Football",
+            "max_detalle":  max_detalle,
+            "actualizados": actualizados,
+            "api_calls":    sync_summary.get("api_calls", 0),
+            "bracket_ok":   bracket_ok,
+            "puntajes_ok":  puntajes_ok,
         },
     )
-    await db.commit()
-
-    # Contar equipos resueltos para el mensaje
-    resueltos_map = {
-        "campeon":          campeon_id,
-        "finalista1":       finalista1_id,
-        "finalista2":       finalista2_id,
-        "peor_equipo":      peor_equipo_id,
-        "goleada_ganador":  goleada_gan_id,
-        "goleada_perdedor": goleada_per_id,
-    }
-    no_resueltos = [k for k, v in resueltos_map.items() if v is None and body.get(f"pred_{k}")]
 
     return {
-        "ok": True,
-        "guardado": True,
-        "apostador": alias,
-        "apostador_id": apostador_id,
-        "msg": f"Pronósticos globales guardados para {alias}",
-        "equipos_db": len(equipos),
-        "resueltos": resueltos_map,
-        "no_resueltos_input": {
-            k: body.get(f"pred_{k}") for k in no_resueltos
-        },
-        "texto": {
-            "goleador":         goleador,
-            "etapa_paraguay":   etapa_py,
-            "goles_paraguay":   goles_py,
-        },
+        "ok":                  True,
+        "actualizados":        actualizados,
+        "partidos_importados": partidos_importados,
+          "sync":                sync_summary,
+        "bracket_ok":          bracket_ok,
+        "puntajes_ok":         puntajes_ok,
+        "puntajes":            puntajes_summary,
     }
+
+
+@router.get("/verificar-importacion/{torneo_id}", summary="Verificar datos importados (admin)")
+async def verificar_importacion(
+    torneo_id: int,
+    current: CurrentUser,
+    db: DBSession,
+    limite: int = 30,
+) -> dict:
+    if current.role not in ("admin", "superadmin"):
+        raise HTTPException(status_code=403, detail="Solo admin")
+    r = await db.execute(
+        text("""
+            SELECT p.id, p.api_fixture_id,
+                COALESCE(el.nombre_es, el.nombre) AS local,
+                COALESCE(ev.nombre_es, ev.nombre) AS visitante,
+                p.goles_local, p.goles_visitante, p.estado, p.fecha,
+                COALESCE(p.amarillas, 0) AS amarillas,
+                COALESCE(p.rojas, 0) AS rojas,
+                COALESCE(p.decisiones_var, 0) AS var_decisiones,
+                p.penales_local, p.penales_visitante, p.penales_partido,
+                p.minuto_primer_gol,
+                (p.api_fixture_id IS NOT NULL) AS mapeado
+            FROM partido p
+            LEFT JOIN equipo el ON el.id = p.equipo_local_id
+            LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+            WHERE p.torneo_id = :tid AND p.estado IN ('finalizado', 'en_juego')
+            ORDER BY p.fecha DESC NULLS LAST
+            LIMIT :lim
+        """),
+        {"tid": torneo_id, "lim": limite},
+    )
+    partidos = [dict(row) for row in r.mappings()]
+    return {"partidos": partidos, "total": len(partidos)}
