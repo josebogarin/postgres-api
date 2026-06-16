@@ -38,6 +38,11 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   <h1>BEC BUC</h1>
   <div class="sub">Copa del Mundo 2026</div>
 
+  <a href="/static/becbuc-live.html" style="display:block;margin-bottom:18px;padding:11px 14px;background:rgba(0,166,81,.08);border:1px solid rgba(0,166,81,.3);border-radius:9px;text-decoration:none;text-align:center;">
+    <div style="font-size:.95rem;font-weight:800;color:#00a651;">🔴 BECBUC Live</div>
+    <div style="font-size:.68rem;color:#8892a4;margin-top:2px;">Accedé al partido en vivo sin loguearte</div>
+  </a>
+
   <label>Usuario</label>
   <input id="u" type="text" autocomplete="username" placeholder="tu usuario"
          onkeydown="if(event.key==='Enter')document.getElementById('p').focus()">
@@ -66,10 +71,18 @@ async function login() {
   try {
     const r = await fetch('/api/v1/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true'
+      },
       body: JSON.stringify({ username: u, password: p })
     });
-    const data = await r.json();
+    let data;
+    try { data = await r.json(); }
+    catch {
+      err.textContent = 'Error de conexión (respuesta inválida). Intentá de nuevo.';
+      btn.disabled = false; btn.textContent = 'Ingresar'; return;
+    }
     if (!r.ok) {
       err.textContent = data.detail || 'Credenciales incorrectas.';
       btn.disabled = false;
@@ -77,13 +90,16 @@ async function login() {
       return;
     }
 
-    // Guardar refresh token para renovación automática
+    // Guardar tokens en storage (disponibles en la página destino)
+    sessionStorage.setItem('bec_token', data.access_token);
+    localStorage.setItem('tok_fix', data.access_token);
     if (data.refresh_token) localStorage.setItem('becbuc_refresh', data.refresh_token);
 
-    // Pasar access token por URL — más confiable que sessionStorage entre páginas
-    const dest = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-      ? '/static/BECBUC-movil.html'
-      : '/static/BECBUC-portal.html';
+    // Detectar dispositivo: móvil si userAgent indica mobile/tablet O pantalla angosta
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                     || window.innerWidth < 768;
+    const dest = isMobile ? '/static/BECBUC-movil.html' : '/static/BECBUC-portal.html';
+    // Pasar token por URL como respaldo por si sessionStorage no persiste entre páginas
     window.location.href = dest + '?token=' + encodeURIComponent(data.access_token);
 
   } catch {

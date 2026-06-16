@@ -779,9 +779,10 @@ function renderPartidoRow(p){
   const lL=p.local_logo, vL=p.visit_logo;
   const lF=teamFlag(p.local_nombre_es||p.local_nombre||'');
   const vF=teamFlag(p.visit_nombre_es||p.visit_nombre||'');
+  const pNum = p.numero_fifa ? `<span style="font-size:.62rem;font-weight:700;color:var(--accent);margin-right:4px;flex-shrink:0">P${p.numero_fifa}</span>` : '';
   return `<div class="partido-row${jugado?' jugado':''}" ${oc}>
     <div class="eq-cell">
-      ${lL?`<img src="${esc(lL)}" onerror="this.style.display='none'">`:lF?`<span style="font-size:14px">${lF}</span>`:''}
+      ${pNum}${lL?`<img src="${esc(lL)}" onerror="this.style.display='none'">`:lF?`<span style="font-size:14px">${lF}</span>`:''}
       <span>${lN}</span></div>
     ${centro}
     <div class="eq-cell right">

@@ -251,6 +251,7 @@ async def get_fixture(torneo_id: int, db: DBSession) -> dict:
                 p.goles_local_prorroga, p.goles_visitante_prorroga,
                 p.penales_local, p.penales_visitante,
                 p.estado, p.leg, p.partido_ida_id, p.api_fixture_id,
+                COALESCE(p.numero_fifa, 0) AS numero_fifa,
                 el.id    AS local_id,
                 el.nombre AS local_nombre,
                 el.nombre_es AS local_nombre_es,

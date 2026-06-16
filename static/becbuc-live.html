@@ -22,6 +22,9 @@
       border-radius: 6px; font-size: 12px; padding: 6px 12px; cursor: pointer;
       border: 1px solid; font-weight: 500;
     }
+    #btn-sync    { background: #7c3aed; color: #c4b5fd; border-color: #6d28d9; }
+    #btn-sync:hover { background: #6d28d9; }
+    #btn-sync:disabled { opacity: 0.5; cursor: not-allowed; }
     #btn-refresh { background: #065f46; color: #6ee7b7; border-color: #047857; }
     #btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
     #btn-portal  { background: #1e3a8a; color: #93c5fd; border-color: #1d4ed8; }
@@ -95,6 +98,7 @@
     #score-main { font-size: 50px; font-weight: 700; color: #fff; letter-spacing: 10px; line-height: 1; font-variant-numeric: tabular-nums; }
     #score-sub { margin-top: 8px; font-size: 13px; color: #6b7280; }
     #score-sub.live-min { color: #ef4444; font-weight: 600; }
+    #score-sub.countdown-txt { color: #60a5fa; font-weight: 600; font-size: 15px; }
 
     #py-banner {
       background: #78350f; color: #fbbf24; text-align: center;
@@ -121,9 +125,11 @@
     .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #374151; margin-bottom: 6px; }
     table { width: 100%; border-collapse: collapse; min-width: 480px; }
     thead th {
-      background: #111827; color: #6b7280; font-size: 10px; font-weight: 700;
-      padding: 8px 7px; text-align: center; white-space: nowrap; letter-spacing: 0.4px;
+      background: #111827; color: #6b7280; font-size: 13px; font-weight: 700;
+      padding: 8px 5px; text-align: center; white-space: nowrap; letter-spacing: 0.2px;
     }
+    thead th.nm { font-size: 10px; }
+    thead th[title]:not(.nm):not(.lv):not(.tt) { cursor: help; }
     thead th.nm { text-align: left; min-width: 90px; }
     thead th.lv { color: #6ee7b7; }
     thead th.tt { color: #fff; }
@@ -169,8 +175,7 @@
   <div id="hdr-brand">⚽ BECBUC EN VIVO</div>
   <div id="hdr-right">
     <span id="hdr-clock"></span>
-    <button class="hdr-btn" id="btn-refresh" onclick="recargar()">🔄 Actualizar</button>
-    <button class="hdr-btn" id="btn-portal"  onclick="irAlPortal()">🏠 Portal</button>
+    <button class="hdr-btn" id="btn-sync"    onclick="sincronizar()">🔄 Sincronizar</button>
   </div>
 </div>
 
@@ -201,6 +206,9 @@
 
 <div id="screen-main">
 <div id="main">
+
+  <!-- NAV PARTIDOS -->
+  <div id="nav-partido" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;"></div>
 
   <!-- PARTIDO -->
   <div id="match-card">
@@ -236,11 +244,17 @@
         <thead>
           <tr>
             <th class="nm">Apostador</th>
-            <th>Pred.</th>
-            <th>H</th><th>I</th><th>J</th><th>K</th>
-            <th>L</th><th>M</th><th>N</th><th>O</th>
-            <th class="lv">+Pts</th>
-            <th class="tt">Total▼</th>
+            <th title="Predicción del marcador">Pred.</th>
+            <th title="Resultado (ganador / empate)">🏆</th>
+            <th title="Marcador exacto">🎯</th>
+            <th title="Tarjetas amarillas">🟨</th>
+            <th title="Tarjetas rojas">🟥</th>
+            <th title="Decisiones VAR">📺</th>
+            <th title="Penales cobrados en el partido">🥅</th>
+            <th title="Minuto del primer gol">⏱</th>
+            <th title="Penales en tanda">🔢</th>
+            <th title="Puntaje actual (antes de este partido)">Actual</th>
+            <th class="tt" title="Puntaje corregido = actual + este partido">Corregido▼</th>
           </tr>
         </thead>
         <tbody id="tbl-body"></tbody>
@@ -276,12 +290,15 @@ const REFRESH_MS = 60_000;
 // ════════════════════════════════════════════════
 // ESTADO
 // ════════════════════════════════════════════════
-let _token     = null;
-let _torneoId  = null;
-let _partido   = null;
-let _apostoles = [];
-let _results   = [];
-let _timer     = null;
+let _token       = null;
+let _torneoId    = null;
+let _partido     = null;
+let _apostoles   = [];
+let _results     = [];
+let _timer       = null;
+let _cdTimer     = null;   // countdown timer para partidos próximos
+let _numFifa     = null;   // numero_fifa seleccionado manualmente (null = auto)
+let _allNumeros  = [];     // lista de todos los numero_fifa disponibles
 
 // ════════════════════════════════════════════════
 // TOKEN PERSISTENTE 24h
@@ -327,6 +344,29 @@ async function api(url) {
     localStorage.removeItem(TOKEN_TS);
     await ensureToken();
     return api(url);
+  }
+  if (!r.ok) {
+    let msg = r.statusText;
+    try { const b = await r.json(); msg = b.detail || msg; } catch(_) {}
+    throw new Error(msg);
+  }
+  return r.json();
+}
+
+async function apiPost(url) {
+  const r = await fetch(BASE_URL + url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + _token,
+      'ngrok-skip-browser-warning': 'true',
+      'Content-Type': 'application/json',
+    },
+  });
+  if (r.status === 401) {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_TS);
+    await ensureToken();
+    return apiPost(url);
   }
   if (!r.ok) {
     let msg = r.statusText;
@@ -462,6 +502,12 @@ function flag(iso, nombre) {
 async function init() {
   showScreen('loading');
   startClock();
+  // Leer ?p=N del URL
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    const pv = sp.get('p');
+    if (pv && !isNaN(parseInt(pv, 10))) _numFifa = parseInt(pv, 10);
+  } catch(_) {}
   try {
     await ensureToken();
     const torneos = await api('/api/v1/torneo/activas');
@@ -477,12 +523,15 @@ async function init() {
 
 async function cargar() {
   try {
-    const data = await api('/api/v1/bets/live-panel/' + _torneoId);
+    const qs = _numFifa != null ? '?numero_fifa=' + _numFifa : '';
+    const data = await api('/api/v1/bets/live-panel/' + _torneoId + qs);
     if (!data.partido) { showScreen('nomatches'); return; }
     _partido   = data.partido;
     _apostoles = data.apostadores || [];
+    if (data.numeros_fifa && data.numeros_fifa.length) _allNumeros = data.numeros_fifa;
     calcularTodos();
     render();
+    renderNav();
     showScreen('main');
     updateStatusBar();
     document.getElementById('last-sync').textContent =
@@ -492,11 +541,96 @@ async function cargar() {
   }
 }
 
+function navPartido(delta) {
+  if (!_allNumeros.length) return;
+  const curNum = _numFifa != null ? _numFifa : (_partido && _partido.numero_fifa ? _partido.numero_fifa : null);
+  const idx = curNum != null ? _allNumeros.indexOf(curNum) : -1;
+  let ni;
+  if (idx === -1) {
+    ni = delta > 0 ? _allNumeros[0] : _allNumeros[_allNumeros.length - 1];
+  } else {
+    ni = _allNumeros[idx + delta];
+    if (ni === undefined) return; // ya en el extremo
+  }
+  _numFifa = ni;
+  // Actualizar URL sin recargar
+  try {
+    const u = new URL(window.location.href);
+    u.searchParams.set('p', ni);
+    history.replaceState(null, '', u.toString());
+  } catch(_) {}
+  cargar();
+}
+
+function navAuto() {
+  _numFifa = null;
+  try {
+    const u = new URL(window.location.href);
+    u.searchParams.delete('p');
+    history.replaceState(null, '', u.toString());
+  } catch(_) {}
+  cargar();
+}
+
+function renderNav() {
+  const el = document.getElementById('nav-partido');
+  if (!el || !_allNumeros.length) { if (el) el.innerHTML = ''; return; }
+  // En auto mode, mostrar el P# actual del partido detectado
+  const curNum  = _numFifa != null ? _numFifa : (_partido && _partido.numero_fifa ? _partido.numero_fifa : null);
+  if (!curNum) { el.innerHTML = ''; return; }
+  const idx     = _allNumeros.indexOf(curNum);
+  const hasPrev = idx > 0;
+  const hasNext = idx >= 0 && idx < _allNumeros.length - 1;
+  const total   = _allNumeros.length;
+  const isAuto  = _numFifa == null;
+  el.innerHTML = `
+    <button onclick="navPartido(-1)" ${hasPrev ? '' : 'disabled'}
+      style="background:none;border:1px solid #374151;color:${hasPrev?'#9ca3af':'#374151'};border-radius:6px;padding:4px 10px;cursor:${hasPrev?'pointer':'default'};font-size:12px;">◄</button>
+    <span style="font-size:11px;color:${isAuto?'#6ee7b7':'#9ca3af'};font-weight:600;">
+      ${isAuto ? '⚡' : '📌'} P${curNum} <span style="color:#4b5563;font-weight:400;">${idx+1}/${total}</span>
+    </span>
+    ${isAuto
+      ? ''
+      : `<button onclick="navAuto()" title="Volver al modo automático"
+           style="background:rgba(110,231,183,.1);border:1px solid #065f46;color:#6ee7b7;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:10px;">⚡ Auto</button>`
+    }
+    <button onclick="navPartido(+1)" ${hasNext ? '' : 'disabled'}
+      style="background:none;border:1px solid #374151;color:${hasNext?'#9ca3af':'#374151'};border-radius:6px;padding:4px 10px;cursor:${hasNext?'pointer':'default'};font-size:12px;">►</button>
+  `;
+}
+
 async function recargar() {
   const btn = document.getElementById('btn-refresh');
   btn.disabled = true;
   await cargar();
   btn.disabled = false;
+}
+
+async function sincronizar() {
+  if (!_torneoId) return;
+  const btn = document.getElementById('btn-sync');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sincronizando…';
+  try {
+    const s = await apiPost('/api/v1/bets/sync-resultados/' + _torneoId + '?force=true');
+    const act = s.actualizados ?? 0;
+    showToast('Sync OK · ' + act + ' actualizado(s)', 'ok');
+    // Actualizar puntajes en secuencia
+    btn.textContent = '⏳ Calculando puntajes…';
+    try {
+      const p = await apiPost('/api/v1/bets/calcular-puntajes/' + _torneoId);
+      const proc = p.procesados ?? p.puntajes_procesados ?? '?';
+      showToast('Puntajes OK · ' + proc + ' procesado(s)', 'ok');
+    } catch (ep) {
+      showToast('Sync OK pero error puntajes: ' + ep.message, 'err');
+    }
+    await cargar();
+  } catch (e) {
+    showToast('Error sync: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔄 Sincronizar';
+  }
 }
 
 function startAutoRefresh() {
@@ -516,8 +650,9 @@ function render() {
         hour:'2-digit', minute:'2-digit'
       })
     : '';
+  const pNumLabel = p.numero_fifa ? `P${p.numero_fifa}  ·  ` : '';
   document.getElementById('match-meta').textContent =
-    (p.fase_nombre || '').toUpperCase() + (fechaStr ? '  ·  ' + fechaStr : '');
+    pNumLabel + (p.fase_nombre || '').toUpperCase() + (fechaStr ? '  ·  ' + fechaStr : '');
 
   const badge = document.getElementById('match-badge');
   if      (p.estado === 'en_juego')    { badge.className = 'live'; badge.textContent = '● EN VIVO'; }
@@ -537,10 +672,14 @@ function render() {
   if (p.estado === 'en_juego') {
     sub.className = 'live-min';
     sub.textContent = p.minuto_actual ? p.minuto_actual + "'" : 'EN VIVO';
+    stopCountdown();
   } else if (p.estado === 'finalizado') {
     sub.className = ''; sub.textContent = 'Partido finalizado';
+    stopCountdown();
   } else {
-    sub.className = ''; sub.textContent = fechaStr || 'Por confirmar';
+    sub.className = 'countdown-txt';
+    sub.textContent = p.fecha ? countdownText(p.fecha) : (fechaStr || 'Por confirmar');
+    startCountdown(p.fecha);
   }
 
   document.getElementById('py-banner').style.display = p.es_paraguay ? 'block' : 'none';
@@ -561,10 +700,11 @@ function render() {
 
   // Tabla
   document.getElementById('tbl-body').innerHTML = _results.map(r => {
-    const ap   = _apostoles.find(a => a.apostador_id === r.apostador_id) || {};
-    const pred = (ap.pred_local !== null && ap.pred_local !== undefined &&
-                  ap.pred_visitante !== null && ap.pred_visitante !== undefined)
-                  ? ap.pred_local + '-' + ap.pred_visitante : '—';
+    const ap      = _apostoles.find(a => a.apostador_id === r.apostador_id) || {};
+    const display = esc(ap.username || r.nombre);
+    const pred    = (ap.pred_local !== null && ap.pred_local !== undefined &&
+                     ap.pred_visitante !== null && ap.pred_visitante !== undefined)
+                     ? ap.pred_local + '-' + ap.pred_visitante : '—';
     const cells = ['H','I','J','K','L','M','N','O'].map(k => {
       const v = r.detail[k];
       return v > 0
@@ -572,11 +712,11 @@ function render() {
         : `<td><span class="pts-zero">—</span></td>`;
     }).join('');
     return `<tr>
-      <td class="nm">${esc(r.nombre)}</td>
+      <td class="nm">${display}</td>
       <td><span class="pred-tag">${pred}</span></td>
       ${cells}
-      <td><span class="pts-lv">${r.pts_partido > 0 ? '+' + r.pts_partido : '0'}</span></td>
-      <td><span class="pts-tt">${r.total_proy}</span></td>
+      <td style="color:#6b7280;font-size:12px;">${r.puntos_base}</td>
+      <td><span class="pts-tt" style="font-size:15px;">${r.total_proy}</span></td>
     </tr>`;
   }).join('');
 
@@ -584,10 +724,12 @@ function render() {
   const medals  = ['🥇','🥈','🥉','4°','5°'];
   const classes = ['p1','p2','p3','',''];
   document.getElementById('rank-grid').innerHTML = _results.slice(0, 5).map((r, i) => {
-    const d = r.pts_partido;
+    const d   = r.pts_partido;
+    const ap  = _apostoles.find(a => a.apostador_id === r.apostador_id) || {};
+    const nom = esc(ap.username || r.nombre);
     return `<div class="rk ${classes[i]}">
       <div class="rk-pos">${medals[i]}</div>
-      <div class="rk-name">${esc(r.nombre)}</div>
+      <div class="rk-name">${nom}</div>
       <div class="rk-pts">${r.total_proy}</div>
       <div class="rk-delta ${d === 0 ? 'zero' : 'pos'}">${d > 0 ? '+' + d : d}</div>
     </div>`;
@@ -612,7 +754,8 @@ function updateStatusBar() {
     txt.textContent = `FIN · ${l} ${p.goles_local} - ${p.goles_visitante} ${v}`;
   } else {
     dot.className = 'sb-dot prox';
-    txt.textContent = `Próximo: ${l} vs ${v}`;
+    const cd = p.fecha ? ' · ' + countdownText(p.fecha) : '';
+    txt.textContent = `Próximo: ${l} vs ${v}${cd}`;
   }
 }
 
@@ -642,6 +785,42 @@ function esc(s) {
   return String(s || '').replace(/[&<>"']/g, c =>
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])
   );
+}
+
+// ════════════════════════════════════════════════
+// COUNTDOWN (para partidos próximos)
+// ════════════════════════════════════════════════
+function countdownText(fechaISO) {
+  if (!fechaISO) return 'Por confirmar';
+  const diff = new Date(fechaISO) - new Date();
+  if (diff <= 0) return 'Próximamente';
+  const totalMin = Math.floor(diff / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h >= 24) {
+    const d = Math.floor(h / 24);
+    return `Faltan ${d}d ${h % 24}h`;
+  }
+  if (h > 0) return `Faltan ${h}h ${m}min`;
+  if (m > 0) return `Faltan ${m} min`;
+  return 'Próximamente';
+}
+
+function startCountdown(fechaISO) {
+  stopCountdown();
+  if (!fechaISO) return;
+  _cdTimer = setInterval(() => {
+    const sub = document.getElementById('score-sub');
+    if (!sub || !_partido || _partido.estado === 'en_juego' || _partido.estado === 'finalizado') {
+      stopCountdown(); return;
+    }
+    sub.textContent = countdownText(fechaISO);
+    updateStatusBar();
+  }, 30_000);
+}
+
+function stopCountdown() {
+  if (_cdTimer) { clearInterval(_cdTimer); _cdTimer = null; }
 }
 
 init();

@@ -547,8 +547,8 @@
     <div class="login-logo">BB</div>
     <h1>BECBUC</h1>
     <p>Polla mundialista · ingresá para pronosticar</p>
-    <div class="fld"><label>Usuario</label><input id="lgUser" type="text" autocomplete="username" autocapitalize="none" placeholder="usuario"></div>
-    <div class="fld"><label>Contraseña</label><input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+    <div class="fld"><label>Usuario</label><input id="lgUser" type="text" autocomplete="username" autocapitalize="none" placeholder="usuario" onkeydown="if(event.key==='Enter')document.getElementById('lgPass').focus()"></div>
+    <div class="fld"><label>Contraseña</label><input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="login-btn" id="lgBtn" onclick="doLogin()">Ingresar</button>
     <div class="login-err" id="lgErr"></div>
   </div>
@@ -576,12 +576,31 @@
   <div class="up-pill" id="userPill">
     <div class="avatar" id="avatar">?</div>
     <div style="min-width:0">
-      <div class="up-name" id="userName">—</div>
+      <div class="up-name" id="userName" style="font-size:.85rem;font-weight:800;color:var(--orange);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
       <div class="up-sub" id="userPillSub"></div>
     </div>
   </div>
+  <!-- YO: volver a mis pronósticos (solo cuando admin ve a otro) -->
+  <button id="btnYoM" onclick="clearViewAsM()" title="Mis pronósticos"
+    style="display:none;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.45);color:#a5b4fc;font-size:.62rem;font-weight:800;padding:4px 8px;border-radius:7px;white-space:nowrap">YO</button>
+  <!-- Buscar apostador (solo admin) -->
+  <button id="btnBuscadorM" onclick="openUserPickerM()" title="Buscar apostador"
+    style="display:none;background:none;border:none;color:var(--muted);font-size:1.1rem;padding:4px;cursor:pointer">🔍</button>
   <button class="logout" id="btnAdminTop" onclick="go('admin')" title="Admin" style="display:none;font-size:1.05rem">⚙️</button>
-  <button class="logout" onclick="logout()" title="Salir">⏻</button>
+  <button class="logout" onclick="logout()" title="Cerrar sesión">⏻</button>
+</div>
+
+<!-- OVERLAY: selector de apostador (admin) -->
+<div id="userPickerOverlayM" style="display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.6)" onclick="if(event.target===this)closeUserPickerM()">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--card);border-radius:18px 18px 0 0;max-height:70vh;display:flex;flex-direction:column">
+    <div style="padding:14px 16px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)">
+      <span style="font-weight:800;font-size:.88rem">🔍 Seleccionar apostador</span>
+      <button onclick="closeUserPickerM()" style="margin-left:auto;background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer">✕</button>
+    </div>
+    <input id="userPickerSearchM" type="text" placeholder="Buscar…" oninput="filterUserPickerM(this.value)"
+      style="margin:8px 12px;background:var(--row2);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:7px 11px;font-size:.82rem;outline:none">
+    <div id="userPickerListM" style="overflow-y:auto;padding:4px 8px 20px"></div>
+  </div>
 </div>
 
 <!-- PAGES -->
@@ -620,12 +639,33 @@
 <script>
 /* ════════ Estado ════════ */
 const base = window.location.origin;
-let token = sessionStorage.getItem('bec_token') || localStorage.getItem('tok_fix') || '';
+// Lectura segura del token — localStorage/sessionStorage pueden lanzar en iOS private mode
+let token = '';
+try { token = sessionStorage.getItem('bec_token') || localStorage.getItem('tok_fix') || ''; } catch(_) {}
+// Leer token del parámetro URL (redirigido desde login.html)
+(function(){
+  try {
+    const t=new URLSearchParams(window.location.search).get('token');
+    if(t){
+      token=t;
+      try{sessionStorage.setItem('bec_token',t);}catch(_){}
+      try{localStorage.setItem('tok_fix',t);}catch(_){}
+      try{history.replaceState(null,'',location.pathname);}catch(_){}
+    }
+  } catch(_) {}
+})();
+// Capturar errores JS no manejados y mostrarlos en el login
+window.onerror=function(msg,src,line,col,err){
+  const el=document.getElementById('lgErr');
+  if(el&&!token) el.textContent='Error JS: '+msg+' (L'+line+')';
+  return false;
+};
 let _me=null, _isAdmin=false, _isSuper=false, _torneoId=null, _torneoNombre='';
 let _adminViewAs=null;
 function _viewAsParam(){return _adminViewAs?'?for_apostador_id='+_adminViewAs.id:'';}
-function setViewAsM(id,nombre){_adminViewAs={id,nombre};_bracketDirty=true;_misApuestas={};loadPronos();}
-function clearViewAsM(){_adminViewAs=null;_bracketDirty=true;_misApuestas={};loadPronos();}
+function setViewAsM(id,nombre){_adminViewAs={id,nombre};_bracketDirty=true;_misApuestas={};_updateYoBtnM();loadPronos();}
+function clearViewAsM(){_adminViewAs=null;_bracketDirty=true;_misApuestas={};_updateYoBtnM();loadPronos();}
+function _updateYoBtnM(){const btn=document.getElementById('btnYoM');if(btn) btn.style.display=_adminViewAs?'inline-block':'none';}
 async function populatePronApostadorSel(rk){
   const sel=document.getElementById('pronViewAsSel');
   if(!sel)return;
@@ -655,10 +695,20 @@ let _ranking=[], _mensajes=[], _bracket=null, _bracketDirty=true;
 let _koSlipM={};   // KO bracket: {partido_id:{pred_local,pred_visitante,pred_penales}}
 let _lastKoMapM={}; // { num: ko_item } — versión mapeada del último ko_bracket cargado
 const BK_FEEDERS_M={
-  89:['W74','W77'],90:['W73','W75'],91:['W76','W78'],92:['W79','W80'],
-  93:['W83','W84'],94:['W81','W82'],95:['W86','W88'],96:['W85','W87'],
-  97:['W89','W90'],98:['W93','W94'],99:['W91','W92'],100:['W95','W96'],
-  101:['W97','W98'],102:['W99','W100'],103:['P101','P102'],104:['W101','W102'],
+  // R32 — origen desde grupos
+  73:['2°A','2°B'],  74:['1°E','Mej.3°'],75:['1°F','2°C'], 76:['1°C','2°F'],
+  77:['1°I','Mej.3°'],78:['2°E','2°I'], 79:['1°A','Mej.3°'],80:['1°L','Mej.3°'],
+  81:['1°D','Mej.3°'],82:['1°G','Mej.3°'],83:['2°K','2°L'],84:['1°H','2°J'],
+  85:['1°B','Mej.3°'],86:['1°J','2°H'],87:['1°K','Mej.3°'],88:['2°D','2°G'],
+  // R16
+  89:['G.P74','G.P77'],90:['G.P73','G.P75'],91:['G.P76','G.P78'],92:['G.P79','G.P80'],
+  93:['G.P83','G.P84'],94:['G.P81','G.P82'],95:['G.P86','G.P88'],96:['G.P85','G.P87'],
+  // Cuartos
+  97:['G.P89','G.P90'],98:['G.P93','G.P94'],99:['G.P91','G.P92'],100:['G.P95','G.P96'],
+  // Semis
+  101:['G.P97','G.P98'],102:['G.P99','G.P100'],
+  // 3er puesto y Final
+  103:['P.P101','P.P102'],104:['G.P101','G.P102'],
 };
 let _curGroup=null;       // letra de grupo activa (pronós/grupos)
 const MSG_READ_KEY='becbuc_msg_read';
@@ -671,7 +721,7 @@ async function api(path,opts={}){
   const h={'Content-Type':'application/json','ngrok-skip-browser-warning':'true',...(xh||{})};
   if(token) h['Authorization']='Bearer '+token;
   const r=await fetch(base+path,{headers:h,...rest});
-  if(r.status===401){token='';sessionStorage.removeItem('bec_token');localStorage.removeItem('tok_fix');showLogin();throw new Error('Sesión expirada');}
+  if(r.status===401){token='';try{sessionStorage.removeItem('bec_token');}catch(_){}try{localStorage.removeItem('tok_fix');}catch(_){}showLogin();throw new Error('Sesión expirada');}
   if(!r.ok){const e=await r.json().catch(()=>({detail:r.statusText}));throw new Error(e.detail||r.statusText);}
   return r.json();
 }
@@ -687,18 +737,25 @@ function showLogin(){
 async function doLogin(){
   const u=document.getElementById('lgUser').value.trim(), p=document.getElementById('lgPass').value;
   const err=document.getElementById('lgErr'), btn=document.getElementById('lgBtn');
-  err.textContent='';
-  if(!u||!p){err.textContent='Completá usuario y contraseña.';return;}
-  btn.disabled=true; btn.innerHTML='<span class="spin">◌</span> Ingresando…';
+  if(err) err.textContent='';
+  if(!u||!p){if(err) err.textContent='Completá usuario y contraseña.'; return;}
+  if(btn){btn.disabled=true; btn.innerHTML='<span class="spin">◌</span> Ingresando…';}
   try{
     const r=await fetch(base+'/api/v1/auth/login',{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({username:u,password:p})});
-    const d=await r.json();
-    if(!r.ok){err.textContent=d.detail||'Credenciales incorrectas.';return;}
-    token=d.access_token; sessionStorage.setItem('bec_token',token); localStorage.setItem('tok_fix',token);
+    let d;
+    try{ d=await r.json(); }catch(je){ if(err) err.textContent='Respuesta inválida del servidor ('+r.status+').'; return; }
+    if(!r.ok){if(err) err.textContent=d.detail||'Credenciales incorrectas.'; return;}
+    token=d.access_token;
+    try{sessionStorage.setItem('bec_token',token);}catch(_){}
+    try{localStorage.setItem('tok_fix',token);}catch(_){}
     if(d.must_change_password){showChangePasswordModalM();return;}
     await boot();
-  }catch{err.textContent='Error de conexión.';}
-  finally{btn.disabled=false; btn.textContent='Ingresar';}
+  }catch(e){
+    const msg=e&&e.message?e.message:'sin detalles';
+    if(err) err.textContent='Error de conexión: '+msg;
+    else alert('Error de conexión: '+msg);
+  }
+  finally{if(btn){btn.disabled=false; btn.textContent='Ingresar';}}
 }
 function showChangePasswordModalM(){
   document.getElementById('cpmCur').value='';
@@ -738,7 +795,47 @@ function _startHeartbeatM(){
 function _stopHeartbeatM(){if(_mHbTimer){clearInterval(_mHbTimer);_mHbTimer=null;}}
 function _mOnlineBadge(src){if(!src)return'';const ic=src==='movil'?'📱':'💻';return`<span title="Conectado (${src})" style="font-size:.72rem;margin-left:3px">${ic}</span>`;}
 
-function logout(){_stopHeartbeatM();token='';sessionStorage.removeItem('bec_token');localStorage.removeItem('tok_fix');location.reload();}
+function logout(){_stopHeartbeatM();token='';try{sessionStorage.removeItem('bec_token');}catch(_){}try{localStorage.removeItem('tok_fix');}catch(_){}window.location.href='/login';}
+
+/* ════════ User Picker (admin) ════════ */
+let _allUsersM=[];
+async function openUserPickerM(){
+  const ov=document.getElementById('userPickerOverlayM');
+  const list=document.getElementById('userPickerListM');
+  const inp=document.getElementById('userPickerSearchM');
+  if(!ov) return;
+  ov.style.display='block';
+  if(inp){inp.value='';setTimeout(()=>inp.focus(),120);}
+  list.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.78rem">Cargando…</div>';
+  try{
+    const r=await api('/api/v1/bets/apostadores').catch(()=>[]);
+    _allUsersM=r||[];
+    renderUserPickerListM(_allUsersM);
+  }catch(e){list.innerHTML=`<div style="padding:12px;color:var(--red);font-size:.75rem">Error: ${e.message}</div>`;}
+}
+function closeUserPickerM(){const ov=document.getElementById('userPickerOverlayM');if(ov) ov.style.display='none';}
+function filterUserPickerM(q){
+  const v=(q||'').toLowerCase();
+  renderUserPickerListM(_allUsersM.filter(u=>(u.username||'').toLowerCase().includes(v)||(u.nombre_completo||'').toLowerCase().includes(v)));
+}
+function renderUserPickerListM(users){
+  const list=document.getElementById('userPickerListM');
+  if(!users.length){list.innerHTML='<div style="padding:12px;color:var(--muted);font-size:.75rem;text-align:center">Sin resultados</div>';return;}
+  list.innerHTML=users.map(u=>{
+    const nm=u.nombre_completo||u.username||String(u.id);
+    const isCur=_adminViewAs&&_adminViewAs.id===u.id;
+    return `<button onclick="pickUserM(${u.id},'${esc(nm)}')"
+      style="display:flex;align-items:center;gap:10px;width:100%;background:${isCur?'rgba(99,102,241,.2)':'transparent'};border:none;border-bottom:1px solid var(--line);padding:10px 8px;cursor:pointer;text-align:left">
+      <div style="width:30px;height:30px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;flex-shrink:0;color:#fff">${esc(nm.charAt(0).toUpperCase())}</div>
+      <div>
+        <div style="font-size:.8rem;font-weight:700;color:var(--text)">${esc(nm)}</div>
+        <div style="font-size:.62rem;color:var(--muted)">${esc(u.username||'')}</div>
+      </div>
+      ${isCur?`<span style="margin-left:auto;font-size:.6rem;color:#a5b4fc;font-weight:700">✓ ACTIVO</span>`:''}
+    </button>`;
+  }).join('');
+}
+function pickUserM(id,nombre){closeUserPickerM();setViewAsM(id,nombre);}
 
 /* ════════ Boot ════════ */
 async function boot(){
@@ -750,6 +847,9 @@ async function boot(){
   document.getElementById('userName').textContent=name;
   document.getElementById('avatar').textContent=name.charAt(0).toUpperCase();
   document.getElementById('btnAdminTop').style.display=_isAdmin?'block':'none';
+  const buscador=document.getElementById('btnBuscadorM');
+  if(buscador) buscador.style.display=_isAdmin?'inline':'none';
+  _updateYoBtnM();
   document.getElementById('login').classList.add('hidden');
   _startHeartbeatM();
   document.getElementById('topbar').style.display='flex';
@@ -1383,15 +1483,17 @@ function _koCardsM(nums,koMap,realMap,forceEdit=false,locked=false){
   return nums.map(num=>{
     const ko=koMap[num],real=realMap[num];
     const feeders=BK_FEEDERS_M[num];
-    const feederLabel=feeders?feeders.join('·'):'';
+    const feederLabel=feeders?feeders.join(' · '):'';
+    const lfeedM=feeders?.[0]||'';
+    const vfeedM=feeders?.[1]||'';
     const pid=ko?.partido_id;
     const lObj=ko?.local,vObj=ko?.visitante;
     const lName=lObj?(lObj.nombre_es||lObj.nombre||'?'):null;
     const vName=vObj?(vObj.nombre_es||vObj.nombre||'?'):null;
     const lF=lObj?.logo_url?flag(lObj.logo_url,lName,'sm'):'';
     const vF=vObj?.logo_url?flag(vObj.logo_url,vName,'sm'):'';
-    const lD=lName?esc(lName):`<span style="color:var(--muted);font-style:italic">TBD</span>`;
-    const vD=vName?esc(vName):`<span style="color:var(--muted);font-style:italic">TBD</span>`;
+    const lD=lName?esc(lName):`<span style="color:var(--muted2);font-size:.68rem;font-style:italic">${lfeedM||'TBD'}</span>`;
+    const vD=vName?esc(vName):`<span style="color:var(--muted2);font-size:.68rem;font-style:italic">${vfeedM||'TBD'}</span>`;
     const sv=pid?(_misApuestas[pid]||{}):{}; const sl=pid?(_koSlipM[pid]||{}):{};
     const pgl=sl.pred_local!==undefined?sl.pred_local:(sv.pred_local??'');
     const pgv=sl.pred_visitante!==undefined?sl.pred_visitante:(sv.pred_visitante??'');
@@ -1435,8 +1537,8 @@ function _koCardsM(nums,koMap,realMap,forceEdit=false,locked=false){
       // Editable siempre que haya partido_id (equipos pueden ser TBD aún)
       // R16+ (num≥89) ocultan nombres de equipo en pronósticos (no en popup forceEdit)
       const hideTeams = !forceEdit && num >= 89;
-      const lRow=(!hideTeams&&lObj)?`${lF}<span class="nm">${lD}</span>`:`<span class="nm" style="color:var(--muted);font-style:italic">Por definir</span>`;
-      const vRow=(!hideTeams&&vObj)?`${vF}<span class="nm">${vD}</span>`:`<span class="nm" style="color:var(--muted);font-style:italic">Por definir</span>`;
+      const lRow=(!hideTeams&&lObj)?`${lF}<span class="nm">${lD}</span>`:`<span class="nm" style="color:var(--muted2);font-size:.68rem;font-style:italic">${lfeedM||'Por definir'}</span>`;
+      const vRow=(!hideTeams&&vObj)?`${vF}<span class="nm">${vD}</span>`:`<span class="nm" style="color:var(--muted2);font-size:.68rem;font-style:italic">${vfeedM||'Por definir'}</span>`;
       const lNP=lName||'L', vNP=vName||'V';
       const _dis=locked?' disabled':'';
       // Bonus toggle: siempre clickeable (para ver aunque esté bloqueado)
@@ -1468,9 +1570,9 @@ function _koCardsM(nums,koMap,realMap,forceEdit=false,locked=false){
       </div>`;
     }else{
       body=`<div class="bk-m-teams">
-        <div class="bk-m-t">${lF}<span class="nm">${lD}</span></div>
-        <div class="bk-m-sc" style="color:var(--muted);font-style:italic;font-size:.65rem">Por definir</div>
-        <div class="bk-m-t r">${vF}<span class="nm">${vD}</span></div>
+        <div class="bk-m-t"><span class="nm" style="color:var(--muted2);font-size:.68rem;font-style:italic">${lfeedM||'Por definir'}</span></div>
+        <div class="bk-m-sc" style="color:var(--muted);font-style:italic;font-size:.6rem">vs</div>
+        <div class="bk-m-t r"><span class="nm" style="color:var(--muted2);font-size:.68rem;font-style:italic">${vfeedM||'Por definir'}</span></div>
       </div>`;
     }
     return `<div class="r32m" id="bkcm-${num}"><div class="num">P${num}${feederLabel?` <span style="font-size:.55rem;color:var(--muted2)">${feederLabel}</span>`:''}</div>${body}</div>`;
@@ -1988,7 +2090,7 @@ function matchCard(p,fid,blq=false){
         const pts=ap.puntos??0, cls=pts===3?'pts-3':pts===1?'pts-1':'pts-0', ic=pts===3?'🎯':pts===1?'✔️':'✖️';
         cmp=`<div class="cmp"><span class="lbl">Tu pronóstico:</span><span class="val">${ap.pred_local}–${ap.pred_visitante}</span><span class="ptsb ${cls}">${ic} ${pts} pt${pts!==1?'s':''}${ap.puntos_bonus?` +${ap.puntos_bonus}⚡`:''}</span></div>`;
       } else cmp=`<div class="cmp"><span class="lbl">No pronosticaste este partido</span></div>`;
-      return `<div class="mc fin" id="mc-${p.id}"><div class="mc-meta">J${p.jornada||'?'} <span class="fb">Final</span></div>
+      return `<div class="mc fin" id="mc-${p.id}"><div class="mc-meta">${p.numero_fifa?`<span style="color:#6ee7b7;font-weight:700;font-size:.62rem">P${p.numero_fifa}</span> · `:''}J${p.jornada||'?'} <span class="fb">Final</span></div>
         <div class="mc-row"><div class="team">${lf}<span class="tname">${esc(ln)}</span></div>
         <div class="sfin">${p.goles_local}<span class="dash">–</span>${p.goles_visitante}${ap?betParen(ap.pred_local,ap.pred_visitante,p.goles_local,p.goles_visitante):''}</div>
         <div class="team r">${vf}<span class="tname">${esc(vn)}</span></div></div>${cmp}</div>`;
@@ -1997,9 +2099,10 @@ function matchCard(p,fid,blq=false){
       const predTxt=ap&&ap.pred_local!=null&&ap.pred_visitante!=null
         ?`<div class="cmp"><span class="lbl">Tu pronóstico:</span><span class="val">${ap.pred_local}–${ap.pred_visitante}</span></div>`
         :`<div class="cmp"><span class="lbl" style="color:var(--muted)">Sin pronóstico guardado</span></div>`;
+      const _pnumRO = p.numero_fifa ? `<span style="color:#6ee7b7;font-weight:700;font-size:.62rem">P${p.numero_fifa}</span> · ` : '';
       const metaLblRO = isLive
-        ? `J${p.jornada||'?'} <span class="fb-live">🔴 En vivo</span>`
-        : `J${p.jornada||'?'} · Programado <span style="font-size:.58rem;color:var(--amber)">🔒</span>`;
+        ? `${_pnumRO}J${p.jornada||'?'} <span class="fb-live">🔴 En vivo</span>`
+        : `${_pnumRO}J${p.jornada||'?'} · Programado <span style="font-size:.58rem;color:var(--amber)">🔒</span>`;
       return `<div class="mc${ap&&ap.pred_local!=null?' has-pred':''}" id="mc-${p.id}">
         <div class="mc-meta">${metaLblRO}</div>
         ${livebar()}
@@ -2023,11 +2126,12 @@ function matchCard(p,fid,blq=false){
       <div class="bfld"><label>⚽ Penales partido</label><input id="bpp-${p.id}" type="number" inputmode="numeric" min="0" max="10" value="${cur.pred_penales_partido??''}" oninput="onScore(${p.id},${fid})"></div>
       <div class="bfld"><label>📺 VAR</label><input id="bv-${p.id}" type="number" inputmode="numeric" min="0" max="10" value="${cur.pred_var??''}" oninput="onScore(${p.id},${fid})"></div>
     </div>`;
+  const _pnum = p.numero_fifa ? `<span style="color:#6ee7b7;font-weight:700;font-size:.62rem">P${p.numero_fifa}</span> · ` : '';
   const metaLbl = fin
-    ? `J${p.jornada||'?'} <span class="fb">Final</span> ${realRef}`
+    ? `${_pnum}J${p.jornada||'?'} <span class="fb">Final</span> ${realRef}`
     : isLive
-      ? `J${p.jornada||'?'} <span class="fb-live">🔴 En vivo</span>`
-      : `J${p.jornada||'?'} · Programado`;
+      ? `${_pnum}J${p.jornada||'?'} <span class="fb-live">🔴 En vivo</span>`
+      : `${_pnum}J${p.jornada||'?'} · Programado`;
   return `<div class="mc ${hasPred?'has-pred':''}" id="mc-${p.id}"><div class="mc-meta">${metaLbl}</div>
     ${livebar()}
     <div class="mc-row"><div class="team">${lf}<span class="tname">${esc(ln)}</span></div>
@@ -2130,7 +2234,7 @@ function onBkBonusM(pid,field,val){
 }
 function _updKoSaveBtnM(){
   const btn=document.getElementById('bk-savem');
-  if(!btn) return;
+  if(!btn) return; // puede no existir si la fase está cerrada
   const cnt=Object.keys(_koSlipM).length;
   btn.disabled=!cnt;
   btn.textContent=cnt?`💾 Guardar KO (${cnt})`:'💾 Sin cambios';
@@ -2216,10 +2320,12 @@ function _renderKOInputsM(koData,realMap){
 
     // team rows (always text — no inputs here)
     const lIsW=fin&&real?.ganador==='local', vIsW=fin&&real?.ganador==='visitante';
+    const _lf=BK_FEEDERS_M?.[num]?.[0]||'TBD';
+    const _vf=BK_FEEDERS_M?.[num]?.[1]||'TBD';
     const lNmHtml=lName?`<span class="bk-hz-nm${lIsW?' w':''}">${esc(lName)}</span>`
-      :`<span class="bk-hz-nm tbd">TBD</span>`;
+      :`<span class="bk-hz-nm tbd" style="font-size:.6rem">${_lf}</span>`;
     const vNmHtml=vName?`<span class="bk-hz-nm${vIsW?' w':''}">${esc(vName)}</span>`
-      :`<span class="bk-hz-nm tbd">TBD</span>`;
+      :`<span class="bk-hz-nm tbd" style="font-size:.6rem">${_vf}</span>`;
     const lScHtml=fin&&real?.gl!=null?`<span class="bk-hz-sc${lIsW?' w':''}">${real.gl}</span>`:'';
     const vScHtml=fin&&real?.gv!=null?`<span class="bk-hz-sc${vIsW?' w':''}">${real.gv}</span>`:'';
 
@@ -2297,11 +2403,11 @@ function _renderKOInputsM(koData,realMap){
     </div>`;
   }).join('');
 
+  const _anyKOOpen=(_faseEst?.fases||[]).some(f=>f.tipo!=='grupo'&&!f.bloqueada&&!f.concluida);
   return `<div class="br-sec">
     <div class="br-sec-h" style="display:flex;align-items:center;justify-content:space-between;padding-bottom:0">
       📝 Playoffs
-      <button id="bk-savem" class="btn-act" onclick="saveKOM()" disabled
-        style="font-size:.62rem;padding:3px 10px">💾 Sin cambios</button>
+      ${_anyKOOpen?`<button id="bk-savem" class="btn-act" onclick="saveKOM()" disabled style="font-size:.62rem;padding:3px 10px">💾 Sin cambios</button>`:`<span style="font-size:.62rem;color:var(--amber)">🔒 Fase cerrada</span>`}
     </div>
     <div class="bk-rnd-chips">${chipsHtml}</div>
     <div class="bk-hz-rounds" id="bk-hz-scroll">${colsHtml}</div>
@@ -2940,6 +3046,7 @@ function _renderRankingTotal(el){
           <span>Todos</span>
         </label>
         <button class="sm-btn" onclick="downloadRankingExcelM(this)" style="font-size:.68rem;padding:4px 10px">📥 Excel ranking</button>
+        <button class="sm-btn" onclick="exportarPuntajesM(this)" style="font-size:.68rem;padding:4px 10px;background:var(--accent2)">📊 Exportar puntaje</button>
       </div>
     </div>
   </div>`;
@@ -3004,7 +3111,7 @@ async function downloadRankingExcelM(btn){
   if(btn){btn.disabled=true;btn.textContent='⏳…';}
   try{
     const resp=await fetch(`/api/v1/bets/ranking-export/${_torneoId}`,{
-      headers:{Authorization:`Bearer ${token}`}
+      headers:{Authorization:`Bearer ${token}`,'ngrok-skip-browser-warning':'true'}
     });
     if(!resp.ok)throw new Error(`Error ${resp.status}`);
     const blob=await resp.blob();
@@ -3018,6 +3125,28 @@ async function downloadRankingExcelM(btn){
     URL.revokeObjectURL(url);
   }catch(e){alert(`Error al descargar Excel: ${e.message}`);}
   finally{if(btn){btn.disabled=false;btn.textContent=orig||'📥 Excel ranking';}}
+}
+
+async function exportarPuntajesM(btn){
+  if(!_torneoId){alert('Seleccioná un torneo primero.');return;}
+  const orig=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent='⏳…';}
+  try{
+    const resp=await fetch(`/api/v1/bets/exportar-puntajes/${_torneoId}`,{
+      headers:{Authorization:`Bearer ${token}`,'ngrok-skip-browser-warning':'true'}
+    });
+    if(!resp.ok)throw new Error(`Error ${resp.status}`);
+    const blob=await resp.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const cd=resp.headers.get('Content-Disposition')||'';
+    const m=cd.match(/filename="([^"]+)"/);
+    a.href=url;
+    a.download=m?m[1]:`puntajes_copa.xlsx`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }catch(e){alert(`Error al exportar: ${e.message}`);}
+  finally{if(btn){btn.disabled=false;btn.textContent=orig||'📊 Exportar puntaje';}}
 }
 
 function _onRkFilterChangeM(){
@@ -3073,7 +3202,10 @@ async function toggleRkAposM(aid, el) {
       const gl=p.goles_local??'?',gv=p.goles_visitante??'?';
       const pl=p.pred_local??'-',pv=p.pred_visitante??'-';
       const lN=p.local_nombre||'?',vN=p.visit_nombre||'?';
-      const pts=p.pts_total??0;
+      // anyDetail=true cuando puntaje_detalle existe (al menos un item no-null)
+      const anyDetail=ITEMS_DEF.some(([,,k])=>p[k]!=null);
+      const itemSum=ITEMS_DEF.reduce((s,[,,k])=>s+(p[k]??0),0);
+      const pts=anyDetail?itemSum+(p.pts_equipo??0)+(p.pts_bonus??0):(p.pts_total??0);
       const pid=p.partido_id||p.id;
       grandTotal+=pts;
       const ok=gl!=='?'&&pl!=='-'&&String(pl)===String(gl)&&String(pv)===String(gv);
@@ -3082,13 +3214,15 @@ async function toggleRkAposM(aid, el) {
       const bg=ok?'rgba(34,197,94,.08)':hit?'rgba(251,191,36,.07)':'transparent';
 
       // Items del partido (nivel 3)
-      const itemRows=ITEMS_DEF.map(([letra,lbl,key])=>{
-        const v=p[key]??0;
-        return `<div style="display:flex;justify-content:space-between;font-size:.6rem;padding:1px 0">
-          <span style="color:var(--muted2)">${letra} — ${lbl}</span>
-          <span style="font-weight:${v>0?'700':'400'};color:${v>0?'var(--accent)':'var(--muted2)'}">${v} pts</span>
-        </div>`;
-      }).join('');
+      const itemRows=anyDetail
+        ?ITEMS_DEF.map(([letra,lbl,key])=>{
+            const v=p[key]??0;
+            return `<div style="display:flex;justify-content:space-between;font-size:.6rem;padding:1px 0">
+              <span style="color:var(--muted2)">${letra} — ${lbl}</span>
+              <span style="font-weight:${v>0?'700':'400'};color:${v>0?'var(--accent)':'var(--muted2)'}">${v} pts</span>
+            </div>`;
+          }).join('')
+        :`<div style="color:var(--muted2);font-size:.58rem;padding:3px 0;font-style:italic">⚠ Sin desglose — recalculá puntajes</div>`;
 
       h+=`<div style="border-bottom:1px solid var(--border);background:${bg}">
         <div id="rkPtRowM_${aid}_${pid}" onclick="toggleRkPartidoM(${aid},${pid})"
@@ -3144,7 +3278,7 @@ async function _exportTransparenciaM(btn){
   const old=btn?btn.textContent:'';
   if(btn){btn.disabled=true;btn.textContent='⏳';}
   try{
-    const h={}; if(token) h['Authorization']='Bearer '+token;
+    const h={'ngrok-skip-browser-warning':'true'}; if(token) h['Authorization']='Bearer '+token;
     const r=await fetch('/api/v1/bets/transparencia/'+_torneoId+'/export',{headers:h});
     if(!r.ok) throw new Error('HTTP '+r.status);
     const blob=await r.blob();
@@ -3258,8 +3392,6 @@ async function loadTransparencia(selUid){
 }
 
 /* ════════ MENSAJES ════════ */
-const readSet=()=>{try{return new Set(JSON.parse(localStorage.getItem(MSG_READ_KEY)||'[]'));}catch{return new Set();}};
-const saveRead=s=>{try{localStorage.setItem(MSG_READ_KEY,JSON.stringify([...s]));}catch{}};
 async function loadMensajes(silent){
   const el=document.getElementById('page-mensajes');
   if(!silent) el.innerHTML='<div class="loader"><span class="spin">◌</span> Cargando mensajes…</div>';
@@ -3689,57 +3821,52 @@ async function confirmarFpM(){
     if(pv!==''&&!isNaN(parseInt(pv))) qs+=`&penales_visitante=${parseInt(pv)}`;
     const r=await api(`/api/v1/bets/finalizar-partido/${pid}${qs}`,{method:'POST'});
     const steps=[`✅ ${r.partido}`];
-    if(r    if(r.standings_ok) steps.push('✅ Standings');
+    if(r.puntajes_error) steps.push(`⚡️ ${r.puntajes_error}`);
+    if(r.standings_ok) steps.push('✅ Standings');
     if(r.bracket_ok)   steps.push('✅ Bracket');
-    if(r.puntajes_ok)  steps.push('✅ Puntajes ('+r.puntajes_procesados+')');
-    msg.innerHTML=steps.join(' · ');
-  }catch(e){msg.innerHTML='❌ '+esc(e.message);}
-  finally{btn.disabled=false;btn.textContent='Finalizar';}
-}
-</script>
-</body>
-</html>
-��️ ${r.puntajes_error}`);
+    if(r.puntajes_ok)  steps.push(`✅ Puntajes (${r.puntajes_procesados})`);
     msg.innerHTML=`<span style="color:var(--green);font-size:.73rem">${steps.join(' → ')}</span>`;
     document.getElementById('amFpMsg').innerHTML=msg.innerHTML;
   }catch(e){
     msg.innerHTML=`<span style="color:var(--red)">✗ ${e.message}</span>`;
   }finally{btn.disabled=false; btn.textContent='⚡ Finalizar y recalcular';}
 }
+
+// ── Auto-start ──
+if (token) { boot(); } else { showLogin(); }
 </script>
 
 <!-- ── Bottom sheet Finalizar Partido (móvil) ── -->
-<div id="fpOverlayM" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9500;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
-  <div style="background:var(--card);border-radius:18px 18px 0 0;padding:20px 18px 30px;width:100%;max-width:480px;max-height:82vh;overflow-y:auto;">
+<div id="fpOverlayM" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9500;align-items:flex-end;justify-content:center;display:none;">
+  <div style="background:var(--card);border-radius:18px 18px 0 0;padding:20px 18px 30px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <span style="font-weight:800;font-size:.88rem;color:#f87171">⚡ Finalizar partido</span>
-      <button onclick="document.getElementById('fpOverlayM').style.display='none'" style="background:none;border:none;color:var(--muted2);font-size:1.2rem;cursor:pointer">✕</button>
+      <button onclick="document.getElementById('fpOverlayM').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;">✕</button>
     </div>
-    <div style="font-size:.7rem;color:var(--muted2);margin-bottom:10px">Usar cuando la API queda trabada. Guarda resultado en BD y recalcula todo.</div>
-    <div id="fpListM" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:160px;overflow-y:auto"></div>
-    <div id="fpFormM" style="display:none">
+    <div style="font-size:.7rem;color:var(--muted2);margin-bottom:10px">Usar cuando la API queda trabada. Guarda resultados y recalcula standings, bracket y puntajes.</div>
+    <div id="fpListM" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:160px;overflow-y:auto;"></div>
     <div id="fpFormM" style="display:none">
       <div style="font-weight:700;font-size:.78rem;color:var(--accent);margin-bottom:8px" id="fpLabelM"></div>
       <input type="hidden" id="fpPidM">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div>
           <label style="font-size:.67rem;color:var(--muted2)">Goles local</label>
-          <input type="number" id="fpGLM" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem">
+          <input type="number" id="fpGLM" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.82rem;">
         </div>
         <div>
           <label style="font-size:.67rem;color:var(--muted2)">Goles visitante</label>
-          <input type="number" id="fpGVM" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem">
+          <input type="number" id="fpGVM" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.82rem;">
         </div>
         <div>
           <label style="font-size:.67rem;color:var(--muted2)">Pen. local (opc.)</label>
-          <input type="number" id="fpPLM" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem">
+          <input type="number" id="fpPLM" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.82rem;">
         </div>
         <div>
           <label style="font-size:.67rem;color:var(--muted2)">Pen. visitante (opc.)</label>
-          <input type="number" id="fpPVM" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem">
+          <input type="number" id="fpPVM" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.82rem;">
         </div>
       </div>
-      <button id="fpBtnM" onclick="confirmarFpM()" style="width:100%;padding:9px;border-radius:10px;border:none;background:var(--red,#dc2626);color:#fff;font-weight:700;font-size:.82rem;cursor:pointer">⚡ Finalizar y recalcular</button>
+      <button id="fpBtnM" onclick="confirmarFpM()" style="width:100%;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-weight:700;font-size:.82rem;cursor:pointer">⚡ Finalizar y recalcular</button>
       <div id="fpMsgM" style="margin-top:8px;font-size:.72rem"></div>
     </div>
   </div>

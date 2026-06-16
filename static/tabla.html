@@ -44,6 +44,12 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 /* ── Table wrap ── */
 .table-wrap{flex:1;overflow:auto;position:relative;}
 table.grid{border-collapse:collapse;width:max-content;min-width:100%;font-size:.8rem;}
+/* ── Row selector column ── */
+th.th-sel,td.td-sel{width:10px;min-width:10px;max-width:10px;padding:0 !important;border-right:1px solid var(--border);position:sticky;left:0;z-index:2;background:var(--surface);cursor:pointer;}
+td.td-sel{background:var(--surface2);transition:background .1s;}
+td.td-sel:hover{background:var(--accent2) !important;}
+tr:hover td.td-sel{background:rgba(0,188,212,.25);}
+tr.selected td.td-sel{background:var(--accent2) !important;}
 
 /* ── Column headers ── */
 table.grid thead th{
@@ -102,14 +108,14 @@ td.td-actions{
   position:sticky;right:0;
   background:var(--surface);
   border-left:1px solid var(--border);
-  padding:3px 6px;
+  padding:3px 4px;
   white-space:nowrap;
   text-align:center;
-  width:72px;min-width:72px;
+  width:84px;min-width:84px;
 }
 table.grid tbody tr:hover td.td-actions{background:var(--surface2);}
 table.grid tbody tr.dirty td.td-actions{background:rgba(245,158,11,.04);}
-.row-actions{display:flex;align-items:center;justify-content:center;gap:4px;}
+.row-actions{display:flex;align-items:center;justify-content:center;gap:2px;}
 .ra-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;border:none;cursor:pointer;transition:all .12s;background:none;padding:0;}
 .ra-btn:disabled{opacity:.3;cursor:not-allowed;}
 .ra-save{color:var(--green);}
@@ -117,14 +123,13 @@ table.grid tbody tr.dirty td.td-actions{background:rgba(245,158,11,.04);}
 .ra-discard{color:var(--muted);}
 .ra-discard:hover:not(:disabled){color:var(--red);background:rgba(239,68,68,.1);}
 .ra-edit{color:var(--muted);opacity:0;}
-.ra-copy{color:var(--muted);opacity:0;}
+.ra-add{color:var(--muted);opacity:0;}
 .ra-delete{color:var(--muted);opacity:0;}
 table.grid tbody tr:hover .ra-edit,
-table.grid tbody tr:hover .ra-copy,
+table.grid tbody tr:hover .ra-add,
 table.grid tbody tr:hover .ra-delete{opacity:.6;}
 .ra-edit:hover{opacity:1 !important;background:rgba(0,188,212,.12);color:var(--accent2);}
-.ra-copy:hover{opacity:1 !important;background:rgba(99,102,241,.12);color:var(--indigo);}
-.ra-copy.copied{opacity:1 !important;color:var(--green);}
+.ra-add:hover{opacity:1 !important;background:rgba(34,197,94,.12);color:var(--green);}
 .ra-delete:hover{opacity:1 !important;background:rgba(239,68,68,.12);color:var(--red);}
 .ra-confirm-del{color:var(--red);}
 .ra-confirm-del:hover:not(:disabled){background:rgba(239,68,68,.15);}
@@ -142,6 +147,7 @@ table.grid tbody tr:hover .ra-delete{opacity:.6;}
 .bool-t{color:var(--green);font-weight:700;}
 .bool-f{color:var(--red);}
 .badge-mv{background:rgba(99,102,241,.18);border:1px solid rgba(99,102,241,.35);border-radius:12px;padding:2px 9px;font-size:.73rem;color:#a5b4fc;}
+.badge-mv-extra{background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:1px 7px;font-size:.68rem;color:#818cf8;margin-left:4px;}
 .date-val{color:var(--yellow);font-family:monospace;font-size:.76rem;}
 .num-val{font-family:monospace;color:var(--accent2);}
 .int-val{font-family:monospace;color:var(--accent);}
@@ -196,6 +202,40 @@ table.grid tbody tr:hover .ra-delete{opacity:.6;}
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* ── Content Tabs ── */
+.ct-tabs{display:flex;align-items:center;gap:2px;padding:6px 14px 0;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+.ct-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;font-size:.78rem;font-weight:600;padding:6px 12px;margin-bottom:-1px;transition:all .15s;white-space:nowrap;}
+.ct-tab:hover{color:var(--fg);}
+.ct-tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+
+/* ── Schema panel ── */
+#schemaPanelWrap{flex:1;overflow:auto;display:none;padding:16px;}
+/* ── SQL panel ── */
+#sqlPanelWrap{flex:1;overflow:hidden;padding:16px;display:flex;flex-direction:column;}
+#sqlEditor:focus{border-color:var(--accent2);}
+.sql-status-ok{color:#22c55e;font-weight:600;}
+.sql-status-err{color:#f87171;font-weight:600;}
+.sql-status-info{color:#94a3b8;}
+.sql-preview-tbl{border-collapse:collapse;width:100%;font-size:.75rem;}
+.sql-preview-tbl th{background:#1e293b;color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.65rem;letter-spacing:.06em;padding:5px 10px;border:1px solid #2a3a55;white-space:nowrap;}
+.sql-preview-tbl td{padding:4px 10px;border:1px solid #1e293b;color:#e2e8f0;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;}
+.schema-hdr{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.schema-tbl{border-collapse:collapse;width:100%;font-size:.78rem;}
+.schema-tbl th{background:var(--surface2);color:var(--accent2);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:6px 10px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;}
+.schema-tbl td{padding:5px 10px;border-bottom:1px solid rgba(42,48,69,.4);vertical-align:middle;white-space:nowrap;}
+.schema-tbl tr:hover td{background:var(--surface2);}
+.sc-pk{display:inline-flex;align-items:center;gap:3px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:1px 7px;font-size:.66rem;color:var(--yellow);font-weight:700;}
+.sc-type{font-family:monospace;color:var(--accent);}
+.sc-null{color:var(--green);font-weight:700;}
+.sc-notnull{color:var(--muted);}
+.sc-default{font-family:monospace;color:var(--muted);font-size:.72rem;}
+.sc-name{color:var(--fg);font-weight:600;}
+.sc-fk{display:inline-flex;align-items:center;gap:3px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:10px;padding:1px 7px;font-size:.66rem;color:#a5b4fc;}
+.dc-yes{color:var(--green);font-weight:700;}
+.dc-no{color:var(--muted);}
+.dc-mv{font-family:monospace;font-size:.72rem;color:var(--purple);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dc-help{color:var(--muted);font-size:.75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 /* ── Tree Sidebar ── */
 #mainArea{display:flex;flex:1;overflow:hidden;}
@@ -265,6 +305,14 @@ table.grid tbody tr:hover .ra-delete{opacity:.6;}
 <!-- Área principal -->
 <div id="contentArea">
 
+<!-- Tabs (sólo visibles cuando hay tabla seleccionada) -->
+<div class="ct-tabs" id="contentTabs" style="display:none;">
+  <button class="ct-tab active" onclick="showTab('data')"   id="tabData">📋 Contenido</button>
+  <button class="ct-tab"        onclick="showTab('schema')" id="tabSchema">🔲 Estructura</button>
+  <button class="ct-tab"        onclick="showTab('dic')"    id="tabDic">📖 Diccionario</button>
+  <button class="ct-tab"        onclick="showTab('sql')"    id="tabSql" style="display:none;">📝 SQL Vista</button>
+</div>
+
 <!-- Hint doble clic -->
 <div id="dblClickHint" style="background:#1e293b;border-bottom:1px solid #2a3a55;padding:4px 16px;font-size:11px;color:#64748b;display:flex;align-items:center;gap:6px;">
   <span style="color:#E05020;">ℹ</span> Doble clic en una fila para ver y editar el registro completo
@@ -296,6 +344,132 @@ table.grid tbody tr:hover .ra-delete{opacity:.6;}
     <option value="500">500</option>
   </select>
   <span class="dirty-bar" id="dirtyBar"></span>
+</div>
+
+<!-- Schema panel (tab Estructura) -->
+<div id="schemaPanelWrap">
+  <div class="schema-hdr" id="schemaHdr">Estructura de tabla</div>
+  <table class="schema-tbl">
+    <thead>
+      <tr>
+        <th>Columna</th>
+        <th>Tipo</th>
+        <th>Nullable</th>
+        <th>Atributos</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody id="schemaTbody">
+      <tr><td colspan="5" style="color:var(--muted);padding:20px;text-align:center;">Cargando…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Diccionario panel (tab Diccionario) -->
+<div id="dicPanelWrap" style="display:none;flex:1;overflow:auto;padding:16px;">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+    <div class="schema-hdr" id="dicHdr" style="margin-bottom:0;flex:1;">Diccionario de tabla</div>
+    <button id="dicBtnSmartFill" onclick="dicSmartFill()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:6px;padding:6px 13px;cursor:pointer;font-size:.75rem;font-weight:600;display:none;">✨ Smart Fill</button>
+    <button id="dicBtnTest" onclick="dicTestPreview()" style="background:rgba(14,165,233,.15);color:#38bdf8;border:1px solid rgba(14,165,233,.3);border-radius:6px;padding:6px 13px;cursor:pointer;font-size:.75rem;font-weight:600;display:none;">🧪 Test</button>
+    <span id="dicStatus" style="font-size:.72rem;color:var(--muted);"></span>
+  </div>
+  <table class="schema-tbl">
+    <thead>
+      <tr>
+        <th>Campo</th>
+        <th>Alias</th>
+        <th>Tipo dato</th>
+        <th>Visible</th>
+        <th>Solo lectura</th>
+        <th>Orden</th>
+        <th>Texto ayuda</th>
+        <th>Multivalor</th>
+      </tr>
+    </thead>
+    <tbody id="dicTbody">
+      <tr><td colspan="8" style="color:var(--muted);padding:20px;text-align:center;">Cargando…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Smart Fill modal -->
+<div id="sfOverlay" onclick="if(event.target===this)closeSF()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(10,12,20,.75);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;width:780px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div>
+        <span style="font-weight:700;font-size:.95rem;">✨ Smart Fill — Inferencia de diccionario</span>
+        <span id="sfSubtitle" style="color:var(--muted);font-size:.75rem;margin-left:10px;"></span>
+      </div>
+      <button onclick="closeSF()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;">✕</button>
+    </div>
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;font-size:.75rem;color:var(--muted);">
+      Propuesta generada desde tipos de dato, FK constraints, comentarios PG y convenciones de nombres.
+      Los campos marcados 🆕 son nuevos; los marcados 🔄 difieren del diccionario actual.
+    </div>
+    <div style="overflow:auto;flex:1;">
+      <table class="schema-tbl" id="sfTable" style="min-width:600px;">
+        <thead>
+          <tr>
+            <th style="width:24px;"></th>
+            <th>Campo</th>
+            <th>Alias</th>
+            <th>Tipo dato</th>
+            <th>Visible</th>
+            <th>Solo lect.</th>
+            <th>Texto ayuda</th>
+            <th>SQL referencia (FK)</th>
+          </tr>
+        </thead>
+        <tbody id="sfTbody">
+          <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted);">Analizando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0;">
+      <span id="sfSummary" style="flex:1;font-size:.75rem;color:var(--muted);"></span>
+      <button onclick="closeSF()" style="background:#334155;color:#fff;border:none;border-radius:6px;padding:7px 16px;cursor:pointer;font-size:.78rem;">Cancelar</button>
+      <button id="sfBtnSave" onclick="dicSmartFillSave()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:6px;padding:7px 16px;cursor:pointer;font-size:.78rem;font-weight:600;">💾 Aplicar al diccionario</button>
+    </div>
+  </div>
+</div>
+
+<!-- Dic Test preview modal -->
+<div id="dicTestOverlay" onclick="if(event.target===this)closeDicTest()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(10,12,20,.75);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;width:880px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <span style="font-weight:700;font-size:.95rem;">🧪 Vista previa del diccionario</span>
+      <button onclick="closeDicTest()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;">✕</button>
+    </div>
+    <div style="padding:10px 20px;border-bottom:1px solid var(--border);flex-shrink:0;font-size:.72rem;color:var(--muted);">
+      Así se verían los datos de la tabla aplicando la configuración actual del diccionario (alias, orden, visibilidad, multivalor).
+    </div>
+    <div id="dicTestBody" style="overflow:auto;flex:1;padding:16px;">
+      <div style="text-align:center;color:var(--muted);padding:30px;">Cargando…</div>
+    </div>
+    <div style="padding:12px 20px;border-top:1px solid var(--border);flex-shrink:0;text-align:right;">
+      <button onclick="closeDicTest()" style="background:#334155;color:#fff;border:none;border-radius:6px;padding:7px 16px;cursor:pointer;font-size:.78rem;">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SQL panel (tab SQL Vista, solo para vistas) -->
+<div id="sqlPanelWrap" style="display:none;flex:1;overflow:hidden;padding:16px;display:none;flex-direction:column;">
+  <div class="schema-hdr" id="sqlHdr">SQL de la vista</div>
+  <div id="sqlToolbar" style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;flex-shrink:0;">
+    <button id="sqlBtnTest" onclick="sqlTest()" style="background:#0ea5e9;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:.78rem;font-weight:600;">▶ Probar</button>
+    <button id="sqlBtnSave" onclick="sqlSave()" style="background:#22c55e;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:.78rem;font-weight:600;display:none;">💾 Guardar vista</button>
+    <button onclick="sqlReset()" style="background:#475569;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:.78rem;">↩ Restaurar</button>
+    <span id="sqlStatus" style="font-size:.75rem;margin-left:4px;"></span>
+  </div>
+  <textarea id="sqlEditor"
+    spellcheck="false"
+    style="flex:1;min-height:80px;width:100%;box-sizing:border-box;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:12px;font-family:monospace;font-size:.8rem;line-height:1.6;resize:none;outline:none;"
+    oninput="sqlOnEdit()"
+    placeholder="Cargando SQL…"></textarea>
+  <div id="sqlPreviewHdr" style="display:none;margin-top:14px;flex-shrink:0;max-height:260px;overflow:auto;">
+    <div class="schema-hdr">Vista previa (primeras 10 filas)</div>
+    <div id="sqlPreviewWrap" style="overflow:auto;max-height:220px;"></div>
+  </div>
 </div>
 
 </div><!-- /contentArea -->
@@ -350,8 +524,8 @@ const IC = {
 const _params   = new URLSearchParams(window.location.search);
 let token       = _params.get('token') || sessionStorage.getItem('pg_token') || sessionStorage.getItem('tbl_token') || '';
 let baseUrl     = (_params.get('base') || window.location.origin).replace(/\/$/, '');
-const sistemaId = _params.get('sistema_id') ? parseInt(_params.get('sistema_id')) : null;
-const tablaName = (_params.get('tabla') || '').trim();
+let sistemaId   = _params.get('sistema_id') ? parseInt(_params.get('sistema_id')) : null;
+let tablaName   = (_params.get('tabla') || '').trim();
 if (_params.get('token')) {
   token = _params.get('token');
   sessionStorage.setItem('tbl_token', token);
@@ -393,6 +567,7 @@ let _draggedCol  = null;
 let _refreshing  = false;
 let _refreshPromise = null;
 let _confirmDeletePk = null; // pk con confirmación pendiente
+let _sfProposals    = [];   // propuestas Smart Fill en curso
 
 // ── Token refresh ─────────────────────────────────────────────────────────────
 async function _refreshToken() {
@@ -530,6 +705,13 @@ async function init() {
   await detectPk();
   await loadData();
 
+  // Mostrar tabs y cargar esquema
+  document.getElementById('contentTabs').style.display = '';
+  // Mostrar tab SQL solo para vistas
+  const tabSqlEl = document.getElementById('tabSql');
+  if (tabSqlEl) tabSqlEl.style.display = (isView || _isView()) ? '' : 'none';
+  await loadSchema();
+
   // Restaurar estado del sidebar árbol
   if (sessionStorage.getItem('tree_collapsed') === '1') {
     document.getElementById('treeSidebar')?.classList.add('collapsed');
@@ -551,6 +733,12 @@ function applyNavAccess(me) {
   // Botón Diccionario — visible para admin
   const btnDic = document.getElementById('btnDic');
   if (btnDic && isAdmin) btnDic.style.display = '';
+
+  // Botones Smart Fill + Test en tab Diccionario — solo admin con sistema
+  const sfBtn = document.getElementById('dicBtnSmartFill');
+  const testBtn = document.getElementById('dicBtnTest');
+  if (sfBtn) sfBtn.style.display = (isAdmin && sistemaId) ? '' : 'none';
+  if (testBtn) testBtn.style.display = isAdmin ? '' : 'none';
 
   // Permisos de escritura: vistas son solo-lectura (superadmin puede escribir si quiere)
   canWrite = isAdmin && (!isView || isSuper);
@@ -684,7 +872,7 @@ function renderTree(q) {
         ? `${item.alias} [${item.name}] (${typeLabel}${saLabel})`
         : `${item.name} (${typeLabel}${saLabel})`;
       html += `<div class="${cls}" title="${esc(title)}"
-        onclick="navToTable(${JSON.stringify(item.name)},${sis.id})">
+        onclick="navToTable('${item.name.replace(/'/g,"\\'")}',${sis.id})">
         <span style="flex-shrink:0;font-size:.65rem;color:var(--muted2)">${item.isView ? '⊡' : '▤'}</span>
         <span style="overflow:hidden;text-overflow:ellipsis;">${esc(item.alias)}</span>
         ${item.soloSA ? '<span style="flex-shrink:0;font-size:.55rem;color:#f59e0b" title="Solo superadmin">🔒</span>' : ''}
@@ -724,7 +912,6 @@ function navToTable(tbl, sId) {
   p.set('tabla', tbl);
   if (sId) {
     p.set('sistema_id', sId);
-    // Actualizar db_slug según el sistema seleccionado
     const entry = _treeData.find(e => e.sistema.id === sId);
     if (entry?.sistema?.nombre_bd) p.set('db_slug', entry.sistema.nombre_bd);
     else p.delete('db_slug');
@@ -886,6 +1073,11 @@ function renderTable() {
 
   // Fila de columnas
   const colRow = document.createElement('tr');
+  // Columna selector (primera, sticky izq)
+  const thSel = document.createElement('th');
+  thSel.className = 'th-sel';
+  thSel.title = 'Doble clic en la barra para abrir ficha';
+  colRow.appendChild(thSel);
   visCols.forEach(c => {
     const d = dicMap[c];
     const label = d?.alias || c;
@@ -916,6 +1108,10 @@ function renderTable() {
   // Fila de filtros
   const filtRow = document.createElement('tr');
   filtRow.className = 'filter-row';
+  // Celda vacía para la columna selector
+  const thSelFlt = document.createElement('th');
+  thSelFlt.className = 'th-sel';
+  filtRow.appendChild(thSelFlt);
   visCols.forEach(c => {
     const td = document.createElement('th');
     const v = colFilters[c] || '';
@@ -985,10 +1181,27 @@ function buildDataRow(row, visCols) {
   tr.dataset.pk = pk;
   if (isDirty) tr.classList.add('dirty');
   tr.addEventListener('dblclick', e => {
-    if (!e.target.closest('.td-actions') && !e.target.closest('.cell-input') && !e.target.closest('.cell-select')) {
+    if (!e.target.closest('.td-actions') && !e.target.closest('.cell-input') && !e.target.closest('.cell-select') && !e.target.closest('.td-sel')) {
       openFichaModal(pk);
     }
   });
+
+  // ── Celda selector (sticky izq, siempre captura dblclick) ───────────────────
+  const tdSel = document.createElement('td');
+  tdSel.className = 'td-sel';
+  tdSel.title = 'Doble clic → abrir ficha';
+  tdSel.addEventListener('click', e => {
+    e.stopPropagation();
+    // Alternar selección visual
+    const wasSelected = tr.classList.contains('selected');
+    document.querySelectorAll('#gridBody tr.selected').forEach(r => r.classList.remove('selected'));
+    if (!wasSelected) tr.classList.add('selected');
+  });
+  tdSel.addEventListener('dblclick', e => {
+    e.stopPropagation();
+    openFichaModal(pk);
+  });
+  tr.appendChild(tdSel);
 
   visCols.forEach(c => {
     const td = document.createElement('td');
@@ -1030,9 +1243,9 @@ function buildDataRow(row, visCols) {
     </div>`;
   } else if (canWrite) {
     tdAct.innerHTML = `<div class="row-actions">
-      <button class="ra-btn ra-edit"   title="Editar fila"   onclick="editRowFull('${esc(pk)}')">${IC.edit}</button>
-      <button class="ra-btn ra-copy"   title="Copiar fila"   onclick="copyRow('${esc(pk)}')">${IC.copy}</button>
-      <button class="ra-btn ra-delete" title="Eliminar fila" onclick="confirmDelete('${esc(pk)}')">${IC.trash}</button>
+      <button class="ra-btn ra-edit"   title="Editar fila"    onclick="openFichaModal('${esc(pk)}')">${IC.edit}</button>
+      <button class="ra-btn ra-add"    title="Incluir (nueva fila copiada)" onclick="copyRow('${esc(pk)}')">${IC.plus}</button>
+      <button class="ra-btn ra-delete" title="Eliminar fila"  onclick="confirmDelete('${esc(pk)}')">${IC.trash}</button>
     </div>`;
   } else {
     tdAct.innerHTML = `<div class="row-actions">${IC.eye}</div>`;
@@ -1059,18 +1272,37 @@ function activateCell(pk, campo, td, currentVal, row) {
   let input;
 
   if (opts && opts.length > 0) {
-    // Combo multivalor
-    input = document.createElement('select');
-    input.className = 'cell-select';
-    const emptyOpt = document.createElement('option');
-    emptyOpt.value = ''; emptyOpt.textContent = '— seleccionar —';
-    input.appendChild(emptyOpt);
-    opts.forEach(o => {
-      const opt = document.createElement('option');
-      opt.value = o.val; opt.textContent = o.label;
-      if (String(o.val) === String(currentVal ?? '')) opt.selected = true;
-      input.appendChild(opt);
-    });
+    const isMulti = opts.some(o => o.extra && o.extra.length);
+    if (isMulti) {
+      // Lista multicampo: tabla seleccionable
+      input = document.createElement('select');
+      input.className = 'cell-select';
+      input.size = Math.min(opts.length + 1, 8);
+      const emptyOpt = document.createElement('option');
+      emptyOpt.value = ''; emptyOpt.textContent = '— (ninguno) —';
+      input.appendChild(emptyOpt);
+      opts.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.val;
+        const extraText = o.extra ? o.extra.map(e => e.val).join(' · ') : '';
+        opt.textContent = o.label + (extraText ? ' — ' + extraText : '');
+        if (String(o.val) === String(currentVal ?? '')) opt.selected = true;
+        input.appendChild(opt);
+      });
+    } else {
+      // Combo simple
+      input = document.createElement('select');
+      input.className = 'cell-select';
+      const emptyOpt = document.createElement('option');
+      emptyOpt.value = ''; emptyOpt.textContent = '— seleccionar —';
+      input.appendChild(emptyOpt);
+      opts.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.val; opt.textContent = o.label;
+        if (String(o.val) === String(currentVal ?? '')) opt.selected = true;
+        input.appendChild(opt);
+      });
+    }
   } else if (tipo === 'boolean' || tipo === 'bool') {
     input = document.createElement('select');
     input.className = 'cell-select';
@@ -1781,10 +2013,16 @@ function formatCell(val, d) {
   const tipo = (d?.tipo_dato || '').toLowerCase();
   const mv   = d?.multivalor;
   if (mv && mvCache[d.campo]) {
-    const label = mvCache[d.campo].find(o => String(o.val) === String(val))?.label;
-    return label
-      ? `<span class="badge-mv" title="${esc(val)}">${esc(label)}</span>`
-      : `<span class="badge-mv">${esc(val)}</span>`;
+    const opt = mvCache[d.campo].find(o => String(o.val) === String(val));
+    if (opt) {
+      const mainBadge = `<span class="badge-mv" title="${esc(val)}">${esc(opt.label)}</span>`;
+      if (opt.extra && opt.extra.length) {
+        const extras = opt.extra.map(e => `<span class="badge-mv-extra" title="${esc(e.key)}">${esc(e.val)}</span>`).join('');
+        return mainBadge + extras;
+      }
+      return mainBadge;
+    }
+    return `<span class="badge-mv">${esc(val)}</span>`;
   }
   if (mv) return `<span class="badge-mv">${esc(val)}</span>`;
   if (tipo==='boolean'||tipo==='bool') {
@@ -1822,14 +2060,21 @@ async function fetchMvOptions(campo, mv) {
   mv = mv.trim();
   let opts = [];
   if (mv.toLowerCase().startsWith('select')) {
-    const res = await api('/api/v1/admin/sql-db', {
+    const res = await api('/api/v1/admin/mv-options', {
       method: 'POST', body: JSON.stringify({ query: mv, limit: 500, db_slug: dbSlug })
     });
     if (res.ok) {
       const data = await res.json();
       opts = (data.rows || []).map(row => {
+        const cols = Object.keys(row);
         const vals = Object.values(row);
-        return { val: String(vals[0]??''), label: vals.length>1 ? String(vals[1]??vals[0]) : String(vals[0]) };
+        // primer campo = id (val), segundo = etiqueta, resto = campos extra para lista multicampo
+        const val   = String(vals[0] ?? '');
+        const label = vals.length > 1 ? String(vals[1] ?? vals[0]) : String(vals[0]);
+        const extra = cols.length > 2
+          ? cols.slice(2).map(c => ({ key: c, val: String(row[c] ?? '') }))
+          : null;
+        return { val, label, extra };
       });
     }
   } else {
@@ -1905,6 +2150,9 @@ function onSearch(val) {
 // ── Ficha modal (dblclick) ────────────────────────────────────────────────────
 let _fichaPk      = null;
 let _fichaChanges = {};
+let _fichaMode    = 'table';   // 'table' | 'dic'
+let _dicFichaCampo   = null;
+let _dicFichaChanges = {};
 
 function openFichaModal(pk) {
   const row = rawRows.find(r => String(r[pkCol]) === String(pk));
@@ -1940,13 +2188,21 @@ function openFichaModal(pk) {
     let input;
 
     if (opts && opts.length > 0 && !isReadonly) {
+      const isMultiFicha = opts.some(o => o.extra && o.extra.length);
       input = document.createElement('select');
       input.className = 'ficha-select';
-      const emptyOpt = document.createElement('option'); emptyOpt.value=''; emptyOpt.textContent='— seleccionar —';
+      if (isMultiFicha) input.size = Math.min(opts.length + 1, 8);
+      const emptyOpt = document.createElement('option');
+      emptyOpt.value = ''; emptyOpt.textContent = isMultiFicha ? '— (ninguno) —' : '— seleccionar —';
       input.appendChild(emptyOpt);
       opts.forEach(o => {
         const opt = document.createElement('option');
-        opt.value = o.val; opt.textContent = o.label;
+        opt.value = o.val;
+        if (isMultiFicha && o.extra && o.extra.length) {
+          opt.textContent = o.label + ' — ' + o.extra.map(e => e.val).join(' · ');
+        } else {
+          opt.textContent = o.label;
+        }
         if (String(o.val) === String(val ?? '')) opt.selected = true;
         input.appendChild(opt);
       });
@@ -2036,6 +2292,175 @@ function openFichaModal(pk) {
 function closeFichaModal() {
   document.getElementById('fichaOverlay').classList.remove('open');
   _fichaPk = null; _fichaChanges = {};
+  _fichaMode = 'table'; _dicFichaCampo = null; _dicFichaChanges = {};
+}
+
+// ── Ficha de entrada de Diccionario (doble clic en tab Diccionario) ───────────
+function openDicFicha(campo) {
+  _fichaMode       = 'dic';
+  _dicFichaCampo   = campo;
+  _dicFichaChanges = {};
+
+  const d   = dicMap[campo] || {};
+  const body = document.getElementById('fichaBody');
+  const ftr  = document.getElementById('fichaFooter');
+  document.getElementById('fichaTitleEl').textContent = `Diccionario — ${tablaName}.${campo}`;
+  body.innerHTML = '';
+  ftr.innerHTML  = '';
+
+  const TIPOS = ['text','varchar','character varying','integer','bigint','smallint','boolean',
+                 'date','timestamp','timestamptz','numeric','float','real','jsonb','uuid',
+                 'serial','bigserial'];
+
+  const fields = [
+    { key:'campo',           label:'Campo',             type:'text',     ro:true  },
+    { key:'alias',           label:'Alias / Etiqueta',  type:'text',     ro:false },
+    { key:'tipo_dato',       label:'Tipo dato',         type:'tipo',     ro:false },
+    { key:'es_visible',      label:'Visible',           type:'bool',     ro:false },
+    { key:'es_solo_lectura', label:'Solo lectura',      type:'bool',     ro:false },
+    { key:'es_obligatorio',  label:'Obligatorio',       type:'bool',     ro:false },
+    { key:'orden_campo',     label:'Orden',             type:'number',   ro:false },
+    { key:'texto_ayuda',     label:'Texto ayuda',       type:'textarea', ro:false },
+    { key:'valor_defecto',   label:'Valor defecto',     type:'text',     ro:false },
+    { key:'multivalor',      label:'Multivalor (SQL)',  type:'textarea', ro:false },
+    { key:'grupo',           label:'Grupo',             type:'number',   ro:false },
+    { key:'calculo',         label:'Cálculo',           type:'textarea', ro:false },
+  ];
+
+  const vals = { campo, ...d };
+
+  fields.forEach(f => {
+    const val = vals[f.key];
+    const wrapper = document.createElement('div');
+    wrapper.className = 'ficha-field' + (f.type === 'textarea' ? ' ficha-full' : '');
+
+    const lbl = document.createElement('label');
+    lbl.className = 'ficha-label';
+    lbl.textContent = f.label;
+    wrapper.appendChild(lbl);
+
+    let input;
+
+    if (f.type === 'bool') {
+      input = document.createElement('select');
+      input.className = 'ficha-select';
+      [['true','✓ Sí'],['false','✗ No']].forEach(([v,l]) => {
+        const opt = document.createElement('option');
+        opt.value = v; opt.textContent = l;
+        const bv = val === true || val === 'true' || val === 't';
+        if ((v === 'true') === bv) opt.selected = true;
+        input.appendChild(opt);
+      });
+    } else if (f.type === 'tipo') {
+      input = document.createElement('select');
+      input.className = 'ficha-select';
+      const empty = document.createElement('option');
+      empty.value = ''; empty.textContent = '— tipo —';
+      input.appendChild(empty);
+      TIPOS.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t; opt.textContent = t;
+        if (t === (val || '').toLowerCase()) opt.selected = true;
+        input.appendChild(opt);
+      });
+    } else if (f.type === 'number') {
+      input = document.createElement('input');
+      input.type = 'number'; input.step = '1'; input.className = 'ficha-input';
+      input.value = val ?? '';
+      if (f.ro) input.readOnly = true;
+    } else if (f.type === 'textarea') {
+      input = document.createElement('textarea');
+      input.className = 'ficha-textarea';
+      input.rows = f.key === 'multivalor' || f.key === 'calculo' ? 4 : 2;
+      input.value = val ?? '';
+      if (f.ro) input.readOnly = true;
+    } else {
+      input = document.createElement('input');
+      input.type = 'text'; input.className = 'ficha-input';
+      input.value = val ?? '';
+      if (f.ro) input.readOnly = true;
+    }
+
+    input.dataset.campo = f.key;
+    const origVal = val;
+    input.addEventListener('change', () => {
+      const nv = input.value;
+      if (String(nv) !== String(origVal ?? '')) {
+        _dicFichaChanges[f.key] = nv === '' ? null : nv;
+      } else {
+        delete _dicFichaChanges[f.key];
+      }
+    });
+    wrapper.appendChild(input);
+    body.appendChild(wrapper);
+  });
+
+  // Footer
+  const btnClose = document.createElement('button');
+  btnClose.className = 'icn-btn btn-secondary';
+  btnClose.innerHTML = IC.x + ' Cerrar';
+  btnClose.onclick = closeFichaModal;
+  ftr.appendChild(btnClose);
+
+  const btnSave = document.createElement('button');
+  btnSave.className = 'icn-btn btn-primary';
+  btnSave.id = 'fichaSaveBtn';
+  btnSave.innerHTML = IC.check + ' Guardar';
+  btnSave.onclick = saveDicFichaModal;
+  ftr.appendChild(btnSave);
+
+  document.getElementById('fichaOverlay').classList.add('open');
+}
+
+async function saveDicFichaModal() {
+  if (!_dicFichaCampo || !Object.keys(_dicFichaChanges).length) { closeFichaModal(); return; }
+  const btn = document.getElementById('fichaSaveBtn');
+  if (btn) btn.disabled = true;
+
+  const d       = dicMap[_dicFichaCampo] || {};
+  const entryId = d.id;
+  const payload = { ..._dicFichaChanges };
+
+  // Coerce types
+  ['es_visible','es_solo_lectura','es_obligatorio'].forEach(k => {
+    if (k in payload) payload[k] = payload[k] === 'true';
+  });
+  ['orden_campo','grupo'].forEach(k => {
+    if (k in payload && payload[k] !== null) payload[k] = parseInt(payload[k], 10) || null;
+  });
+
+  let res;
+  if (entryId) {
+    res = await api(`/api/v1/diccionario/${entryId}`,
+      { method:'PATCH', body: JSON.stringify(payload) });
+  } else {
+    payload.tabla    = tablaName;
+    payload.campo    = _dicFichaCampo;
+    if (sistemaId) payload.id_sistema = parseInt(sistemaId, 10);
+    res = await api(`/api/v1/diccionario/`,
+      { method:'POST', body: JSON.stringify(payload) });
+  }
+
+  if (res.ok) {
+    const updated = await res.json().catch(() => ({}));
+    dicMap[_dicFichaCampo] = { ...(dicMap[_dicFichaCampo] || {}), ...payload, ...updated };
+    // Refresh mv cache for this campo if multivalor changed
+    if ('multivalor' in payload) {
+      delete mvCache[_dicFichaCampo];
+      const mv = payload.multivalor || updated.multivalor;
+      if (mv) await fetchMvOptions(_dicFichaCampo, mv);
+    }
+    closeFichaModal();
+    // Re-render diccionario tab
+    const tb = document.getElementById('dicTbody');
+    if (tb) delete tb.dataset.loaded;
+    renderDiccionario();
+    toast('Diccionario actualizado ✓', 'ok');
+  } else {
+    const err = await res.json().catch(() => ({}));
+    alert('Error al guardar: ' + (err.detail || res.status));
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function saveFichaModal() {
@@ -2090,6 +2515,398 @@ function exportXlsx() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, tablaAlias.slice(0, 31));
   XLSX.writeFile(wb, `${tablaAlias}.xlsx`);
+}
+
+// ── Tabs de contenido ─────────────────────────────────────────────────────────
+function showTab(tab) {
+  // Activar tab correcto
+  document.getElementById('tabData').classList.toggle('active',   tab === 'data');
+  document.getElementById('tabSchema').classList.toggle('active', tab === 'schema');
+  document.getElementById('tabDic').classList.toggle('active',    tab === 'dic');
+
+  // Paneles del tab Contenido
+  const isData = tab === 'data';
+  ['dblClickHint','groupZone','tableWrap','footerBar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isData ? '' : 'none';
+  });
+  // Al volver a Contenido, re-aplicar diccionario (aliases, orden, visibilidad, MV)
+  if (isData && rawRows.length > 0) renderTable();
+
+  // Panel Estructura
+  const sp = document.getElementById('schemaPanelWrap');
+  if (sp) sp.style.display = tab === 'schema' ? 'block' : 'none';
+
+  // Panel Diccionario
+  const dp = document.getElementById('dicPanelWrap');
+  if (dp) dp.style.display = tab === 'dic' ? 'block' : 'none';
+
+  // Panel SQL Vista
+  const sqlp = document.getElementById('sqlPanelWrap');
+  if (sqlp) sqlp.style.display = tab === 'sql' ? 'flex' : 'none';
+
+  // Carga lazy: estructura
+  if (tab === 'schema' && document.getElementById('schemaTbody')?.dataset.loaded !== '1') {
+    loadSchema();
+  }
+  // Carga lazy: diccionario
+  if (tab === 'dic' && document.getElementById('dicTbody')?.dataset.loaded !== '1') {
+    renderDiccionario();
+  }
+  // Carga lazy: SQL vista
+  if (tab === 'sql') {
+    const ed = document.getElementById('sqlEditor');
+    if (!ed?.value.trim()) loadSqlView();
+  }
+
+  // Activar tab SQL
+  const tSql = document.getElementById('tabSql');
+  if (tSql) tSql.classList.toggle('active', tab === 'sql');
+}
+
+// ── Panel Diccionario ─────────────────────────────────────────────────────────
+function renderDiccionario() {
+  const tbody = document.getElementById('dicTbody');
+  if (!tbody) return;
+
+  // Obtener columnas visibles + todas las del dicMap
+  const allCols = [...new Set([...rawCols, ...Object.keys(dicMap)])];
+
+  const hdr = document.getElementById('dicHdr');
+  if (hdr) hdr.textContent = `Diccionario — ${tablaName}  (${allCols.length} campo${allCols.length !== 1 ? 's' : ''})`;
+
+  if (!allCols.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);padding:20px;text-align:center;">Sin entradas de diccionario.</td></tr>';
+    tbody.dataset.loaded = '1';
+    return;
+  }
+
+  tbody.innerHTML = allCols.map(c => {
+    const d = dicMap[c] || {};
+    const visible  = d.es_visible !== false;
+    const soloLect = !!d.es_solo_lectura;
+    return `<tr style="cursor:pointer" title="Doble clic para editar" ondblclick="openDicFicha('${esc(c)}')">
+      <td><span class="sc-name">${esc(c)}</span>${c === pkCol ? ' <span class="sc-pk">PK</span>' : ''}</td>
+      <td>${esc(d.alias || '')}</td>
+      <td><span class="sc-type">${esc(d.tipo_dato || '')}</span></td>
+      <td><span class="${visible ? 'dc-yes' : 'dc-no'}">${visible ? '✓' : '✗'}</span></td>
+      <td><span class="${soloLect ? 'dc-yes' : 'dc-no'}">${soloLect ? '✓' : '—'}</span></td>
+      <td style="font-family:monospace;color:var(--muted)">${d.orden_campo != null ? d.orden_campo : ''}</td>
+      <td><span class="dc-help" title="${esc(d.texto_ayuda||'')}">${esc(d.texto_ayuda || '')}</span></td>
+      <td><span class="dc-mv" title="${esc(d.multivalor||'')}">${esc(d.multivalor || '')}</span></td>
+    </tr>`;
+  }).join('');
+  tbody.dataset.loaded = '1';
+}
+
+// ── Esquema de tabla ──────────────────────────────────────────────────────────
+async function loadSchema() {
+  if (!tablaName) return;
+  const tbody = document.getElementById('schemaTbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);padding:20px;text-align:center;">Cargando esquema…</td></tr>';
+  tbody.dataset.loaded = '0';
+
+  const sp = dbSlug ? `&db_slug=${encodeURIComponent(dbSlug)}` : '';
+  const res = await api(`/api/v1/admin/db-table-schema?table_name=${encodeURIComponent(tablaName)}${sp}`);
+  if (!res.ok) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--red);padding:16px;text-align:center;">No se pudo cargar el esquema.</td></tr>';
+    return;
+  }
+  const data = await res.json();
+  const cols = data.columns || [];
+  if (!cols.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);padding:16px;text-align:center;">Sin columnas.</td></tr>';
+    return;
+  }
+
+  const hdr = document.getElementById('schemaHdr');
+  if (hdr) hdr.textContent = `Estructura — ${tablaName}  (${cols.length} columna${cols.length !== 1 ? 's' : ''})`;
+
+  tbody.innerHTML = cols.map(c => {
+    const name    = c.name || c.column_name || '';
+    const type    = c.data_type || c.type || '';
+    const isPk    = !!c.is_primary_key;
+    const nullable= c.is_nullable !== false;
+    const defVal  = c.column_default || c.default || '';
+    const isFk    = !!(c.foreign_key || c.references);
+    const fkRef   = c.foreign_key || c.references || '';
+    const dicEntry = dicMap[name];
+    const alias   = dicEntry?.alias ? `<span style="color:var(--muted);margin-left:6px;font-size:.7rem;">(${esc(dicEntry.alias)})</span>` : '';
+
+    const attrs = [
+      isPk ? `<span class="sc-pk">🔑 PK</span>` : '',
+      isFk ? `<span class="sc-fk">→ ${esc(fkRef)}</span>` : '',
+    ].filter(Boolean).join(' ');
+
+    return `<tr>
+      <td><span class="sc-name">${esc(name)}</span>${alias}</td>
+      <td><span class="sc-type">${esc(type)}</span></td>
+      <td><span class="${nullable ? 'sc-null' : 'sc-notnull'}">${nullable ? '✓' : '—'}</span></td>
+      <td>${attrs || '<span style="color:var(--muted)">—</span>'}</td>
+      <td><span class="sc-default">${defVal ? esc(String(defVal)) : ''}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SQL Vista ─────────────────────────────────────────────────────────────────
+let _sqlOriginal = '';
+let _sqlTested   = false;
+
+function _isView() {
+  const n = (tablaName || '').toLowerCase();
+  return n.startsWith('v_') || n.startsWith('vw_');
+}
+
+async function loadSqlView() {
+  const ed  = document.getElementById('sqlEditor');
+  const hdr = document.getElementById('sqlHdr');
+  if (!ed) return;
+  if (hdr) hdr.textContent = 'SQL — ' + tablaName;
+  ed.value = 'Cargando…';
+  const sp = dbSlug ? '&db_slug=' + encodeURIComponent(dbSlug) : '';
+  const res = await api('/api/v1/admin/view-sql?view_name=' + encodeURIComponent(tablaName) + sp);
+  if (!res.ok) { ed.value = '-- No se pudo obtener el SQL de la vista'; return; }
+  const data = await res.json();
+  _sqlOriginal = data.sql || '';
+  ed.value = _sqlOriginal;
+  _sqlTested = false;
+  _syncSqlButtons();
+}
+
+function sqlOnEdit() {
+  _sqlTested = false;
+  _syncSqlButtons();
+  const st = document.getElementById('sqlStatus');
+  if (st) { st.textContent = '● Sin guardar'; st.className = 'sql-status-info'; }
+}
+
+function sqlReset() {
+  const ed = document.getElementById('sqlEditor');
+  if (ed) ed.value = _sqlOriginal;
+  _sqlTested = false;
+  _syncSqlButtons();
+  const st = document.getElementById('sqlStatus');
+  if (st) { st.textContent = 'SQL restaurado al original.'; st.className = 'sql-status-info'; }
+  const ph = document.getElementById('sqlPreviewHdr');
+  if (ph) ph.style.display = 'none';
+}
+
+function _syncSqlButtons() {
+  const saveBtn = document.getElementById('sqlBtnSave');
+  if (saveBtn) saveBtn.style.display = _sqlTested ? '' : 'none';
+}
+
+async function sqlTest() {
+  const ed = document.getElementById('sqlEditor');
+  const st = document.getElementById('sqlStatus');
+  const ph = document.getElementById('sqlPreviewHdr');
+  const pw = document.getElementById('sqlPreviewWrap');
+  if (!ed) return;
+  const sql = ed.value.trim().replace(/;+$/, '');
+  if (!sql) return;
+  if (st) { st.textContent = 'Probando…'; st.className = 'sql-status-info'; }
+  const res = await api('/api/v1/admin/sql-db', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: 'SELECT * FROM (' + sql + ') __t__ LIMIT 10', db_slug: dbSlug || null }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = err.detail || 'Error desconocido';
+    if (st) { st.textContent = '✗ ' + msg; st.className = 'sql-status-err'; }
+    _sqlTested = false;
+    _syncSqlButtons();
+    if (ph) ph.style.display = 'none';
+    return;
+  }
+  const data = await res.json();
+  _sqlTested = true;
+  _syncSqlButtons();
+  if (st) { st.textContent = '✓ OK — ' + data.count + ' fila' + (data.count !== 1 ? 's' : '') + ' · ' + data.time_ms + 'ms'; st.className = 'sql-status-ok'; }
+  if (ph && pw) {
+    ph.style.display = '';
+    const cols = data.columns || [];
+    const rows = data.rows || [];
+    const hdrs = cols.map(function(c) { return '<th>' + esc(c) + '</th>'; }).join('');
+    const trs  = rows.map(function(r) { return '<tr>' + cols.map(function(c) { return '<td>' + esc(r[c] != null ? r[c] : '') + '</td>'; }).join('') + '</tr>'; }).join('');
+    pw.innerHTML = '<table class="sql-preview-tbl"><thead><tr>' + hdrs + '</tr></thead><tbody>' + (trs || '<tr><td colspan="' + cols.length + '" style="color:var(--muted);text-align:center;padding:12px;">Sin resultados</td></tr>') + '</tbody></table>';
+  }
+}
+
+async function sqlSave() {
+  const ed = document.getElementById('sqlEditor');
+  if (!ed || !_sqlTested) return;
+  const sql = ed.value.trim().replace(/;+$/, '');
+  const st = document.getElementById('sqlStatus');
+  const sp = dbSlug ? '&db_slug=' + encodeURIComponent(dbSlug) : '';
+  const res = await api('/api/v1/admin/update-view-sql?view_name=' + encodeURIComponent(tablaName) + sp, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sql }),
+  });
+  if (res.ok) {
+    _sqlOriginal = sql;
+    if (st) { st.textContent = '✓ Vista guardada correctamente'; st.className = 'sql-status-ok'; }
+    toast('Vista SQL guardada', 'ok');
+  } else {
+    const err = await res.json().catch(() => ({}));
+    if (st) { st.textContent = '✗ Error: ' + (err.detail || res.status); st.className = 'sql-status-err'; }
+  }
+}
+
+function closeDicTest() {
+  const ov = document.getElementById('dicTestOverlay');
+  if (ov) ov.style.display = 'none';
+}
+
+// ── Smart Fill ────────────────────────────────────────────────────────────────
+async function dicSmartFill() {
+  if (!tablaName || !sistemaId) return;
+  const ov  = document.getElementById('sfOverlay');
+  const tb  = document.getElementById('sfTbody');
+  const sum = document.getElementById('sfSummary');
+  const sub = document.getElementById('sfSubtitle');
+  const btn = document.getElementById('sfBtnSave');
+  if (ov) ov.style.display = 'flex';
+  if (sub) sub.textContent = tablaName;
+  if (tb) tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted);">Analizando…</td></tr>';
+  if (btn) btn.disabled = true;
+  _sfProposals = [];
+
+  const sp = dbSlug ? '&db_slug=' + encodeURIComponent(dbSlug) : '';
+  const res = await api('/api/v1/admin/smart-fill-dic?table_name=' + encodeURIComponent(tablaName) + '&id_sistema=' + sistemaId + sp, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.text();
+    if (tb) tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--red);">Error: ' + esc(err) + '</td></tr>';
+    return;
+  }
+  const data = await res.json();
+  _sfProposals = data.proposals || [];
+  if (sum) sum.textContent = data.total + ' campos · ' + data.new + ' nuevos · ' + data.changed + ' con cambios';
+
+  if (!_sfProposals.length) {
+    if (tb) tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted);">Sin campos encontrados.</td></tr>';
+    return;
+  }
+
+  if (tb) tb.innerHTML = _sfProposals.map(function(p) {
+    const tag = p.is_new
+      ? '<span style="color:#22c55e;font-size:.7rem;font-weight:700;">&#x1F195;</span>'
+      : p.changed
+        ? '<span style="color:#f59e0b;font-size:.7rem;font-weight:700;">&#x1F504;</span>'
+        : '<span style="color:var(--muted);font-size:.7rem;">&#183;</span>';
+    const rowStyle = p.is_new ? 'background:rgba(34,197,94,.05);' : p.changed ? 'background:rgba(245,158,11,.05);' : '';
+    const mvCell = p.multivalor
+      ? '<code style="font-size:.65rem;color:#38bdf8;background:rgba(56,189,248,.08);padding:2px 5px;border-radius:3px;word-break:break-all;">' + esc(p.multivalor) + '</code>'
+      : '<span style="color:var(--muted);font-size:.7rem;">&mdash;</span>';
+    return '<tr style="' + rowStyle + '">'
+      + '<td style="text-align:center;">' + tag + '</td>'
+      + '<td><span class="sc-name">' + esc(p.campo) + '</span></td>'
+      + '<td>' + esc(p.alias || '') + '</td>'
+      + '<td><span class="sc-type">' + esc(p.tipo_dato || '') + '</span></td>'
+      + '<td><span class="' + (p.es_visible ? 'dc-yes' : 'dc-no') + '">' + (p.es_visible ? '&#10003;' : '&#10007;') + '</span></td>'
+      + '<td><span class="' + (p.es_solo_lectura ? 'dc-yes' : 'dc-no') + '">' + (p.es_solo_lectura ? '&#10003;' : '&mdash;') + '</span></td>'
+      + '<td style="font-size:.72rem;color:var(--muted);">' + esc(p.texto_ayuda || '') + '</td>'
+      + '<td style="max-width:220px;">' + mvCell + '</td>'
+      + '</tr>';
+  }).join('');
+
+  if (btn) btn.disabled = false;
+}
+
+function closeSF() {
+  const ov = document.getElementById('sfOverlay');
+  if (ov) ov.style.display = 'none';
+}
+
+async function dicSmartFillSave() {
+  if (!tablaName || !sistemaId || !_sfProposals.length) return;
+  const btn = document.getElementById('sfBtnSave');
+  const sum = document.getElementById('sfSummary');
+  const st  = document.getElementById('dicStatus');
+  if (btn) btn.disabled = true;
+  if (sum) sum.textContent = 'Guardando...';
+
+  const sp = dbSlug ? '&db_slug=' + encodeURIComponent(dbSlug) : '';
+  const res = await api(
+    '/api/v1/admin/smart-fill-dic?table_name=' + encodeURIComponent(tablaName) + '&id_sistema=' + sistemaId + sp + '&save=true',
+    { method: 'POST' }
+  );
+  if (btn) btn.disabled = false;
+  if (!res.ok) {
+    const err = await res.json().catch(function() { return {}; });
+    if (sum) sum.textContent = 'Error al guardar: ' + (err.detail || res.status);
+    return;
+  }
+  const data = await res.json();
+  const entries = data.entries || [];
+  dicMap = {};
+  entries.forEach(function(e) { if (e.campo) dicMap[e.campo] = e; });
+  if (st) {
+    st.textContent = '&#10003; Smart Fill aplicado &mdash; ' + data.new + ' nuevos, ' + data.changed + ' actualizados.';
+    setTimeout(function() { if (st) st.textContent = ''; }, 4000);
+  }
+  closeSF();
+  renderDiccionario();
+}
+
+async function dicTestPreview() {
+  if (!tablaName) return;
+  const ov   = document.getElementById('dicTestOverlay');
+  const body = document.getElementById('dicTestBody');
+  if (ov) ov.style.display = 'flex';
+  if (body) body.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px;">Cargando datos...</div>';
+
+  const allCols = Array.from(new Set([].concat(rawCols, Object.keys(dicMap))));
+  const visCols = allCols
+    .filter(function(c) { const d = dicMap[c]; return d ? d.es_visible !== false : true; })
+    .sort(function(a, b) {
+      const oa = (dicMap[a] && dicMap[a].orden_campo != null) ? dicMap[a].orden_campo : 9999;
+      const ob = (dicMap[b] && dicMap[b].orden_campo != null) ? dicMap[b].orden_campo : 9999;
+      return oa === ob ? a.localeCompare(b) : oa - ob;
+    });
+
+  if (!visCols.length) {
+    if (body) body.innerHTML = '<div style="color:var(--muted);padding:20px;">Sin columnas visibles configuradas.</div>';
+    return;
+  }
+
+  let rows = rawRows.slice(0, 10);
+  if (!rows.length) {
+    const sp = dbSlug ? '&db_slug=' + encodeURIComponent(dbSlug) : '';
+    const res = await api('/api/v1/admin/tables/' + encodeURIComponent(tablaName) + '/rows?skip=0&limit=10' + sp);
+    if (res.ok) { const d = await res.json(); rows = d.items || d.rows || []; }
+  }
+
+  // Pre-cargar opciones multivalor (incluye SQL) para columnas visibles
+  await Promise.all(visCols.map(function(c) {
+    const d = dicMap[c];
+    return d && d.multivalor ? fetchMvOptions(c, d.multivalor) : Promise.resolve();
+  }));
+
+  const hdrs = '<tr>' + visCols.map(function(c) {
+    const d = dicMap[c] || {};
+    return '<th style="padding:6px 10px;text-align:left;font-size:.7rem;color:var(--accent2);border-bottom:1px solid var(--border);">' + esc(d.alias || c) + '</th>';
+  }).join('') + '</tr>';
+
+  const trows = rows.length
+    ? rows.map(function(row) {
+        const cells = visCols.map(function(c) {
+          const d = dicMap[c] || {};
+          const cellStyle = d.es_solo_lectura ? 'color:var(--muted);font-style:italic;' : '';
+          const cellHtml = formatCell(row[c], d);
+          return '<td style="padding:5px 10px;border-bottom:1px solid rgba(42,48,69,.5);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;' + cellStyle + '">' + cellHtml + '</td>';
+        }).join('');
+        return '<tr>' + cells + '</tr>';
+      }).join('')
+    : '<tr><td colspan="' + visCols.length + '" style="text-align:center;padding:20px;color:var(--muted);">Sin datos.</td></tr>';
+
+  if (body) body.innerHTML = '<p style="font-size:.72rem;color:var(--muted);margin-bottom:10px;">'
+    + visCols.length + ' columna' + (visCols.length !== 1 ? 's' : '') + ' visible'
+    + (visCols.length !== 1 ? 's' : '') + ' - ' + rows.length + ' fila' + (rows.length !== 1 ? 's' : '')
+    + '</p><div style="overflow-x:auto;"><table style="border-collapse:collapse;min-width:100%;">'
+    + '<thead>' + hdrs + '</thead><tbody>' + trows + '</tbody></table></div>';
 }
 
 init();

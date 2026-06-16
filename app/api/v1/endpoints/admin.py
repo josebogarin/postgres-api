@@ -605,12 +605,380 @@ async def get_table_schema_by_db(
     return {"table": table_name, "columns": columns}
 
 
+# ── SQL de vista + guardar ────────────────────────────────────────────────────
+
+@router.get("/view-sql", summary="SQL de definición de una vista")
+async def get_view_sql(
+    view_name: str,
+    _: CurrentAdmin,
+    db_slug: str | None = Query(None),
+) -> dict:
+    eng = await _get_engine_for_slug(db_slug)
+    async with eng.connect() as conn:
+        r = await conn.execute(text("""
+            SELECT view_definition
+            FROM information_schema.views
+            WHERE table_schema = 'public'
+              AND table_name   = :vn
+        """), {"vn": view_name})
+        row = r.fetchone()
+        if not row or not row[0]:
+            raise HTTPException(404, detail=f"Vista '{view_name}' no encontrada")
+    return {"view": view_name, "sql": row[0]}
+
+
+class SaveViewBody(BaseModel):
+    view_name: str
+    sql: str
+    db_slug: str | None = None
+
+
+@router.post("/save-view", summary="Guardar (recrear) una vista con nuevo SQL")
+async def save_view(_: CurrentAdmin, body: SaveViewBody) -> dict:
+    from sqlalchemy.exc import SQLAlchemyError
+    sql_clean = body.sql.strip().rstrip(";")
+    eng = await _get_engine_for_slug(body.db_slug)
+    try:
+        async with eng.begin() as conn:
+            await conn.execute(text(
+                f"CREATE OR REPLACE VIEW {body.view_name} AS {sql_clean}"
+            ))
+    except SQLAlchemyError as e:
+        raise HTTPException(400, detail=str(e.orig or e))
+    return {"ok": True, "view": body.view_name}
+
+
+# ── Smart Fill: inferencia de diccionario desde esquema BD ───────────────────
+
+class SmartFillResult(BaseModel):
+    campo: str
+    alias: str | None
+    tipo_dato: str | None
+    texto_ayuda: str | None
+    multivalor: str | None
+    es_solo_lectura: bool
+    es_visible: bool
+    orden_campo: int | None
+    is_new: bool
+    changed: bool
+
+
+@router.post("/smart-fill-dic", summary="Inferir y opcionalmente guardar diccionario desde esquema BD")
+async def smart_fill_dic(
+    _: CurrentAdmin,
+    db: DBSession,
+    table_name: str = Query(..., description="Nombre de tabla/vista a analizar"),
+    id_sistema: int = Query(..., description="ID del sistema en app_db"),
+    save: bool = Query(False, description="Si true, aplica los cambios al diccionario"),
+    db_slug: str | None = Query(None, description="Slug de la BD externa; vacío = principal"),
+) -> dict:
+    """
+    Infiere alias, tipo_dato, texto_ayuda, es_solo_lectura, orden_campo para cada
+    campo de la tabla a partir de:
+    - Nombre del campo (convenciones: id, created_at, id_X, X_id, is_/es_…)
+    - Tipo de dato PostgreSQL
+    - FK constraints (id_X → referencia a tabla X)
+    - Comentarios de columna en pg_description
+    Si save=true, hace upsert en la tabla diccionario (app_db).
+    Retorna lista de propuestas con indicador is_new/changed.
+    """
+
+    # ── 1. Leer columnas + tipo + PK + ordinal desde BD target ────────────────
+    target_eng = await _get_engine_for_slug(db_slug)
+    async with target_eng.connect() as conn:
+        col_res = await conn.execute(text("""
+            SELECT
+                c.column_name,
+                c.data_type,
+                c.ordinal_position,
+                c.is_nullable,
+                CASE WHEN pk.column_name IS NOT NULL THEN true ELSE false END AS is_pk
+            FROM information_schema.columns c
+            LEFT JOIN (
+                SELECT ku.column_name
+                FROM information_schema.table_constraints tc
+                JOIN information_schema.key_column_usage ku
+                  ON tc.constraint_name = ku.constraint_name
+                WHERE tc.constraint_type = 'PRIMARY KEY'
+                  AND tc.table_schema = 'public'
+                  AND ku.table_name = :tn
+            ) pk ON pk.column_name = c.column_name
+            WHERE c.table_schema = 'public' AND c.table_name = :tn
+            ORDER BY c.ordinal_position
+        """), {"tn": table_name})
+        columns = col_res.fetchall()
+
+        # ── 2. Leer FK constraints: campo → tabla referenciada ─────────────────
+        fk_res = await conn.execute(text("""
+            SELECT kcu.column_name, ccu.table_name AS foreign_table
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.key_column_usage kcu
+              ON tc.constraint_name = kcu.constraint_name
+             AND kcu.table_schema = 'public'
+             AND kcu.table_name = :tn
+            JOIN information_schema.referential_constraints rc
+              ON tc.constraint_name = rc.constraint_name
+            JOIN information_schema.constraint_column_usage ccu
+              ON rc.unique_constraint_name = ccu.constraint_name
+             AND ccu.table_schema = 'public'
+            WHERE tc.constraint_type = 'FOREIGN KEY'
+        """), {"tn": table_name})
+        fk_map: dict[str, str] = {r[0]: r[1] for r in fk_res.fetchall()}  # campo → tabla referenciada
+
+        # ── 2b. Para cada FK: detectar columna de texto legible ───────────────
+        _NAME_COLS = ("nombre", "name", "descripcion", "titulo", "title",
+                      "label", "detalle", "codigo", "code", "nombre_es")
+        fk_label_col: dict[str, str] = {}
+        for campo_fk, ref_table in fk_map.items():
+            cols_res = await conn.execute(text("""
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = :tn
+                ORDER BY ordinal_position
+            """), {"tn": ref_table})
+            ref_cols = [r[0] for r in cols_res.fetchall()]
+            label = next((c for c in _NAME_COLS if c in ref_cols), ref_cols[1] if len(ref_cols) > 1 else "id")
+            fk_label_col[campo_fk] = label
+
+        # ── 3. Leer comentarios de columna (pg_description) ──────────────────
+        comment_res = await conn.execute(text("""
+            SELECT a.attname, pg_catalog.col_description(c.oid, a.attnum)
+            FROM pg_catalog.pg_class c
+            JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+            WHERE c.relname = :tn AND c.relnamespace = (
+                SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = 'public'
+            )
+        """), {"tn": table_name})
+        comments: dict[str, str] = {r[0]: r[1] for r in comment_res.fetchall() if r[1]}
+
+    # ── 4. Leer diccionario actual para este sistema + tabla ──────────────────
+    existing_result = await db.execute(text("""
+        SELECT campo, alias, tipo_dato, texto_ayuda, es_solo_lectura, es_visible, orden_campo, id
+        FROM diccionario
+        WHERE id_sistema = :sid AND tabla = :tn
+    """), {"sid": id_sistema, "tn": table_name})
+    existing: dict[str, dict] = {}
+    for r in existing_result.fetchall():
+        existing[r[0]] = {
+            "alias": r[1], "tipo_dato": r[2], "texto_ayuda": r[3],
+            "es_solo_lectura": r[4], "es_visible": r[5], "orden_campo": r[6], "id": r[7],
+        }
+
+    # ── 5. Mapeo tipo PG → tipo_dato semántico ────────────────────────────────
+    def _pg_to_tipo(pg_type: str) -> str:
+        pg_type = (pg_type or "").lower()
+        if pg_type in ("bigint", "integer", "smallint", "int4", "int8", "int2"):
+            return "numero"
+        if pg_type in ("boolean",):
+            return "booleano"
+        if "timestamp" in pg_type or pg_type in ("date",):
+            return "fecha"
+        if pg_type in ("time without time zone", "time with time zone"):
+            return "hora"
+        if pg_type in ("numeric", "real", "double precision", "float4", "float8", "decimal"):
+            return "decimal"
+        if pg_type in ("jsonb", "json"):
+            return "json"
+        if pg_type in ("uuid",):
+            return "texto"
+        if pg_type in ("bytea",):
+            return "binario"
+        return "texto"
+
+    # ── 6. Inferir alias legible desde nombre de campo ────────────────────────
+    _STOP = {"id", "de", "del", "la", "el", "en", "y", "a", "por", "con"}
+
+    def _title(s: str) -> str:
+        words = s.replace("_", " ").split()
+        return " ".join(
+            w.capitalize() if w.lower() not in _STOP or i == 0 else w.lower()
+            for i, w in enumerate(words)
+        )
+
+    def _infer_alias(campo: str, pg_type: str, is_pk: bool, fk_table: str | None) -> str:
+        c = campo.lower()
+        # PK simple "id"
+        if c == "id":
+            return "ID"
+        # FK detectada por constraint
+        if fk_table:
+            return _title(fk_table)
+        # Convención id_tabla o tabla_id
+        if c.startswith("id_"):
+            return _title(c[3:])
+        if c.endswith("_id"):
+            return _title(c[:-3])
+        # Campos de fecha típicos
+        if c in ("created_at", "crear_en", "fecha_creacion", "fecha_creado"):
+            return "Fecha creación"
+        if c in ("updated_at", "actualizar_en", "fecha_modificacion", "fecha_actualizacion"):
+            return "Fecha modificación"
+        if c in ("deleted_at", "fecha_borrado"):
+            return "Fecha eliminación"
+        # Booleanos es_/is_
+        if c.startswith("es_"):
+            return _title(c[3:])
+        if c.startswith("is_"):
+            return _title(c[3:])
+        return _title(campo)
+
+    def _infer_readonly(campo: str, is_pk: bool, pg_type: str) -> bool:
+        c = campo.lower()
+        if is_pk:
+            return True
+        if c in ("created_at", "crear_en", "updated_at", "actualizar_en",
+                  "deleted_at", "fecha_creacion", "fecha_modificacion"):
+            return True
+        return False
+
+    def _infer_visible(campo: str, is_pk: bool) -> bool:
+        c = campo.lower()
+        # Ocultar campos de auditoría y PK numérica
+        if c in ("deleted_at", "created_at", "updated_at", "crear_en", "actualizar_en"):
+            return False
+        if is_pk:
+            return False
+        return True
+
+    def _infer_multivalor(campo: str, fk_table: str | None, label_col: str | None) -> str | None:
+        if not fk_table:
+            return None
+        lc = label_col or "id"
+        return f"SELECT id, {lc} AS nombre FROM {fk_table} ORDER BY {lc}"
+
+    def _infer_ayuda(campo: str, pg_type: str, fk_table: str | None) -> str | None:
+        c = campo.lower()
+        if fk_table:
+            return f"Referencia a {_title(fk_table)}"
+        if c.endswith("_email") or c == "email":
+            return "Correo electrónico"
+        if c.endswith("_url") or c == "url":
+            return "Dirección URL"
+        if c.endswith("_telefono") or c in ("telefono", "phone"):
+            return "Número de teléfono"
+        if c in ("password", "contraseña", "hash_password"):
+            return "Contraseña (encriptada)"
+        return None
+
+    # ── 7. Generar propuestas ─────────────────────────────────────────────────
+    proposals: list[SmartFillResult] = []
+    for row in columns:
+        campo, pg_type, ordinal, nullable, is_pk = row[0], row[1], row[2], row[3], row[4]
+        fk_table  = fk_map.get(campo)
+        label_col = fk_label_col.get(campo)
+        comment   = comments.get(campo)
+
+        alias       = _infer_alias(campo, pg_type, is_pk, fk_table)
+        tipo_dato   = _pg_to_tipo(pg_type)
+        readonly    = _infer_readonly(campo, is_pk, pg_type)
+        visible     = _infer_visible(campo, is_pk)
+        texto_ayuda = comment or _infer_ayuda(campo, pg_type, fk_table)
+        multivalor  = _infer_multivalor(campo, fk_table, label_col)
+
+        prev = existing.get(campo, {})
+        is_new = campo not in existing
+        changed = not is_new and bool(
+            prev.get("alias") != alias or
+            prev.get("tipo_dato") != tipo_dato or
+            prev.get("texto_ayuda") != texto_ayuda or
+            prev.get("es_solo_lectura") != readonly or
+            (multivalor is not None and prev.get("multivalor") != multivalor)
+        )
+
+        proposals.append(SmartFillResult(
+            campo=campo,
+            alias=alias,
+            tipo_dato=tipo_dato,
+            texto_ayuda=texto_ayuda,
+            multivalor=multivalor,
+            es_solo_lectura=readonly,
+            es_visible=visible,
+            orden_campo=ordinal,
+            is_new=is_new,
+            changed=changed,
+        ))
+
+    # ── 8. Si save=true: upsert en diccionario ────────────────────────────────
+    if save:
+        from app.crud.diccionario import diccionario_crud
+        from app.schemas.diccionario import DiccionarioCreate, DiccionarioUpdate
+
+        for p in proposals:
+            prev = existing.get(p.campo)
+            if prev:
+                if p.changed:
+                    await diccionario_crud.update(
+                        db,
+                        db_obj=await diccionario_crud.get(db, id=prev["id"]),
+                        obj_in=DiccionarioUpdate(
+                            alias=p.alias,
+                            tipo_dato=p.tipo_dato,
+                            texto_ayuda=p.texto_ayuda,
+                            multivalor=p.multivalor,
+                            es_solo_lectura=p.es_solo_lectura,
+                            es_visible=p.es_visible,
+                            orden_campo=p.orden_campo,
+                        ),
+                    )
+            else:
+                await diccionario_crud.create(
+                    db,
+                    obj_in=DiccionarioCreate(
+                        tabla=table_name,
+                        campo=p.campo,
+                        alias=p.alias,
+                        tipo_dato=p.tipo_dato,
+                        texto_ayuda=p.texto_ayuda,
+                        multivalor=p.multivalor,
+                        es_solo_lectura=p.es_solo_lectura,
+                        es_visible=p.es_visible,
+                        orden_campo=p.orden_campo,
+                        id_sistema=id_sistema,
+                    ),
+                )
+
+    new_count     = sum(1 for p in proposals if p.is_new)
+    changed_count = sum(1 for p in proposals if p.changed)
+    return {
+        "table": table_name,
+        "proposals": [p.model_dump() for p in proposals],
+        "total": len(proposals),
+        "new": new_count,
+        "changed": changed_count,
+        "saved": save,
+    }
+
+
 # ── SQL en BD específica ──────────────────────────────────────────────────────
 
 class SQLRequestExt(BaseModel):
     query: str
     limit: int = 500
     db_slug: str | None = None   # None = BD principal
+
+
+@router.post("/mv-options", summary="Opciones de combo multivalor (SELECT-only, accesible por admin)")
+async def get_mv_options(_: CurrentAdmin, body: SQLRequestExt) -> dict:
+    """Ejecuta un SELECT para poblar opciones de combos (multivalor en diccionario).
+    Solo acepta sentencias SELECT. Accesible por CurrentAdmin."""
+    from sqlalchemy.exc import SQLAlchemyError
+    q = body.query.strip().rstrip(";")
+    if not q.upper().lstrip().startswith("SELECT"):
+        raise HTTPException(status_code=400, detail="Solo se permiten sentencias SELECT")
+    eng = await _get_engine_for_slug(body.db_slug)
+    try:
+        async with eng.connect() as conn:
+            if "LIMIT" not in q.upper():
+                q = f"{q} LIMIT {body.limit}"
+            result = await conn.execute(text(q))
+            columns = list(result.keys())
+            rows = [{col: (str(val) if val is not None else None)
+                     for col, val in zip(columns, row)} for row in result.fetchall()]
+    except SQLAlchemyError as exc:
+        import re as _re
+        raw  = str(exc).splitlines()[0] if str(exc) else "Error"
+        clean = _re.sub(r"^\([^)]+\)\s*(?:<class '[^']+'>:\s*)?", "", raw).strip() or raw
+        raise HTTPException(status_code=400, detail=f"Error SQL: {clean}")
+    return {"columns": columns, "rows": rows, "count": len(rows)}
 
 
 @router.post("/sql-db", summary="Ejecutar SQL en BD por slug")

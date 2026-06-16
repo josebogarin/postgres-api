@@ -106,6 +106,24 @@ tr:last-child td{border-bottom:none}
 
 details summary{cursor:pointer;font-size:.75rem;color:#64748b;padding:4px 0;user-select:none}
 details summary:hover{color:#94a3b8}
+
+/* Defectuosos */
+.def-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.def-tab{padding:5px 14px;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;border:1px solid #2e3540;background:#1a1d23;color:#64748b;transition:all .15s}
+.def-tab.active{border-color:#f59e0b;color:#fcd34d;background:rgba(245,158,11,.08)}
+.def-tab.has-warn{border-color:#ef4444;color:#fca5a5;background:rgba(239,68,68,.08)}
+.def-tab.has-warn.active{background:rgba(239,68,68,.13)}
+.def-panel{display:none}.def-panel.active{display:block}
+.def-tbl{width:100%;border-collapse:collapse;font-size:.78rem}
+.def-tbl th{background:#1a1d23;color:#64748b;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:7px 10px;text-align:left;border-bottom:1px solid #2e3540;position:sticky;top:0}
+.def-tbl td{padding:6px 10px;border-bottom:1px solid #1e2530;vertical-align:top}
+.def-tbl tr:last-child td{border-bottom:none}
+.def-tbl tr.row-warn td:first-child{border-left:2px solid #f59e0b}
+.def-tbl tr.row-err  td:first-child{border-left:2px solid #ef4444}
+.sug-chip{display:inline-block;background:rgba(59,130,246,.12);color:#93c5fd;border:1px solid rgba(93,196,247,.2);border-radius:4px;padding:1px 7px;font-size:.7rem;margin:2px;cursor:pointer;font-family:monospace}
+.sug-chip:hover{background:rgba(59,130,246,.25)}
+.def-scroll{overflow-y:auto;max-height:340px;border:1px solid #2e3540;border-radius:6px}
+.def-empty{color:#475569;font-size:.78rem;font-style:italic;padding:12px 0}
 </style>
 </head>
 <body>
@@ -246,6 +264,17 @@ details summary:hover{color:#94a3b8}
     <div id="errDetail" class="msg-box msg-error section-hidden" style="margin-top:10px"></div>
     <div id="importMsg" class="msg-box" style="margin-top:10px"></div>
   </div>
+</div>
+
+<!-- REGISTROS DEFECTUOSOS (aparece tras importar) -->
+<div class="card section-hidden" id="cardDefectuosos" style="border-color:#f59e0b55">
+  <div class="card-title" style="color:#fcd34d">⚠ Registros con problemas de mapeo</div>
+  <div style="font-size:.78rem;color:#94a3b8;margin-bottom:12px">
+    Registros que no pudieron mapearse automáticamente por nombres de equipo.
+    Corregí los aliases faltantes en <code style="color:#7dd3fc">_EQ_ALIASES</code> del backend y volvé a importar.
+  </div>
+  <div class="def-tabs" id="defTabs"></div>
+  <div id="defPanels"></div>
 </div>
 
 <script>
@@ -512,20 +541,20 @@ function parseIndividualFormat(wb) {
   parsedRows = [];
   for (let i = 1; i < pronosData.length; i++) {
     const row = pronosData[i];
-    if (!row || !row[0]) continue;
+    if (!row || !row[1]) continue;
     // Solo importar fase grupos (excluye KO, globales, etc.)
-    const _fase = String(row[5] || '').toUpperCase();
+    const _fase = String(row[6] || '').toUpperCase();
     if (_fase && !_fase.includes('GRUPO') && !_fase.includes('10-')) continue;
     parsedRows.push({
       apostador:            alias,
       nombre:               nombre,
       email:                email,
       telefono:             telefono,
-      partido_num:          row[0],
-      equipo_local:         row[9],
-      goles_local:          row[11],
-      goles_visitante:      row[13],
-      equipo_visitante:     row[14],
+      partido_num:          row[1],   // col B = ID PARTIDO
+      equipo_local:         row[10],  // col K = EQUIPO 1
+      goles_local:          row[12],  // col M = GOLES local
+      goles_visitante:      row[14],  // col O = GOLES visitante
+      equipo_visitante:     row[15],  // col P = EQUIPO 2
       pred_amarillas:       row[24],
       pred_rojas:           row[25],
       pred_var:             row[26],
@@ -1008,8 +1037,12 @@ function buildCleanRows() {
         if (!faseStr.includes('GRUPO') && !faseStr.includes('10-')) { skippedCount++; return; }
       }
     }
-    // Convertir campos numericos a int seguro (maneja 2.0, "", "-", "?", etc.)
-    INT_FIELDS.forEach(k => { r[k] = toSafeInt(r[k], false); });
+    // Convertir campos numericos a int seguro (maneja 2.0, "", "-", "?", formulas Excel, etc.)
+    // goles: null = sin prediccion (distinto de predecir 0 goles)
+    ['goles_local','goles_visitante'].forEach(k => { r[k] = toSafeInt(r[k], false); });
+    // bonus J/K/L/M/N: no-numerico o vacio = 0 (celdas con formula "-" en Excel son 0)
+    // pred_minuto_gol=0 es equivalente a null en scoring (minuto 0 nunca gana N)
+    ['pred_minuto_gol','pred_amarillas','pred_rojas','pred_var','pred_penales_partido'].forEach(k => { r[k] = toSafeInt(r[k], true); });
     // Requiere al menos uno de los goles
     if (r.goles_local == null && r.goles_visitante == null) { skippedCount++; return; }
     ['nombre','email','telefono'].forEach(k => { if (r[k]) r[k] = String(r[k]).replace(/ /g,' ').trim(); });
@@ -1453,7 +1486,7 @@ function updateEditRow(input) {
 // Auto-iniciar al cargar la página
 init();
 
-// ── Check existentes + doImport ───────────────────────────────────────────────
+// ── Check existentes + doImport ────────────────────────────────────────────
 async function checkExistingBets(aliasesList) {
   try {
     const q = aliasesList.map(encodeURIComponent).join(',');
@@ -1473,7 +1506,6 @@ async function doImport() {
   statusEl.style.color = '#94a3b8';
   statusEl.textContent = 'Verificando apuestas existentes...';
 
-  // Verificar si ya existen apuestas
   const aliases = [...new Set(editRows.map(r => r.apostador))];
   const existing = await checkExistingBets(aliases);
   const conApuestas = existing
@@ -1504,27 +1536,197 @@ async function doImport() {
     const d = await resp.json();
     if (!resp.ok) {
       statusEl.style.color = '#ef4444';
-  statusEl.textContent = d.detail || 'Error al importar';
+      statusEl.textContent = d.detail || 'Error al importar';
       return;
     }
-    let msg = `✅ ${d.eliminadas||0} eliminadas · ${d.creadas||0} insertadas`;
-    if (d.puntajes_ok) msg += ` · 📊 ${d.puntajes_procesados||0} puntajes calculados`;
+    // Resumen principal
+    const met = d.resolucion_metodos || {};
+    const metStr = Object.entries(met).map(([k,v]) => k + ':' + v).join(' · ');
+    const esperados = d.esperados || 0;
+    const creadas   = d.creadas   || 0;
+    let msg = '✅ ' + (d.eliminadas||0) + ' eliminadas · ' + creadas + ' en tabla';
+    if (esperados) msg += ' / ' + esperados + ' esperados (' + d.num_apostadores + '×' + d.total_partidos_grupos + ')';
+    if (metStr) msg += ' · ' + metStr;
+    if (d.skipped_ko)      msg += ' · ⏭️ ' + d.skipped_ko + ' KO ignorados';
+    if (d.completados_0_0) msg += ' · 🔲 ' + d.completados_0_0 + ' completados 0-0';
+    if (d.puntajes_ok) msg += ' · 📊 ' + (d.puntajes_procesados||0) + ' puntajes calculados';
     else if (d.puntajes_ok === false) msg += ' · ⚠️ puntajes fallaron';
-    if (d.brackets_reiniciados) msg += ' · 🔄 Brackets reiniciados';
-    statusEl.style.color = '#86efac';
+    statusEl.style.color = d.cobertura_completa ? '#86efac' : '#fbbf24';
     statusEl.textContent = msg;
+    if (d.cobertura_advertencia) {
+      showMsg('importMsg', 'warn', '⚠️ ' + d.cobertura_advertencia);
+    }
     if ((d.advertencias||[]).length) {
       showMsg('importMsg', 'warn', d.advertencias.map(a => a.motivo||JSON.stringify(a)).join(' | '));
     }
     if ((d.errores_usuarios||[]).length) {
       showMsg('importMsg', 'warn', 'Usuarios no encontrados: ' + d.errores_usuarios.join(', '));
     }
+    // Mostrar registros defectuosos
+    renderDefectuosos(d);
   } catch(e) {
     statusEl.style.color = '#ef4444';
     statusEl.textContent = 'Error: ' + e.message;
   } finally {
     btn.disabled = false;
   }
+}
+
+/* ─── DEFECTUOSOS ──────────────────────────────────────────────── */
+function renderDefectuosos(d) {
+  const card   = document.getElementById('cardDefectuosos');
+  const tabs   = document.getElementById('defTabs');
+  const panels = document.getElementById('defPanels');
+
+  const eqList  = d.equipos_sin_resolver   || [];
+  const sinInf  = d.sin_inferencia_equipos || [];
+  const errList = d.errores                || [];
+
+  if (!eqList.length && !sinInf.length && !errList.length) {
+    card.classList.add('section-hidden');
+    return;
+  }
+
+  card.classList.remove('section-hidden');
+
+  const counts = [eqList.length, sinInf.length, errList.length];
+  const defs = [
+    { label: '🏳️ Sin resolver ('   + eqList.length  + ')', warn: eqList.length  > 0, render: () => renderEqTable(eqList)     },
+    { label: '⚠️ Sin inferencia (' + sinInf.length  + ')', warn: sinInf.length  > 0, render: () => renderSinInfTable(sinInf) },
+    { label: '❌ Errores ('         + errList.length + ')', warn: errList.length > 0, render: () => renderErrTable(errList)   },
+  ];
+
+  tabs.innerHTML   = '';
+  panels.innerHTML = '';
+  let firstActive = -1;
+
+  defs.forEach((def, i) => {
+    const t = document.createElement('button');
+    t.className = 'def-tab' + (def.warn ? ' has-warn' : '');
+    t.textContent = def.label;
+    t.onclick = () => activateDefTab(i);
+    tabs.appendChild(t);
+    const p = document.createElement('div');
+    p.className = 'def-panel';
+    p.innerHTML = counts[i] ? def.render() : '<div class="def-empty">Sin registros.</div>';
+    panels.appendChild(p);
+    if (firstActive < 0 && counts[i] > 0) firstActive = i;
+  });
+  activateDefTab(Math.max(firstActive, 0));
+}
+
+function activateDefTab(idx) {
+  document.querySelectorAll('.def-tab').forEach((t, i)  => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.def-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+}
+
+function renderEqTable(list) {
+  if (!list.length) return '<div class="def-empty">Sin registros.</div>';
+  let h = '<div class="def-scroll"><table class="def-tbl"><thead><tr>'
+    + '<th>Nombre en Excel</th><th>Norm.</th><th>#</th><th>Sugerencias BD</th>'
+    + '</tr></thead><tbody>';
+  list.forEach(eq => {
+    const chips = (eq.sugerencias || []).map(s =>
+      '<span class="sug-chip" id="chip-' + s.equipo_id + '" onclick="saveAlias(' + s.equipo_id + ',\'' + esc(eq.nombre_excel) + '\',this)"'
+      + ' title="ID ' + s.equipo_id + ': ' + esc(s.nombre_norm_bd) + '">' + esc(s.nombre_bd) + '</span>'
+    ).join('');
+    h += '<tr class="row-warn">'
+      + '<td><b>' + esc(eq.nombre_excel) + '</b></td>'
+      + '<td style="color:#94a3b8">' + esc(eq.nombre_norm || '') + '</td>'
+      + '<td style="text-align:center;color:#fcd34d">' + (eq.count || 0) + '</td>'
+      + '<td>' + (chips || '<span style="color:#475569;font-size:.72rem">sin coincidencias</span>') + '</td>'
+      + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<div style="margin-top:8px;font-size:.72rem;color:#64748b">Click en un chip para guardar el alias en la BD — no volverá a aparecer en la próxima importación.</div>';
+  return h;
+}
+
+function renderSinInfTable(list) {
+  if (!list.length) return '<div class="def-empty">Sin registros.</div>';
+  let h = '<div class="def-scroll"><table class="def-tbl"><thead><tr>'
+    + '<th>Fila</th><th>Apostador</th><th>Local</th><th>Visitante</th><th>P#</th><th>Método</th><th>Partido ID</th>'
+    + '</tr></thead><tbody>';
+  list.forEach(r => {
+    const m = r.resolucion || '';
+    const badge = m === 'numero_fifa'
+      ? '<span style="color:#fbbf24">numero_fifa</span>'
+      : m === 'num_seq'
+        ? '<span style="color:#f87171">num_seq</span>'
+        : '<span style="color:#94a3b8">' + esc(m) + '</span>';
+    h += '<tr class="row-warn">'
+      + '<td style="color:#94a3b8">' + (r.fila || '?') + '</td>'
+      + '<td>' + esc(r.apostador || '') + '</td>'
+      + '<td>' + esc(r.equipo_local || '') + '</td>'
+      + '<td>' + esc(r.equipo_visitante || '') + '</td>'
+      + '<td style="text-align:center">' + (r.partido_num || '-') + '</td>'
+      + '<td>' + badge + '</td>'
+      + '<td style="text-align:center;color:#94a3b8">' + (r.partido_id || '-') + '</td>'
+      + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  return h;
+}
+
+function renderErrTable(list) {
+  if (!list.length) return '<div class="def-empty">Sin registros.</div>';
+  let h = '<div class="def-scroll"><table class="def-tbl"><thead><tr>'
+    + '<th>Fila</th><th>Apostador</th><th>Error</th>'
+    + '</tr></thead><tbody>';
+  list.forEach(r => {
+    const txt  = typeof r === 'string' ? r : (r.error || r.motivo || JSON.stringify(r));
+    const fila = r.fila || '';
+    const ap   = r.apostador || '';
+    h += '<tr class="row-err">'
+      + '<td style="color:#94a3b8">' + esc(String(fila)) + '</td>'
+      + '<td>' + esc(ap) + '</td>'
+      + '<td style="color:#fca5a5">' + esc(txt) + '</td>'
+      + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  return h;
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+async function saveAlias(equipoId, nombreExcel, chipEl) {
+  if (chipEl.dataset.saved) return;
+  chipEl.style.opacity = '0.5';
+  const origText = chipEl.textContent;
+  chipEl.textContent = '⏳...';
+  try {
+    const resp = await fetch(baseUrl + '/api/v1/bets/equipo-alias?equipo_id=' + equipoId
+      + '&nombre_es=' + encodeURIComponent(nombreExcel), {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+    });
+    const d = await resp.json();
+    if (!resp.ok) throw new Error(d.detail || resp.status);
+    chipEl.dataset.saved = '1';
+    chipEl.style.cssText += ';background:rgba(34,197,94,.18);color:#86efac;border-color:#22c55e;cursor:default;opacity:1';
+    chipEl.textContent = '\u2705 ' + d.nombre_es;
+    chipEl.onclick = null;
+    const tr = chipEl.closest('tr');
+    if (tr) tr.style.opacity = '0.45';
+    _showToast('\u2705 Alias guardado: "' + nombreExcel + '" \u2192 ' + d.nombre + ' (se resolverá automáticamente la próxima vez)');
+  } catch(e) {
+    chipEl.style.opacity = '1';
+    chipEl.textContent = origText;
+    _showToast('\u274c Error al guardar: ' + e.message, true);
+  }
+}
+
+function _showToast(msg, isErr) {
+  const el = document.createElement('div');
+  el.textContent = msg;
+  el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'
+    + 'background:#1e2530;color:' + (isErr ? '#fca5a5' : '#86efac') + ';'
+    + 'border:1px solid ' + (isErr ? '#ef4444' : '#22c55e') + ';border-radius:8px;'
+    + 'padding:8px 18px;font-size:.78rem;z-index:9999;pointer-events:none;max-width:500px;text-align:center';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
 }
 </script>
 </body>

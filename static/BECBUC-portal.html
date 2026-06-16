@@ -930,6 +930,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
     <div id="dynamicMenuItems"></div>
 
 <div class="nav-section" style="margin-top:6px;" id="navSecHerr">Herramientas</div>
+    <button class="nav-item" onclick="exportarPuntajes()" id="nav-exportar-puntajes">
+      <i class="ti ti-file-spreadsheet"></i> Exportar puntaje
+    </button>
     <button class="nav-item" onclick="showView('noticias')" id="nav-noticias">
       <i class="ti ti-news"></i> Noticias
     </button>
@@ -2503,7 +2506,7 @@ function _grupoMiniDash(g) {
     ? pf.map(p => {
         const ln = esc(p.local_nombre_es || p.local_nombre);
         const vn = esc(p.visit_nombre_es || p.visit_nombre);
-        return `<div style="font-size:.6rem;color:var(--muted);padding:1px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ln} <b style="color:var(--fg)">${p.goles_local}-${p.goles_visitante}</b> ${vn}</div>`;
+        return `<div style="font-size:.6rem;color:var(--muted);padding:1px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.numero_fifa?`<span style="color:var(--accent2);font-weight:700;margin-right:3px">P${p.numero_fifa}</span>`:``}${ln} <b style="color:var(--fg)">${p.goles_local}-${p.goles_visitante}</b> ${vn}</div>`;
       }).join('')
     : '<div style="font-size:.58rem;color:var(--muted2);font-style:italic">Sin partidos jugados</div>';
   return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;">
@@ -2518,6 +2521,12 @@ function _renderRealBracket(partidos) {
   const map = {};
   for (const m of partidos) map[m.num] = m;
 
+  // Formatea etiquetas de feeder: "G.P74" → "Gan. P74", "P.P101" → "Per. P101"
+  function fmtFeeder(fl) {
+    if (!fl) return 'TBD';
+    return fl.replace(/^G\.P(\d+)$/, 'Gan. P$1').replace(/^P\.P(\d+)$/, 'Per. P$1');
+  }
+
   function flag(t) {
     if (!t) return '';
     if (t.logo_url) return `<img src="${esc(t.logo_url)}" alt="" onerror="this.style.display=\'none\'" style="width:15px;height:10px;object-fit:cover;border-radius:1px;flex-shrink:0;">`;
@@ -2525,7 +2534,11 @@ function _renderRealBracket(partidos) {
   }
   function row(m, side) {
     const t = side === 'local' ? m.local : m.visitante;
-    if (!t) return `<div class="bk-team"><span class="bk-tn" style="color:var(--muted);font-style:italic">TBD</span></div>`;
+    if (!t) {
+      const fi = side === 'local' ? 0 : 1;
+      const fl = fmtFeeder(BK_FEEDERS?.[m.num]?.[fi]);
+      return `<div class="bk-team"><span class="bk-tn" style="color:var(--muted2);font-size:.65rem;font-style:italic">${fl}</span></div>`;
+    }
     const fin = m.finalizado;
     const isW = fin && m.ganador === side;
     const isL = fin && m.ganador && m.ganador !== side;
@@ -2539,7 +2552,11 @@ function _renderRealBracket(partidos) {
   }
   function card(num) {
     const m = map[num];
-    if (!m) return `<div class="bk-match"><div class="bk-mnum">P${num}</div><div class="bk-tbd">⏳ TBD</div></div>`;
+    if (!m) {
+      const rawF = BK_FEEDERS?.[num] || ['?','?'];
+      const [lf, vf] = [fmtFeeder(rawF[0]), fmtFeeder(rawF[1])];
+      return `<div class="bk-match"><div class="bk-mnum">P${num}</div><div class="bk-team"><span class="bk-tn" style="color:var(--muted2);font-size:.65rem;font-style:italic">${lf}</span></div><div class="bk-sep"></div><div class="bk-team"><span class="bk-tn" style="color:var(--muted2);font-size:.65rem;font-style:italic">${vf}</span></div></div>`;
+    }
     return `<div class="bk-match"><div class="bk-mnum">P${num}</div>${row(m,'local')}<div class="bk-sep"></div>${row(m,'visitante')}</div>`;
   }
   function buildRound(name, sub, nums, flexVal) {
@@ -2819,7 +2836,8 @@ async function loadBecbucTablas(sistema) {
   const body  = document.getElementById('tablasBody');
   const dbSlug = sistema.nombre_bd || 'becbuc';
   try {
-    const tablas = await api(`/api/v1/admin/db-tables?db_slug=${encodeURIComponent(dbSlug)}`);
+    const r = await api(`/api/v1/admin/db-tables?db_slug=${encodeURIComponent(dbSlug)}`);
+    const tablas = [...(r.tables||[]),...(r.views||[])];
     if (!tablas.length) { panel.style.display = 'none'; return; }
     panel.style.display = '';
     body.innerHTML = `<div class="tabla-chips">${tablas.map(t => `
@@ -5158,7 +5176,7 @@ function _grupoCard(grupo, predsMap, mode, allInputIds) {
         center += `<div class="gbc-date" style="margin-top:2px;">🎯 ${saved.pred_local}–${saved.pred_visitante}</div>`;
       }
       matchesHtml += `<div class="gbc-match" id="mc-${p.id}">
-        <div class="gbc-date" style="min-width:28px">${fechaStr}${_estadoBadge(p.estado)}</div>
+        <div class="gbc-date" style="min-width:28px">${p.numero_fifa?`<span style="font-size:.58rem;font-weight:700;color:var(--accent2)">P${p.numero_fifa}</span><br>`:''}${fechaStr}${_estadoBadge(p.estado)}</div>
         <div class="gbc-eq">${lF}<span>${esc(lName)}</span></div>
         <div class="gbc-center">${center}</div>
         <div class="gbc-eq r">${vF}<span>${esc(vName)}</span></div>
@@ -5202,7 +5220,7 @@ function _grupoCard(grupo, predsMap, mode, allInputIds) {
         const inL = `sl-${p.id}`, inV = `sv-${p.id}`;
         if (!_bloqGrp) allInputIds.push({ inL, inV, pid: p.id, fid: grupo.fase_id });
         matchesHtml += `<div class="gbc-match ${rowCls}" id="mc-${p.id}">
-          <div class="gbc-date" style="min-width:28px">${fechaStr}${_estadoBadge(p.estado)}</div>
+          <div class="gbc-date" style="min-width:28px">${p.numero_fifa?`<span style="font-size:.58rem;font-weight:700;color:var(--accent2)">P${p.numero_fifa}</span><br>`:''}${fechaStr}${_estadoBadge(p.estado)}</div>
           <div class="gbc-eq">${lF}<span>${esc(lName)}</span></div>
           <div class="gbc-center">
             ${liveBadge}
@@ -5249,7 +5267,7 @@ function _grupoCard(grupo, predsMap, mode, allInputIds) {
              <div class="gbc-date" style="color:var(--amber)">⏳ pend.</div>`
           : `<div class="gbc-date">—</div>`);
         matchesHtml += `<div class="gbc-match ${saved?'is-saved':''}" id="mc-${p.id}">
-          <div class="gbc-date" style="min-width:28px">${fechaStr}${_estadoBadge(p.estado)}</div>
+          <div class="gbc-date" style="min-width:28px">${p.numero_fifa?`<span style="font-size:.58rem;font-weight:700;color:var(--accent2)">P${p.numero_fifa}</span><br>`:''}${fechaStr}${_estadoBadge(p.estado)}</div>
           <div class="gbc-eq">${lF}<span>${esc(lName)}</span></div>
           <div class="gbc-center">${center}</div>
           <div class="gbc-eq r">${vF}<span>${esc(vName)}</span></div>
@@ -6917,11 +6935,13 @@ function _koCards(nums, koMap, realMap, forceEdit = false, locked = false) {
   return nums.map(num => {
     const ko = koMap[num];
     const real = realMap[num];
-    const feeders = BK_FEEDERS ? (BK_FEEDERS[num]||[]).join('·') : '';
+    const feeders = BK_FEEDERS ? (BK_FEEDERS[num]||[]).join(' · ') : '';
+    const lfeed = BK_FEEDERS?.[num]?.[0] || '';
+    const vfeed = BK_FEEDERS?.[num]?.[1] || '';
     const pid = ko?.partido_id;
     const lObj = ko?.local, vObj = ko?.visitante;
-    const lName = lObj ? esc(lObj.nombre_es||lObj.nombre||'?') : `<span style="color:var(--muted);font-style:italic">TBD</span>`;
-    const vName = vObj ? esc(vObj.nombre_es||vObj.nombre||'?') : `<span style="color:var(--muted);font-style:italic">TBD</span>`;
+    const lName = lObj ? esc(lObj.nombre_es||lObj.nombre||'?') : (lfeed ? `<span style="color:var(--muted2);font-size:.72rem">${lfeed}</span>` : `<span style="color:var(--muted);font-style:italic">TBD</span>`);
+    const vName = vObj ? esc(vObj.nombre_es||vObj.nombre||'?') : (vfeed ? `<span style="color:var(--muted2);font-size:.72rem">${vfeed}</span>` : `<span style="color:var(--muted);font-style:italic">TBD</span>`);
     const lFlag = lObj?.logo_url ? `<img src="${esc(lObj.logo_url)}" alt="" onerror="this.style.display=\'none\'" style="width:16px;height:11px;object-fit:cover;border-radius:1px;flex-shrink:0;">` : '';
     const vFlag = vObj?.logo_url ? `<img src="${esc(vObj.logo_url)}" alt="" onerror="this.style.display=\'none\'" style="width:16px;height:11px;object-fit:cover;border-radius:1px;flex-shrink:0;">` : '';
     const saved = pid ? (_betMisAp[pid]||{}) : {};
@@ -6972,8 +6992,8 @@ function _koCards(nums, koMap, realMap, forceEdit = false, locked = false) {
       const hideTeams = !forceEdit && num >= 89;
       const lNamePlain = lObj ? (lObj.nombre_es||lObj.nombre||'?') : 'Por definir';
       const vNamePlain = vObj ? (vObj.nombre_es||vObj.nombre||'?') : 'Por definir';
-      const lDisplay = (!hideTeams && lObj) ? `${lFlag}<span class="bk-ko-nm">${lName}</span>` : `<span class="bk-ko-nm" style="color:var(--muted);font-style:italic">Por definir</span>`;
-      const vDisplay = (!hideTeams && vObj) ? `${vFlag}<span class="bk-ko-nm">${vName}</span>` : `<span class="bk-ko-nm" style="color:var(--muted);font-style:italic">Por definir</span>`;
+      const lDisplay = (!hideTeams && lObj) ? `${lFlag}<span class="bk-ko-nm">${lName}</span>` : `<span class="bk-ko-nm" style="color:var(--muted2);font-size:.72rem;font-style:italic">${lfeed||'Por definir'}</span>`;
+      const vDisplay = (!hideTeams && vObj) ? `${vFlag}<span class="bk-ko-nm">${vName}</span>` : `<span class="bk-ko-nm" style="color:var(--muted2);font-size:.72rem;font-style:italic">${vfeed||'Por definir'}</span>`;
       const _dis = locked ? ' disabled' : '';
       // Bonus button: always clickable (view-only when locked)
       const bonusOnClick = `openBonusModal(${pid},'${esc(lNamePlain)}','${esc(vNamePlain)}')`;
@@ -7001,9 +7021,12 @@ function _koCards(nums, koMap, realMap, forceEdit = false, locked = false) {
         </div>
       </div>`;
     } else {
-      // Sin equipos definidos aún (TBD)
+      // Sin equipos definidos aún (TBD) — mostrar origen
       bodyHtml=`<div class="bk-ko-result">
-        <div class="bk-result-teams"><span style="color:var(--muted);font-style:italic">Por definir</span></div>
+        <div class="bk-result-teams" style="gap:4px;flex-direction:column;align-items:flex-start">
+          <span style="color:var(--muted2);font-size:.7rem;font-style:italic">${lfeed||'Por definir'}</span>
+          <span style="color:var(--muted2);font-size:.7rem;font-style:italic">${vfeed||'Por definir'}</span>
+        </div>
       </div>`;
     }
 
@@ -7494,11 +7517,20 @@ async function submitKOFaseBets(faseId, pids) {
 
 /* ── Feeder labels por número de partido ── */
 const BK_FEEDERS = {
-  89:['W74','W77'], 90:['W73','W75'], 91:['W76','W78'], 92:['W79','W80'],
-  93:['W83','W84'], 94:['W81','W82'], 95:['W86','W88'], 96:['W85','W87'],
-  97:['W89','W90'], 98:['W93','W94'], 99:['W91','W92'], 100:['W95','W96'],
-  101:['W97','W98'], 102:['W99','W100'],
-  103:['P101','P102'], 104:['W101','W102'],
+  // R32 — origen desde grupos (1°=primero, 2°=segundo, Mej.3°=mejor tercero)
+  73:['2°A','2°B'],   74:['1°E','Mej.3°'], 75:['1°F','2°C'],   76:['1°C','2°F'],
+  77:['1°I','Mej.3°'],78:['2°E','2°I'],   79:['1°A','Mej.3°'], 80:['1°L','Mej.3°'],
+  81:['1°D','Mej.3°'],82:['1°G','Mej.3°'],83:['2°K','2°L'],   84:['1°H','2°J'],
+  85:['1°B','Mej.3°'],86:['1°J','2°H'],   87:['1°K','Mej.3°'], 88:['2°D','2°G'],
+  // R16 — ganadores de R32
+  89:['G.P74','G.P77'], 90:['G.P73','G.P75'], 91:['G.P76','G.P78'], 92:['G.P79','G.P80'],
+  93:['G.P83','G.P84'], 94:['G.P81','G.P82'], 95:['G.P86','G.P88'], 96:['G.P85','G.P87'],
+  // Cuartos
+  97:['G.P89','G.P90'], 98:['G.P93','G.P94'], 99:['G.P91','G.P92'], 100:['G.P95','G.P96'],
+  // Semis
+  101:['G.P97','G.P98'], 102:['G.P99','G.P100'],
+  // 3er puesto y Final
+  103:['P.P101','P.P102'], 104:['G.P101','G.P102'],
 };
 
 /* Compara pronóstico vs resultado real */
@@ -7892,7 +7924,7 @@ function _renderStatsBar() {
       border-bottom:1px solid var(--border);align-items:center">
     ${chip('Apostadores', s.total_apostadores, 'var(--text)')}
     ${chip('Con pronóst.', s.con_apuestas, 'var(--green)')}
-    ${chip('Pronósticos', s.total_pronosticos, 'var(--accent)')}
+    ${chip('🎯 Pts jugados', (s.pts_max_posibles||0)+' pts', 'var(--accent)')}
     ${chip('🥇 Líder', (s.lider_pts||0)+' pts', 'var(--green)')}
     ${chip('🔻 Último', (s.ultimo_pts||0)+' pts', 'var(--muted)')}
     <span style="font-size:.6rem;color:var(--muted);margin-left:auto">
@@ -8006,7 +8038,7 @@ async function _renderRkPronTotal() {
       const isMe  = r.apostador_id === myId;
       const sub   = CATS.reduce((s, c) => s + (r[c.key]||0), 0);
       const glob  = r.pts_globales || 0;
-      const total = sub + glob;
+      const total = (r.puntos_total != null) ? r.puntos_total : (sub + glob);
       const bg    = isMe ? 'background:rgba(224,80,32,.07);' : (i%2===0?'':'background:rgba(255,255,255,.02);');
       const catCells = CATS.map(c => {
         const v = r[c.key]||0;
@@ -8049,7 +8081,7 @@ async function _renderRkPronTotal() {
       const isMe  = r.apostador_id === myId;
       const sub   = CATS.reduce((s, c) => s + (r[c.key]||0), 0);
       const glob  = r.pts_globales || 0;
-      const total = sub + glob;
+      const total = (r.puntos_total != null) ? r.puntos_total : (sub + glob);
       const aid   = r.apostador_id;
       const open  = !!window._rkTreeOpen[aid];
       return `<div class="rk-tree-node" id="rk-node-${aid}">
@@ -8174,7 +8206,11 @@ async function _rkLoadNodeContent(aid) {
       const gl  = p.goles_local    ?? '?', gv  = p.goles_visitante ?? '?';
       const pl  = p.pred_local     ?? '-', pv  = p.pred_visitante  ?? '-';
       const lN  = p.local_nombre   || '?', vN  = p.visit_nombre    || '?';
-      const pts = p.pts_total ?? 0;
+      // anyDetail=true cuando puntaje_detalle existe (al menos un item no-null)
+      const anyDetail = ITEMS_DEF.some(([,, k]) => p[k] != null);
+      const itemSum   = ITEMS_DEF.reduce((s, [,, k]) => s + (p[k] ?? 0), 0);
+      // pts del padre: si hay detalle usamos suma de items; si no, fallback a pts_total (scoring viejo)
+      const pts = anyDetail ? itemSum + (p.pts_equipo ?? 0) + (p.pts_bonus ?? 0) : (p.pts_total ?? 0);
       const pid = p.partido_id || p.id;
       grandTotal += pts; fasePts += pts;
 
@@ -8186,14 +8222,16 @@ async function _rkLoadNodeContent(aid) {
       const bg = ok ? 'rgba(34,197,94,.08)' : hit ? 'rgba(251,191,36,.07)' : 'transparent';
 
       // Items del partido (nivel 3)
-      const itemRows = ITEMS_DEF.map(([letra, lbl, key]) => {
-        const v = p[key] ?? 0;
-        const color = v > 0 ? 'var(--green)' : 'var(--muted)';
-        return `<div style="display:flex;justify-content:space-between;padding:1px 0;font-size:.55rem">
-          <span style="color:var(--muted2)">${letra} — ${lbl}</span>
-          <span style="font-weight:${v>0?'700':'400'};color:${color}">${v} pts</span>
-        </div>`;
-      }).join('');
+      const itemRows = anyDetail
+        ? ITEMS_DEF.map(([letra, lbl, key]) => {
+            const v = p[key] ?? 0;
+            const color = v > 0 ? 'var(--green)' : 'var(--muted)';
+            return `<div style="display:flex;justify-content:space-between;padding:1px 0;font-size:.55rem">
+              <span style="color:var(--muted2)">${letra} — ${lbl}</span>
+              <span style="font-weight:${v>0?'700':'400'};color:${color}">${v} pts</span>
+            </div>`;
+          }).join('')
+        : `<div style="color:var(--muted);font-size:.54rem;padding:3px 0;font-style:italic">⚠ Sin desglose — recalculá puntajes primero</div>`;
 
       // Nivel 2: partido (toggle abre items)
       h += `<div style="border-bottom:1px solid var(--border);background:${bg}">
@@ -8231,6 +8269,32 @@ async function _rkLoadNodeContent(aid) {
     detail.dataset.loaded = '1';
   } catch(e) {
     detail.innerHTML = `<div style="padding:6px 14px;color:var(--muted);font-size:.65rem">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+async function exportarPuntajes() {
+  if (!_betTorneoId) { alert('Seleccioná un torneo primero.'); return; }
+  const btn = document.getElementById('nav-exportar-puntajes');
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Generando…'; }
+  try {
+    const resp = await fetch(`/api/v1/bets/exportar-puntajes/${_betTorneoId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!resp.ok) throw new Error(`Error ${resp.status}`);
+    const blob = await resp.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const cd   = resp.headers.get('Content-Disposition') || '';
+    const m    = cd.match(/filename="([^"]+)"/);
+    a.href     = url;
+    a.download = m ? m[1] : `puntajes_copa.xlsx`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert(`Error al exportar: ${e.message}`);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = orig || '<i class="ti ti-file-spreadsheet"></i> Exportar puntaje'; }
   }
 }
 

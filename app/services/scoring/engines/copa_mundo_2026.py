@@ -76,21 +76,21 @@ class CopasMundoScoringEngine:
             score.pts_resultado = cfg.pts_resultado * mult
             score.pts_marcador_base = 1
 
-        # I — Marcador exacto
+        # I — Marcador exacto (acumulativo con H: acierto exacto suma H+I)
         if pl == rl and pv == rv:
             score.pts_marcador = cfg.pts_marcador_exacto * mult
             score.pts_marcador_base = 3
 
-        # Normalizar NULL -> 0 en todas las predicciones numericas (J/K/L/M)
-        # Regla: NULL pred = "no especificado" = 0; NULL real = "no ocurrio" = 0
+        # J/K/L/M: NULL pred = 0 (apostó que no habría). NULL real = 0 (no ocurrió).
+        # Paraguay: multiplicador x2.
         pred_amarillas = (apuesta.get("pred_amarillas") or 0)
         real_amarillas = (partido.get("amarillas") or 0)
-        pred_rojas = (apuesta.get("pred_rojas") or 0)
-        real_rojas = (partido.get("rojas") or 0)
-        pred_var = (apuesta.get("pred_var") or 0)
-        real_var = (partido.get("decisiones_var") or 0)
-        pred_pp = (apuesta.get("pred_penales_partido") or 0)
-        real_pp = (partido.get("penales_partido") or 0)
+        pred_rojas     = (apuesta.get("pred_rojas") or 0)
+        real_rojas     = (partido.get("rojas") or 0)
+        pred_var       = (apuesta.get("pred_var") or 0)
+        real_var       = (partido.get("decisiones_var") or 0)
+        pred_pp        = (apuesta.get("pred_penales_partido") or 0)
+        real_pp        = (partido.get("penales_partido") or 0)
 
         # J — Amarillas
         if pred_amarillas == real_amarillas:

@@ -287,9 +287,9 @@ async def set_periodo(torneo_id: int, body: PeriodoIn, current: CurrentUser, db:
 
 @router.post("/apuestas", summary="Crear o actualizar apuesta")
 async def upsert_apuesta(body: ApuestaIn, current: CurrentUser, db: DBSession) -> dict:
-    # Verificar partido
+    # Verificar partido y obtener numero_fifa
     r = await db.execute(
-        text("SELECT estado, torneo_id FROM partido WHERE id = :pid"),
+        text("SELECT estado, torneo_id, COALESCE(numero_fifa, 0) AS numero_fifa FROM partido WHERE id = :pid"),
         {"pid": body.partido_id}
     )
     row = r.one_or_none()
@@ -306,16 +306,23 @@ async def upsert_apuesta(body: ApuestaIn, current: CurrentUser, db: DBSession) -
                if fin else "El período de apuestas aún no ha comenzado")
         raise HTTPException(400, msg)
 
+    numero_fifa = row[2] or None
+    nombre_apost = getattr(current, "nombre", None) or getattr(current, "username", None) or str(current.id)
+
     await db.execute(
         text("""
             INSERT INTO apuesta
-                (apostador_id, partido_id, pred_local, pred_visitante,
+                (apostador_id, partido_id, nombre_apostador, numero_fifa,
+                 pred_local, pred_visitante,
                  pred_minuto_gol, pred_amarillas, pred_var, pred_penales,
                  pred_rojas, pred_penales_partido, pred_penales_local_tanda, pred_penales_visitante_tanda)
             VALUES
-                (:uid, :pid, :pl, :pv, :pmg, :pam, :pvar, :ppen,
+                (:uid, :pid, :nombre, :nfifa,
+                 :pl, :pv, :pmg, :pam, :pvar, :ppen,
                  :projas, :ppp, :pltanda, :pvtanda)
             ON CONFLICT (apostador_id, partido_id) DO UPDATE SET
+                nombre_apostador             = EXCLUDED.nombre_apostador,
+                numero_fifa                  = EXCLUDED.numero_fifa,
                 pred_local                   = EXCLUDED.pred_local,
                 pred_visitante               = EXCLUDED.pred_visitante,
                 pred_minuto_gol              = EXCLUDED.pred_minuto_gol,
@@ -331,6 +338,8 @@ async def upsert_apuesta(body: ApuestaIn, current: CurrentUser, db: DBSession) -
         {
             "uid":    current.id,
             "pid":    body.partido_id,
+            "nombre": nombre_apost,
+            "nfifa":  numero_fifa,
             "pl":     body.pred_local,
             "pv":     body.pred_visitante,
             "pmg":    body.pred_minuto_gol,
@@ -344,7 +353,7 @@ async def upsert_apuesta(body: ApuestaIn, current: CurrentUser, db: DBSession) -
         }
     )
     await db.commit()
-    return {"ok": True, "partido_id": body.partido_id,
+    return {"ok": True, "partido_id": body.partido_id, "numero_fifa": numero_fifa,
             "pred": f"{body.pred_local} - {body.pred_visitante}"}
 
 
@@ -484,6 +493,7 @@ async def grupos_standings(torneo_id: int, db: DBSession) -> list[dict]:
                     COALESCE(p.rojas, NULL)              AS rojas,
                     COALESCE(p.penales_partido, NULL)    AS penales_partido,
                     p.minuto_actual,
+                    COALESCE(p.numero_fifa, 0)           AS numero_fifa,
                     el.nombre    AS local_nombre,
                     el.nombre_es AS local_nombre_es,
                     el.logo_url  AS local_logo,
@@ -741,6 +751,37 @@ async def stats_torneo(torneo_id: int, db: DBSession) -> dict:
         await db.rollback()
         fase_activa = "—"
 
+    # Puntos máximos posibles = max_pts(fase) × partidos finalizados por fase
+    # Copa del Mundo 2026: H+I+J+K+L+M+N (+O si KO con tanda)
+    _MAX_PTS_FASE = {
+        "grupos":   17,   # H(4)+I(8)+J+K+L+M+N
+        "16avos":   27,   # H(6)+I(12)+J+K+L+M+N+O(4)
+        "8avos":    33,   # H(8)+I(16)+J+K+L+M+N+O(4)
+        "4tos":     39,   # H(10)+I(20)+J+K+L+M+N+O(4)
+        "semi":     45,   # H(12)+I(24)+J+K+L+M+N+O(4)
+        "tercero":  47,   # H(14)+I(28)+J+K+L+M+N (sin tanda)
+        "final":    69,   # H(20)+I(40)+J+K+L+M+N+O(4)
+    }
+    pts_max_posibles = 0
+    try:
+        mq = await db.execute(
+            text("""
+                SELECT f.tipo, COUNT(p.id)
+                FROM partido p
+                JOIN fase f ON f.id = p.fase_id
+                WHERE f.torneo_id = :tid AND p.estado = 'finalizado'
+                GROUP BY f.tipo
+            """),
+            {"tid": torneo_id}
+        )
+        for row in mq:
+            fase_tipo = row[0] or "grupos"
+            count     = int(row[1] or 0)
+            pts_max_posibles += _MAX_PTS_FASE.get(fase_tipo, 17) * count
+    except Exception:
+        await db.rollback()
+        pts_max_posibles = 0
+
     return {
         "total_apostadores":  total_apostadores,
         "con_apuestas":       con_apuestas,
@@ -751,6 +792,7 @@ async def stats_torneo(torneo_id: int, db: DBSession) -> dict:
         "ultimo_nombre":      ultimo_nombre,
         "ultimo_pts":         ultimo_pts,
         "fase_activa":        fase_activa,
+        "pts_max_posibles":   pts_max_posibles,
     }
 
 
@@ -1166,6 +1208,7 @@ async def _ranking_export_inner(torneo_id: int, current, db):
                     p.minuto_primer_gol            AS real_minuto,
                     p.penales_local                AS real_pen_local,
                     p.penales_visitante            AS real_pen_visitante,
+                    COALESCE(p.numero_fifa, 0) AS numero_fifa,
                     a.pred_local,
                     a.pred_visitante,
                     a.pred_amarillas,
@@ -1424,7 +1467,9 @@ async def _ranking_export_inner(torneo_id: int, current, db):
 
         # Data rows
         for ri, frow in enumerate(fase_filas, 3):
-            partido_lbl = f"{frow.get('equipo_local','')} vs {frow.get('equipo_visitante','')}"
+            _pnum = frow.get('numero_fifa') or 0
+            _pnum_prefix = f"P{_pnum}  " if _pnum else ""
+            partido_lbl = f"{_pnum_prefix}{frow.get('equipo_local','')} vs {frow.get('equipo_visitante','')}"
             pred_marc = _marcador(frow.get("pred_local"), frow.get("pred_visitante"))
             real_marc = _marcador(frow.get("goles_local"), frow.get("goles_visitante"))
             row_fill = FILL_GRAY if ri % 2 == 0 else FILL_WHITE
@@ -1468,6 +1513,102 @@ async def _ranking_export_inner(torneo_id: int, current, db):
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GET /bets/exportar-puntajes/{torneo_id}
+# Excel con dos hojas: v_copamundial_puntajes + v_copamundial_puntajes_det
+# ─────────────────────────────────────────────────────────────────────────────
+@router.get("/exportar-puntajes/{torneo_id}", summary="Excel puntajes: resumen + detalle por partido")
+async def exportar_puntajes(torneo_id: int, db: DBSession, current: CurrentUser):
+    import io
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    HDR_FILL  = PatternFill("solid", fgColor="1F4E79")
+    HDR_FONT  = Font(bold=True, color="FFFFFF", name="Calibri", size=10)
+    ALT_FILL  = PatternFill("solid", fgColor="DCE6F1")
+    NORM_FILL = PatternFill("solid", fgColor="FFFFFF")
+    TOT_FILL  = PatternFill("solid", fgColor="FFF2CC")
+    TOT_FONT  = Font(bold=True, name="Calibri", size=10)
+    PTS_FILL  = PatternFill("solid", fgColor="E2EFDA")
+    PTS_FONT  = Font(name="Calibri", size=10, color="375623")
+    CELL_FONT = Font(name="Calibri", size=10)
+    CENTER    = Alignment(horizontal="center", vertical="center")
+    LEFT      = Alignment(horizontal="left",   vertical="center")
+    _s        = Side(style="thin", color="BBBBBB")
+    BORDER    = Border(left=_s, right=_s, top=_s, bottom=_s)
+
+    def _is_pts(col):  return col.endswith("_pts") or col in ("total_partido","total_puntos","subtotal_partidos","subtotal_globales")
+    def _is_tot(col):  return col in ("total_partido","total_puntos","subtotal_partidos","subtotal_globales")
+
+    def _write_sheet(ws, rows, title):
+        ws.title = title
+        if not rows:
+            ws.cell(1, 1, "Sin datos")
+            return
+        cols = list(rows[0].keys())
+        for c, col in enumerate(cols, 1):
+            cell = ws.cell(row=1, column=c, value=col.replace("_", " ").title())
+            cell.font = HDR_FONT; cell.fill = HDR_FILL
+            cell.alignment = CENTER; cell.border = BORDER
+        for r, row in enumerate(rows, 2):
+            alt = (r % 2 == 0)
+            for c, col in enumerate(cols, 1):
+                val = row[col]
+                cell = ws.cell(row=r, column=c, value=val)
+                cell.border = BORDER
+                cell.font   = TOT_FONT if _is_tot(col) else (PTS_FONT if _is_pts(col) else CELL_FONT)
+                cell.alignment = CENTER if isinstance(val, (int, float)) else LEFT
+                cell.fill   = TOT_FILL if _is_tot(col) else (PTS_FILL if _is_pts(col) else (ALT_FILL if alt else NORM_FILL))
+        # ancho automático
+        for c, col in enumerate(cols, 1):
+            max_w = max(len(col), max((len(str(r[col] or "")) for r in rows), default=0))
+            ws.column_dimensions[get_column_letter(c)].width = min(max_w + 3, 38)
+        ws.freeze_panes = "A2"
+        ws.auto_filter.ref = ws.dimensions
+
+    try:
+        r1 = await db.execute(text("SELECT * FROM v_copamundial_puntajes"))
+        rows1 = [dict(row._mapping) for row in r1]
+    except Exception as ex:
+        raise HTTPException(500, f"Error consultando vista resumen: {ex}")
+    try:
+        # Try to enrich detail view with numero_fifa (requires partido_id in view)
+        r2 = await db.execute(text("""
+            SELECT v.*, COALESCE(p.numero_fifa, 0) AS numero_fifa
+            FROM v_copamundial_puntajes_det v
+            LEFT JOIN partido p ON p.id = v.partido_id
+        """))
+        rows2_raw = [dict(row._mapping) for row in r2]
+        # Prepend P# to the 'partido' column text if present
+        for row in rows2_raw:
+            nf = row.get("numero_fifa") or 0
+            if nf and "partido" in row:
+                row["partido"] = f"P{nf}  {row['partido']}"
+        rows2 = rows2_raw
+    except Exception:
+        try:
+            r2b = await db.execute(text("SELECT * FROM v_copamundial_puntajes_det"))
+            rows2 = [dict(row._mapping) for row in r2b]
+        except Exception as ex2:
+            raise HTTPException(500, f"Error consultando vista detalle: {ex2}")
+
+    wb = Workbook()
+    ws1 = wb.active
+    _write_sheet(ws1, rows1, "Resumen")
+    ws2 = wb.create_sheet()
+    _write_sheet(ws2, rows2, "Detalle")
+
+    buf = io.BytesIO()
+    wb.save(buf); buf.seek(0)
+    ts = _dt.now().strftime("%Y%m%d_%H%M")
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="puntajes_copa_{ts}.xlsx"'},
     )
 
 
@@ -5824,7 +5965,9 @@ class ImportRowIn(BaseModel):
     nombre:               str | None = None
     email:                str | None = None
     telefono:             str | None = None
-    partido_num:          int
+    partido_num:          int | None = None
+    equipo_local:         str | None = None
+    equipo_visitante:     str | None = None
     goles_local:          int
     goles_visitante:      int
     pred_minuto_gol:      int | None = None
@@ -5833,6 +5976,31 @@ class ImportRowIn(BaseModel):
     pred_rojas:           int | None = None
     pred_penales_partido: int | None = None
 
+
+
+
+@router.post("/equipo-alias", summary="Guardar alias de equipo en BD (admin)")
+async def guardar_equipo_alias(
+    equipo_id: int,
+    nombre_es: str,
+    current: CurrentUser,
+    db: DBSession,
+) -> dict:
+    """
+    Actualiza equipo.nombre_es con el alias en español.
+    Después de esto el import lo resuelve directamente sin necesidad de _EQ_ALIASES.
+    """
+    if not await _check_admin(current):
+        raise HTTPException(403, "Se requiere rol admin o superadmin")
+    r = await db.execute(
+        text("UPDATE equipo SET nombre_es = :alias WHERE id = :eid RETURNING id, nombre, nombre_es"),
+        {"alias": nombre_es.strip(), "eid": equipo_id},
+    )
+    row = r.one_or_none()
+    if not row:
+        raise HTTPException(404, f"Equipo {equipo_id} no encontrado")
+    await db.commit()
+    return {"ok": True, "equipo_id": row[0], "nombre": row[1], "nombre_es": row[2]}
 
 @router.post("/importar-apuestas-grupos/{torneo_id}")
 async def importar_apuestas_grupos(
@@ -5853,13 +6021,154 @@ async def importar_apuestas_grupos(
     if not torneo_r.one_or_none():
         raise HTTPException(404, f"Torneo {torneo_id} no encontrado")
 
-    # Pre-cargar partidos de fase grupos numerados por f.orden, p.id (igual que generar_excel)
-    # La columna 'numero' NO existe en BD — se calcula con ROW_NUMBER().
-    # partido_num del Excel puede venir como "P001" o "1" o 1 (int).
+    # Pre-cargar partidos de fase grupos
+    import unicodedata as _ucd
+
+    def _norm_eq(s: str) -> str:
+        """Normaliza nombre de equipo: sin tildes, lowercase, sin puntuación extra."""
+        s = (s or "").lower().strip()
+        s = _ucd.normalize("NFD", s)
+        return "".join(c for c in s if _ucd.category(c) != "Mn")
+
+    # Aliases: nombre_normalizado_excel → nombre_normalizado_bd
+    # Cubre nombres en español del Excel vs nombres en inglés de la BD
+    # Aliases: nombre_normalizado_excel → nombre_normalizado_bd (nombre EN en BD).
+    # Las comparaciones son case-insensitive porque _norm_eq() lowercasea todo.
+    _EQ_ALIASES: dict[str, str] = {
+        # Congo
+        "congo":                    "congo dr",
+        "rep congo":                "congo dr",
+        "rd congo":                 "congo dr",
+        "republica del congo":      "congo dr",
+        # Turquía
+        "turquia":                  "turkiye",
+        "turkey":                   "turkiye",
+        # Costa de Marfil — nombre en BD: "Ivory Coast"
+        "costa marfil":             "ivory coast",
+        "costa de marfil":          "ivory coast",
+        "cote d'ivoire":            "ivory coast",
+        "cote divoire":             "ivory coast",
+        # Países en español → nombre EN en BD
+        "noruega":                  "norway",
+        "croacia":                  "croatia",
+        "argelia":                  "algeria",
+        "corea del sur":            "south korea",
+        "corea":                    "south korea",
+        "corea sur":                "south korea",
+        "korea republic":           "south korea",
+        "republic of korea":        "south korea",
+        "corea del norte":          "korea dpr",
+        "chequia":                  "czech republic",
+        "rep checa":                "czech republic",
+        "sudafrica":                "south africa",
+        "paises bajos":             "netherlands",
+        "holanda":                  "netherlands",
+        "nueva zelanda":            "new zealand",
+        "estados unidos":           "united states",
+        "usa":                      "united states",
+        "arabia saudita":           "saudi arabia",
+        "japon":                    "japan",
+        "belgica":                  "belgium",
+        "dinamarca":                "denmark",
+        "polonia":                  "poland",
+        "suecia":                   "sweden",
+        "suiza":                    "switzerland",
+        "egipto":                   "egypt",
+        "marruecos":                "morocco",
+        "iran":                     "ir iran",
+        "irak":                     "iraq",
+        "jordania":                 "jordan",
+        "curazao":                  "curacao",
+        "cabo verde":               "cape verde islands",
+        "cabo verde islands":       "cape verde islands",
+        "haiti":                    "haiti",
+        "escocia":                  "scotland",
+        "gales":                    "wales",
+        "uzbekistan":               "uzbekistan",
+        "catar":                    "qatar",
+        "ghana":                    "ghana",
+        "senegal":                  "senegal",
+        # Sesion 29+
+        "brasil":                   "brazil",
+        "alemania":                 "germany",
+        "tunez":                    "tunisia",
+        "francia":                  "france",
+        "inglaterra":               "england",
+        "espana":                   "spain",
+        "españa":                   "spain",
+        # Bosnia
+        "bosnia":                   "bosnia & herzegovina",
+        "bosnia herzegovina":       "bosnia & herzegovina",
+        "bosnia y herzegovina":     "bosnia & herzegovina",
+        "bosnia i hercegovina":     "bosnia & herzegovina",
+    }
+
+    # ── 1. Índice de equipos: nombre_normalizado → equipo_id ─────────────────
+    # Indexa nombre (EN) y nombre_es (ES) + todos los aliases conocidos.
+    eq_r = await db.execute(
+        text("""
+            SELECT DISTINCT e.id, e.nombre, e.nombre_es
+            FROM equipo e
+            WHERE e.id IN (
+                SELECT equipo_local_id    FROM partido WHERE torneo_id = :tid AND equipo_local_id    IS NOT NULL
+                UNION
+                SELECT equipo_visitante_id FROM partido WHERE torneo_id = :tid AND equipo_visitante_id IS NOT NULL
+            )
+        """),
+        {"tid": torneo_id},
+    )
+    equipo_name_map: dict[str, int] = {}  # nombre_norm → equipo_id
+    eq_list = eq_r.mappings().all()
+    for eq in eq_list:
+        for col in (eq["nombre"], eq["nombre_es"]):
+            if col:
+                equipo_name_map[_norm_eq(col)] = eq["id"]
+
+    # Resolver aliases: si el alias apunta a un nombre que existe en el mapa, agregar
+    for alias_key, target_raw in _EQ_ALIASES.items():
+        # Normalizar alias_key y target para comparación case-insensitive
+        alias_norm = _norm_eq(alias_key)
+        target_norm = _norm_eq(target_raw)
+        if target_norm in equipo_name_map and alias_norm not in equipo_name_map:
+            equipo_name_map[alias_norm] = equipo_name_map[target_norm]
+
+    # Fallback por prefijo: "congo" → encuentra "congo dr" si no hubo match exacto
+    _eq_norm_keys = list(equipo_name_map.keys())
+
+    # Índice inverso equipo_id → nombre legible (para sugerencias)
+    _eq_id_to_nombre: dict[int, str] = {
+        eq["id"]: eq["nombre"] for eq in eq_list if eq["nombre"]
+    }
+
+    import difflib as _difflib
+
+    def _sugerir_equipo(nombre_excel: str) -> list[dict]:
+        """Busca los nombres más cercanos en equipo_name_map para un nombre no resuelto."""
+        n = _norm_eq(nombre_excel)
+        if not n:
+            return []
+        matches = _difflib.get_close_matches(n, _eq_norm_keys, n=3, cutoff=0.5)
+        result = []
+        for m in matches:
+            eid = equipo_name_map[m]
+            result.append({
+                "nombre_bd": _eq_id_to_nombre.get(eid, m),
+                "nombre_norm_bd": m,
+                "equipo_id": eid,
+            })
+        return result
+
+    # Colectar nombres de equipos del Excel que no resuelven (para reportar al final)
+    _unresolved_eq: dict[str, dict] = {}  # nombre_excel → {count, sugerencias}
+
+    # ── 2. Partidos de grupos: (equipo_local_id, equipo_visitante_id) → partido_id ──
     partidos_r = await db.execute(
         text("""
             SELECT p.id,
-                   ROW_NUMBER() OVER (ORDER BY f.orden, p.id)::int AS num_seq
+                   COALESCE(p.numero_fifa, 0)                       AS numero_fifa,
+                   ROW_NUMBER() OVER (ORDER BY f.orden, p.id)::int  AS num_seq,
+                   p.equipo_local_id,
+                   p.equipo_visitante_id
             FROM partido p
             JOIN fase f ON f.id = p.fase_id
             WHERE p.torneo_id = :tid AND f.tipo = 'grupo'
@@ -5868,45 +6177,143 @@ async def importar_apuestas_grupos(
         {"tid": torneo_id},
     )
     partido_rows = partidos_r.all()
-    partido_map = {row.num_seq: row.id for row in partido_rows}
-    total_partidos_grupos = len(partido_map)  # para advertencia de cobertura
+    # Índice principal: numero_fifa → partido_id (referencia oficial FIFA P1-P104)
+    partido_map_fifa: dict[int, int] = {
+        row.numero_fifa: row.id
+        for row in partido_rows
+        if row.numero_fifa
+    }
+    # Fallback legado: num_seq → partido_id (orden BD)
+    partido_map_seq: dict[int, int] = {row.num_seq: row.id for row in partido_rows}
+    # Inverso: partido_id → numero_fifa (para grabar en apuesta al insertar)
+    partido_map_fifa_inv: dict[int, int] = {
+        row.id: row.numero_fifa
+        for row in partido_rows
+        if row.numero_fifa
+    }
+    # Índice por par de equipo_id (confiable)
+    partido_map_ids: dict[tuple[int, int], int] = {
+        (row.equipo_local_id, row.equipo_visitante_id): row.id
+        for row in partido_rows
+        if row.equipo_local_id and row.equipo_visitante_id
+    }
+    total_partidos_grupos = len(partido_map_seq)
 
-    # Pre-cargar usuarios existentes (username -> id) — desde app_db
+    def _resolve_equipo(name: str) -> int | None:
+        """Resuelve equipo_id desde nombre del Excel.
+        1. Match exacto (cubre nombre EN, nombre_es ES y aliases).
+        2. Fallback: busca claves de BD que empiecen con el nombre del Excel
+           (ej. 'congo' matchea 'congo dr').
+        Retorna None y registra en _unresolved_eq si no encuentra.
+        """
+        n = _norm_eq(name)
+        if not n:
+            return None
+        # 1. Exacto
+        eid = equipo_name_map.get(n)
+        if eid:
+            return eid
+        # 2. Prefijo: n es prefijo de alguna clave conocida
+        for key in _eq_norm_keys:
+            if key.startswith(n + " ") or key == n:
+                return equipo_name_map[key]
+        # No resuelto: registrar para el reporte
+        nombre_orig = (name or "").strip()
+        if nombre_orig and nombre_orig not in _unresolved_eq:
+            _unresolved_eq[nombre_orig] = {
+                "nombre_excel": nombre_orig,
+                "nombre_norm": n,
+                "count": 0,
+                "sugerencias": _sugerir_equipo(nombre_orig),
+            }
+        if nombre_orig:
+            _unresolved_eq[nombre_orig]["count"] += 1
+        return None
+
+    def _find_partido(row: "ImportRowIn") -> tuple[int | None, str]:
+        """Resuelve partido_id desde la fila del Excel.
+
+        Prioridad:
+          1. Inferir por nombres de equipo local y visitante → partido_map_ids
+             (más confiable: usa los IDs reales de la BD, garantiza numero_fifa correcto)
+          2. partido_num del Excel → numero_fifa en BD (número oficial FIFA P1-P104)
+          3. partido_num del Excel → num_seq en BD (fallback legado — evitar)
+
+        Returns: (partido_id | None, método: "equipo" | "numero_fifa" | "num_seq" | "none")
+        """
+        # 1. PRIORIDAD: inferir por nombres de equipo (PRIMARY — más robusto)
+        if row.equipo_local and row.equipo_visitante:
+            lid = _resolve_equipo(row.equipo_local)
+            vid = _resolve_equipo(row.equipo_visitante)
+            if lid and vid:
+                pid = partido_map_ids.get((lid, vid))
+                if pid:
+                    return pid, "equipo"
+        # 2. partido_num del Excel → numero_fifa en BD
+        if row.partido_num:
+            pid = partido_map_fifa.get(int(row.partido_num))
+            if pid:
+                return pid, "numero_fifa"
+        # 3. FALLBACK LEGADO: número de partido del Excel → num_seq en BD
+        if row.partido_num:
+            pid = partido_map_seq.get(int(row.partido_num))
+            if pid:
+                return pid, "num_seq"
+        return None, "none"
+
+    # Pre-cargar usuarios existentes (username -> id, nombre) — desde app_db
     async with _app_engine.connect() as aconn:
         users_r = await aconn.execute(
-            text("SELECT id, username, email FROM users WHERE is_active = TRUE")
+            text("SELECT id, username, email, COALESCE(nombre, username) AS nombre FROM users WHERE is_active = TRUE")
         )
-        user_map = {row.username.lower(): row.id for row in users_r}
+        user_rows = users_r.all()
+        # strip + lower en username para comparacion robusta (espacios, \xa0, mayusculas)
+        user_map = {row.username.strip().replace("\xa0", "").lower(): row.id for row in user_rows}
+        # mapa id → nombre para usar en INSERT
+        user_nombre_map: dict[int, str] = {row.id: row.nombre for row in user_rows}
+
+    def _norm_alias(s: str) -> str:
+        """Normaliza alias para comparacion: sin espacios extremos, sin \xa0, lowercase."""
+        return (s or "").replace("\xa0", "").strip().lower()
 
     errores = []
+    # Filas donde la inferencia de equipos no fue posible (resueltas por fallback o sin resolver)
+    sin_inferencia: list[dict] = []
+    skipped_ko = 0  # filas de P073+ ignoradas silenciosamente
 
     # ── PASO 1: Pre-resolver apostadores y partidos (sin tocar BD aún) ────────
-    # Necesitamos los user_ids para el DELETE masivo antes de insertar.
-    resolved: list[tuple[int, int, "ImportRowIn"]] = []  # (partido_id, user_id, row)
+    resolved: list[tuple[int, int, "ImportRowIn", str]] = []  # (partido_id, user_id, row, resolucion)
+    # key = (user_id, partido_id) → índice en resolved; para deduplicar filas repetidas
+    _resolved_key: dict[tuple[int, int], int] = {}
 
     for i, row in enumerate(rows, start=2):
         fila = i
 
-        # Resolver partido
-        raw_num = row.partido_num
-        if isinstance(raw_num, str):
-            raw_num = raw_num.strip().lstrip('Pp').lstrip('0') or '0'
-        try:
-            num_int = int(raw_num)
-        except (ValueError, TypeError):
-            num_int = None
-        partido_id = partido_map.get(num_int) if num_int else None
+        # Filtro: solo partidos de fase grupos (P001-P072).
+        # Filas con partido_num > total_partidos_grupos son KO y se omiten silenciosamente.
+        if row.partido_num is not None:
+            try:
+                _pnum = int(row.partido_num)
+            except (ValueError, TypeError):
+                _pnum = 0
+            if _pnum > total_partidos_grupos:
+                skipped_ko += 1
+                continue
+
+        # Resolver partido: por nombres de equipo (preferido) o por num_seq (fallback)
+        partido_id, resolucion = _find_partido(row)
         if not partido_id:
+            desc = f"equipo='{row.equipo_local} vs {row.equipo_visitante}'" if row.equipo_local else f"num={row.partido_num}"
             errores.append({
                 "fila": fila,
-                "motivo": f"Partido #{row.partido_num} no encontrado en fase grupos del torneo {torneo_id} "
-                          f"(hay {total_partidos_grupos} partidos: P1–P{total_partidos_grupos})",
+                "motivo": f"Partido no encontrado ({desc}) en fase grupos del torneo {torneo_id} "
+                          f"(hay {total_partidos_grupos} partidos)",
                 "sin_mapeo": True,
             })
             continue
 
-        # Resolver apostador
-        alias = row.apostador.strip().lower()
+        # Resolver apostador — comparacion normalizada
+        alias = _norm_alias(row.apostador)
         user_id = user_map.get(alias)
 
         if not user_id:
@@ -5957,34 +6364,64 @@ async def importar_apuestas_grupos(
                     user_id = new_u.scalar_one()
                 user_map[alias] = user_id
 
-        resolved.append((partido_id, user_id, row))
+        # Registrar si la resolución no fue por inferencia de equipos
+        if resolucion != "equipo":
+            sin_inferencia.append({
+                "fila": fila,
+                "apostador": row.apostador.strip() if row.apostador else "",
+                "partido_num": row.partido_num,
+                "equipo_local": row.equipo_local or "",
+                "equipo_visitante": row.equipo_visitante or "",
+                "resolucion": resolucion,
+                "partido_id": partido_id,
+            })
 
-    # ── PASO 2: DELETE masivo — borra todas las apuestas de fase grupos
-    #            para los apostadores presentes en el Excel ─────────────────────
-    unique_user_ids = list({uid for _, uid, _ in resolved})
-    all_partido_ids  = list(partido_map.values())
+        key = (user_id, partido_id)
+        if key in _resolved_key:
+            # Reemplazar fila anterior con la más reciente (deduplicar)
+            resolved[_resolved_key[key]] = (partido_id, user_id, row, resolucion)
+        else:
+            _resolved_key[key] = len(resolved)
+            resolved.append((partido_id, user_id, row, resolucion))
 
+    # ── PASO 2: DELETE masivo — borra TODAS las apuestas de la fase grupos
+    #            del torneo completo (sin filtrar por apostador)
+    #            Garantiza tabla limpia antes del INSERT fresco ───────────────────
+    all_partido_ids  = list(partido_map_seq.values())
+
+    # Borrar TODAS las apuestas de fase grupos del torneo (todos los apostadores)
     eliminadas = 0
-    if unique_user_ids and all_partido_ids:
+    if all_partido_ids:
         ids_p = ",".join(str(x) for x in all_partido_ids)
-        ids_u = ",".join(str(x) for x in unique_user_ids)
         del_r = await db.execute(
-            text(f"DELETE FROM apuesta WHERE partido_id IN ({ids_p}) AND apostador_id IN ({ids_u})")
+            text(f"DELETE FROM apuesta WHERE partido_id IN ({ids_p})")
         )
         eliminadas = del_r.rowcount
 
-    # ── PASO 3: INSERT limpio ─────────────────────────────────────────────────
+    # ── PASO 3: INSERT limpio (sin ON CONFLICT — el DELETE garantiza tabla limpia) ──
     creadas = 0
-    for partido_id, user_id, row in resolved:
+    for partido_id, user_id, row, resolucion in resolved:
+        # Nombre: del Excel si viene, sino del mapa de usuarios de app_db
+        nombre_apost = (row.nombre or "").strip() or user_nombre_map.get(user_id) or row.apostador.strip()
+        # numero_fifa SOLO cuando la resolución fue por inferencia de equipos:
+        # partidos.equipo_local_id = lid AND partidos.equipo_visitante_id = vid
+        # → el partido_id que viene de partido_map_ids[(lid, vid)] garantiza la correspondencia.
+        # Para rutas "numero_fifa" o "num_seq" no se confirma por equipos → NULL.
+        _nfifa = partido_map_fifa_inv.get(partido_id) if resolucion == "equipo" else None
         await db.execute(
             text("""
-                INSERT INTO apuesta (apostador_id, partido_id,
+                INSERT INTO apuesta (apostador_id, partido_id, nombre_apostador, id_partido_ok,
+                    numero_fifa,
+                    equipo_local_excel, equipo_visitante_excel,
                     pred_local, pred_visitante, pred_minuto_gol,
                     pred_amarillas, pred_var, pred_rojas, pred_penales_partido)
-                VALUES (:uid, :pid, :l, :v, :mg, :am, :var, :ro, :pp)
+                VALUES (:uid, :pid, :nombre, :pid_ok, :nfifa, :eq_l, :eq_v, :l, :v, :mg, :am, :var, :ro, :pp)
             """),
             {
-                "uid": user_id, "pid": partido_id,
+                "uid": user_id, "pid": partido_id, "nombre": nombre_apost, "pid_ok": partido_id,
+                "nfifa": _nfifa,
+                "eq_l": row.equipo_local or None,
+                "eq_v": row.equipo_visitante or None,
                 "l": row.goles_local, "v": row.goles_visitante,
                 "mg": row.pred_minuto_gol, "am": row.pred_amarillas,
                 "var": row.pred_var, "ro": row.pred_rojas,
@@ -5993,7 +6430,61 @@ async def importar_apuestas_grupos(
         )
         creadas += 1
 
+    # ── PASO 3b: Completar partidos faltantes con 0-0 ────────────────────────
+    all_partido_ids_set = set(partido_map_seq.values())
+    seq_of_pid: dict[int, int] = {v: k for k, v in partido_map_seq.items()}
+
+    # Partidos cubiertos por apostador (desde resolved)
+    covered_by_user: dict[int, set[int]] = {}
+    for pid, uid, _, _res in resolved:
+        covered_by_user.setdefault(uid, set()).add(pid)
+
+    completados_0_0 = 0
+    faltantes_por_apostador: list[dict] = []
+
+    for uid, covered in covered_by_user.items():
+        missing = sorted(all_partido_ids_set - covered, key=lambda p: seq_of_pid.get(p, 9999))
+        if not missing:
+            continue
+        nombre_apost = user_nombre_map.get(uid) or ""
+        _completados_this = []
+        for pid in missing:
+            _nfifa = partido_map_fifa_inv.get(pid)
+            await db.execute(
+                text("""
+                    INSERT INTO apuesta (apostador_id, partido_id, nombre_apostador, id_partido_ok,
+                        numero_fifa, pred_local, pred_visitante)
+                    VALUES (:uid, :pid, :nombre, :pid_ok, :nfifa, 0, 0)
+                """),
+                {"uid": uid, "pid": pid, "nombre": nombre_apost, "pid_ok": pid, "nfifa": _nfifa},
+            )
+            completados_0_0 += 1
+            creadas += 1
+            _completados_this.append({
+                "partido_id": pid,
+                "num_seq": seq_of_pid.get(pid),
+            })
+        faltantes_por_apostador.append({
+            "apostador_id": uid,
+            "completados_0_0": len(_completados_this),
+            "partidos": _completados_this,
+        })
+
     await db.commit()
+
+    # ── PASO 3c: Contar registros reales en BD y verificar cobertura ──────────
+    num_apostadores = len(covered_by_user)
+    esperados = num_apostadores * total_partidos_grupos
+    count_r = await db.execute(
+        text(f"SELECT COUNT(*) FROM apuesta WHERE partido_id IN ({','.join(str(x) for x in all_partido_ids)})")
+    )
+    creadas_real = count_r.scalar() or 0
+    cobertura_ok = (creadas_real == esperados)
+    cobertura_advertencia = (
+        f"Se esperaban {esperados} registros ({num_apostadores} apostadores × {total_partidos_grupos} partidos) "
+        f"pero la tabla tiene {creadas_real}. Diferencia: {creadas_real - esperados:+d}."
+        if not cobertura_ok else None
+    )
 
     # ── PASO 4: Recalcular puntajes automáticamente ───────────────────────────
     puntajes_ok = False
@@ -6018,14 +6509,29 @@ async def importar_apuestas_grupos(
     except Exception as _e:
         pass  # no bloquear el import si el cálculo falla
 
+    # Resumen de métodos de resolución
+    metodos = {}
+    for _, _, _, res in resolved:
+        metodos[res] = metodos.get(res, 0) + 1
+
     return {
-        "ok": True,
+        "ok": len(errores) == 0 and cobertura_ok,
         "eliminadas": eliminadas,
-        "creadas": creadas,
+        "creadas": creadas_real,            # COUNT real post-commit
+        "skipped_ko": skipped_ko,
+        "completados_0_0": completados_0_0,
         "errores": errores,
         "total_partidos_grupos": total_partidos_grupos,
+        "num_apostadores": num_apostadores,
+        "esperados": esperados,
+        "faltantes_por_apostador": faltantes_por_apostador,
+        "cobertura_completa": cobertura_ok,
+        "cobertura_advertencia": cobertura_advertencia,
         "puntajes_ok": puntajes_ok,
         "puntajes_procesados": puntajes_procesados,
+        "resolucion_metodos": metodos,
+        "sin_inferencia_equipos": sin_inferencia,
+        "equipos_sin_resolver": sorted(_unresolved_eq.values(), key=lambda x: -x["count"]),
     }
 
 
@@ -6122,6 +6628,7 @@ async def sync_historico(
                 SELECT p.id,
                        COALESCE(el.nombre_es, el.nombre, '?') AS local,
                        COALESCE(ev.nombre_es, ev.nombre, '?') AS visitante,
+                       p.goles_local, p.goles_visitante, p.estado,
                        p.amarillas, p.rojas, p.decisiones_var,
                        p.penales_local, p.penales_visitante, p.minuto_primer_gol,
                        p.api_fixture_id
@@ -6326,7 +6833,6 @@ async def live_panel(
                 SELECT apostador_id,
                        COALESCE(SUM(
                            pts_campeon + pts_finalistas + pts_goleador +
-                           pts_peor_equipo + pts_mayor_goleada +
                            pts_etapa_paraguay + pts_goles_paraguay
                        ), 0) AS pts_globales
                 FROM puntaje_global WHERE torneo_id = :tid
@@ -6346,7 +6852,7 @@ async def live_panel(
             return {"partido": partido, "apostadores": []}
         ids_sql = ",".join(str(x) for x in all_ids)
         names_r = await aconn.execute(
-            text(f"SELECT id, COALESCE(nombre, username) AS nombre FROM users WHERE id IN ({ids_sql})")
+            text(f"SELECT id, username AS nombre FROM users WHERE id IN ({ids_sql})")
         )
         names_map = {r[0]: r[1] for r in names_r.fetchall()}
 
