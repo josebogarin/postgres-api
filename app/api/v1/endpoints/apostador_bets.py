@@ -30,7 +30,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CurrentUser, OptionalCurrentUser, BECBUCSession as DBSession
+from app.api.deps import CurrentUser, CurrentAdmin, OptionalCurrentUser, BECBUCSession as DBSession
 from app.db.session import engine as _app_engine
 
 from app.services.bracket_service import (
@@ -6765,11 +6765,13 @@ async def live_panel(
         WHERE p.torneo_id = :tid
     """
     # Primero: en_juego o programado (próximo por fecha)
+    # Prefiere fase grupos sobre KO para evitar mostrar 32avos antes de terminar grupos
     partido_r = await db.execute(
         text(_partido_sql + """
               AND p.estado IN ('programado', 'en_juego')
             ORDER BY
                 CASE p.estado WHEN 'en_juego' THEN 0 ELSE 1 END,
+                CASE WHEN f.tipo ILIKE 'grupo%' THEN 0 ELSE 1 END,
                 p.fecha ASC NULLS LAST
             LIMIT 1
         """),
@@ -6877,3 +6879,54 @@ async def live_panel(
         "partido":     partido,
         "apostadores": apostadores,
     }
+
+
+@router.get("/espn-verify/{partido_id}", summary="Verifica stats con ESPN (live page)")
+async def espn_verify_live(
+    partido_id: int,
+    current: CurrentAdmin,
+    db: DBSession,
+) -> dict:
+    """
+    Consulta ESPN para el partido dado y aplica correcciones si difieren del valor en DB.
+    Reglas: VAR siempre ESPN; amarillas/rojas ESPN si mayor; minuto_gol ESPN como fallback.
+    Usado por becbuc-live.html cada 20 min durante un partido en vivo.
+    """
+    import httpx
+    from app.services import sync_api_football as _sync
+
+    p_r = await db.execute(
+        text("""
+            SELECT p.id,
+                   COALESCE(el.nombre, el.nombre_es, '?') AS local_nombre,
+                   COALESCE(ev.nombre, ev.nombre_es, '?') AS visit_nombre,
+                   p.fecha, p.estado,
+                   p.amarillas, p.rojas, p.decisiones_var, p.minuto_primer_gol
+            FROM partido p
+            LEFT JOIN equipo el ON el.id = p.equipo_local_id
+            LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+            WHERE p.id = :pid
+        """),
+        {"pid": partido_id},
+    )
+    p_row = p_r.mappings().fetchone()
+    if not p_row:
+        raise HTTPException(status_code=404, detail="Partido no encontrado")
+
+    db_p = dict(p_row)
+    espn_cache: dict = {}
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            corr = await _sync._espn_verify_and_patch(db, client, db_p, partido_id, espn_cache)
+        if corr:
+            await db.commit()
+        return {
+            "partido_id":   partido_id,
+            "correcciones": corr or {},
+            "estado":       db_p.get("estado"),
+            "ok":           True,
+        }
+    except Exception as e:
+        logger.warning(f"espn_verify_live partido_id={partido_id}: {e}")
+        return {"partido_id": partido_id, "correcciones": {}, "ok": False, "error": str(e)}

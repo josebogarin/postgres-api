@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,9 +72,35 @@ async def get_optional_current_user(
         return None
 
 
+async def get_current_user_download(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_optional)] = None,
+    token_q: str | None = Query(None, alias="token"),
+) -> User:
+    """Acepta JWT via Authorization header O via ?token= (para descargas iOS/Safari)."""
+    token_str = credentials.credentials if credentials else token_q
+    if not token_str:
+        raise UnauthorizedError("No authentication token provided")
+    try:
+        payload = decode_token(token_str)
+    except ValueError:
+        raise UnauthorizedError("Invalid token")
+    if payload.get("type") != "access":
+        raise UnauthorizedError("Invalid token type")
+    user_id = int(payload["sub"])
+    user = await user_crud.get(db, id=user_id)
+    if not user:
+        raise UnauthorizedError("User not found")
+    if not user.is_active:
+        raise UnauthorizedError("Inactive user")
+    return user
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
 CurrentSuperuser = Annotated[User, Depends(get_current_superuser)]
 CurrentAdmin = Annotated[User, Depends(get_current_admin)]
 OptionalCurrentUser = Annotated["User | None", Depends(get_optional_current_user)]
+# Para endpoints de descarga de archivos (soporta ?token= para iOS/Safari)
+DownloadUser = Annotated[User, Depends(get_current_user_download)]
 DBSession = Annotated[AsyncSession, Depends(get_db)]
 BECBUCSession = Annotated[AsyncSession, Depends(get_becbuc_db)]

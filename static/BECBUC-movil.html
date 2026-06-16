@@ -673,7 +673,7 @@ async function populatePronApostadorSel(rk){
   for(const r of rk){
     const opt=document.createElement('option');
     opt.value=r.apostador_id;
-    opt.textContent=(r.nombre||r.alias||r.apostador_id)+' ('+(r.puntos_total||0)+'pts)';
+    opt.textContent=(r.alias||r.nombre||r.apostador_id)+' ('+(r.puntos_total||0)+'pts)';
     if(_adminViewAs&&_adminViewAs.id===r.apostador_id)opt.selected=true;
     sel.appendChild(opt);
   }
@@ -963,7 +963,7 @@ function faseChipTap(fid){
 function renderPronos(){
   const el=document.getElementById('page-pronos');
   const tabs=[['grupos','🏟 Grupos'],['playoffs','⚔️ Playoffs'],['globales','🌐 Globales'],
-    ['envivo','🔴 En Vivo'],['partidos','📋 Partidos']];
+    ['envivo','🔴 En Vivo'],['partidos','📊 Resultados']];
   let h=`<div id="m-today-bar" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:4px 0 8px;min-height:48px;align-items:center;"></div>`;
   if(_isAdmin){
     h+=`<div id="pronAdminSel" style="padding:6px 12px;background:rgba(99,102,241,.08);border-bottom:1px solid rgba(99,102,241,.2);display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -984,7 +984,7 @@ function renderPronos(){
   }
   h+=`<div class="pron-tabs" style="display:flex;align-items:center;">`;
   tabs.forEach(([k,lbl])=>{h+=`<button class="pron-tab${_pronosTab===k?' active':''}" id="ptab-${k}" onclick="switchPronosTab('${k}')">${lbl}</button>`;});
-  h+=`<button id="btnActualizarM" onclick="refreshPronosM(this)" style="margin-left:auto;flex-shrink:0;background:none;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:.62rem;font-weight:700;padding:3px 8px;cursor:pointer;white-space:nowrap;" title="Recargar resultados y puntajes">🔄</button>`;
+  h+=`<button id="btnActualizarM" onclick="refreshPronosM(this)" style="display:none;margin-left:auto;flex-shrink:0;background:none;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:.62rem;font-weight:700;padding:3px 8px;cursor:pointer;white-space:nowrap;" title="Recargar en vivo">🔄</button>`;
   h+=`</div><div id="pron-content"></div>`;
   el.innerHTML=h;
   _renderTodayBarM();
@@ -1097,6 +1097,8 @@ function switchPronosTab(tab){
   _pronosTab=tab;
   document.querySelectorAll('.pron-tab').forEach(b=>b.classList.toggle('active',b.id==='ptab-'+tab));
   document.getElementById('savebar').classList.toggle('show',tab==='grupos'&&_periodo.abierto&&_grupos.length);
+  const actBtnM=document.getElementById('btnActualizarM');
+  if(actBtnM) actBtnM.style.display=tab==='envivo'?'':'none';
   _loadPronosSubTab();
 }
 async function _loadPronosSubTab(){
@@ -2481,7 +2483,8 @@ async function loadAdmin(){
       <details>
         <summary style="font-size:.71rem;color:var(--muted);cursor:pointer;padding:4px 0;list-style:none">⚙️ Más opciones del sistema</summary>
         <div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:8px">
-          <button class="btn-save" style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--amber);font-size:.72rem;padding:6px 12px;border-radius:8px" onclick="amCalcPuntajesM(this)">🧮 Calcular puntajes</button>
+          <!-- Calcular puntajes: lo llama el sync auto — ocultado -->
+          <!-- <button class="btn-save" onclick="amCalcPuntajesM(this)">🧮 Calcular puntajes</button> -->
           <button class="btn-save" style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);color:var(--green);font-size:.72rem;padding:6px 12px;border-radius:8px" onclick="amAvanzarBracketM(this)">⏭ Avanzar bracket</button>
           <button class="btn-save" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:.72rem;padding:6px 12px;border-radius:8px" onclick="amFinalizarPartidoM()">⚡ Finalizar partido</button>
         </div>
@@ -2510,7 +2513,7 @@ async function _loadMonDashM(){
       ? `<div style="margin-bottom:6px;padding:5px 8px;background:rgba(239,68,68,.1);border-radius:6px;font-size:.72rem;color:#f87171">🔴 En vivo: <b>${esc(vivo.local||'?')} ${vivo.goles_local??'?'}–${vivo.goles_visitante??'?'} ${esc(vivo.visitante||'?')}</b> · ${vivo.minuto_actual?vivo.minuto_actual+"'":''}</div>`
       : '';
     const top5 = (d.ranking||[]).slice(0,5).map((r,i)=>
-      `${['🥇','🥈','🥉','4.','5.'][i]} ${esc(r.nombre||r.apostador||'?')} <b>${r.puntos_total||0}pts</b>`
+      `${['🥇','🥈','🥉','4.','5.'][i]} ${esc(r.alias||r.nombre||r.apostador||'?')} <b>${r.puntos_total||0}pts</b>`
     ).join(' · ');
     el.innerHTML = vivoHtml +
       `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
@@ -2680,40 +2683,96 @@ function standingsBox(g,sim,inner){
   return `<div class="stbox" id="stwrap-${fid}">${body}</div>`;
 }
 
-/* ════════ TAB PARTIDOS ════════ */
+/* ════════ TAB RESULTADOS (ex-Partidos) ════════ */
 
 async function _renderPronosPartidosM(el){
   el.innerHTML='<div class="loader"><span class="spin">◌</span> Cargando…</div>';
   try{
     const partidos=await api('/api/v1/bets/partidos-finalizados/'+_torneoId).catch(()=>[]);
-    if(!partidos.length){el.innerHTML=empty('📋','Sin partidos finalizados','Cuando terminen partidos aparecerán aquí.');return;}
-    // Agrupar por fase
-    const faseMap={};
-    for(const p of partidos)(faseMap[p.fase||'Sin fase']=faseMap[p.fase||'Sin fase']||[]).push(p);
-    let h='<div style="padding:4px 0">';
-    for(const[fase,plist]of Object.entries(faseMap)){
-      h+=`<div style="margin-bottom:14px">
-        <div style="padding:5px 10px;background:var(--surface2);border-radius:5px;font-size:.72rem;font-weight:700;color:var(--fg);margin-bottom:4px">${esc(fase)}</div>`;
+    if(!partidos.length){el.innerHTML=empty('📊','Sin partidos finalizados','Cuando terminen partidos aparecerán aquí.');return;}
+
+    // Botón Excel
+    let h=`<div style="display:flex;align-items:center;padding:6px 12px 4px;gap:8px">
+      <span style="font-size:.68rem;color:var(--muted)">${partidos.length} partidos finalizados</span>
+      <button onclick="exportarResultadosPartidosM(this)"
+        style="margin-left:auto;padding:4px 10px;background:var(--green);color:#fff;border:none;
+               border-radius:6px;font-size:.68rem;font-weight:600;cursor:pointer">📥 Excel</button>
+    </div>`;
+
+    // Agrupar por fase (ya vienen ordenados por numero_fifa)
+    const faseMap=new Map();
+    for(const p of partidos){const f=p.fase||'Sin fase';if(!faseMap.has(f))faseMap.set(f,[]);faseMap.get(f).push(p);}
+
+    const bdg=(emoji,val,bg,fg)=>val!=null&&(val>0||emoji==='🟨')
+      ?`<span style="background:${bg};color:${fg};padding:1px 5px;border-radius:3px;font-size:.6rem;font-weight:600">${emoji}${val}</span>`:'';
+
+    for(const[fase,plist]of faseMap){
+      h+=`<div style="margin-bottom:12px">
+        <div style="padding:4px 10px;background:var(--surface2);border-radius:5px;font-size:.71rem;font-weight:700;margin-bottom:3px">${esc(fase)}</div>`;
       for(const p of plist){
-        const gl=p.goles_local??'?', gv=p.goles_visitante??'?';
-        const badges=[];
-        if(p.amarillas!=null) badges.push(`<span style="background:rgba(234,179,8,.18);color:#ca8a04;padding:1px 5px;border-radius:3px;font-size:.62rem">🟨${p.amarillas}</span>`);
-        if(p.rojas!=null&&p.rojas>0) badges.push(`<span style="background:rgba(239,68,68,.18);color:#ef4444;padding:1px 5px;border-radius:3px;font-size:.62rem">🟥${p.rojas}</span>`);
-        if(p.decisiones_var!=null&&p.decisiones_var>0) badges.push(`<span style="background:rgba(99,102,241,.18);color:#818cf8;padding:1px 5px;border-radius:3px;font-size:.62rem">📺${p.decisiones_var}</span>`);
-        if(p.penales_partido!=null&&p.penales_partido>0) badges.push(`<span style="background:rgba(124,58,237,.18);color:#a78bfa;padding:1px 5px;border-radius:3px;font-size:.62rem">🥅${p.penales_partido}</span>`);
-        h+=`<div style="display:flex;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);gap:6px">
-          <span style="color:var(--muted);font-size:.65rem;min-width:28px">P${String(p.numero||0).padStart(2,'0')}</span>
-          <span style="flex:1;text-align:right;font-size:.73rem">${esc(p.equipo_local||'?')}</span>
-          <span style="font-weight:700;font-family:monospace;font-size:.75rem;min-width:44px;text-align:center">${gl} – ${gv}</span>
-          <span style="flex:1;font-size:.73rem">${esc(p.equipo_visitante||'?')}</span>
-          ${badges.length?`<span style="display:flex;gap:3px;flex-shrink:0">${badges.join('')}</span>`:''}
-        </div>`;
+        const gl=p.goles_local??'?',gv=p.goles_visitante??'?';
+        const num=String(p.numero_fifa||p.numero||0).padStart(2,'0');
+        const badges=[
+          bdg('🟨',p.amarillas,'rgba(234,179,8,.18)','#ca8a04'),
+          bdg('🟥',p.rojas,'rgba(239,68,68,.18)','#ef4444'),
+          bdg('📺',p.decisiones_var,'rgba(99,102,241,.18)','#818cf8'),
+          bdg('🥅',p.penales_partido,'rgba(124,58,237,.18)','#a78bfa'),
+        ].filter(Boolean);
+        const tanda=p.penales_local!=null&&p.penales_visitante!=null
+          ?`<span style="background:rgba(16,185,129,.12);color:#059669;padding:1px 5px;border-radius:3px;font-size:.6rem;font-weight:600">⚽${p.penales_local}–${p.penales_visitante}</span>`:'';
+        const min=p.minuto_primer_gol!=null
+          ?`<span style="background:rgba(234,179,8,.1);color:#92400e;padding:1px 5px;border-radius:3px;font-size:.6rem">⏱${p.minuto_primer_gol}'</span>`:'';
+        const clas=p.equipo_clasifica_nombre
+          ?`<span style="background:rgba(99,102,241,.1);color:#6366f1;padding:1px 5px;border-radius:3px;font-size:.6rem">✅${esc(p.equipo_clasifica_nombre)}</span>`:'';
+        const extras=[...badges,tanda,min,clas].filter(Boolean);
+        h+=`<div style="padding:5px 10px;border-bottom:1px solid var(--line)">
+          <div style="display:flex;align-items:center;gap:5px;font-size:.72rem">
+            <span style="color:var(--muted);font-size:.63rem;min-width:26px">P${num}</span>
+            <span style="flex:1;text-align:right">${esc(p.equipo_local||'?')}</span>
+            <span style="font-weight:700;font-family:monospace;font-size:.74rem;min-width:40px;text-align:center">${gl}–${gv}</span>
+            <span style="flex:1">${esc(p.equipo_visitante||'?')}</span>
+          </div>
+          ${extras.length?`<div style="display:flex;gap:3px;flex-wrap:wrap;padding-top:3px;padding-left:30px">${extras.join('')}</div>`:''}</div>`;
       }
       h+='</div>';
     }
-    h+='</div>';
     el.innerHTML=h;
   }catch(e){el.innerHTML=`<div class="state-msg" style="color:var(--red)">❌ ${esc(e.message)}</div>`;}
+}
+
+/* ── Helper descarga iOS-safe (mobile) ── */
+async function _downloadFileM(apiUrl, defaultFilename) {
+  const tok = token || _tok || '';
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const sep = apiUrl.includes('?') ? '&' : '?';
+  if (isIOS) {
+    window.open(apiUrl + sep + 'token=' + encodeURIComponent(tok), '_blank');
+    return;
+  }
+  const resp = await fetch(apiUrl, {
+    headers: { Authorization: `Bearer ${tok}`, 'ngrok-skip-browser-warning': 'true' }
+  });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  const blob = await resp.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const cd = resp.headers.get('Content-Disposition') || '';
+  const m = cd.match(/filename[^;=\n]*=["']?([^"'\n;]+)/);
+  a.href = blobUrl;
+  a.download = m ? m[1] : defaultFilename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl);
+}
+
+async function exportarResultadosPartidosM(btn){
+  if(btn){btn.disabled=true;btn.textContent='⏳…';}
+  try{
+    await _downloadFileM(
+      `/api/v1/bets/exportar-resultados-partidos/${_torneoId}`,
+      `resultados_${new Date().toISOString().slice(0,10)}.xlsx`
+    );
+  }catch(e){alert('Error: '+e.message);}
+  finally{if(btn){btn.disabled=false;btn.textContent='📥 Excel';}}
 }
 
 /* ════════ GRUPOS (real) ════════ */
@@ -2810,16 +2869,17 @@ async function _renderPronosEnVivoM(el){
         if(rs.length) h+=`<div class="lvm-real-bar">${rs.join(' <span style="color:var(--line)">·</span> ')}</div>`;
       }
 
-      // Bonus predictions (amarillas, rojas, VAR, penales, minuto)
-      const hasAnyBonusM=p.pred_amarillas!=null||p.pred_rojas!=null||p.pred_var!=null||p.pred_minuto_gol!=null||p.pred_penales_partido!=null;
-      if(hasAnyBonusM){
-        const bc=[];
-        if(p.pred_amarillas!=null||p.amarillas!=null){const ra=p.amarillas,pa=p.pred_amarillas,ok=ra!=null&&pa===ra,d=ra!=null?`${ra}`:`${pa??'?'}`,s=ra!=null&&pa!=null?`(pred:${pa})`:ra==null&&pa!=null?'?':'';bc.push(`<span class="lvm-bchip${ra!=null?(ok?' ok':' miss'):''}" title="Amar: real ${ra??'—'}/pred ${pa??'—'}">🟨${d}${s}</span>`);}
-        if(p.pred_rojas!=null||p.rojas!=null){const rr=p.rojas,pr=p.pred_rojas,ok=rr!=null&&pr===rr,d=rr!=null?`${rr}`:`${pr??'?'}`,s=rr!=null&&pr!=null?`(pred:${pr})`:rr==null&&pr!=null?'?':'';bc.push(`<span class="lvm-bchip${rr!=null?(ok?' ok':' miss'):''}" title="Rojas: real ${rr??'—'}/pred ${pr??'—'}">🟥${d}${s}</span>`);}
-        if(p.pred_var!=null||p.decisiones_var!=null){const rv=p.decisiones_var,pv2=p.pred_var,ok=rv!=null&&pv2===rv,d=rv!=null?`${rv}`:`${pv2??'?'}`,s=rv!=null&&pv2!=null?`(pred:${pv2})`:rv==null&&pv2!=null?'?':'';bc.push(`<span class="lvm-bchip${rv!=null?(ok?' ok':' miss'):''}" title="VAR: real ${rv??'—'}/pred ${pv2??'—'}"><span class="var-badge">VAR</span>${d}${s}</span>`);}
-        if(p.pred_penales_partido!=null||p.penales_partido!=null){const rp=p.penales_partido,pp2=p.pred_penales_partido,ok=rp!=null&&pp2===rp,d=rp!=null?`${rp}`:`${pp2??'?'}`,s=rp!=null&&pp2!=null?`(pred:${pp2})`:rp==null&&pp2!=null?'?':'';bc.push(`<span class="lvm-bchip${rp!=null?(ok?' ok':' miss'):''}" title="Pen.juego: real ${rp??'—'}/pred ${pp2??'—'}">🥅${d}${s}</span>`);}
-        if(p.pred_minuto_gol!=null||p.minuto_primer_gol!=null){const rm=p.minuto_primer_gol,pm=p.pred_minuto_gol,ok=rm!=null&&pm!=null&&Math.abs(pm-rm)===0,d=rm!=null?`${rm}'`:`${pm??'?'}'`,s=rm!=null&&pm!=null?`(pred:${pm}')`:rm==null&&pm!=null?'?':'';bc.push(`<span class="lvm-bchip${rm!=null?(ok?' ok':' miss'):''}" title="Min gol: real ${rm??'—'}/pred ${pm??'—'}">⏱${d}${s}</span>`);}
-        if(bc.length) h+=`<div class="lvm-bbonus">${bc.join('')}</div>`;
+      // Bonus predictions — SIEMPRE visibles (J K L M N)
+      {
+        const _bcM=(ra,pa,ico,lbl)=>{const ok=ra!=null&&pa===ra,d=ra!=null?`${ra}`:pa!=null?`${pa}`:'—',s=ra!=null&&pa!=null?`(pred:${pa})`:'';return`<span class="lvm-bchip${ra!=null?(ok?' ok':' miss'):''}" title="${lbl}: real ${ra??'—'}/pred ${pa??'—'}">${ico}${d}${s}</span>`;};
+        const _bmM=(rm,pm)=>{const ok=rm!=null&&pm!=null&&Math.abs(pm-rm)===0,d=rm!=null?`${rm}'`:pm!=null?`${pm}'`:'—',s=rm!=null&&pm!=null?`(pred:${pm}')`:'';return`<span class="lvm-bchip${rm!=null?(ok?' ok':' miss'):''}" title="Min gol: real ${rm??'—'}/pred ${pm??'—'}">⏱${d}${s}</span>`;};
+        h+=`<div class="lvm-bbonus">${[
+          _bcM(p.amarillas,p.pred_amarillas,'🟨','Amar'),
+          _bcM(p.rojas,p.pred_rojas,'🟥','Rojas'),
+          _bcM(p.decisiones_var,p.pred_var,'<span class="var-badge">VAR</span>','VAR'),
+          _bcM(p.penales_partido,p.pred_penales_partido,'🥅','Pen.juego'),
+          _bmM(p.minuto_primer_gol,p.pred_minuto_gol),
+        ].join('')}</div>`;
       }
 
       if(p.penales_local!=null||p.penales_visitante!=null)
@@ -2983,10 +3043,16 @@ function _renderStatBarM(){
     </div>
   </div>`;
 }
+async function _refreshDashM(){
+  await _loadStatsLiveM();
+  // Si el ranking está visible, refrescarlo también
+  const rkPage=document.getElementById('page-ranking');
+  if(rkPage && rkPage.style.display!=='none') loadRanking();
+}
 function _startStatsTimerM(){
   _stopStatsTimerM();
   _loadStatsLiveM();
-  _statsLiveTimerM=setInterval(_loadStatsLiveM,60000);
+  _statsLiveTimerM=setInterval(_refreshDashM, 120000); // cada 2 min
 }
 function _stopStatsTimerM(){
   if(_statsLiveTimerM){clearInterval(_statsLiveTimerM);_statsLiveTimerM=null;}
@@ -3007,7 +3073,7 @@ async function loadRanking(){
 function _rkMatchMine(r){
   if(_adminViewAs) return r.apostador_id===_adminViewAs.id;
   if(!_me) return false;
-  return r.nombre===_me.username;
+  return (r.alias||r.nombre)===_me.username;
 }
 
 function _renderRankingTotal(el){
@@ -3071,7 +3137,7 @@ function _renderRankingTotal(el){
     const total=sub+glob;
     h+=`<tr class="${isMe?'me':''}">
       <td class="pos">${medal?`<span class="medal">${medal}</span>`:(realIdx+1)}</td>
-      <td class="l"><span class="nm">${esc(r.nombre)}</span>${r.online_source?_mOnlineBadge(r.online_source):''}</td>`;
+      <td class="l"><span class="nm">${esc(r.alias||r.nombre)}</span>${r.online_source?_mOnlineBadge(r.online_source):''}</td>`;
     CATS_M.forEach(c=>{const v=r[c.key]||0;h+=`<td style="font-size:.67rem;text-align:center;padding:5px 4px">${v}</td>`;});
     h+=`<td style="font-size:.67rem;text-align:center;font-weight:700;color:var(--amber);padding:5px 4px">${sub}</td>
       <td style="font-size:.67rem;text-align:center;color:#818cf8;padding:5px 4px">${glob}</td>
@@ -3091,7 +3157,7 @@ function _renderRankingTotal(el){
     const total=sub+glob;
     h+=`<div onclick="toggleRkAposM(${r.apostador_id},this)" style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--surface2);border-radius:8px;cursor:pointer;margin-bottom:2px;white-space:nowrap;${isMe?'border:1px solid var(--accent);':'border:1px solid var(--border);'}">
       <span style="font-size:.75rem;transition:transform .15s;display:inline-block">▶</span>
-      <span style="flex:1;font-size:.78rem;font-weight:${isMe?'700':'500'};color:${isMe?'var(--accent)':'var(--text)'};overflow:hidden;text-overflow:ellipsis">${medal?medal+' ':''}${esc(r.nombre)}</span>
+      <span style="flex:1;font-size:.78rem;font-weight:${isMe?'700':'500'};color:${isMe?'var(--accent)':'var(--text)'};overflow:hidden;text-overflow:ellipsis">${medal?medal+' ':''}${esc(r.alias||r.nombre)}</span>
       <span style="font-size:.7rem;color:var(--muted2)">(${total} pts.)</span>
     </div>
     <div id="rkApsD_${r.apostador_id}" style="display:none;background:var(--bg2);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;margin-bottom:6px;overflow:hidden">
@@ -3110,19 +3176,7 @@ async function downloadRankingExcelM(btn){
   const orig=btn?btn.textContent:'';
   if(btn){btn.disabled=true;btn.textContent='⏳…';}
   try{
-    const resp=await fetch(`/api/v1/bets/ranking-export/${_torneoId}`,{
-      headers:{Authorization:`Bearer ${token}`,'ngrok-skip-browser-warning':'true'}
-    });
-    if(!resp.ok)throw new Error(`Error ${resp.status}`);
-    const blob=await resp.blob();
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    const cd=resp.headers.get('Content-Disposition')||'';
-    const m=cd.match(/filename="([^"]+)"/);
-    a.href=url;
-    a.download=m?m[1]:`ranking_torneo${_torneoId}.xlsx`;
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    await _downloadFileM(`/api/v1/bets/ranking-export/${_torneoId}`, `ranking_torneo${_torneoId}.xlsx`);
   }catch(e){alert(`Error al descargar Excel: ${e.message}`);}
   finally{if(btn){btn.disabled=false;btn.textContent=orig||'📥 Excel ranking';}}
 }
@@ -3132,19 +3186,7 @@ async function exportarPuntajesM(btn){
   const orig=btn?btn.textContent:'';
   if(btn){btn.disabled=true;btn.textContent='⏳…';}
   try{
-    const resp=await fetch(`/api/v1/bets/exportar-puntajes/${_torneoId}`,{
-      headers:{Authorization:`Bearer ${token}`,'ngrok-skip-browser-warning':'true'}
-    });
-    if(!resp.ok)throw new Error(`Error ${resp.status}`);
-    const blob=await resp.blob();
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    const cd=resp.headers.get('Content-Disposition')||'';
-    const m=cd.match(/filename="([^"]+)"/);
-    a.href=url;
-    a.download=m?m[1]:`puntajes_copa.xlsx`;
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    await _downloadFileM(`/api/v1/bets/exportar-puntajes/${_torneoId}`, `puntajes_copa.xlsx`);
   }catch(e){alert(`Error al exportar: ${e.message}`);}
   finally{if(btn){btn.disabled=false;btn.textContent=orig||'📊 Exportar puntaje';}}
 }
@@ -3430,10 +3472,11 @@ function loadAdmin(){
   </div>`;
   h+=`<div style="display:flex;gap:9px">
         <button id="amBtnSim" onclick="simularResultadosM()" style="${bs};background:linear-gradient(135deg,#7c3aed,#5b21b6)">🎲 Simular resultados</button>
-        <button id="amBtnCalc" onclick="calcularPuntajesM()" style="${bs};background:linear-gradient(135deg,#0891b2,#0e7490)">🧮 Calcular puntajes</button>
+        <!-- Calcular puntajes: ocultado — sync auto lo llama -->
       </div>`;
   h+=`<button id="amBtnSync" onclick="syncResultadosM()" style="${bs};background:linear-gradient(135deg,#059669,#047857)">🔄 Sync desde API-Football</button>`;
   h+=`<button onclick="openFinalizarPartidoM()" style="${bs};background:linear-gradient(135deg,#dc2626,#991b1b);margin-top:2px">⚡ Finalizar partido (emergencia)</button>`;
+  h+=`<button onclick="openStatsOverrideM()" style="${bs};background:linear-gradient(135deg,#d97706,#92400e);margin-top:2px">📺 Corregir stats partido (VAR/Amar.)</button>`;
   h+=`<div id="amFpMsg" style="font-size:.72rem;color:var(--muted);min-height:14px"></div>`;
   h+=`<div id="amSyncMsg" style="font-size:.72rem;color:var(--muted);min-height:14px"></div>`;
   h+=`<div style="display:flex;gap:7px;align-items:center">
@@ -3629,7 +3672,7 @@ async function loadAdminPanel(){
       const medals=['🥇','🥈','🥉','4.','5.'];
       h+=top5.map((r,i)=>`<div style="display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--line2);">
         <span style="font-size:.78rem;width:22px">${medals[i]||i+1+'.'}  </span>
-        <span style="flex:1;font-size:.8rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.nombre||r.email||'?')}</span>
+        <span style="flex:1;font-size:.8rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.alias||r.nombre||r.email||'?')}</span>
         <span style="font-size:.78rem;font-weight:800;color:#86efac">${r.pts_total??r.puntos_total??0} pts</span>
       </div>`).join('');
     }
@@ -3832,6 +3875,74 @@ async function confirmarFpM(){
   }finally{btn.disabled=false; btn.textContent='⚡ Finalizar y recalcular';}
 }
 
+
+// ── Stats Override (corregir VAR, amarillas, etc.) ── móvil ─────────────────
+let _soPartidoIdM = null;
+
+async function openStatsOverrideM(){
+  if(!_torneoId) return;
+  const overlay=document.getElementById('soOverlayM');
+  overlay.style.display='flex';
+  const list=document.getElementById('soListM');
+  list.innerHTML='<span style="color:var(--muted2);font-size:.75rem">Cargando…</span>';
+  document.getElementById('soFormM').style.display='none';
+  document.getElementById('soMsgM').innerHTML='';
+  try{
+    const pts=await api(`/api/v1/bets/partidos-finalizados/${_torneoId}`);
+    if(!pts.length){
+      list.innerHTML='<span style="color:var(--muted2);font-size:.75rem">Sin partidos finalizados.</span>';
+    } else {
+      list.innerHTML='<select id="soSelM" onchange="soSelectM(this)" style="width:100%;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:.78rem">'
+        +'<option value="">— Elegí un partido —</option>'
+        +pts.map(p=>`<option value="${p.id}" data-var="${p.decisiones_var??''}" data-amar="${p.amarillas??''}" data-rojas="${p.rojas??''}" data-pp="${p.penales_partido??''}" data-min="${p.minuto_primer_gol??''}">${p.nombre||('P#'+p.id)}: ${p.goles_local??'?'}-${p.goles_visitante??'?'}</option>`).join('')
+        +'</select>';
+    }
+  }catch(e){list.innerHTML=`<span style="color:var(--red);font-size:.75rem">Error: ${e.message}</span>`;}
+}
+
+function soSelectM(sel){
+  const opt=sel.options[sel.selectedIndex];
+  if(!opt.value){document.getElementById('soFormM').style.display='none';return;}
+  _soPartidoIdM=parseInt(opt.value);
+  const fv=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val;};
+  fv('soVarM',  opt.dataset.var  ||'');
+  fv('soAmarM', opt.dataset.amar ||'');
+  fv('soRojasM',opt.dataset.rojas||'');
+  fv('soPPM',   opt.dataset.pp   ||'');
+  fv('soMinM',  opt.dataset.min  ||'');
+  document.getElementById('soFormM').style.display='block';
+  document.getElementById('soMsgM').innerHTML='';
+}
+
+async function confirmarStatsOverrideM(){
+  if(!_soPartidoIdM) return;
+  const btn=document.getElementById('soBtnM');
+  const msg=document.getElementById('soMsgM');
+  const gv=(id)=>{const el=document.getElementById(id);return el&&el.value!==''?parseInt(el.value):null;};
+  const params=new URLSearchParams();
+  const v=gv('soVarM'),a=gv('soAmarM'),r=gv('soRojasM'),p=gv('soPPM'),m=gv('soMinM');
+  if(v!==null) params.set('decisiones_var',v);
+  if(a!==null) params.set('amarillas',a);
+  if(r!==null) params.set('rojas',r);
+  if(p!==null) params.set('penales_partido',p);
+  if(m!==null) params.set('minuto_primer_gol',m);
+  if(!params.toString()){msg.innerHTML='<span style="color:var(--red)">Ingresá al menos un valor.</span>';return;}
+  if(!confirm(`¿Actualizar stats partido #${_soPartidoIdM}?`)) return;
+  btn.disabled=true;btn.textContent='Guardando…';
+  msg.innerHTML='';
+  try{
+    const res=await api(`/api/v1/bets/partido-stats/${_soPartidoIdM}?${params.toString()}`,{method:'PATCH'});
+    const upd=(res.actualizados||[]).map(k=>`${k}: ${res.anterior?.[k]??'—'}→${res.nuevo?.[k]??'—'}`).join(', ');
+    let txt=`✅ ${res.partido} — ${upd}`;
+    if(res.puntajes_ok) txt+=` | ✅ Pts(${res.puntajes_procesados})`;
+    if(res.puntajes_error) txt+=` | ⚠ ${res.puntajes_error}`;
+    msg.innerHTML=`<span style="color:var(--green);font-size:.72rem">${txt}</span>`;
+    document.getElementById('amFpMsg').innerHTML=msg.innerHTML;
+  }catch(e){
+    msg.innerHTML=`<span style="color:var(--red)">✗ ${e.message}</span>`;
+  }finally{btn.disabled=false;btn.textContent='💾 Guardar y recalcular';}
+}
+
 // ── Auto-start ──
 if (token) { boot(); } else { showLogin(); }
 </script>
@@ -3866,8 +3977,36 @@ if (token) { boot(); } else { showLogin(); }
           <input type="number" id="fpPVM" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.82rem;">
         </div>
       </div>
-      <button id="fpBtnM" onclick="confirmarFpM()" style="width:100%;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-weight:700;font-size:.82rem;cursor:pointer">⚡ Finalizar y recalcular</button>
+            <button id="fpBtnM" onclick="confirmarFpM()" style="width:100%;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-weight:700;font-size:.82rem;cursor:pointer">⚡ Finalizar y recalcular</button>
       <div id="fpMsgM" style="margin-top:8px;font-size:.72rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Bottom sheet Corregir Stats (móvil) ── -->
+<div id="soOverlayM" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9600;align-items:flex-end;justify-content:center;">
+  <div style="background:var(--card);border-radius:18px 18px 0 0;padding:20px 18px 30px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-weight:800;font-size:.88rem;color:var(--amber)">📺 Corregir stats partido</span>
+      <button onclick="document.getElementById('soOverlayM').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="font-size:.7rem;color:var(--muted2);margin-bottom:10px">Corregir datos que API-Football no reportó (VAR, amarillas, rojas, penales, minuto gol). Dejá en blanco lo que no cambiás.</div>
+    <div id="soListM" style="margin-bottom:12px"></div>
+    <div id="soFormM" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div><label style="font-size:.67rem;color:var(--muted2)">📺 VAR</label>
+          <input type="number" id="soVarM" min="0" max="20" placeholder="valor API" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.82rem"></div>
+        <div><label style="font-size:.67rem;color:var(--muted2)">🟨 Amarillas</label>
+          <input type="number" id="soAmarM" min="0" max="20" placeholder="valor API" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.82rem"></div>
+        <div><label style="font-size:.67rem;color:var(--muted2)">🟥 Rojas</label>
+          <input type="number" id="soRojasM" min="0" max="5" placeholder="valor API" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.82rem"></div>
+        <div><label style="font-size:.67rem;color:var(--muted2)">🥅 Pen. partido</label>
+          <input type="number" id="soPPM" min="0" max="10" placeholder="valor API" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.82rem"></div>
+        <div style="grid-column:span 2"><label style="font-size:.67rem;color:var(--muted2)">⏱ Minuto primer gol</label>
+          <input type="number" id="soMinM" min="0" max="150" placeholder="valor API" style="width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.82rem"></div>
+      </div>
+      <button id="soBtnM" onclick="confirmarStatsOverrideM()" style="width:100%;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,#d97706,#92400e);color:#fff;font-weight:700;font-size:.82rem;cursor:pointer">💾 Guardar y recalcular</button>
+      <div id="soMsgM" style="margin-top:8px;font-size:.72rem"></div>
     </div>
   </div>
 </div>

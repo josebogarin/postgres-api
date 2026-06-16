@@ -28,9 +28,15 @@ button {
   display: block; width: 100%; margin-top: 24px; padding: 11px;
   background: #e05020; color: #fff; border: none; border-radius: 9px;
   font-size: .9rem; font-weight: 700; cursor: pointer;
+  transition: background .15s;
 }
 button:disabled { opacity: .5; cursor: not-allowed; }
-.err { margin-top: 14px; color: #ef4444; font-size: .78rem; text-align: center; min-height: 18px; }
+button:not(:disabled):hover { background: #c04010; }
+.err { margin-top: 14px; color: #ef4444; font-size: .78rem; text-align: center; min-height: 18px; line-height: 1.4; }
+.info { margin-top: 10px; color: #8892a4; font-size: .73rem; text-align: center; min-height: 16px; }
+.step { color: #94a3b8; font-size: .73rem; text-align: center; margin-top: 8px; }
+.dot-anim::after { content: ''; animation: dots 1.5s steps(4, end) infinite; }
+@keyframes dots { 0%,100%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
 </style>
 </head>
 <body>
@@ -53,60 +59,114 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 
   <button id="btn" onclick="login()">Ingresar</button>
   <div class="err" id="err"></div>
+  <div class="step" id="step"></div>
 </div>
 
 <script>
+const TIMEOUT_MS = 12000; // 12 segundos máximo para respuesta del servidor
+
 async function login() {
   const u   = document.getElementById('u').value.trim();
   const p   = document.getElementById('p').value;
   const err = document.getElementById('err');
   const btn = document.getElementById('btn');
+  const step = document.getElementById('step');
 
   err.textContent = '';
+  step.textContent = '';
   if (!u || !p) { err.textContent = 'Completá usuario y contraseña.'; return; }
 
   btn.disabled = true;
   btn.textContent = 'Ingresando…';
 
+  // ── Paso 1: conectar con el servidor ─────────────────────────────
+  step.innerHTML = '<span class="dot-anim">Conectando con el servidor</span>';
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, TIMEOUT_MS);
+
+  let r, data;
+
   try {
-    const r = await fetch('/api/v1/auth/login', {
+    r = await fetch('/api/v1/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true'
+        'ngrok-skip-browser-warning': 'true',
       },
-      body: JSON.stringify({ username: u, password: p })
+      body: JSON.stringify({ username: u, password: p }),
+      signal: controller.signal,
     });
-    let data;
-    try { data = await r.json(); }
-    catch {
-      err.textContent = 'Error de conexión (respuesta inválida). Intentá de nuevo.';
-      btn.disabled = false; btn.textContent = 'Ingresar'; return;
+    clearTimeout(timeoutId);
+  } catch (e) {
+    clearTimeout(timeoutId);
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+    step.textContent = '';
+    if (e.name === 'AbortError') {
+      err.textContent = '⏱ El servidor tardó demasiado en responder (más de ' + (TIMEOUT_MS/1000) + 's). Verificá que el servidor esté corriendo en el puerto 8000.';
+    } else {
+      err.textContent = '🔌 No se pudo conectar con el servidor. Verificá que uvicorn esté activo (puerto 8000).';
     }
-    if (!r.ok) {
-      err.textContent = data.detail || 'Credenciales incorrectas.';
-      btn.disabled = false;
-      btn.textContent = 'Ingresar';
-      return;
-    }
+    console.error('[login] fetch error:', e.name, e.message);
+    return;
+  }
 
-    // Guardar tokens en storage (disponibles en la página destino)
+  // ── Paso 2: leer respuesta ────────────────────────────────────────
+  step.innerHTML = '<span class="dot-anim">Verificando credenciales</span>';
+
+  try {
+    data = await r.json();
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+    step.textContent = '';
+    err.textContent = `⚠ El servidor respondió (HTTP ${r.status}) pero la respuesta no es válida. Intentá de nuevo.`;
+    console.error('[login] r.json() error:', e.message, 'status:', r.status);
+    return;
+  }
+
+  // ── Paso 3: verificar resultado ────────────────────────────────────
+  if (!r.ok) {
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+    step.textContent = '';
+    const msg = data.detail || 'Credenciales incorrectas.';
+    err.textContent = (r.status === 401) ? '🔑 ' + msg : `❌ Error ${r.status}: ${msg}`;
+    console.error('[login] auth failed:', r.status, data);
+    return;
+  }
+
+  if (!data.access_token) {
+    btn.disabled = false;
+    btn.textContent = 'Ingresar';
+    step.textContent = '';
+    err.textContent = '⚠ El servidor no devolvió un token. Contactá al admin.';
+    console.error('[login] no access_token in response:', data);
+    return;
+  }
+
+  // ── Paso 4: guardar y redirigir ────────────────────────────────────
+  step.innerHTML = '<span class="dot-anim">Cargando tu cuenta</span>';
+
+  try {
     sessionStorage.setItem('bec_token', data.access_token);
     localStorage.setItem('tok_fix', data.access_token);
     if (data.refresh_token) localStorage.setItem('becbuc_refresh', data.refresh_token);
-
-    // Detectar dispositivo: móvil si userAgent indica mobile/tablet O pantalla angosta
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-                     || window.innerWidth < 768;
-    const dest = isMobile ? '/static/BECBUC-movil.html' : '/static/BECBUC-portal.html';
-    // Pasar token por URL como respaldo por si sessionStorage no persiste entre páginas
-    window.location.href = dest + '?token=' + encodeURIComponent(data.access_token);
-
-  } catch {
-    err.textContent = 'Error de conexión con el servidor.';
-    btn.disabled = false;
-    btn.textContent = 'Ingresar';
+  } catch (e) {
+    console.warn('[login] storage error (ignorado):', e.message);
   }
+
+  // Detectar dispositivo
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                   || window.innerWidth < 768;
+  const dest = isMobile ? '/static/BECBUC-movil.html' : '/static/BECBUC-portal.html';
+  const url  = dest + '?token=' + encodeURIComponent(data.access_token);
+
+  console.info('[login] OK → redirigiendo a', dest);
+  window.location.href = url;
 }
 
 // Foco automático en el campo usuario

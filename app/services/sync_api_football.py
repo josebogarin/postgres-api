@@ -118,12 +118,22 @@ async def _log_warn(db: AsyncSession, contexto: str) -> None:
 API_BASE = "https://v3.football.api-sports.io"
 STATUS_FINAL = {"FT", "AET", "PEN"}
 
-# Cuota gratuita API-Football: 100 req/día.
+# Plan Pro API-Football: sin límite de cuota diaria.
 # max_detalle limita cuántos partidos hacen una 2ª llamada individual (eventos+stats).
-DEFAULT_MAX_DETALLE = 10
+# Con plan Pro se puede subir a 50 o más sin riesgo de cuota.
+DEFAULT_MAX_DETALLE = 50
 
 # Liga Copa Mundial FIFA en API-Football (ID oficial)
 FIFA_WORLD_CUP_LEAGUE_ID = 1
+
+# ── ESPN (fuente verificadora) ────────────────────────────────────────────────
+ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world"
+ESPN_HEADERS = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
+_VAR_RE = re.compile(
+    r"VAR\s+Decision|VAR\s+Check|VAR\s+Review|goes\s+to\s+monitor|"
+    r"after\s+VAR\s+review|Video\s+Review",
+    re.IGNORECASE,
+)
 
 
 def _headers() -> dict:
@@ -217,6 +227,189 @@ def _match_fixtures(
             result[p["id"]] = api_by_pair[(visit_api, local_api)]
 
     return result
+
+
+# ── ESPN helpers ──────────────────────────────────────────────────────────────
+
+async def _espn_scoreboard(client: httpx.AsyncClient, fecha) -> list[dict]:
+    """Devuelve eventos ESPN para la fecha del partido (cache por fecha en la llamada)."""
+    date_str = fecha.strftime("%Y%m%d") if hasattr(fecha, "strftime") else str(fecha)[:10].replace("-", "")
+    try:
+        r = await client.get(
+            f"{ESPN_BASE}/scoreboard",
+            params={"dates": date_str},
+            headers=ESPN_HEADERS,
+            timeout=15,
+        )
+        return r.json().get("events", [])
+    except Exception as e:
+        logger.warning(f"ESPN scoreboard error ({date_str}): {e}")
+        return []
+
+
+def _espn_find_game_id(events: list[dict], local: str, visitante: str) -> str | None:
+    """Busca el ESPN game_id por nombres de equipos normalizados."""
+    loc_n = _normalize(local)
+    vis_n = _normalize(visitante)
+    for ev in events:
+        comp = ev.get("competitions", [{}])[0]
+        team_names = [
+            _normalize(c.get("team", {}).get("displayName", ""))
+            for c in comp.get("competitors", [])
+        ]
+        if (any(loc_n in t or t in loc_n for t in team_names if t) and
+                any(vis_n in t or t in vis_n for t in team_names if t)):
+            return ev.get("id")
+    return None
+
+
+async def _espn_get_summary(client: httpx.AsyncClient, game_id: str) -> dict:
+    """Descarga el summary ESPN (stats + plays)."""
+    try:
+        r = await client.get(
+            f"{ESPN_BASE}/summary",
+            params={"event": game_id},
+            headers=ESPN_HEADERS,
+            timeout=15,
+        )
+        return r.json()
+    except Exception as e:
+        logger.warning(f"ESPN summary error (game_id={game_id}): {e}")
+        return {}
+
+
+def _espn_extract_stats(summary: dict) -> dict:
+    """
+    Extrae stats comparables del ESPN summary.
+    Retorna: {decisiones_var, amarillas, rojas, minuto_primer_gol?}
+    """
+    result: dict = {}
+
+    # Amarillas + rojas desde boxscore statistics (suma ambos equipos)
+    amarillas = 0
+    rojas = 0
+    for team_data in summary.get("boxscore", {}).get("teams", []):
+        for stat in team_data.get("statistics", []):
+            try:
+                val = int(stat.get("value") or 0)
+            except (ValueError, TypeError):
+                val = 0
+            name = stat.get("name", "")
+            if name == "yellowCards":
+                amarillas += val
+            elif name == "redCards":
+                rojas += val
+    result["amarillas"] = amarillas
+    result["rojas"] = rojas
+
+    # VAR + minuto primer gol desde plays/commentary
+    plays = summary.get("plays") or summary.get("commentary") or []
+    var_count = 0
+    first_goal_min: int | None = None
+
+    for play in plays:
+        text_val = (
+            play.get("text") or
+            play.get("commentary") or
+            play.get("description") or ""
+        )
+        if _VAR_RE.search(text_val):
+            var_count += 1
+
+        # Detectar tipo de jugada para minuto gol
+        t_obj = play.get("type")
+        ptype = t_obj.get("text", "") if isinstance(t_obj, dict) else str(t_obj or "")
+        if "goal" in ptype.lower() and first_goal_min is None:
+            clock = play.get("clock")
+            min_str = clock.get("displayValue", "") if isinstance(clock, dict) else str(clock or "")
+            try:
+                first_goal_min = int(min_str.split(":")[0]) if ":" in min_str else int(min_str)
+            except (ValueError, AttributeError):
+                pass
+
+    result["decisiones_var"] = var_count
+    if first_goal_min is not None:
+        result["minuto_primer_gol"] = first_goal_min
+
+    return result
+
+
+async def _espn_verify_and_patch(
+    db: AsyncSession,
+    client: httpx.AsyncClient,
+    db_p: dict,
+    partido_id: int,
+    espn_cache: dict,
+) -> dict:
+    """
+    Verifica stats de un partido finalizado contra ESPN y aplica correcciones.
+    Reglas:
+      - decisiones_var: ESPN siempre (API-Football frecuentemente no reporta VAR)
+      - amarillas/rojas: ESPN gana si su valor es mayor que el de API-Football
+      - minuto_primer_gol: ESPN como fallback si API-Football devolvió NULL
+
+    Retorna dict con correcciones aplicadas (vacío si no hay diferencias).
+    """
+    fecha = db_p.get("fecha")
+    if not fecha:
+        return {}
+
+    date_str = fecha.strftime("%Y%m%d") if hasattr(fecha, "strftime") else str(fecha)[:10].replace("-", "")
+    if date_str not in espn_cache:
+        espn_cache[date_str] = await _espn_scoreboard(client, fecha)
+
+    events = espn_cache[date_str]
+    if not events:
+        return {}
+
+    local    = db_p.get("local_nombre", "")
+    visitante = db_p.get("visit_nombre", "")
+    game_id = _espn_find_game_id(events, local, visitante)
+    if not game_id:
+        logger.info(f"  ESPN: partido no encontrado en scoreboard — {local} vs {visitante} ({date_str})")
+        return {}
+
+    summary = await _espn_get_summary(client, game_id)
+    if not summary:
+        return {}
+
+    espn = _espn_extract_stats(summary)
+
+    # Leer valores actuales del partido en BD (post API-Football update)
+    rq = await db.execute(
+        text("SELECT decisiones_var, amarillas, rojas, minuto_primer_gol FROM partido WHERE id = :pid"),
+        {"pid": partido_id},
+    )
+    current = dict(rq.mappings().first() or {})
+
+    corrections: dict = {}
+
+    # VAR: ESPN siempre prevalece (API-Football no reporta la mayoría)
+    espn_var = espn.get("decisiones_var", 0)
+    if espn_var != (current.get("decisiones_var") or 0):
+        corrections["decisiones_var"] = espn_var
+
+    # Amarillas/rojas: ESPN gana cuando tiene valor más alto
+    if espn.get("amarillas", 0) > (current.get("amarillas") or 0):
+        corrections["amarillas"] = espn["amarillas"]
+    if espn.get("rojas", 0) > (current.get("rojas") or 0):
+        corrections["rojas"] = espn["rojas"]
+
+    # Minuto primer gol: ESPN solo como fallback (API-Football es más preciso)
+    if "minuto_primer_gol" in espn and not current.get("minuto_primer_gol"):
+        corrections["minuto_primer_gol"] = espn["minuto_primer_gol"]
+
+    if not corrections:
+        logger.info(f"  ESPN ✓ sin diferencias — {local} vs {visitante}")
+        return {}
+
+    set_clauses = ", ".join(f"{k} = :{k}" for k in corrections)
+    await db.execute(
+        text(f"UPDATE partido SET {set_clauses} WHERE id = :pid"),
+        {**corrections, "pid": partido_id},
+    )
+    logger.info(f"  ESPN 🔧 corregido partido_id={partido_id} ({local} vs {visitante}): {corrections}")
+    return corrections
 
 
 # ── Auto-mapeo ────────────────────────────────────────────────────────────────
@@ -522,6 +715,7 @@ async def sync_torneo(
     ya_finalizados: list[int] = []
     sin_match: list[int] = []
     errores: list[dict] = []
+    espn_corrections: list = []   # correcciones ESPN — inicializado antes del async with
 
     LIVE_STATUSES = {"1H", "HT", "2H", "ET", "BT", "P", "LIVE"}
 
@@ -659,6 +853,8 @@ async def sync_torneo(
         # (ignorando max_detalle) para obtener score en tiempo real.
         all_finished = finished_fixtures  # para fallback básico
         detalle_count = 0
+        espn_cache: dict = {}          # {date_str: [espn_events]} — cache por fecha
+        espn_corrections: list = []    # log de correcciones ESPN aplicadas
         for fix_id, db_p, is_live in to_detail:
             partido_id = db_p["id"]
             match_name = f"{db_p.get('local_nombre','?')} vs {db_p.get('visit_nombre','?')}"
@@ -711,6 +907,20 @@ async def sync_torneo(
                 elapsed = time.time() - t0
                 mm, ss = divmod(elapsed, 60)
                 logger.info(f"  ✓ Actualizado: {match_name} (partido_id={partido_id}) [{int(mm):02d}:{ss:05.2f}]")
+
+                # ── Verificación ESPN (solo partidos finalizados) ─────────────
+                fix_status = fix_full.get("fixture", {}).get("status", {}).get("short", "")
+                if fix_status in STATUS_FINAL:
+                    try:
+                        corr = await _espn_verify_and_patch(
+                            db, client, db_p, partido_id, espn_cache
+                        )
+                        if corr:
+                            await db.commit()
+                            espn_corrections.append({"partido_id": partido_id, "corr": corr})
+                    except Exception as e_espn:
+                        logger.warning(f"  ESPN verify error {match_name}: {e_espn}")
+
             except Exception as e:
                 await db.rollback()
                 elapsed = time.time() - t0
@@ -729,6 +939,9 @@ async def sync_torneo(
     if mapeo_summary and mapeo_summary.get("partidos_mapeados", 0) > 0:
         n = mapeo_summary["partidos_mapeados"]
         await _log_warn(db, f"ℹ Auto-mapeo: {n} partido(s) mapeados automáticamente")
+    if espn_corrections:
+        espn_ids = [c["partido_id"] for c in espn_corrections]
+        await _log_warn(db, f"ESPN correcciones: {len(espn_corrections)} partidos {espn_ids}")
 
     return {
         "ok": True,
@@ -741,9 +954,9 @@ async def sync_torneo(
         "ids_errores": errores,
         "limite_detalle": max_detalle,
         "detalle_usados": min(len(actualizados), max_detalle),
+        "espn_correcciones": espn_corrections,
         **({"auto_mapeo": mapeo_summary} if mapeo_summary else {}),
     }
-
 
 # ── Helpers de actualización ─────────────────────────────────────────────────
 

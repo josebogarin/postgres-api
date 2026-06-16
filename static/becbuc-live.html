@@ -168,6 +168,8 @@
     /* footer */
     #footer { text-align: center; font-size: 11px; color: #374151; padding: 14px; }
   </style>
+  <!-- Twemoji: renderiza emoji de banderas en Windows/desktop -->
+  <script src="https://unpkg.com/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -254,7 +256,7 @@
             <th title="Minuto del primer gol">⏱</th>
             <th title="Penales en tanda">🔢</th>
             <th title="Puntaje actual (antes de este partido)">Actual</th>
-            <th class="tt" title="Puntaje corregido = actual + este partido">Corregido▼</th>
+            <th class="tt" title="Puntaje actual + puntos de este partido">En vivo▼</th>
           </tr>
         </thead>
         <tbody id="tbl-body"></tbody>
@@ -281,7 +283,7 @@
 // ════════════════════════════════════════════════
 const BASE_URL  = '';
 const USER      = 'Jose';
-const PASS      = 'Catalina';
+const PASS      = 'catalina';
 const TOKEN_KEY = 'bec_live_token';
 const TOKEN_TS  = 'bec_live_token_ts';
 const TOKEN_TTL = 24 * 60 * 60 * 1000;   // 24 horas
@@ -297,8 +299,9 @@ let _apostoles   = [];
 let _results     = [];
 let _timer       = null;
 let _cdTimer     = null;   // countdown timer para partidos próximos
-let _numFifa     = null;   // numero_fifa seleccionado manualmente (null = auto)
-let _allNumeros  = [];     // lista de todos los numero_fifa disponibles
+let _numFifa        = null;   // numero_fifa seleccionado manualmente (null = auto)
+let _allNumeros     = [];     // lista de todos los numero_fifa disponibles
+let _lastEspnCheck  = 0;      // timestamp último chequeo ESPN (ms)
 
 // ════════════════════════════════════════════════
 // TOKEN PERSISTENTE 24h
@@ -534,6 +537,23 @@ async function cargar() {
     renderNav();
     showScreen('main');
     updateStatusBar();
+
+    // ESPN verify cada ~20 min durante partido en vivo
+    const ESPN_INTERVAL = 20 * 60 * 1000;
+    if (_partido && _partido.estado === 'en_juego' && _partido.id &&
+        (Date.now() - _lastEspnCheck) > ESPN_INTERVAL) {
+      _lastEspnCheck = Date.now();
+      try {
+        const ev = await api('/api/v1/bets/espn-verify/' + _partido.id);
+        if (ev.ok && ev.correcciones && Object.keys(ev.correcciones).length > 0) {
+          // Aplica correcciones localmente para refrescar UI sin esperar al próximo refresh
+          Object.assign(_partido, ev.correcciones);
+          render();
+          const keys = Object.keys(ev.correcciones).join(', ');
+          showToast('ESPN corrigió: ' + keys, 'warn');
+        }
+      } catch (_) { /* silencioso */ }
+    }
     document.getElementById('last-sync').textContent =
       new Date().toLocaleTimeString('es-CR');
   } catch (e) {
@@ -661,6 +681,11 @@ function render() {
 
   document.getElementById('flag-l').textContent = flag(p.bandera_local,      p.equipo_local);
   document.getElementById('flag-v').textContent = flag(p.bandera_visitante,   p.equipo_visitante);
+  // Twemoji: convierte emoji de banderas a imágenes PNG (necesario en Windows/desktop)
+  if (typeof twemoji !== 'undefined') {
+    twemoji.parse(document.getElementById('flag-l'), { folder: 'svg', ext: '.svg', base: 'https://twemoji.maxcdn.com/v/latest/' });
+    twemoji.parse(document.getElementById('flag-v'), { folder: 'svg', ext: '.svg', base: 'https://twemoji.maxcdn.com/v/latest/' });
+  }
   document.getElementById('name-l').textContent = (p.equipo_local     || '—').toUpperCase();
   document.getElementById('name-v').textContent = (p.equipo_visitante || '—').toUpperCase();
 
@@ -685,9 +710,9 @@ function render() {
   document.getElementById('py-banner').style.display = p.es_paraguay ? 'block' : 'none';
 
   const chips = [
-    ['🟨', 'Amarillas',   p.amarillas],
-    ['🟥', 'Rojas',       p.rojas],
-    ['📺', 'VAR',         p.decisiones_var],
+    ['🟨', 'Amarillas',    p.amarillas],
+    ['🟥', 'Rojas',        p.rojas],
+    ['📺', 'VAR',          p.decisiones_var > 0 ? p.decisiones_var : null],
     ['🥅', 'Pen. partido', p.penales_partido],
     ['⏱',  'Min. gol',    p.minuto_primer_gol !== null && p.minuto_primer_gol !== undefined
                               ? p.minuto_primer_gol + "'" : null],

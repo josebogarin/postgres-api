@@ -1394,10 +1394,10 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <button class="bet-tab-btn active" onclick="betSwitchTab('grupos')"   id="btab-grupos">🏟 Fase de Grupos</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('playoffs')" id="btab-playoffs">⚔️ Playoffs</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('globales')" id="btab-globales">🌐 Globales</button>
-            <button class="bet-tab-btn"        onclick="betSwitchTab('partidos')" id="btab-partidos">📋 Partidos</button>
+            <button class="bet-tab-btn"        onclick="betSwitchTab('partidos')" id="btab-partidos">📊 Resultados</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('envivo')"   id="btab-envivo">🔴 En Vivo</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('ranking')"  id="btab-ranking">🏆 Ranking</button>
-            <button class="btn-actualizar-pronos" id="btnActualizarPronos" onclick="refreshPronos(this)" title="Recarga resultados y puntajes desde el servidor">🔄 Actualizar</button>
+            <button class="btn-actualizar-pronos" id="btnActualizarPronos" onclick="refreshPronos(this)" title="Recarga partidos en vivo" style="display:none">🔄 Actualizar</button>
           </div>
           <div class="bet-content" id="betContent">
             <div class="state-msg"><i class="ti ti-loader-2" style="display:block;margin-bottom:8px;"></i>Cargando torneos…</div>
@@ -1529,11 +1529,13 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
           <details class="mon-sys-details">
             <summary class="mon-sys-summary"><i class="ti ti-settings"></i> Más acciones del sistema</summary>
             <div class="mon-actions" style="margin-top:8px;">
-              <button class="mon-act-btn" id="monBtnCalc" onclick="monCalcPuntajes()"><i class="ti ti-calculator"></i> Calcular puntajes</button>
+              <!-- Calcular puntajes: lo llama el sync auto — botón manual ocultado -->
+              <button class="mon-act-btn" id="monBtnCalc" onclick="monCalcPuntajes()" style="display:none"><i class="ti ti-calculator"></i> Calcular puntajes</button>
               <button class="mon-act-btn" id="monBtnAvanzar" onclick="monAvanzarBracket()"><i class="ti ti-arrow-right"></i> Avanzar bracket</button>
               <button class="mon-act-btn" id="monBtnSigFase" onclick="monCalcSiguienteFase()" style="color:#818cf8;"><i class="ti ti-player-skip-forward"></i> Siguiente fase</button>
               <button class="mon-act-btn" id="monBtnExcel" onclick="monGenerarExcel()"><i class="ti ti-file-spreadsheet"></i> Excel auditoría</button>
               <button class="mon-act-btn" style="color:var(--red);" onclick="openFinalizarPartidoModal()"><i class="ti ti-flag-check"></i> Finalizar partido</button>
+              <button class="mon-act-btn" style="color:var(--amber);" onclick="openStatsOverrideModal()"><i class="ti ti-pencil"></i> Corregir stats</button>
             </div>
             <div style="margin-top:6px;font-size:.72rem;" id="monAccionMsg"></div>
           </details>
@@ -1896,6 +1898,7 @@ async function afterLogin() {
   _startHeartbeat();
   loadNoticias();
   loadBecbucExtra();
+  _startDashRefresh(); // auto-refresh KPIs cada 2 min mientras el dashboard esté activo
 }
 
 function applyUserUI(me) {
@@ -1957,6 +1960,27 @@ const VIEW_LABELS = {
   iframe:         '',
 };
 
+/* ── Auto-refresh KPIs dashboard ──────────────────────────────────────────── */
+let _dashTimer = null;
+const DASH_REFRESH_MS = 2 * 60 * 1000; // 2 minutos
+
+function _refreshDash() {
+  loadBecbucKpis();
+  _loadBecbucStatsKpis();
+  loadRankingDash(true);
+  loadPartidosHoyPanel(true);
+  _dashTimer = setTimeout(_refreshDash, DASH_REFRESH_MS);
+}
+
+function _startDashRefresh() {
+  if (_dashTimer) return;
+  _dashTimer = setTimeout(_refreshDash, DASH_REFRESH_MS);
+}
+
+function _stopDashRefresh() {
+  if (_dashTimer) { clearTimeout(_dashTimer); _dashTimer = null; }
+}
+
 function showView(key) {
   document.querySelectorAll('.view,.iframe-view').forEach(v => v.classList.remove('active'));
   const el = document.getElementById('view-' + key);
@@ -1972,7 +1996,8 @@ function showView(key) {
   if (key === 'mensajes') _renderMensajesFull();
   if (key === 'competiciones') loadCompeticionesView();
   if (key === 'monitoreo') { initMonitoreo(); if (_isAdmin) apiMonLoad(); }
-  if (key === 'dashboard') { loadBecbucKpis(); loadRankingDash(); }
+  if (key === 'dashboard') { loadBecbucKpis(); loadRankingDash(); _startDashRefresh(); }
+  else _stopDashRefresh();
 }
 
 /* ── Tools en iframe ──────────────────────────────────────────────────────── */
@@ -2662,7 +2687,7 @@ async function loadRankingDash(force) {
         const rowBg = isMe ? 'background:rgba(224,80,32,.07);' : (i%2===0?'':'background:rgba(255,255,255,.02);');
         return `<tr style="${rowBg}${isMe?'font-weight:700;':''}">
           <td style="padding:6px 8px;text-align:center">${medals[i]||i+1}</td>
-          <td style="padding:6px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${esc(r.nombre)}${_onlineBadge(r.online_source)}</td>
+          <td style="padding:6px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${esc(r.alias||r.nombre)}${_onlineBadge(r.online_source)}</td>
           <td style="padding:6px 8px;text-align:center;color:var(--muted)">${napW||'—'}</td>
           <td style="padding:6px 8px;text-align:center;color:var(--amber)">${pl||'—'}</td>
           <td style="padding:6px 8px;text-align:center;color:var(--green)">${ac||'—'}</td>
@@ -2791,7 +2816,7 @@ function _renderRankingPartido(body, rows) {
                                   : `<td style="padding:5px 7px;text-align:center;color:var(--border)">—</td>`;
       return `<tr style="${rowBg}${isMe?'font-weight:700;':''}">
         <td style="padding:5px 8px;text-align:center">${medals[i]||i+1}</td>
-        <td style="padding:5px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">${esc(r.nombre||r.apostador||'?')}</td>
+        <td style="padding:5px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px">${esc(r.alias||r.nombre||r.apostador||'?')}</td>
         <td style="padding:5px 8px;text-align:center;color:var(--muted);font-family:monospace">${pred}</td>
         ${cell(r.pts_resultado||0 , r.pts_resultado>0?'var(--green)':'var(--muted)')}
         ${cell(r.pts_marcador||0  , r.pts_marcador>0?'var(--amber)':'var(--muted)')}
@@ -3421,7 +3446,7 @@ function _renderMonitoreo() {
     rankEl.innerHTML = top5.map((r,i) => `
       <div class="mon-rank-row">
         <span class="mon-rank-pos ${posClass(i)}">${i+1}</span>
-        <span class="mon-rank-name">${esc(r.nombre || r.email || '?')}</span>
+        <span class="mon-rank-name">${esc(r.alias || r.nombre || r.email || '?')}</span>
         <span class="mon-rank-pts">${r.pts_total ?? r.puntos_total ?? 0} pts</span>
       </div>`).join('');
   }
@@ -4395,6 +4420,9 @@ function betSwitchTab(tab) {
   // Boleta solo visible en pestaña Grupos (acumula marcadores pendientes)
   const slip = document.querySelector('.betslip');
   if (slip) slip.style.display = tab === 'grupos' ? '' : 'none';
+  // Botón Actualizar: solo visible en tab En Vivo
+  const actBtn = document.getElementById('btnActualizarPronos');
+  if (actBtn) actBtn.style.display = tab === 'envivo' ? '' : 'none';
   loadBetTab();
 }
 
@@ -4561,47 +4589,28 @@ async function renderBetEnVivo(el) {
         if (rs.length) h += `<div class="lv-real-bar">${rs.join(' <span style="color:var(--border)">·</span> ')}</div>`;
       }
 
-      // ── Bonus predictions (amarillas, rojas, VAR, minuto, penales) ────────
-      const hasAnyBonus = p.pred_amarillas!=null||p.pred_rojas!=null||p.pred_var!=null||p.pred_minuto_gol!=null||p.pred_penales_partido!=null;
-      if (hasAnyBonus) {
-        const bchips = [];
-        if (p.pred_amarillas!=null||p.amarillas!=null) {
-          const ra=p.amarillas, pa=p.pred_amarillas;
-          const ok=ra!=null&&pa===ra;
-          const disp=ra!=null?`${ra}`:`${pa??'?'}`;
-          const sub=ra!=null&&pa!=null?`(pred:${pa})`:ra==null&&pa!=null?'?':'';
-          bchips.push(`<span class="lv-bchip${ra!=null?(ok?' ok':' miss'):''}" title="Amarillas: real ${ra??'—'} / pred ${pa??'—'}">🟨${disp}${sub}</span>`);
-        }
-        if (p.pred_rojas!=null||p.rojas!=null) {
-          const rr=p.rojas, pr=p.pred_rojas;
-          const ok=rr!=null&&pr===rr;
-          const disp=rr!=null?`${rr}`:`${pr??'?'}`;
-          const sub=rr!=null&&pr!=null?`(pred:${pr})`:rr==null&&pr!=null?'?':'';
-          bchips.push(`<span class="lv-bchip${rr!=null?(ok?' ok':' miss'):''}" title="Rojas: real ${rr??'—'} / pred ${pr??'—'}">🟥${disp}${sub}</span>`);
-        }
-        if (p.pred_var!=null||p.decisiones_var!=null) {
-          const rv=p.decisiones_var, pv2=p.pred_var;
-          const ok=rv!=null&&pv2===rv;
-          const disp=rv!=null?`${rv}`:`${pv2??'?'}`;
-          const sub=rv!=null&&pv2!=null?`(pred:${pv2})`:rv==null&&pv2!=null?'?':'';
-          bchips.push(`<span class="lv-bchip${rv!=null?(ok?' ok':' miss'):''}" title="VAR: real ${rv??'—'} / pred ${pv2??'—'}"><span class="var-badge">VAR</span>${disp}${sub}</span>`);
-        }
-        if (p.pred_penales_partido!=null||p.penales_partido!=null) {
-          const rp=p.penales_partido, pp2=p.pred_penales_partido;
-          const ok=rp!=null&&pp2===rp;
-          const disp=rp!=null?`${rp}`:`${pp2??'?'}`;
-          const sub=rp!=null&&pp2!=null?`(pred:${pp2})`:rp==null&&pp2!=null?'?':'';
-          bchips.push(`<span class="lv-bchip${rp!=null?(ok?' ok':' miss'):''}" title="Pen.juego: real ${rp??'—'} / pred ${pp2??'—'}">🥅${disp}${sub}</span>`);
-        }
-        if (p.pred_minuto_gol!=null||p.minuto_primer_gol!=null) {
-          const rm=p.minuto_primer_gol, pm=p.pred_minuto_gol;
-          const ok=rm!=null&&pm!=null&&Math.abs(pm-rm)===0;
-          const disp=rm!=null?`${rm}'`:`${pm??'?'}'`;
-          const sub=rm!=null&&pm!=null?`(pred:${pm}')`:rm==null&&pm!=null?'?':'';
-          bchips.push(`<span class="lv-bchip${rm!=null?(ok?' ok':' miss'):''}" title="Min 1er gol: real ${rm??'—'} / pred ${pm??'—'}">⏱${disp}${sub}</span>`);
-        }
-        if (bchips.length)
-          h += `<div class="lv-bbonus">${bchips.join('')}</div>`;
+      // ── Bonus predictions — SIEMPRE visibles (J K L M N) ───────────────
+      {
+        const _bc = (ra, pa, ico, lbl) => {
+          const ok = ra!=null && pa===ra;
+          const disp = ra!=null ? `${ra}` : pa!=null ? `${pa}` : '—';
+          const sub  = ra!=null && pa!=null ? `(pred:${pa})` : '';
+          return `<span class="lv-bchip${ra!=null?(ok?' ok':' miss'):''}" title="${lbl}: real ${ra??'—'} / pred ${pa??'—'}">${ico}${disp}${sub}</span>`;
+        };
+        const _bm = (rm, pm) => {
+          const ok = rm!=null && pm!=null && Math.abs(pm-rm)===0;
+          const disp = rm!=null ? `${rm}'` : pm!=null ? `${pm}'` : '—';
+          const sub  = rm!=null && pm!=null ? `(pred:${pm}')` : '';
+          return `<span class="lv-bchip${rm!=null?(ok?' ok':' miss'):''}" title="Min 1er gol: real ${rm??'—'} / pred ${pm??'—'}">⏱${disp}${sub}</span>`;
+        };
+        const bchips = [
+          _bc(p.amarillas,       p.pred_amarillas,       '🟨', 'Amarillas'),
+          _bc(p.rojas,           p.pred_rojas,           '🟥', 'Rojas'),
+          _bc(p.decisiones_var,  p.pred_var,             '<span class="var-badge">VAR</span>', 'VAR'),
+          _bc(p.penales_partido, p.pred_penales_partido, '🥅', 'Pen.juego'),
+          _bm(p.minuto_primer_gol, p.pred_minuto_gol),
+        ];
+        h += `<div class="lv-bbonus">${bchips.join('')}</div>`;
       }
 
       // Penales tanda
@@ -6729,7 +6738,7 @@ function _renderApostadorTree(ranking) {
   let h = '';
   for (const r of ranking) {
     const active = _adminViewAs && _adminViewAs.id === r.apostador_id ? ' active' : '';
-    const nombre = esc(r.nombre || r.alias || String(r.apostador_id));
+    const nombre = esc(r.alias || r.nombre || String(r.apostador_id));
     h += '<div class="bet-tree-item' + active + '" data-uid="' + r.apostador_id + '" data-nombre="' + nombre + '" data-pts="' + (r.puntos_total||0) + '" onclick="setViewAs(Number(this.dataset.uid),this.dataset.nombre,Number(this.dataset.pts))">'
        + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + nombre + '</span>'
        + '<span class="ta">' + (r.puntos_total||0) + 'pts</span></div>';
@@ -7829,7 +7838,8 @@ async function saveGlobales() {
 }
 
 /* ══════════════════════════════════════════════════════
-   TAB PARTIDOS FINALIZADOS (Pronósticos)
+   TAB RESULTADOS (ex-Partidos Finalizados) — Pronósticos
+   Muestra todos los campos de resultado por partido.
    ══════════════════════════════════════════════════════ */
 async function renderBetPartidos(el) {
   if (!_betTorneoId) { el.innerHTML = '<div class="state-msg">Seleccioná un torneo.</div>'; return; }
@@ -7837,44 +7847,127 @@ async function renderBetPartidos(el) {
   try {
     const partidos = await api(`/api/v1/bets/partidos-finalizados/${_betTorneoId}`).catch(() => []);
     if (!partidos.length) {
-      el.innerHTML = '<div class="state-msg" style="color:var(--muted)">📋 Sin partidos finalizados aún.</div>';
+      el.innerHTML = '<div class="state-msg" style="color:var(--muted)">📊 Sin partidos finalizados aún.</div>';
       return;
     }
 
-    // Agrupar por fase
-    const faseMap = {};
+    // Botón Excel
+    const dlBtn = `<button onclick="exportarResultadosPartidos(this)"
+        style="margin-left:auto;display:flex;align-items:center;gap:5px;padding:5px 12px;
+               background:var(--green);color:#fff;border:none;border-radius:5px;
+               font-size:.72rem;font-weight:600;cursor:pointer;">
+        📥 Excel
+      </button>`;
+
+    // Badge helper
+    const badge = (emoji, val, bg, fg) =>
+      val != null && (val > 0 || emoji === '🟨')
+        ? `<span style="background:${bg};color:${fg};padding:1px 6px;border-radius:4px;font-size:.61rem;font-weight:600">${emoji} ${val}</span>`
+        : '';
+
+    // Agrupar por fase (ya vienen ordenados por numero_fifa)
+    const faseMap = new Map();
     for (const p of partidos) {
       const f = p.fase || 'Sin fase';
-      (faseMap[f] = faseMap[f] || []).push(p);
+      if (!faseMap.has(f)) faseMap.set(f, []);
+      faseMap.get(f).push(p);
     }
 
-    let h = '<div style="padding:8px 0">';
-    for (const [fase, plist] of Object.entries(faseMap)) {
-      h += `<div style="margin-bottom:16px">
-        <div style="padding:5px 12px;background:var(--surface2);border-radius:6px;font-size:.72rem;font-weight:700;color:var(--fg);margin-bottom:4px;display:inline-block">${esc(fase)}</div>`;
+    let h = `<div style="padding:8px 12px 4px;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:.72rem;color:var(--muted)">${partidos.length} partidos finalizados</span>
+      ${dlBtn}
+    </div>`;
+
+    for (const [fase, plist] of faseMap) {
+      h += `<div style="margin-bottom:16px;padding:0 8px">
+        <div style="padding:4px 12px;background:var(--surface2);border-radius:6px;font-size:.72rem;
+                    font-weight:700;color:var(--fg);margin-bottom:4px;display:inline-block">${esc(fase)}</div>`;
+
       for (const p of plist) {
         const gl = p.goles_local ?? '?', gv = p.goles_visitante ?? '?';
-        const badges = [];
-        if (p.amarillas != null) badges.push(`<span style="background:rgba(234,179,8,.18);color:#ca8a04;padding:1px 6px;border-radius:4px;font-size:.62rem">🟨 ${p.amarillas}</span>`);
-        if (p.rojas != null && p.rojas > 0) badges.push(`<span style="background:rgba(239,68,68,.18);color:#ef4444;padding:1px 6px;border-radius:4px;font-size:.62rem">🟥 ${p.rojas}</span>`);
-        if (p.decisiones_var != null && p.decisiones_var > 0) badges.push(`<span style="background:rgba(99,102,241,.18);color:#818cf8;padding:1px 6px;border-radius:4px;font-size:.62rem">📺 ${p.decisiones_var}</span>`);
-        if (p.penales_partido != null && p.penales_partido > 0) badges.push(`<span style="background:rgba(124,58,237,.18);color:#a78bfa;padding:1px 6px;border-radius:4px;font-size:.62rem">🥅 ${p.penales_partido}</span>`);
-        const lF = _flagEl(p.local_logo, p.equipo_local || '?');
-        const vF = _flagEl(p.visit_logo, p.equipo_visitante || '?');
-        h += `<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);font-size:.74rem">
-          <span style="color:var(--muted);font-size:.63rem;min-width:30px;flex-shrink:0">P${String(p.numero || 0).padStart(2, '0')}</span>
-          <span style="flex:1;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:5px">${lF}<span>${esc(p.equipo_local || '?')}</span></span>
-          <span style="font-weight:700;font-family:monospace;font-size:.8rem;min-width:50px;text-align:center;color:var(--fg)">${gl} – ${gv}</span>
-          <span style="flex:1;display:flex;align-items:center;gap:5px">${vF}<span>${esc(p.equipo_visitante || '?')}</span></span>
-          ${badges.length ? `<span style="display:flex;gap:4px;flex-shrink:0">${badges.join('')}</span>` : ''}
+        const lF  = _flagEl(p.local_logo, p.equipo_local || '?');
+        const vF  = _flagEl(p.visit_logo, p.equipo_visitante || '?');
+        const num = String(p.numero_fifa || p.numero || 0).padStart(2, '0');
+
+        // Tanda de penales
+        let tandaHtml = '';
+        if (p.penales_local != null && p.penales_visitante != null) {
+          tandaHtml = `<span style="background:rgba(16,185,129,.12);color:#059669;padding:1px 7px;
+            border-radius:4px;font-size:.62rem;font-weight:600">⚽ Tanda: ${p.penales_local}–${p.penales_visitante}</span>`;
+        }
+
+        // Minuto primer gol
+        const minHtml = p.minuto_primer_gol != null
+          ? `<span style="background:rgba(234,179,8,.1);color:#92400e;padding:1px 6px;border-radius:4px;font-size:.61rem">⏱ ${p.minuto_primer_gol}'</span>`
+          : '';
+
+        // Equipo que clasifica (KO)
+        const clasHtml = p.equipo_clasifica_nombre
+          ? `<span style="background:rgba(99,102,241,.1);color:#6366f1;padding:1px 6px;border-radius:4px;font-size:.61rem">✅ ${esc(p.equipo_clasifica_nombre)}</span>`
+          : '';
+
+        const badges = [
+          badge('🟨', p.amarillas,       'rgba(234,179,8,.18)',   '#ca8a04'),
+          badge('🟥', p.rojas,           'rgba(239,68,68,.18)',   '#ef4444'),
+          badge('📺', p.decisiones_var,  'rgba(99,102,241,.18)',  '#818cf8'),
+          badge('🥅', p.penales_partido, 'rgba(124,58,237,.18)',  '#a78bfa'),
+        ].filter(Boolean);
+
+        h += `<div style="padding:6px 12px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;font-size:.74rem">
+            <span style="color:var(--muted);font-size:.62rem;min-width:30px;flex-shrink:0">P${num}</span>
+            <span style="flex:1;text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:5px">${lF}<span>${esc(p.equipo_local||'?')}</span></span>
+            <span style="font-weight:700;font-family:monospace;font-size:.8rem;min-width:50px;text-align:center;color:var(--fg)">${gl} – ${gv}</span>
+            <span style="flex:1;display:flex;align-items:center;gap:5px">${vF}<span>${esc(p.equipo_visitante||'?')}</span></span>
+          </div>
+          ${(badges.length || tandaHtml || minHtml || clasHtml) ? `
+          <div style="display:flex;gap:4px;flex-wrap:wrap;padding-top:4px;padding-left:34px">
+            ${badges.join('')}${tandaHtml}${minHtml}${clasHtml}
+          </div>` : ''}
         </div>`;
       }
       h += '</div>';
     }
-    h += '</div>';
+
     el.innerHTML = h;
   } catch (e) {
     el.innerHTML = `<div class="state-msg" style="color:var(--red)">❌ ${esc(e.message)}</div>`;
+  }
+}
+
+/* ── Helper de descarga compatible con iOS/Safari ── */
+async function _downloadFile(apiUrl, defaultFilename) {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const sep = apiUrl.includes('?') ? '&' : '?';
+  if (isIOS) {
+    // iOS Safari no soporta blob download ni a.click() → usar URL directa con token
+    window.open(apiUrl + sep + 'token=' + encodeURIComponent(token), '_blank');
+    return;
+  }
+  const resp = await fetch(apiUrl, { headers: { Authorization: `Bearer ${token}` } });
+  if (!resp.ok) throw new Error(`Error ${resp.status}`);
+  const blob = await resp.blob();
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const cd = resp.headers.get('Content-Disposition') || '';
+  const m = cd.match(/filename[^;=\n]*=["']?([^"'\n;]+)/);
+  a.href = blobUrl;
+  a.download = m ? m[1] : defaultFilename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl);
+}
+
+async function exportarResultadosPartidos(btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Generando…'; }
+  try {
+    await _downloadFile(
+      `/api/v1/bets/exportar-resultados-partidos/${_betTorneoId}`,
+      `resultados_partidos_${new Date().toISOString().slice(0,10)}.xlsx`
+    );
+  } catch(e) {
+    alert('Error al exportar: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📥 Excel'; }
   }
 }
 
@@ -7888,7 +7981,7 @@ let _rkTreeData = {}; // { [pid]: rows[] }
 function _rkMyAposId() {
   if (_adminViewAs?.id) return _adminViewAs.id;
   if (!_rkPronRankingCache || !_me) return null;
-  const match = _rkPronRankingCache.find(r => r.nombre === _me.username);
+  const match = _rkPronRankingCache.find(r => (r.alias || r.nombre) === _me.username);
   return match?.apostador_id ?? null;
 }
 
@@ -8047,7 +8140,7 @@ async function _renderRkPronTotal() {
       return `<tr style="${bg}${isMe?'font-weight:700;':''}">
         <td style="padding:5px 8px;text-align:center;font-size:.72rem">${medals[real]||real+1}</td>
         <td style="padding:5px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">
-          ${esc(r.nombre)}${_onlineBadge(r.online_source)}</td>
+          ${esc(r.alias||r.nombre)}${_onlineBadge(r.online_source)}</td>
         ${catCells}
         <td style="padding:5px 6px;text-align:center;font-weight:700;font-size:.72rem;color:var(--amber)">${sub}</td>
         <td style="padding:5px 6px;text-align:center;font-size:.72rem;color:#818cf8">${glob}</td>
@@ -8090,7 +8183,7 @@ async function _renderRkPronTotal() {
              onclick="_rkToggleNode(${aid})">
           <span style="min-width:14px;font-size:.6rem;color:var(--muted)">${open?'▾':'▸'}</span>
           <span style="min-width:18px;font-size:.64rem">${medals[real]||real+1}</span>
-          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.nombre)}</span>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.alias||r.nombre)}</span>
           <span class="pts-chip ${total>0?'green':'gray'}" style="font-size:.64rem;padding:1px 5px">${total}</span>
         </div>
         <div id="rk-detail-${aid}" style="display:${open?'block':'none'};background:rgba(0,0,0,.15)">
@@ -8278,19 +8371,10 @@ async function exportarPuntajes() {
   const orig = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Generando…'; }
   try {
-    const resp = await fetch(`/api/v1/bets/exportar-puntajes/${_betTorneoId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!resp.ok) throw new Error(`Error ${resp.status}`);
-    const blob = await resp.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const cd   = resp.headers.get('Content-Disposition') || '';
-    const m    = cd.match(/filename="([^"]+)"/);
-    a.href     = url;
-    a.download = m ? m[1] : `puntajes_copa.xlsx`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    await _downloadFile(
+      `/api/v1/bets/exportar-puntajes/${_betTorneoId}`,
+      `puntajes_copa.xlsx`
+    );
   } catch(e) {
     alert(`Error al exportar: ${e.message}`);
   } finally {
@@ -8303,21 +8387,10 @@ async function downloadRankingExcel() {
   const btn = event?.target;
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Generando…'; }
   try {
-    const resp = await fetch(`/api/v1/bets/ranking-export/${_betTorneoId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!resp.ok) throw new Error(`Error ${resp.status}`);
-    const blob = await resp.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    const cd   = resp.headers.get('Content-Disposition') || '';
-    const m    = cd.match(/filename="([^"]+)"/);
-    a.href     = url;
-    a.download = m ? m[1] : `ranking_torneo${_betTorneoId}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    await _downloadFile(
+      `/api/v1/bets/ranking-export/${_betTorneoId}`,
+      `ranking_torneo${_betTorneoId}.xlsx`
+    );
   } catch(e) {
     alert(`Error al descargar Excel: ${e.message}`);
   } finally {
@@ -8366,23 +8439,40 @@ async function _renderRkPronPartidoId(partidoId) {
   if (!body) return;
   body.innerHTML = '<div class="news-load" style="color:var(--muted)">Cargando…</div>';
   try {
-    const data = await api(`/api/v1/bets/ranking/${_betTorneoId}?partido_id=${partidoId}`);
-    if (!data || !data.ranking) { body.innerHTML = '<div class="news-load">Sin datos.</div>'; return; }
-    const rows = data.ranking;
+    const rows = await api(`/api/v1/bets/ranking-partido/${_betTorneoId}?partido_id=${partidoId}`);
+    if (!rows || !rows.length) { body.innerHTML = '<div class="news-load">Sin datos para este partido.</div>'; return; }
+    const part = rows[0];
     const medals = ['🥇','🥈','🥉'];
-    let h = `<table style="width:100%;border-collapse:collapse;font-size:.72rem">
-      <thead><tr style="border-bottom:2px solid var(--border)">
-        <th style="padding:5px 8px;text-align:left">#</th>
-        <th style="padding:5px 8px;text-align:left">Apostador</th>
-        <th style="padding:5px 8px;text-align:right">Pts</th>
+    let h = `<div style="padding:4px 8px;font-size:.68rem;color:var(--muted);border-bottom:1px solid var(--border)">
+      <b>${esc(part.equipo_local||'?')} ${part.goles_local??'?'}–${part.goles_visitante??'?'} ${esc(part.equipo_visitante||'?')}</b>
+      &nbsp;|&nbsp; Real: 🟨${part.real_amarillas??'—'} 📺${part.real_var??'—'} ⏱${part.real_minuto??'—'}
+    </div>
+    <table style="width:100%;font-size:.68rem;border-collapse:collapse">
+      <thead><tr style="background:var(--surface2)">
+        <th style="padding:4px 6px">#</th>
+        <th style="padding:4px 6px;text-align:left">Apostador</th>
+        <th style="padding:4px 6px">Pred</th>
+        <th style="padding:4px 6px">H</th><th>I</th><th>J</th><th>K</th><th>L</th><th>M</th><th>N</th><th>O</th>
+        <th style="padding:4px 6px;color:var(--amber)">Total</th>
       </tr></thead><tbody>`;
-    rows.forEach((r, i) => {
-      h += `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:4px 8px;color:var(--muted)">${medals[i]||i+1}</td>
-        <td style="padding:4px 8px">${esc(r.nombre||r.username||'')}</td>
-        <td style="padding:4px 8px;text-align:right;font-weight:700">${r.puntos_total||r.pts_total||0}</td>
+    for (const [i, r] of rows.entries()) {
+      const pts = r.pts_total ?? 0;
+      const isMe = r.apostador_id === _rkMyAposId();
+      h += `<tr style="${isMe?'background:rgba(224,80,32,.07);font-weight:700':''}">
+        <td style="padding:3px 6px;text-align:center">${medals[i]||i+1}</td>
+        <td style="padding:3px 6px">${esc(r.nombre||'?')}</td>
+        <td style="padding:3px 6px;color:var(--muted);font-family:monospace">${r.pred_local??'-'}:${r.pred_visitante??'-'}</td>
+        <td style="text-align:center;color:${r.pts_resultado>0?'var(--green)':'var(--muted)'}">${r.pts_resultado??0}</td>
+        <td style="text-align:center;color:${r.pts_marcador>0?'var(--amber)':'var(--muted)'}">${r.pts_marcador??0}</td>
+        <td style="text-align:center;color:${r.pts_amarillas>0?'#818cf8':'var(--muted)'}">${r.pts_amarillas??0}</td>
+        <td style="text-align:center;color:${r.pts_rojas>0?'#818cf8':'var(--muted)'}">${r.pts_rojas??0}</td>
+        <td style="text-align:center;color:${r.pts_var>0?'#818cf8':'var(--muted)'}">${r.pts_var??0}</td>
+        <td style="text-align:center;color:${r.pts_penales_partido>0?'#818cf8':'var(--muted)'}">${r.pts_penales_partido??0}</td>
+        <td style="text-align:center;color:${r.pts_minuto>0?'#818cf8':'var(--muted)'}">${r.pts_minuto??0}</td>
+        <td style="text-align:center;color:${r.pts_penales_tanda>0?'#818cf8':'var(--muted)'}">${r.pts_penales_tanda??0}</td>
+        <td style="text-align:center;font-weight:700;color:var(--amber)">${pts}</td>
       </tr>`;
-    });
+    }
     h += '</tbody></table>';
     body.innerHTML = h;
   } catch(e) {
@@ -8390,8 +8480,217 @@ async function _renderRkPronPartidoId(partidoId) {
   }
 }
 
-// Arrancar la app
+// ── Finalizar Partido Modal ──────────────────────────────────────────────────
+async function openFinalizarPartidoModal() {
+  if (!_betTorneoId) return;
+  const overlay = document.getElementById('fpOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  const list = document.getElementById('fpList');
+  list.innerHTML = '<span style="color:var(--muted);font-size:.75rem">Cargando partidos…</span>';
+  document.getElementById('fpForm').style.display = 'none';
+  document.getElementById('fpMsg').innerHTML = '';
+  try {
+    const data = await api(`/api/v1/bets/hay-partido-activo/${_betTorneoId}`);
+    const pts = data.partidos || [];
+    if (!pts.length) {
+      list.innerHTML = '<span style="color:var(--muted);font-size:.75rem">Sin partidos activos en ventana de sync.</span>';
+    } else {
+      list.innerHTML = pts.map(p =>
+        `<button class="mon-act-btn" onclick="fpSelect(${p.id},'${esc(p.local_nombre||'?')} – ${esc(p.visitante_nombre||'?')}')" style="width:100%;text-align:left;justify-content:flex-start;margin-bottom:4px">
+          <b>#${p.id}</b> ${esc(p.local_nombre||'?')} – ${esc(p.visitante_nombre||'?')}
+          <span style="color:var(--muted);font-size:.68rem;margin-left:6px">[${p.estado}]</span>
+        </button>`
+      ).join('');
+    }
+  } catch(e) {
+    list.innerHTML = `<span style="color:var(--red);font-size:.75rem">Error: ${e.message}</span>`;
+  }
+}
+
+function fpSelect(id, label) {
+  document.getElementById('fpPid').value = id;
+  document.getElementById('fpLabel').textContent = label;
+  document.getElementById('fpForm').style.display = 'block';
+  ['fpGL','fpGV','fpPL','fpPV'].forEach(x => { document.getElementById(x).value = ''; });
+  document.getElementById('fpMsg').innerHTML = '';
+}
+
+async function confirmarFinalizarPartido() {
+  const pid = parseInt(document.getElementById('fpPid').value);
+  const gl  = parseInt(document.getElementById('fpGL').value);
+  const gv  = parseInt(document.getElementById('fpGV').value);
+  const pl  = document.getElementById('fpPL').value;
+  const pv  = document.getElementById('fpPV').value;
+  const msg = document.getElementById('fpMsg');
+  const btn = document.getElementById('fpBtn');
+  if (!pid || isNaN(gl) || isNaN(gv)) { msg.innerHTML = '<span style="color:var(--red)">Completá ID y goles.</span>'; return; }
+  if (!confirm(`¿Finalizar partido #${pid} con ${gl}–${gv}?\nSe guardarán los resultados y recalcularán standings, bracket y puntajes.`)) return;
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  msg.innerHTML = '';
+  try {
+    let qs = `?goles_local=${gl}&goles_visitante=${gv}`;
+    if (pl !== '' && !isNaN(parseInt(pl))) qs += `&penales_local=${parseInt(pl)}`;
+    if (pv !== '' && !isNaN(parseInt(pv))) qs += `&penales_visitante=${parseInt(pv)}`;
+    const r = await api(`/api/v1/bets/finalizar-partido/${pid}${qs}`, {method:'POST'});
+    const steps = [`✅ ${r.partido}`];
+    if (r.standings_ok) steps.push('✅ Standings');
+    if (r.bracket_ok)   steps.push('✅ Bracket');
+    if (r.puntajes_ok)  steps.push(`✅ Puntajes (${r.puntajes_procesados})`);
+    if (r.puntajes_error) steps.push(`⚠ ${r.puntajes_error}`);
+    msg.innerHTML = `<span style="color:var(--green);font-size:.72rem">${steps.join(' → ')}</span>`;
+    const monMsg = document.getElementById('monAccionMsg');
+    if (monMsg) monMsg.innerHTML = msg.innerHTML;
+  } catch(e) {
+    msg.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
+  } finally { btn.disabled = false; btn.textContent = '⚡ Finalizar y recalcular'; }
+}
+
+// ── Stats Override Modal (corregir VAR, amarillas, etc.) ─────────────────────
+let _soPartidoId = null;
+
+async function openStatsOverrideModal() {
+  if (!_betTorneoId) return;
+  const overlay = document.getElementById('soOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  const list = document.getElementById('soList');
+  list.innerHTML = '<span style="color:var(--muted);font-size:.75rem">Cargando partidos…</span>';
+  document.getElementById('soForm').style.display = 'none';
+  document.getElementById('soMsg').innerHTML = '';
+  try {
+    const partidos = await api(`/api/v1/bets/partidos-finalizados/${_betTorneoId}`);
+    if (!partidos.length) {
+      list.innerHTML = '<span style="color:var(--muted);font-size:.75rem">Sin partidos finalizados.</span>';
+    } else {
+      list.innerHTML = '<select id="soPartidoSel" onchange="soSelectPartidoFromSel(this)" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:.78rem">'
+        + '<option value="">— Seleccioná un partido —</option>'
+        + partidos.map(p => `<option value="${p.id}" data-var="${p.decisiones_var??''}" data-amar="${p.amarillas??''}" data-rojas="${p.rojas??''}" data-pp="${p.penales_partido??''}" data-min="${p.minuto_primer_gol??''}">${p.nombre||('P#'+p.id)}: ${p.goles_local??'?'}-${p.goles_visitante??'?'}</option>`).join('')
+        + '</select>';
+    }
+  } catch(e) {
+    list.innerHTML = `<span style="color:var(--red);font-size:.75rem">Error: ${e.message}</span>`;
+  }
+}
+
+function soSelectPartidoFromSel(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt.value) { document.getElementById('soForm').style.display = 'none'; return; }
+  _soPartidoId = parseInt(opt.value);
+  // Pre-fill con valores actuales
+  const fv = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  fv('soVar',   opt.dataset.var  || '');
+  fv('soAmar',  opt.dataset.amar || '');
+  fv('soRojas', opt.dataset.rojas || '');
+  fv('soPP',    opt.dataset.pp   || '');
+  fv('soMin',   opt.dataset.min  || '');
+  document.getElementById('soForm').style.display = 'block';
+  document.getElementById('soMsg').innerHTML = '';
+}
+
+async function confirmarStatsOverride() {
+  if (!_soPartidoId) return;
+  const btn = document.getElementById('soBtn');
+  const msg = document.getElementById('soMsg');
+  const gv  = (id) => { const el = document.getElementById(id); return el && el.value !== '' ? parseInt(el.value) : null; };
+  const params = new URLSearchParams();
+  const soVar   = gv('soVar');
+  const soAmar  = gv('soAmar');
+  const soRojas = gv('soRojas');
+  const soPP    = gv('soPP');
+  const soMin   = gv('soMin');
+  if (soVar   !== null) params.set('decisiones_var',    soVar);
+  if (soAmar  !== null) params.set('amarillas',         soAmar);
+  if (soRojas !== null) params.set('rojas',             soRojas);
+  if (soPP    !== null) params.set('penales_partido',   soPP);
+  if (soMin   !== null) params.set('minuto_primer_gol', soMin);
+  if (!params.toString()) { msg.innerHTML = '<span style="color:var(--red)">Ingresá al menos un valor.</span>'; return; }
+  if (!confirm(`¿Actualizar stats del partido #${_soPartidoId}?\n${params.toString()}`)) return;
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  msg.innerHTML = '';
+  try {
+    const r = await api(`/api/v1/bets/partido-stats/${_soPartidoId}?${params.toString()}`, {method:'PATCH'});
+    const upd = (r.actualizados||[]).map(k => `${k}: ${r.anterior?.[k]??'—'} → ${r.nuevo?.[k]??'—'}`).join(', ');
+    let res = `✅ ${r.partido} — ${upd}`;
+    if (r.puntajes_ok) res += ` | ✅ Puntajes (${r.puntajes_procesados})`;
+    if (r.puntajes_error) res += ` | ⚠ ${r.puntajes_error}`;
+    msg.innerHTML = `<span style="color:var(--green);font-size:.72rem">${res}</span>`;
+  } catch(e) {
+    msg.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
+  } finally { btn.disabled = false; btn.textContent = '💾 Guardar y recalcular'; }
+}
+
 init();
 </script>
+
+<!-- ── Modal Finalizar Partido ────────────────────────────────────────── -->
+<div id="fpOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9500;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 24px;width:480px;max-width:96vw;max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-weight:800;font-size:.9rem;color:#f87171">⚡ Finalizar partido (emergencia)</span>
+      <button onclick="document.getElementById('fpOverlay').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="font-size:.71rem;color:var(--muted);margin-bottom:12px">Usar cuando la API queda trabada. Guarda resultados y recalcula standings, bracket y puntajes.</div>
+    <div id="fpList" style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;max-height:180px;overflow-y:auto"></div>
+    <div id="fpForm" style="display:none">
+      <div style="font-weight:700;font-size:.8rem;color:var(--amber);margin-bottom:10px" id="fpLabel"></div>
+      <input type="hidden" id="fpPid">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div><label style="font-size:.67rem;color:var(--muted)">Goles local</label>
+          <input type="number" id="fpGL" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem"></div>
+        <div><label style="font-size:.67rem;color:var(--muted)">Goles visitante</label>
+          <input type="number" id="fpGV" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem"></div>
+        <div><label style="font-size:.67rem;color:var(--muted)">Pen. local (opc.)</label>
+          <input type="number" id="fpPL" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem"></div>
+        <div><label style="font-size:.67rem;color:var(--muted)">Pen. visitante (opc.)</label>
+          <input type="number" id="fpPV" min="0" max="20" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem"></div>
+      </div>
+      <button id="fpBtn" onclick="confirmarFinalizarPartido()" style="width:100%;padding:9px;border-radius:8px;border:none;background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-weight:700;cursor:pointer">⚡ Finalizar y recalcular</button>
+      <div id="fpMsg" style="margin-top:8px;font-size:.72rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal Corregir Stats Partido ───────────────────────────────────── -->
+<div id="soOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9500;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 24px;width:500px;max-width:96vw;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-weight:800;font-size:.9rem;color:var(--amber)">📺 Corregir stats de partido</span>
+      <button onclick="document.getElementById('soOverlay').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="font-size:.71rem;color:var(--muted);margin-bottom:12px">
+      Corregir datos que API-Football no reportó (VAR, amarillas, rojas, penales partido, minuto gol).<br>
+      Solo completá los campos que necesitás cambiar. Dejá en blanco los que no tocás.
+    </div>
+    <div id="soList" style="margin-bottom:12px"></div>
+    <div id="soForm" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div>
+          <label style="font-size:.67rem;color:var(--muted)">📺 Revisiones VAR</label>
+          <input type="number" id="soVar" min="0" max="20" placeholder="actual de API" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem">
+        </div>
+        <div>
+          <label style="font-size:.67rem;color:var(--muted)">🟨 Amarillas</label>
+          <input type="number" id="soAmar" min="0" max="20" placeholder="actual de API" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem">
+        </div>
+        <div>
+          <label style="font-size:.67rem;color:var(--muted)">🟥 Rojas</label>
+          <input type="number" id="soRojas" min="0" max="5" placeholder="actual de API" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem">
+        </div>
+        <div>
+          <label style="font-size:.67rem;color:var(--muted)">🥅 Penales partido (M)</label>
+          <input type="number" id="soPP" min="0" max="10" placeholder="actual de API" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem">
+        </div>
+        <div>
+          <label style="font-size:.67rem;color:var(--muted)">⏱ Minuto primer gol</label>
+          <input type="number" id="soMin" min="0" max="150" placeholder="actual de API" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:.82rem">
+        </div>
+      </div>
+      <button id="soBtn" onclick="confirmarStatsOverride()" style="width:100%;padding:9px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--amber),#b45309);color:#000;font-weight:700;cursor:pointer">💾 Guardar y recalcular</button>
+      <div id="soMsg" style="margin-top:8px;font-size:.72rem"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
