@@ -167,6 +167,47 @@
 
     /* footer */
     #footer { text-align: center; font-size: 11px; color: #374151; padding: 14px; }
+
+    /* ── TABS ── */
+    #tab-nav {
+      display: none;
+      background: #111827; border-bottom: 1px solid #1f2937;
+      padding: 0 12px; position: sticky; top: 43px; z-index: 9;
+    }
+    .tab-btn {
+      display: inline-block; padding: 10px 20px;
+      font-size: 13px; font-weight: 600; color: #6b7280;
+      border-bottom: 2px solid transparent; cursor: pointer;
+      transition: color .15s, border-color .15s; user-select: none;
+    }
+    .tab-btn.active { color: #6ee7b7; border-bottom-color: #6ee7b7; }
+
+    /* ── RANKING FULL (tab) ── */
+    #panel-ranking { display: none; padding: 12px 12px 60px; max-width: 640px; margin: 0 auto; }
+    .rkf-header {
+      display: flex; align-items: center; padding: 0 12px 8px;
+      font-size: 10px; font-weight: 700; color: #4b5563; letter-spacing: 0.6px;
+      text-transform: uppercase; gap: 10px;
+    }
+    .rkf-header .rkf-name { flex: 1; }
+    .rkf-header .rkf-base, .rkf-header .rkf-delta, .rkf-header .rkf-tot { min-width: 40px; text-align: right; }
+    .rk-full-row {
+      display: flex; align-items: center; padding: 10px 12px;
+      background: #1f2937; border-radius: 10px; margin-bottom: 5px;
+      border: 1px solid #374151; gap: 10px;
+    }
+    .rk-full-row.top1 { border-color: rgba(251,191,36,.6); }
+    .rk-full-row.top2 { border-color: rgba(148,163,184,.5); }
+    .rk-full-row.top3 { border-color: rgba(180,83,9,.6); }
+    .rk-full-pos  { font-size: 15px; min-width: 28px; text-align: center; color: #9ca3af; font-weight: 700; }
+    .rk-full-name { flex: 1; font-size: 13px; font-weight: 600; color: #e5e7eb;
+                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rk-full-base  { font-size: 12px; color: #6b7280; min-width: 40px; text-align: right; }
+    .rk-full-delta { font-size: 12px; min-width: 40px; text-align: right; font-weight: 600; }
+    .rk-full-delta.pos  { color: #6ee7b7; }
+    .rk-full-delta.zero { color: #374151; }
+    .rk-full-total { font-size: 17px; font-weight: 700; color: #fff; min-width: 44px; text-align: right; }
+    .rkf-hint { font-size: 10px; color: #374151; text-align: center; margin-top: 10px; }
   </style>
   <!-- Twemoji: renderiza emoji de banderas en Windows/desktop -->
   <script src="https://unpkg.com/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
@@ -188,6 +229,12 @@
 
 <div id="toast"></div>
 
+<!-- TAB NAV (visible solo cuando screen-main está activo) -->
+<div id="tab-nav">
+  <span class="tab-btn active" id="tab-partido" onclick="switchTab('partido')">⚽ Partido</span>
+  <span class="tab-btn"       id="tab-ranking"  onclick="switchTab('ranking')">🏆 Ranking</span>
+</div>
+
 <!-- SCREENS -->
 <div id="screen-loading">
   <div class="spinner"></div>
@@ -207,6 +254,8 @@
 </div>
 
 <div id="screen-main">
+<!-- Panel Partido -->
+<div id="panel-partido">
 <div id="main">
 
   <!-- NAV PARTIDOS -->
@@ -245,6 +294,7 @@
       <table>
         <thead>
           <tr>
+            <th style="width:30px;" title="Cambio de posición vs ranking acumulado">↕</th>
             <th class="nm">Apostador</th>
             <th title="Predicción del marcador">Pred.</th>
             <th title="Resultado (ganador / empate)">🏆</th>
@@ -255,8 +305,9 @@
             <th title="Penales cobrados en el partido">🥅</th>
             <th title="Minuto del primer gol">⏱</th>
             <th title="Penales en tanda">🔢</th>
-            <th title="Puntaje actual (antes de este partido)">Actual</th>
-            <th class="tt" title="Puntaje actual + puntos de este partido">En vivo▼</th>
+            <th title="Puntos de este partido (en vivo)">Live</th>
+            <th title="Puntaje acumulado (todos los partidos anteriores)">Acum.</th>
+            <th class="tt" title="Acumulado + puntos de este partido">Total▼</th>
           </tr>
         </thead>
         <tbody id="tbl-body"></tbody>
@@ -275,7 +326,22 @@
     Actualización automática cada 60 s · Última: <span id="last-sync">—</span>
   </div>
 </div>
+</div><!-- /panel-partido -->
+
+<!-- Panel Ranking -->
+<div id="panel-ranking">
+  <div class="rkf-header">
+    <div style="min-width:28px;"></div>
+    <div class="rkf-name">Apostador</div>
+    <div class="rkf-base">Actual</div>
+    <div class="rkf-delta">+Partido</div>
+    <div class="rkf-tot">Total▼</div>
+  </div>
+  <div id="rk-full-list"></div>
+  <div class="rkf-hint">Puntaje proyectado · calculado localmente</div>
 </div>
+
+</div><!-- /screen-main -->
 
 <script>
 // ════════════════════════════════════════════════
@@ -297,7 +363,9 @@ let _torneoId    = null;
 let _partido     = null;
 let _apostoles   = [];
 let _results     = [];
+let _ranking     = [];   // todos los apostadores desde ranking_vista
 let _timer       = null;
+let _liveTab     = 'partido';  // 'partido' | 'ranking'
 let _cdTimer     = null;   // countdown timer para partidos próximos
 let _numFifa        = null;   // numero_fifa seleccionado manualmente (null = auto)
 let _allNumeros     = [];     // lista de todos los numero_fifa disponibles
@@ -449,18 +517,41 @@ function calcularTodos() {
     .map(a => a.pred_minuto_gol)
     .filter(m => m !== null && m !== undefined);
 
+  // Rank base: usa _ranking (todos los apostadores, orden por puntos_antes)
+  // _ranking ya viene ordenado por puntos_antes DESC del backend
+  const rankBase = {};
+  _ranking.forEach((r, i) => { rankBase[r.apostador_id] = i + 1; });
+
   _results = _apostoles.map(ap => {
     const sc = scoreApostador(_partido, ap, allMin);
     return {
       apostador_id: ap.apostador_id,
       nombre:       ap.nombre,
-      puntos_base:  ap.puntos_total,
+      puntos_base:  ap.puntos_total,   // acum antes de este partido
       detail:       sc.detail,
       pts_partido:  sc.total,
       total_proy:   ap.puntos_total + sc.total,
+      pos_base:     rankBase[ap.apostador_id] || 0,
+      pos_live:     0,
     };
   });
   _results.sort((a, b) => b.total_proy - a.total_proy);
+  // pos_live = posición en el ranking global proyectado
+  // Calculamos insertando el total_proy de cada apostador en el ranking_vista
+  _results.forEach(r => {
+    // Cuenta cuántos apostadores de ranking_vista tienen puntos_antes >= total_proy de este
+    // (simulamos que este partido ya está calculado y le sumamos live)
+    const posGlobal = _ranking.filter(rv => {
+      // Si es el mismo apostador, lo ignoramos (vamos a reemplazarlo con total_proy)
+      if (rv.apostador_id === r.apostador_id) return false;
+      // Si tiene predicción en este partido, usamos su total_proy; sino, su puntos_antes
+      const rRes = _results.find(x => x.apostador_id === rv.apostador_id);
+      const total = rRes ? rRes.total_proy : rv.puntos_antes;
+      return total > r.total_proy;
+    }).length + 1;
+    r.pos_live  = posGlobal;
+    r.pos_delta = r.pos_base - r.pos_live;
+  });
 }
 
 // ════════════════════════════════════════════════
@@ -485,6 +576,35 @@ const ISO_MAP = {
   'nigeria':'NG','south africa':'ZA','sudáfrica':'ZA','cameroon':'CM','camerún':'CM',
   'ghana':'GH','tunisia':'TN','túnez':'TN','algeria':'DZ','argelia':'DZ',
   'new zealand':'NZ','nueva zelanda':'NZ',
+  'congo':'CG','congo dr':'CD','dr congo':'CD','republic of congo':'CG','democratic republic of congo':'CD',
+  'ivory coast':'CI','côte d\'ivoire':'CI','costa de marfil':'CI','cape verde':'CV',
+  'trinidad and tobago':'TT','trinidad tobago':'TT','trinidad y tobago':'TT',
+  'united arab emirates':'AE','uae':'AE','zimbabwe':'ZW','zambia':'ZM',
+  'namibia':'NA','mozambique':'MZ','angola':'AO','tanzania':'TZ','rwanda':'RW',
+  'kenya':'KE','ethiopia':'ET','libya':'LY','mali':'ML','burkina faso':'BF',
+  'guinea':'GN','guinea-bissau':'GW','sierra leone':'SL','liberia':'LR',
+  'togo':'TG','benin':'BJ','gabon':'GA','central african republic':'CF',
+  'equatorial guinea':'GQ','guinea ecuatorial':'GQ','comoros':'KM','djibouti':'DJ',
+  'eritrea':'ER','somalia':'SO','sudan':'SD','south sudan':'SS','chad':'TD',
+  'niger':'NE','mauritania':'MR','western sahara':'EH','palestine':'PS',
+  'lebanon':'LB','syria':'SY','jordan':'JO','kuwait':'KW','bahrain':'BH',
+  'oman':'OM','yemen':'YE','armenia':'AM','georgia':'GE','azerbaijan':'AZ',
+  'uzbekistan':'UZ','kazakhstan':'KZ','kyrgyzstan':'KG','tajikistan':'TJ',
+  'turkmenistan':'TM','afghanistan':'AF','pakistan':'PK','bangladesh':'BD',
+  'sri lanka':'LK','nepal':'NP','myanmar':'MM','cambodia':'KH','laos':'LA',
+  'mongolia':'MN','north korea':'KP','taiwan':'TW','singapore':'SG','malaysia':'MY',
+  'indonesia':'ID','philippines':'PH','vietnam':'VN','thailand':'TH','india':'IN',
+  'china':'CN','hong kong':'HK','macau':'MO','timor-leste':'TL',
+  'cuba':'CU','haiti':'HT','haití':'HT','jamaica':'JM','dominican republic':'DO',
+  'trinidad':'TT','curacao':'CW','curaçao':'CW','barbados':'BB','bahamas':'BS',
+  'guyana':'GY','suriname':'SR','bolivia':'BO','paraguay':'PY',
+  'puerto rico':'PR','saint lucia':'LC','grenada':'GD','antigua':'AG',
+  'albania':'AL','bosnia':'BA','bosnia and herzegovina':'BA','north macedonia':'MK',
+  'montenegro':'ME','moldova':'MD','slovakia':'SK','eslovaquia':'SK','slovenia':'SI','eslovenia':'SI',
+  'estonia':'EE','latvia':'LV','lithuania':'LT','greece':'GR','grecia':'GR',
+  'cyprus':'CY','israel':'IL','malta':'MT','luxembourg':'LU','liechtenstein':'LI',
+  'andorra':'AD','monaco':'MC','san marino':'SM','sweden':'SE','suecia':'SE',
+  'ireland':'IE','irlanda':'IE','northern ireland':'GB-NIR',
 };
 const SPECIAL = { 'england':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','scotland':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','wales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','gales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿' };
 
@@ -531,6 +651,7 @@ async function cargar() {
     if (!data.partido) { showScreen('nomatches'); return; }
     _partido   = data.partido;
     _apostoles = data.apostadores || [];
+    _ranking   = data.ranking_vista || [];
     if (data.numeros_fifa && data.numeros_fifa.length) _allNumeros = data.numeros_fifa;
     calcularTodos();
     render();
@@ -639,12 +760,13 @@ async function sincronizar() {
     btn.textContent = '⏳ Calculando puntajes…';
     try {
       const p = await apiPost('/api/v1/bets/calcular-puntajes/' + _torneoId);
-      const proc = p.procesados ?? p.puntajes_procesados ?? '?';
-      showToast('Puntajes OK · ' + proc + ' procesado(s)', 'ok');
+      const proc = (p.plenos ?? 0) + '⭐ plenos · ' + (p.aciertos ?? 0) + '✅ aciertos';
+      showToast('Puntajes OK · ' + proc, 'ok');
     } catch (ep) {
       showToast('Sync OK pero error puntajes: ' + ep.message, 'err');
     }
     await cargar();
+    renderRanking();   // actualiza ranking aunque no sea el tab activo
   } catch (e) {
     showToast('Error sync: ' + e.message, 'err');
   } finally {
@@ -723,7 +845,7 @@ function render() {
         `<div class="stat-chip">${ico} ${lbl} <b>${v}</b></div>`).join('')
     : '<span style="font-size:11px;color:#374151;padding:2px 0;">Sin estadísticas aún</span>';
 
-  // Tabla
+  // Tabla partido: pos | apostador | pred | H-O live | Live | Acum | Total
   document.getElementById('tbl-body').innerHTML = _results.map(r => {
     const ap      = _apostoles.find(a => a.apostador_id === r.apostador_id) || {};
     const display = esc(ap.username || r.nombre);
@@ -736,27 +858,134 @@ function render() {
         ? `<td><span class="pts-hit">${v}</span></td>`
         : `<td><span class="pts-zero">—</span></td>`;
     }).join('');
+    // Indicador de movimiento de posición
+    const d = r.pos_delta || 0;
+    const posHtml = d > 0
+      ? `<td style="text-align:center;"><span style="color:#22c55e;font-size:12px;font-weight:700;">↑${d}</span></td>`
+      : d < 0
+        ? `<td style="text-align:center;"><span style="color:#ef4444;font-size:12px;font-weight:700;">↓${Math.abs(d)}</span></td>`
+        : `<td style="text-align:center;color:#374151;font-size:11px;">·</td>`;
     return `<tr>
+      ${posHtml}
       <td class="nm">${display}</td>
       <td><span class="pred-tag">${pred}</span></td>
       ${cells}
+      <td style="color:#6b7280;font-size:12px;">${r.pts_partido > 0 ? '<b style=color:#fbbf24>+'+r.pts_partido+'</b>' : '·'}</td>
       <td style="color:#6b7280;font-size:12px;">${r.puntos_base}</td>
       <td><span class="pts-tt" style="font-size:15px;">${r.total_proy}</span></td>
     </tr>`;
   }).join('');
+
+  // Si el tab ranking está abierto, actualizar también
+  if (_liveTab === 'ranking') renderRanking();
 
   // Ranking top 5
   const medals  = ['🥇','🥈','🥉','4°','5°'];
   const classes = ['p1','p2','p3','',''];
   document.getElementById('rank-grid').innerHTML = _results.slice(0, 5).map((r, i) => {
     const d   = r.pts_partido;
+    const mv  = r.pos_delta || 0;
     const ap  = _apostoles.find(a => a.apostador_id === r.apostador_id) || {};
     const nom = esc(ap.username || r.nombre);
+    const mvHtml = mv > 0
+      ? `<span style="color:#22c55e;font-size:10px;font-weight:700;">↑${mv}</span>`
+      : mv < 0
+        ? `<span style="color:#ef4444;font-size:10px;font-weight:700;">↓${Math.abs(mv)}</span>`
+        : `<span style="color:#374151;font-size:10px;">·</span>`;
     return `<div class="rk ${classes[i]}">
       <div class="rk-pos">${medals[i]}</div>
-      <div class="rk-name">${nom}</div>
+      <div class="rk-name">${nom} ${mvHtml}</div>
       <div class="rk-pts">${r.total_proy}</div>
       <div class="rk-delta ${d === 0 ? 'zero' : 'pos'}">${d > 0 ? '+' + d : d}</div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+// RANKING FULL (tab Ranking)
+// ════════════════════════════════════════════════
+function renderRanking() {
+  const medals  = ['🥇','🥈','🥉'];
+  const topCls  = ['top1','top2','top3'];
+  const list    = document.getElementById('rk-full-list');
+  if (!list) return;
+  if (!_ranking.length) {
+    list.innerHTML = '<div style="text-align:center;color:#4b5563;padding:40px 0;font-size:13px;">Sin datos aún…</div>';
+    return;
+  }
+
+  // Ranking puro: viene ordenado por puntos_antes del backend (v_copamundial_puntajes)
+  const sorted = _ranking;
+
+  const ITEMS_P  = ['H','I','J','K','L','M','N','O'];  // partido
+  const ITEMS_G  = ['A','B','C','D','E','F','G'];       // globales
+  const KEY      = {
+    H:'pts_H', I:'pts_I', J:'pts_J', K:'pts_K', L:'pts_L', M:'pts_M', N:'pts_N', O:'pts_O',
+    A:'pts_A', B:'pts_B', C:'pts_C', D:'pts_D', E:'pts_E', F:'pts_F', G:'pts_G',
+  };
+  const LABEL = {
+    H:'Result.',I:'Marcador',J:'Amar.',K:'Rojas',L:'VAR',M:'Pen.Ptdo',N:'Min.Gol',O:'Pen.Tanda',
+    A:'Campeón',B:'Finalistas',C:'Goleador',D:'Peor Eq.',E:'Goleada',F:'Etapa PY',G:'Goles PY',
+  };
+
+  function chip(k, v) {
+    if (!v) return `<span style="color:#374151;font-size:10px;" title="${LABEL[k]}">${k}</span>`;
+    const isG = ITEMS_G.includes(k);
+    const bg  = isG ? 'rgba(167,139,250,.18)' : 'rgba(110,231,183,.13)';
+    const col = isG ? '#a78bfa' : '#6ee7b7';
+    return `<span style="background:${bg};color:${col};border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;" title="${LABEL[k]}">${k}<sub>${v}</sub></span>`;
+  }
+
+  // ── Totales por ítem ──
+  const totals = {};
+  [...ITEMS_P, ...ITEMS_G].forEach(k => { totals[k] = sorted.reduce((s, ap) => s + (ap.acum?.[KEY[k]] || 0), 0); });
+  const hasGlob = ITEMS_G.some(k => totals[k] > 0);
+
+  function chipTot(k, v) {
+    if (!v) return `<span style="color:#374151;font-size:10px;" title="${LABEL[k]}">${k}</span>`;
+    const isG = ITEMS_G.includes(k);
+    const bg  = isG ? 'rgba(167,139,250,.22)' : 'rgba(110,231,183,.17)';
+    const col = isG ? '#c4b5fd' : '#a7f3d0';
+    return `<span style="background:${bg};color:${col};border-radius:4px;padding:1px 7px;font-size:10px;font-weight:700;" title="${LABEL[k]}">${k}<sub>${v}</sub></span>`;
+  }
+
+  const totRow = `<div style="background:#1f2937;border:1px solid #374151;border-radius:8px;padding:8px 12px;margin-bottom:10px;">
+    <div style="font-size:9px;color:#6b7280;font-weight:700;letter-spacing:.5px;margin-bottom:5px;">TOTAL ACUMULADO POR ÍTEM (${sorted.length} apostadores)</div>
+    <div style="display:flex;gap:3px;flex-wrap:wrap;align-items:center;">
+      <span style="color:#4b5563;font-size:9px;">PARTIDOS</span>
+      ${ITEMS_P.map(k => chipTot(k, totals[k])).join(' ')}
+    </div>
+    ${hasGlob ? `<div style="display:flex;gap:3px;flex-wrap:wrap;align-items:center;margin-top:4px;">
+      <span style="color:#4b5563;font-size:9px;">GLOBALES</span>
+      ${ITEMS_G.map(k => chipTot(k, totals[k])).join(' ')}
+    </div>` : ''}
+  </div>`;
+
+  list.innerHTML = totRow + sorted.map((ap, i) => {
+    const acum  = ap.acum || {};    // desde ranking_vista
+    const cls   = i < 3 ? topCls[i] : '';
+    const pos   = i < 3 ? medals[i] : (i + 1) + '.';
+    const nom   = esc(ap.nombre || ap.username || '?');
+    const total = ap.puntos_antes || 0;
+    const glob  = acum.subtotal_globales || 0;
+
+    const pChips = ITEMS_P.map(k => chip(k, acum[KEY[k]] || 0)).join(' ');
+    const gChips = ITEMS_G.map(k => chip(k, acum[KEY[k]] || 0)).join(' ');
+
+    return `<div class="rk-full-row ${cls}" style="flex-direction:column;align-items:stretch;gap:5px;padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="rk-full-pos">${pos}</div>
+        <div class="rk-full-name">${nom}</div>
+        <div class="rk-full-total">${total}</div>
+      </div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;padding-left:36px;">
+        <span style="color:#4b5563;font-size:9px;align-self:center;">PARTIDOS</span>
+        ${pChips}
+      </div>
+      ${glob > 0 ? `<div style="display:flex;gap:3px;flex-wrap:wrap;padding-left:36px;">
+        <span style="color:#4b5563;font-size:9px;align-self:center;">GLOBALES</span>
+        ${gChips}
+      </div>` : ''}
     </div>`;
   }).join('');
 }
@@ -792,6 +1021,21 @@ function showScreen(id) {
     const el = document.getElementById('screen-' + s);
     if (el) el.style.display = s === id ? (s === 'main' ? 'block' : 'flex') : 'none';
   });
+  const nav = document.getElementById('tab-nav');
+  if (nav) nav.style.display = id === 'main' ? 'block' : 'none';
+}
+
+function switchTab(t) {
+  _liveTab = t;
+  const pp = document.getElementById('panel-partido');
+  const pr = document.getElementById('panel-ranking');
+  if (pp) pp.style.display = t === 'partido' ? 'block' : 'none';
+  if (pr) pr.style.display = t === 'ranking'  ? 'block' : 'none';
+  const tb1 = document.getElementById('tab-partido');
+  const tb2 = document.getElementById('tab-ranking');
+  if (tb1) tb1.className = 'tab-btn' + (t === 'partido' ? ' active' : '');
+  if (tb2) tb2.className = 'tab-btn' + (t === 'ranking'  ? ' active' : '');
+  if (t === 'ranking') renderRanking();
 }
 
 function showToast(msg, type = 'ok') {

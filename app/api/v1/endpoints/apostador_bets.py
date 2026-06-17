@@ -3551,6 +3551,18 @@ async def _ensure_detalle_table(db):
             UNIQUE (torneo_id, partido_id, apostador_id)
         )
     """))
+    # Columnas v2 (se agregan si no existen — idempotente para tablas pre-existentes)
+    for _col in [
+        "ALTER TABLE puntaje_detalle ADD COLUMN IF NOT EXISTS pts_resultado INT DEFAULT 0",
+        "ALTER TABLE puntaje_detalle ADD COLUMN IF NOT EXISTS pts_rojas INT DEFAULT 0",
+        "ALTER TABLE puntaje_detalle ADD COLUMN IF NOT EXISTS pts_penales_partido INT DEFAULT 0",
+        "ALTER TABLE puntaje_detalle ADD COLUMN IF NOT EXISTS pts_penales_tanda INT DEFAULT 0",
+        "ALTER TABLE puntaje_detalle ADD COLUMN IF NOT EXISTS pts_equipo INT DEFAULT 0",
+    ]:
+        try:
+            await db.execute(text(_col))
+        except Exception:
+            pass
 
 
 # ── Pronósticos globales A-G ─────────────────────────────────────────────────
@@ -6729,16 +6741,18 @@ async def live_panel(
     torneo_id: int,
     current: CurrentUser,
     db: DBSession,
+    numero_fifa: int | None = None,
 ) -> dict:
     """
-    Devuelve el próximo partido pendiente del torneo (programado o en_juego,
-    ORDER BY fecha ASC) junto con las predicciones de todos los apostadores
-    para ese partido y sus puntos totales actuales.
+    Devuelve el próximo partido pendiente (o el indicado por numero_fifa) junto con
+    las predicciones de todos los apostadores y sus puntos totales actuales.
+    Las predicciones se buscan por numero_fifa en apuesta (robusto ante partido_id incorrecto).
     """
-    # 1. Buscar próximo partido: en_juego > programado > último finalizado (fallback)
+    # 1. Buscar partido: por numero_fifa si se provee, sino auto-detección
     _partido_sql = """
         SELECT
             p.id,
+            COALESCE(p.numero_fifa, 0)            AS numero_fifa,
             COALESCE(el.nombre_es, el.nombre)    AS equipo_local,
             COALESCE(ev.nombre_es, ev.nombre)    AS equipo_visitante,
             el.codigo_iso                         AS bandera_local,
@@ -6764,107 +6778,240 @@ async def live_panel(
         LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
         WHERE p.torneo_id = :tid
     """
-    # Primero: en_juego o programado (próximo por fecha)
-    # Prefiere fase grupos sobre KO para evitar mostrar 32avos antes de terminar grupos
-    partido_r = await db.execute(
-        text(_partido_sql + """
-              AND p.estado IN ('programado', 'en_juego')
-            ORDER BY
-                CASE p.estado WHEN 'en_juego' THEN 0 ELSE 1 END,
-                CASE WHEN f.tipo ILIKE 'grupo%' THEN 0 ELSE 1 END,
-                p.fecha ASC NULLS LAST
-            LIMIT 1
-        """),
-        {"tid": torneo_id},
-    )
-    partido_row = partido_r.mappings().fetchone()
 
-    # Fallback: último partido finalizado
-    if not partido_row:
-        partido_r2 = await db.execute(
+    if numero_fifa is not None:
+        # Partido específico solicitado por numero_fifa
+        partido_r = await db.execute(
+            text(_partido_sql + " AND p.numero_fifa = :nfifa LIMIT 1"),
+            {"tid": torneo_id, "nfifa": numero_fifa},
+        )
+        partido_row = partido_r.mappings().fetchone()
+    else:
+        # Auto: en_juego > programado > último finalizado
+        partido_r = await db.execute(
             text(_partido_sql + """
-                  AND p.estado = 'finalizado'
-                ORDER BY p.fecha DESC NULLS LAST
+                  AND p.estado IN ('programado', 'en_juego')
+                ORDER BY
+                    CASE p.estado WHEN 'en_juego' THEN 0 ELSE 1 END,
+                    CASE WHEN f.tipo ILIKE 'grupo%' THEN 0 ELSE 1 END,
+                    p.fecha ASC NULLS LAST
                 LIMIT 1
             """),
             {"tid": torneo_id},
         )
-        partido_row = partido_r2.mappings().fetchone()
+        partido_row = partido_r.mappings().fetchone()
+        if not partido_row:
+            partido_r2 = await db.execute(
+                text(_partido_sql + " AND p.estado = 'finalizado' ORDER BY p.fecha DESC NULLS LAST LIMIT 1"),
+                {"tid": torneo_id},
+            )
+            partido_row = partido_r2.mappings().fetchone()
 
     if not partido_row:
-        return {"partido": None, "apostadores": []}
+        return {"partido": None, "apostadores": [], "numeros_fifa": []}
 
-    partido_id = partido_row["id"]
-    partido    = dict(partido_row)
+    partido      = dict(partido_row)
+    partido_id   = partido_row["id"]
+    partido_nfifa = partido_row["numero_fifa"] or 0
 
-    # 2. Predicciones de todos los apostadores para este partido
-    apuestas_r = await db.execute(
+    # 2. Lista de numeros_fifa disponibles para navegación
+    nfifa_r = await db.execute(
         text("""
-            SELECT
-                a.apostador_id,
-                a.pred_local, a.pred_visitante,
-                a.pred_minuto_gol, a.pred_amarillas,
-                a.pred_var, a.pred_rojas, a.pred_penales_partido,
-                a.pred_penales_local_tanda, a.pred_penales_visitante_tanda
-            FROM apuesta a
-            WHERE a.partido_id = :pid
-        """),
-        {"pid": partido_id},
-    )
-    apuestas_map = {r["apostador_id"]: dict(r)
-                    for r in apuestas_r.mappings().fetchall()}
-
-    # 3. Puntos totales actuales de cada apostador (puntaje_detalle + puntaje_global)
-    rank_r = await db.execute(
-        text("""
-            SELECT
-                ap.apostador_id,
-                COALESCE(SUM(
-                    COALESCE(d.pts_resultado,0) + COALESCE(d.pts_marcador,0)
-                    + COALESCE(d.pts_amarillas,0) + COALESCE(d.pts_rojas,0)
-                    + COALESCE(d.pts_var,0) + COALESCE(d.pts_penales_partido,0)
-                    + COALESCE(d.pts_minuto,0) + COALESCE(d.pts_penales_tanda,0)
-                    + COALESCE(d.pts_equipo,0)
-                ), 0) AS pts_partidos,
-                COALESCE(pg.pts_globales, 0) AS pts_globales
-            FROM apuesta ap
-            JOIN partido p2 ON p2.id = ap.partido_id
-            JOIN fase f2    ON f2.id = p2.fase_id AND f2.torneo_id = :tid
-            LEFT JOIN puntaje_detalle d ON d.partido_id = p2.id AND d.apostador_id = ap.apostador_id
-            LEFT JOIN (
-                SELECT apostador_id,
-                       COALESCE(SUM(
-                           pts_campeon + pts_finalistas + pts_goleador +
-                           pts_etapa_paraguay + pts_goles_paraguay
-                       ), 0) AS pts_globales
-                FROM puntaje_global WHERE torneo_id = :tid
-                GROUP BY apostador_id
-            ) pg ON pg.apostador_id = ap.apostador_id
-            GROUP BY ap.apostador_id, pg.pts_globales
+            SELECT DISTINCT p.numero_fifa
+            FROM partido p
+            JOIN fase f ON f.id = p.fase_id
+            WHERE p.torneo_id = :tid AND p.numero_fifa IS NOT NULL
+            ORDER BY p.numero_fifa
         """),
         {"tid": torneo_id},
     )
-    puntos_map = {r["apostador_id"]: (r["pts_partidos"] or 0) + (r["pts_globales"] or 0)
-                  for r in rank_r.mappings().fetchall()}
+    numeros_fifa = [r[0] for r in nfifa_r.fetchall()]
 
-    # 4. Obtener nombres desde app_db
+    # 3. Predicciones por numero_fifa (evita problema de partido_id incorrecto en apuesta)
+    if partido_nfifa:
+        apuestas_r = await db.execute(
+            text("""
+                SELECT
+                    a.apostador_id,
+                    a.pred_local, a.pred_visitante,
+                    a.pred_minuto_gol, a.pred_amarillas,
+                    a.pred_var, a.pred_rojas, a.pred_penales_partido,
+                    a.pred_penales_local_tanda, a.pred_penales_visitante_tanda
+                FROM apuesta a
+                JOIN partido p2 ON p2.id = a.partido_id
+                JOIN fase f2    ON f2.id = p2.fase_id AND f2.torneo_id = :tid
+                WHERE a.numero_fifa = :nfifa
+            """),
+            {"tid": torneo_id, "nfifa": partido_nfifa},
+        )
+    else:
+        # Fallback por partido_id si numero_fifa no está disponible
+        apuestas_r = await db.execute(
+            text("""
+                SELECT
+                    a.apostador_id,
+                    a.pred_local, a.pred_visitante,
+                    a.pred_minuto_gol, a.pred_amarillas,
+                    a.pred_var, a.pred_rojas, a.pred_penales_partido,
+                    a.pred_penales_local_tanda, a.pred_penales_visitante_tanda
+                FROM apuesta a
+                WHERE a.partido_id = :pid
+            """),
+            {"pid": partido_id},
+        )
+    apuestas_map = {r["apostador_id"]: dict(r)
+                    for r in apuestas_r.mappings().fetchall()}
+
+    if not apuestas_map:
+        return {"partido": partido, "apostadores": [], "numeros_fifa": numeros_fifa}
+
+    # 4. Puntajes acumulados desde puntaje_detalle + puntaje_global (fuente única de verdad)
+    vista_map: dict[int, dict] = {}
+    try:
+        pd_r = await db.execute(
+            text("""
+                SELECT
+                    apostador_id,
+                    COALESCE(SUM(pts_resultado),        0)::int AS h,
+                    COALESCE(SUM(pts_marcador),         0)::int AS i,
+                    COALESCE(SUM(pts_amarillas),        0)::int AS j,
+                    COALESCE(SUM(pts_rojas),            0)::int AS k,
+                    COALESCE(SUM(pts_var),              0)::int AS l,
+                    COALESCE(SUM(pts_penales_partido),  0)::int AS m,
+                    COALESCE(SUM(pts_minuto),           0)::int AS n,
+                    COALESCE(SUM(pts_penales_tanda),    0)::int AS o,
+                    COALESCE(SUM(pts_resultado)+SUM(pts_marcador)+SUM(pts_amarillas)+
+                             SUM(pts_rojas)+SUM(pts_var)+SUM(pts_penales_partido)+
+                             SUM(pts_minuto)+SUM(pts_penales_tanda), 0)::int AS total_partidos
+                FROM puntaje_detalle
+                WHERE torneo_id = :tid
+                GROUP BY apostador_id
+            """),
+            {"tid": torneo_id},
+        )
+        for row in pd_r.mappings().fetchall():
+            aid = int(row["apostador_id"])
+            vista_map[aid] = {
+                "pts_H": int(row["h"] or 0),
+                "pts_I": int(row["i"] or 0),
+                "pts_J": int(row["j"] or 0),
+                "pts_K": int(row["k"] or 0),
+                "pts_L": int(row["l"] or 0),
+                "pts_M": int(row["m"] or 0),
+                "pts_N": int(row["n"] or 0),
+                "pts_O": int(row["o"] or 0),
+                "pts_A": 0, "pts_B": 0, "pts_C": 0, "pts_D": 0,
+                "pts_E": 0, "pts_F": 0, "pts_G": 0,
+                "subtotal_globales": 0,
+                "total": int(row["total_partidos"] or 0),
+            }
+    except Exception:
+        await db.rollback()
+        vista_map = {}
+    # Globales
+    try:
+        gl_r = await db.execute(
+            text("""
+                SELECT apostador_id,
+                       COALESCE(pts_campeon,       0)::int AS pts_A,
+                       COALESCE(pts_finalistas,    0)::int AS pts_B,
+                       COALESCE(pts_goleador,      0)::int AS pts_C,
+                       COALESCE(pts_peor_equipo,   0)::int AS pts_D,
+                       COALESCE(pts_mayor_goleada, 0)::int AS pts_E,
+                       COALESCE(pts_etapa_paraguay,0)::int AS pts_F,
+                       COALESCE(pts_goles_paraguay,0)::int AS pts_G,
+                       COALESCE(pts_total,         0)::int AS pts_total
+                FROM puntaje_global
+                WHERE torneo_id = :tid
+            """),
+            {"tid": torneo_id},
+        )
+        for row in gl_r.mappings().fetchall():
+            aid = int(row["apostador_id"])
+            gl = {
+                "pts_A": int(row["pts_A"] or 0),
+                "pts_B": int(row["pts_B"] or 0),
+                "pts_C": int(row["pts_C"] or 0),
+                "pts_D": int(row["pts_D"] or 0),
+                "pts_E": int(row["pts_E"] or 0),
+                "pts_F": int(row["pts_F"] or 0),
+                "pts_G": int(row["pts_G"] or 0),
+            }
+            sub_gl = sum(gl.values())
+            if aid in vista_map:
+                vista_map[aid].update(gl)
+                vista_map[aid]["subtotal_globales"] = sub_gl
+                vista_map[aid]["total"] += sub_gl
+            else:
+                vista_map[aid] = {
+                    "pts_H": 0,"pts_I": 0,"pts_J": 0,"pts_K": 0,
+                    "pts_L": 0,"pts_M": 0,"pts_N": 0,"pts_O": 0,
+                    **gl,
+                    "subtotal_globales": sub_gl,
+                    "total": sub_gl,
+                }
+    except Exception:
+        await db.rollback()
+
+    # 4b. Puntos de ESTE partido en puntaje_detalle (para excluirlos del acumulado "antes del partido")
+    #     Si el partido ya está finalizado y se recalcularon puntajes, total_puntos LO INCLUYE.
+    #     Restamos esos pts para que: acum_antes + live_calc = total_proyectado (sin doble conteo).
+    try:
+        det_r = await db.execute(
+            text("""
+                SELECT apostador_id,
+                       COALESCE(SUM(
+                           COALESCE(pts_resultado,0) + COALESCE(pts_marcador,0)
+                           + COALESCE(pts_amarillas,0) + COALESCE(pts_rojas,0)
+                           + COALESCE(pts_var,0) + COALESCE(pts_penales_partido,0)
+                           + COALESCE(pts_minuto,0) + COALESCE(pts_penales_tanda,0)
+                           + COALESCE(pts_equipo,0)
+                       ), 0) AS pts_este_partido
+                FROM puntaje_detalle
+                WHERE partido_id = :pid
+                GROUP BY apostador_id
+            """),
+            {"pid": partido_id},
+        )
+        pts_este_partido: dict[int, int] = {
+            r["apostador_id"]: int(r["pts_este_partido"] or 0)
+            for r in det_r.mappings().fetchall()
+        }
+    except Exception:
+        await db.rollback()
+        pts_este_partido = {}
+
+    # 5. Nombres desde app_db
+    all_ids = list(apuestas_map.keys())
     async with _app_engine.connect() as aconn:
-        all_ids = list(apuestas_map.keys())
-        if not all_ids:
-            return {"partido": partido, "apostadores": []}
         ids_sql = ",".join(str(x) for x in all_ids)
         names_r = await aconn.execute(
-            text(f"SELECT id, username AS nombre FROM users WHERE id IN ({ids_sql})")
+            text(f"SELECT id, COALESCE(nombre, username) AS nombre, username FROM users WHERE id IN ({ids_sql})")
         )
-        names_map = {r[0]: r[1] for r in names_r.fetchall()}
+        names_map = {r[0]: {"nombre": r[1], "username": r[2]} for r in names_r.fetchall()}
 
-    # 5. Ensamblar respuesta
+    # 6. Ensamblar respuesta
     apostadores = []
     for uid, ap in apuestas_map.items():
+        info = names_map.get(uid, {})
+        v    = vista_map.get(uid, {"pts_H":0,"pts_I":0,"pts_J":0,"pts_K":0,
+                                    "pts_L":0,"pts_M":0,"pts_N":0,"pts_O":0,
+                                    "pts_A":0,"pts_B":0,"pts_C":0,"pts_D":0,
+                                    "pts_E":0,"pts_F":0,"pts_G":0,
+                                    "subtotal_globales":0,"total":0})
+        # puntos_antes = total de la vista MENOS lo que ya calculó para este partido
+        # Así: puntos_antes + live_calc = total proyectado (sin doble conteo)
+        pts_ya_calc  = pts_este_partido.get(uid, 0)
+        puntos_antes = max(0, v["total"] - pts_ya_calc)
         apostadores.append({
-            "apostador_id":               uid,
-            "nombre":                      names_map.get(uid, f"Usuario {uid}"),
-            "puntos_total":                puntos_map.get(uid, 0),
+            "apostador_id": uid,
+            "nombre":       info.get("nombre", f"Usuario {uid}"),
+            "username":     info.get("username", f"user{uid}"),
+            "puntos_total": puntos_antes,   # puntaje ANTES de este partido
+            # Desglose acumulado (para mostrar en tabla ranking del live)
+            "acum": {k: v[k] for k in ["pts_H","pts_I","pts_J","pts_K","pts_L","pts_M","pts_N","pts_O",
+                                        "pts_A","pts_B","pts_C","pts_D","pts_E","pts_F","pts_G",
+                                        "subtotal_globales"]},
             **{k: ap.get(k) for k in [
                 "pred_local", "pred_visitante",
                 "pred_minuto_gol", "pred_amarillas", "pred_var",
@@ -6875,9 +7022,28 @@ async def live_panel(
 
     apostadores.sort(key=lambda x: x["nombre"])
 
+    # 7. Ranking completo desde la vista (TODOS los apostadores, no solo los de este partido)
+    #    Incluye nombre desde app_db cuando está disponible en names_map, sino desde la vista.
+    ranking_vista = []
+    for aid, v in vista_map.items():
+        pts_ya_calc  = pts_este_partido.get(aid, 0)
+        puntos_antes = max(0, v["total"] - pts_ya_calc)
+        info = names_map.get(aid, {})
+        ranking_vista.append({
+            "apostador_id":     aid,
+            "nombre":           info.get("nombre") or f"Usuario {aid}",
+            "puntos_antes":     puntos_antes,
+            "acum": {k: v[k] for k in ["pts_H","pts_I","pts_J","pts_K","pts_L","pts_M","pts_N","pts_O",
+                                        "pts_A","pts_B","pts_C","pts_D","pts_E","pts_F","pts_G",
+                                        "subtotal_globales"]},
+        })
+    ranking_vista.sort(key=lambda x: -x["puntos_antes"])
+
     return {
-        "partido":     partido,
-        "apostadores": apostadores,
+        "partido":       partido,
+        "apostadores":   apostadores,
+        "numeros_fifa":  numeros_fifa,
+        "ranking_vista": ranking_vista,
     }
 
 
@@ -6887,21 +7053,13 @@ async def espn_verify_live(
     current: CurrentAdmin,
     db: DBSession,
 ) -> dict:
-    """
-    Consulta ESPN para el partido dado y aplica correcciones si difieren del valor en DB.
-    Reglas: VAR siempre ESPN; amarillas/rojas ESPN si mayor; minuto_gol ESPN como fallback.
-    Usado por becbuc-live.html cada 20 min durante un partido en vivo.
-    """
-    import httpx
-    from app.services import sync_api_football as _sync
-
-    p_r = await db.execute(
+    from app.services.sync_api_football import _espn_verify_and_patch
+    import httpx as _httpx
+    pq = await db.execute(
         text("""
-            SELECT p.id,
-                   COALESCE(el.nombre, el.nombre_es, '?') AS local_nombre,
-                   COALESCE(ev.nombre, ev.nombre_es, '?') AS visit_nombre,
-                   p.fecha, p.estado,
-                   p.amarillas, p.rojas, p.decisiones_var, p.minuto_primer_gol
+            SELECT p.id, p.estado, p.fecha,
+                   COALESCE(el.nombre_es, el.nombre) AS local_nombre,
+                   COALESCE(ev.nombre_es, ev.nombre) AS visit_nombre
             FROM partido p
             LEFT JOIN equipo el ON el.id = p.equipo_local_id
             LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
@@ -6909,24 +7067,15 @@ async def espn_verify_live(
         """),
         {"pid": partido_id},
     )
-    p_row = p_r.mappings().fetchone()
-    if not p_row:
-        raise HTTPException(status_code=404, detail="Partido no encontrado")
-
-    db_p = dict(p_row)
-    espn_cache: dict = {}
-
-    try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            corr = await _sync._espn_verify_and_patch(db, client, db_p, partido_id, espn_cache)
-        if corr:
-            await db.commit()
-        return {
-            "partido_id":   partido_id,
-            "correcciones": corr or {},
-            "estado":       db_p.get("estado"),
-            "ok":           True,
-        }
-    except Exception as e:
-        logger.warning(f"espn_verify_live partido_id={partido_id}: {e}")
-        return {"partido_id": partido_id, "correcciones": {}, "ok": False, "error": str(e)}
+    row = pq.mappings().fetchone()
+    if not row:
+        raise HTTPException(404, f"Partido {partido_id} no encontrado")
+    async with _httpx.AsyncClient(timeout=20) as client:
+        correcciones = await _espn_verify_and_patch(db, dict(row), client)
+    await db.commit()
+    return {
+        "ok":           True,
+        "partido_id":   partido_id,
+        "estado":       row["estado"],
+        "correcciones": correcciones,
+    }
