@@ -135,6 +135,19 @@ _VAR_RE = re.compile(
     re.IGNORECASE,
 )
 
+# ── SofaScore (fuente autoritativa para tarjetas y VAR) ───────────────────────
+# SofaScore distingue correctamente "yellow" (1ª) de "yellowRed" (2ª amarilla=expulsión)
+# y reporta VAR como eventos discretos (1 evento = 1 decisión real).
+SOFASCORE_BASE = "https://api.sofascore.com/api/v1"
+SOFASCORE_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Accept": "application/json",
+    "Referer": "https://www.sofascore.com/",
+}
+# SofaScore devuelve 403 Forbidden desde IP de servidor — deshabilitado.
+# Cambiar a True si se resuelve el acceso (proxy, Playwright, etc.)
+SOFASCORE_ENABLED = False
+
 
 def _headers() -> dict:
     return {
@@ -231,34 +244,208 @@ def _match_fixtures(
 
 # ── ESPN helpers ──────────────────────────────────────────────────────────────
 
+# Mapa de traducción Español → Inglés para nombres de equipos nacionales.
+# ESPN usa nombres en inglés; la BD tiene nombres en español.
+# Mapa con claves SIN normalizar (legible). Se construye versión normalizada abajo.
+_TEAM_ES_EN_RAW: dict[str, list[str]] = {
+    # América
+    "estados unidos":       ["united states", "usa", "us"],
+    "estados unidos de america": ["united states", "usa"],
+    "usa":                  ["united states", "usa"],
+    "trinidad y tobago":    ["trinidad and tobago", "trinidad & tobago"],
+    "republica dominicana": ["dominican republic"],
+    "costa rica":           ["costa rica"],
+    "el salvador":          ["el salvador"],
+    "haiti":                ["haiti"],
+    "curacao":              ["curacao", "curaçao"],
+    # Europa
+    "paises bajos":         ["netherlands", "holland"],
+    "holanda":              ["netherlands", "holland"],
+    "republica checa":      ["czech republic", "czechia"],
+    "chequia":              ["czech republic", "czechia"],
+    "bosnia y herzegovina": ["bosnia and herzegovina", "bosnia & herzegovina", "bosnia-herzegovina"],
+    "escocia":              ["scotland"],
+    "gales":                ["wales"],
+    "irlanda del norte":    ["northern ireland"],
+    "irlanda":              ["ireland", "republic of ireland"],
+    "inglaterra":           ["england"],
+    "alemania":             ["germany"],
+    "espana":               ["spain"],
+    "francia":              ["france"],
+    "belgica":              ["belgium"],
+    "suiza":                ["switzerland"],
+    "austria":              ["austria"],
+    "suecia":               ["sweden"],
+    "noruega":              ["norway"],
+    "dinamarca":            ["denmark"],
+    "finlandia":            ["finland"],
+    "polonia":              ["poland"],
+    "hungria":              ["hungary"],
+    "rumania":              ["romania"],
+    "turquia":              ["turkey", "turkiye"],
+    "turkiye":              ["turkey", "turkiye"],   # BD puede tener con acento
+    "grecia":               ["greece"],
+    "ucrania":              ["ukraine"],
+    "rusia":                ["russia"],
+    "eslovaquia":           ["slovakia"],
+    "eslovenia":            ["slovenia"],
+    "croacia":              ["croatia"],
+    "serbia":               ["serbia"],
+    "albania":              ["albania"],
+    "georgia":              ["georgia"],
+    "macedonia del norte":  ["north macedonia"],
+    "islandia":             ["iceland"],
+    "azerbaiyan":           ["azerbaijan"],
+    "bielorusia":           ["belarus"],
+    "kazakhstan":           ["kazakhstan"],
+    "moldova":              ["moldova"],
+    "kosovo":               ["kosovo"],
+    "luxemburgo":           ["luxembourg"],
+    "chipre":               ["cyprus"],
+    "portugal":             ["portugal"],
+    "italia":               ["italy"],
+    "letonia":              ["latvia"],
+    "lituania":             ["lithuania"],
+    "estonia":              ["estonia"],
+    # África
+    "costa de marfil":      ["ivory coast", "cote d ivoire", "cote divoire"],
+    "republica democratica del congo": ["dr congo", "congo dr", "democratic republic of congo"],
+    "congo dr":             ["dr congo", "congo", "congo dr"],
+    "africa del sur":       ["south africa"],
+    "marruecos":            ["morocco"],
+    "camerun":              ["cameroon"],
+    "egipto":               ["egypt"],
+    "tunez":                ["tunisia"],
+    "argelia":              ["algeria"],
+    "etiopia":              ["ethiopia"],
+    "cabo verde":           ["cape verde"],
+    # Asia / Oceanía
+    "corea del sur":        ["south korea", "korea republic", "korea"],
+    "corea del norte":      ["north korea", "korea dpr"],
+    "arabia saudita":       ["saudi arabia"],
+    "emiratos arabes":      ["united arab emirates", "uae"],
+    "emiratos arabes unidos": ["united arab emirates", "uae"],
+    "iran":                 ["iran", "ir iran"],
+    "irak":                 ["iraq"],
+    "uzbekistan":           ["uzbekistan", "uzbek"],
+    "tayikistan":           ["tajikistan"],
+    "nueva zelanda":        ["new zealand"],
+    "filipinas":            ["philippines"],
+    "tailandia":            ["thailand"],
+    "china":                ["china pr", "china"],
+    "japon":                ["japan"],
+    "jordania":             ["jordan"],
+}
+
+# Versión con claves NORMALIZADAS (para lookup en _espn_translate)
+_TEAM_ES_EN: dict[str, list[str]] = {
+    _normalize(k): [_normalize(v) for v in vs]
+    for k, vs in _TEAM_ES_EN_RAW.items()
+}
+
+# Inverso: inglés normalizado → español normalizado
+_TEAM_EN_ES: dict[str, str] = {}
+for _es_n, _en_list in _TEAM_ES_EN.items():
+    for _en_n in _en_list:
+        _TEAM_EN_ES[_en_n] = _es_n
+
 async def _espn_scoreboard(client: httpx.AsyncClient, fecha) -> list[dict]:
-    """Devuelve eventos ESPN para la fecha del partido (cache por fecha en la llamada)."""
-    date_str = fecha.strftime("%Y%m%d") if hasattr(fecha, "strftime") else str(fecha)[:10].replace("-", "")
-    try:
-        r = await client.get(
-            f"{ESPN_BASE}/scoreboard",
-            params={"dates": date_str},
-            headers=ESPN_HEADERS,
-            timeout=15,
-        )
-        return r.json().get("events", [])
-    except Exception as e:
-        logger.warning(f"ESPN scoreboard error ({date_str}): {e}")
-        return []
+    """
+    Devuelve eventos ESPN para la fecha del partido.
+    Incluye fallback al día anterior: partidos nocturnos en USA/México
+    tienen fecha UTC diferente a la fecha local del partido.
+    """
+    from datetime import timedelta as _td, date as _date_t
+    if hasattr(fecha, "strftime"):
+        d = fecha.date() if hasattr(fecha, "date") and callable(fecha.date) else fecha
+    else:
+        from datetime import date as _date_t2
+        try:
+            d = _date_t2.fromisoformat(str(fecha)[:10])
+        except Exception:
+            d = None
+
+    events: list[dict] = []
+    dates_to_try = []
+    if d:
+        dates_to_try = [d, d - _td(days=1)]  # hoy + día anterior (fallback timezone)
+    else:
+        date_str = str(fecha)[:10].replace("-", "")
+        dates_to_try_raw = [date_str]
+
+    for dt in dates_to_try:
+        date_str = dt.strftime("%Y%m%d")
+        try:
+            r = await client.get(
+                f"{ESPN_BASE}/scoreboard",
+                params={"dates": date_str},
+                headers=ESPN_HEADERS,
+                timeout=15,
+            )
+            events += r.json().get("events", [])
+        except Exception as e:
+            logger.warning(f"ESPN scoreboard error ({date_str}): {e}")
+
+    # Deduplicar por event id
+    seen: set = set()
+    unique: list[dict] = []
+    for ev in events:
+        eid = ev.get("id")
+        if eid not in seen:
+            seen.add(eid)
+            unique.append(ev)
+    return unique
+
+
+def _espn_translate(name_n: str) -> list[str]:
+    """
+    Dado un nombre normalizado (puede ser ES o EN), devuelve lista de
+    variantes normalizadas a intentar en el matching: el original +
+    traducciones ES→EN o EN→ES.
+    """
+    variants = [name_n]
+    # ES → EN
+    if name_n in _TEAM_ES_EN:
+        variants += [_normalize(e) for e in _TEAM_ES_EN[name_n]]
+    # EN → ES (inverso)
+    if name_n in _TEAM_EN_ES:
+        variants.append(_TEAM_EN_ES[name_n])
+    return list(dict.fromkeys(variants))  # dedup preservando orden
 
 
 def _espn_find_game_id(events: list[dict], local: str, visitante: str) -> str | None:
-    """Busca el ESPN game_id por nombres de equipos normalizados."""
-    loc_n = _normalize(local)
-    vis_n = _normalize(visitante)
+    """
+    Busca el ESPN game_id por nombres de equipos normalizados.
+    Aplica traducción ES↔EN para mejorar cobertura con equipos en español.
+    """
+    loc_n  = _normalize(local)
+    vis_n  = _normalize(visitante)
+    loc_vs = _espn_translate(loc_n)
+    vis_vs = _espn_translate(vis_n)
+
     for ev in events:
         comp = ev.get("competitions", [{}])[0]
         team_names = [
             _normalize(c.get("team", {}).get("displayName", ""))
             for c in comp.get("competitors", [])
         ]
-        if (any(loc_n in t or t in loc_n for t in team_names if t) and
-                any(vis_n in t or t in vis_n for t in team_names if t)):
+        team_names += [
+            _normalize(c.get("team", {}).get("shortDisplayName", ""))
+            for c in comp.get("competitors", [])
+        ]
+        team_names += [
+            _normalize(c.get("team", {}).get("abbreviation", ""))
+            for c in comp.get("competitors", [])
+        ]
+        team_names = [t for t in team_names if t]
+
+        def _team_match(variants: list[str]) -> bool:
+            for v in variants:
+                if any(v in t or t in v for t in team_names):
+                    return True
+            return False
+
+        if _team_match(loc_vs) and _team_match(vis_vs):
             return ev.get("id")
     return None
 
@@ -281,7 +468,8 @@ async def _espn_get_summary(client: httpx.AsyncClient, game_id: str) -> dict:
 def _espn_extract_stats(summary: dict) -> dict:
     """
     Extrae stats comparables del ESPN summary.
-    Retorna: {decisiones_var, amarillas, rojas, minuto_primer_gol?}
+    Retorna: {decisiones_var, amarillas, rojas, minuto_primer_gol?,
+              penales_partido?, penales_local_tanda?, penales_visitante_tanda?}
     """
     result: dict = {}
 
@@ -302,10 +490,14 @@ def _espn_extract_stats(summary: dict) -> dict:
     result["amarillas"] = amarillas
     result["rojas"] = rojas
 
-    # VAR + minuto primer gol desde plays/commentary
+    # VAR + minuto primer gol + penales partido desde plays/commentary
     plays = summary.get("plays") or summary.get("commentary") or []
     var_count = 0
     first_goal_min: int | None = None
+    penales_partido = 0
+
+    _PEN_RE = re.compile(r"\bpenalt", re.I)
+    _SHOOTOUT_PERIOD_IDS = {5, 6, "5", "6"}  # ESPN period 5/6 = tanda de penales
 
     for play in plays:
         text_val = (
@@ -319,7 +511,17 @@ def _espn_extract_stats(summary: dict) -> dict:
         # Detectar tipo de jugada para minuto gol
         t_obj = play.get("type")
         ptype = t_obj.get("text", "") if isinstance(t_obj, dict) else str(t_obj or "")
-        if "goal" in ptype.lower() and first_goal_min is None:
+        ptype_lower = ptype.lower()
+
+        # Periodo: ESPN usa period.number (1/2=normal, 3/4=extra time, 5+=shootout)
+        period_obj = play.get("period")
+        period_num = None
+        if isinstance(period_obj, dict):
+            period_num = period_obj.get("number") or period_obj.get("type")
+
+        is_shootout = period_num in _SHOOTOUT_PERIOD_IDS
+
+        if "goal" in ptype_lower and first_goal_min is None and not is_shootout:
             clock = play.get("clock")
             min_str = clock.get("displayValue", "") if isinstance(clock, dict) else str(clock or "")
             try:
@@ -327,9 +529,40 @@ def _espn_extract_stats(summary: dict) -> dict:
             except (ValueError, AttributeError):
                 pass
 
+        # Penales durante el partido (item M): solo tiempo normal/extra, no tanda
+        if not is_shootout and _PEN_RE.search(text_val):
+            if "goal" in ptype_lower or "miss" in ptype_lower:
+                penales_partido += 1
+
     result["decisiones_var"] = var_count
     if first_goal_min is not None:
         result["minuto_primer_gol"] = first_goal_min
+    if penales_partido > 0:
+        result["penales_partido"] = penales_partido
+
+    # Tanda de penales: ESPN lo reporta en header.competitions[0].competitors
+    # como shootoutScore (int) ordenado home=0 / away=1
+    competitions = summary.get("header", {}).get("competitions", [])
+    if competitions:
+        comp = competitions[0]
+        competitors = comp.get("competitors", [])
+        # ESPN: homeTeam == competitors[0], awayTeam == competitors[1] normalmente
+        # pero el orden puede variar; usamos el campo "homeAway"
+        home_score = away_score = None
+        for c in competitors:
+            ss = c.get("shootoutScore")
+            if ss is not None:
+                try:
+                    score_int = int(ss)
+                except (ValueError, TypeError):
+                    score_int = None
+                if c.get("homeAway") == "home":
+                    home_score = score_int
+                elif c.get("homeAway") == "away":
+                    away_score = score_int
+        if home_score is not None and away_score is not None:
+            result["penales_local_tanda"]    = home_score
+            result["penales_visitante_tanda"] = away_score
 
     return result
 
@@ -340,13 +573,20 @@ async def _espn_verify_and_patch(
     db_p: dict,
     partido_id: int,
     espn_cache: dict,
+    out_raw: dict | None = None,
 ) -> dict:
     """
     Verifica stats de un partido finalizado contra ESPN y aplica correcciones.
     Reglas:
-      - decisiones_var: ESPN siempre (API-Football frecuentemente no reporta VAR)
-      - amarillas/rojas: ESPN gana si su valor es mayor que el de API-Football
+      - decisiones_var: ESPN solo como fallback cuando API-Football tiene 0
+        (ESPN cuenta menciones en commentary → puede sobrecontar por decisión)
+      - amarillas: ESPN solo como fallback cuando API-Football tiene 0
+        (ambas fuentes pueden contar la 2ª amarilla como amarilla)
+      - rojas: ESPN gana si tiene valor más alto (fallback para rojas directas)
       - minuto_primer_gol: ESPN como fallback si API-Football devolvió NULL
+
+    out_raw: si se provee, se rellena con los valores crudos detectados por ESPN
+             (J/K/L/M), independientemente de si se aplicaron o no.
 
     Retorna dict con correcciones aplicadas (vacío si no hay diferencias).
     """
@@ -375,29 +615,56 @@ async def _espn_verify_and_patch(
 
     espn = _espn_extract_stats(summary)
 
+    # Guardar valores crudos ESPN para la tabla de auditoría (si se pide)
+    if out_raw is not None:
+        out_raw["amarillas"]       = espn.get("amarillas", 0)
+        out_raw["rojas"]           = espn.get("rojas", 0)
+        out_raw["decisiones_var"]  = espn.get("decisiones_var", 0)
+        out_raw["penales_partido"] = espn.get("penales_partido", 0)
+
     # Leer valores actuales del partido en BD (post API-Football update)
     rq = await db.execute(
-        text("SELECT decisiones_var, amarillas, rojas, minuto_primer_gol FROM partido WHERE id = :pid"),
+        text("""SELECT decisiones_var, amarillas, rojas, minuto_primer_gol,
+                       penales_partido, penales_local, penales_visitante
+                FROM partido WHERE id = :pid"""),
         {"pid": partido_id},
     )
     current = dict(rq.mappings().first() or {})
 
     corrections: dict = {}
 
-    # VAR: ESPN siempre prevalece (API-Football no reporta la mayoría)
+    # VAR: ESPN solo como fallback cuando API-Football no encontró eventos VAR.
+    # ESPN cuenta menciones en el commentary (puede ser 2+ por cada decisión real),
+    # sobrecontando. API-Football events son más precisos (1 evento por decisión).
     espn_var = espn.get("decisiones_var", 0)
-    if espn_var != (current.get("decisiones_var") or 0):
+    api_var  = current.get("decisiones_var") or 0
+    if api_var == 0 and espn_var > 0:
         corrections["decisiones_var"] = espn_var
 
-    # Amarillas/rojas: ESPN gana cuando tiene valor más alto
-    if espn.get("amarillas", 0) > (current.get("amarillas") or 0):
-        corrections["amarillas"] = espn["amarillas"]
+    # Amarillas: ESPN como fallback cuando API-Football no tiene datos (amarillas=0).
+    # El boxscore de ESPN puede incluir la 2ª amarilla como tarjeta amarilla, igual
+    # que las stats de API-Football. Con el fix en _update_partido_full ya usamos
+    # eventos (más precisos). Solo activar ESPN si no hay datos.
+    espn_amar = espn.get("amarillas", 0)
+    if espn_amar > 0 and (current.get("amarillas") or 0) == 0:
+        corrections["amarillas"] = espn_amar
+
+    # Rojas: ESPN gana si tiene valor más alto (útil para rojas directas no captadas por API)
     if espn.get("rojas", 0) > (current.get("rojas") or 0):
         corrections["rojas"] = espn["rojas"]
 
     # Minuto primer gol: ESPN solo como fallback (API-Football es más preciso)
     if "minuto_primer_gol" in espn and not current.get("minuto_primer_gol"):
         corrections["minuto_primer_gol"] = espn["minuto_primer_gol"]
+
+    # Penales durante el partido (item M): ESPN como fuente complementaria
+    if "penales_partido" in espn and (espn["penales_partido"] or 0) > (current.get("penales_partido") or 0):
+        corrections["penales_partido"] = espn["penales_partido"]
+
+    # Tanda de penales (item O): ESPN si BD no tiene datos
+    if "penales_local_tanda" in espn and current.get("penales_local") is None:
+        corrections["penales_local"]    = espn["penales_local_tanda"]
+        corrections["penales_visitante"] = espn.get("penales_visitante_tanda")
 
     if not corrections:
         logger.info(f"  ESPN ✓ sin diferencias — {local} vs {visitante}")
@@ -409,6 +676,397 @@ async def _espn_verify_and_patch(
         {**corrections, "pid": partido_id},
     )
     logger.info(f"  ESPN 🔧 corregido partido_id={partido_id} ({local} vs {visitante}): {corrections}")
+    return corrections
+
+
+# ── SofaScore helpers ─────────────────────────────────────────────────────────
+
+async def _sofascore_scoreboard(client: httpx.AsyncClient, fecha) -> list[dict]:
+    """
+    Retorna eventos de fútbol de SofaScore para una fecha dada.
+    Endpoint: GET /sport/football/scheduled-events/{date} (formato YYYY-MM-DD)
+    """
+    if not SOFASCORE_ENABLED:
+        return []
+    if hasattr(fecha, "strftime"):
+        date_str = fecha.strftime("%Y-%m-%d")
+    else:
+        date_str = str(fecha)[:10]
+    try:
+        r = await client.get(
+            f"{SOFASCORE_BASE}/sport/football/scheduled-events/{date_str}",
+            headers=SOFASCORE_HEADERS,
+            timeout=15,
+        )
+        r.raise_for_status()
+        return r.json().get("events", [])
+    except Exception as e:
+        logger.warning(f"SofaScore scoreboard error ({date_str}): {e}")
+        return []
+
+
+def _sofascore_find_event(events: list[dict], local: str, visitante: str) -> int | None:
+    """
+    Busca el SofaScore event_id por nombres de equipos normalizados.
+    Retorna el event_id (int) o None.
+    Intenta match directo (local=home, visitante=away) e inverso (para KO).
+    """
+    loc_n = _normalize(local)
+    vis_n = _normalize(visitante)
+    if not loc_n or not vis_n:
+        return None
+    for ev in events:
+        home = _normalize(ev.get("homeTeam", {}).get("name", ""))
+        away = _normalize(ev.get("awayTeam", {}).get("name", ""))
+        if not home or not away:
+            continue
+        match_dir = ((loc_n in home or home in loc_n) and
+                     (vis_n in away  or away  in vis_n))
+        match_inv = ((vis_n in home or home in vis_n) and
+                     (loc_n in away  or away  in loc_n))
+        if match_dir or match_inv:
+            return ev.get("id")
+    return None
+
+
+async def _sofascore_get_incidents(client: httpx.AsyncClient, event_id: int) -> list[dict]:
+    """
+    Descarga los incidents de un evento SofaScore.
+    Endpoint: GET /event/{id}/incidents
+    """
+    try:
+        r = await client.get(
+            f"{SOFASCORE_BASE}/event/{event_id}/incidents",
+            headers=SOFASCORE_HEADERS,
+            timeout=15,
+        )
+        r.raise_for_status()
+        return r.json().get("incidents", [])
+    except Exception as e:
+        logger.warning(f"SofaScore incidents error (event_id={event_id}): {e}")
+        return []
+
+
+def _sofascore_extract_stats(incidents: list[dict]) -> dict:
+    """
+    Extrae estadísticas de tarjetas, VAR y penales desde incidents de SofaScore.
+
+    Tipos de incident relevantes:
+      incidentType='card', incidentClass='yellow'    → amarilla (1ª)
+      incidentType='card', incidentClass='yellowRed' → 2ª amarilla = ROJA (expulsión)
+      incidentType='card', incidentClass='red'       → roja directa
+      incidentType='varDecision'                     → decisión VAR (1 evento = 1 decisión)
+      incidentType='goal',  incidentClass='penalty'  → penal convertido (item M)
+      incidentType='missedPenalty'                   → penal fallado/atajado (item M)
+
+    Retorna: {amarillas, rojas, decisiones_var, penales_partido, minuto_primer_gol?}
+    """
+    amarillas = 0
+    rojas = 0
+    decisiones_var = 0
+    penales_partido = 0  # item M: penales cobrados durante el partido (no tanda)
+    first_goal_min: int | None = None
+
+    # Excluir incidents de tanda de penales (periodo shootout)
+    # SofaScore usa period.value: 1=1T, 2=2T, 3=ET1, 4=ET2, 5=shootout
+    _SHOOTOUT_PERIODS = {5, "5", "penalties"}
+
+    for inc in incidents:
+        inc_type = inc.get("incidentType", "")
+        inc_class = inc.get("incidentClass", "")
+        period = inc.get("period", {})
+        period_val = period.get("value") if isinstance(period, dict) else period
+
+        # Ignorar incidents de tanda de penales
+        if period_val in _SHOOTOUT_PERIODS:
+            continue
+
+        if inc_type == "card":
+            if inc_class == "yellow":
+                amarillas += 1
+            elif inc_class in ("yellowRed", "red"):
+                # yellowRed = 2ª amarilla → cuenta como roja (expulsión)
+                # red = roja directa
+                rojas += 1
+        elif inc_type == "varDecision":
+            # Cada evento varDecision = 1 decisión VAR real
+            decisiones_var += 1
+        elif inc_type == "goal" and inc_class == "penalty":
+            # Penal convertido durante el partido (no tanda)
+            penales_partido += 1
+            # También podría ser el primer gol del partido
+            if first_goal_min is None:
+                try:
+                    first_goal_min = int(inc.get("time", 0) or 0) or None
+                except (TypeError, ValueError):
+                    pass
+        elif inc_type == "missedPenalty":
+            # Penal fallado o atajado durante el partido (no tanda)
+            penales_partido += 1
+        elif inc_type == "goal":
+            # Gol normal — capturar minuto del primer gol
+            if first_goal_min is None:
+                try:
+                    first_goal_min = int(inc.get("time", 0) or 0) or None
+                except (TypeError, ValueError):
+                    pass
+
+    result = {
+        "amarillas": amarillas,
+        "rojas": rojas,
+        "decisiones_var": decisiones_var,
+        "penales_partido": penales_partido,
+    }
+    if first_goal_min is not None:
+        result["minuto_primer_gol"] = first_goal_min
+    return result
+
+
+async def _sofascore_verify_and_patch(
+    db: AsyncSession,
+    client: httpx.AsyncClient,
+    db_p: dict,
+    partido_id: int,
+    ss_cache: dict,
+    api_vals: dict | None = None,
+    espn_raw: dict | None = None,
+    estado_partido: str = "finalizado",
+    minuto_actual: int | None = None,
+    force: bool = False,
+) -> dict:
+    """
+    Verifica y corrige tarjetas, VAR y penales usando SofaScore.
+
+    Nueva lógica (sesión 39):
+    - SofaScore corrige SOLO si su valor es MAYOR que el ya aplicado (API+ESPN).
+    - estado_partido: 'finalizado' | 'live' | 'pendiente' — se persiste en partido_stats_fuentes.
+    - minuto_actual: minuto de juego actual (para live tracking, se guarda en ultimo_minuto).
+    - Para 'finalizado': skip si ya existe una fila con estado='finalizado' → no re-procesar.
+      Con force=True se omite el skip y se re-procesa siempre.
+    - Siempre hace UPSERT en partido_stats_fuentes.
+
+    api_vals: valores crudos API-Football (Fase B). espn_raw: valores crudos ESPN (Fase C).
+    """
+    fecha = db_p.get("fecha")
+    if not fecha:
+        return {}
+
+    # Para finalizados: skip si ya fue procesado completamente (salvo force=True)
+    if estado_partido == "finalizado" and not force:
+        try:
+            ck = await db.execute(
+                text("SELECT estado FROM partido_stats_fuentes WHERE partido_id = :pid"),
+                {"pid": partido_id},
+            )
+            existing = ck.mappings().first()
+            if existing and existing.get("estado") == "finalizado":
+                logger.info(f"  partido_stats_fuentes: partido {partido_id} ya finalizado, skip")
+                return {}
+        except Exception:
+            pass
+
+    date_str = fecha.strftime("%Y-%m-%d") if hasattr(fecha, "strftime") else str(fecha)[:10]
+    if date_str not in ss_cache:
+        ss_cache[date_str] = await _sofascore_scoreboard(client, fecha)
+
+    events = ss_cache.get(date_str, [])
+
+    local     = db_p.get("local_nombre", "")
+    visitante = db_p.get("visit_nombre", "")
+
+    ss: dict = {}
+    if events:
+        event_id = _sofascore_find_event(events, local, visitante)
+        if event_id:
+            incidents = await _sofascore_get_incidents(client, event_id)
+            if incidents:
+                ss = _sofascore_extract_stats(incidents)
+            else:
+                logger.info(f"  SofaScore: sin incidents — {local} vs {visitante}")
+        else:
+            logger.info(f"  SofaScore: partido no encontrado — {local} vs {visitante} ({date_str})")
+    else:
+        logger.info(f"  SofaScore: sin eventos para fecha {date_str}")
+
+    # Leer valores actuales en BD (post API-Football + ESPN = el "máximo previo")
+    rq = await db.execute(
+        text("""SELECT decisiones_var, amarillas, rojas, penales_partido
+                FROM partido WHERE id = :pid"""),
+        {"pid": partido_id},
+    )
+    current = dict(rq.mappings().first() or {})
+
+    cur_amar  = current.get("amarillas")       or 0
+    cur_rojas = current.get("rojas")            or 0
+    cur_var   = current.get("decisiones_var")   or 0
+    cur_pp    = current.get("penales_partido")  or 0
+
+    ss_amar   = ss.get("amarillas", 0)       if ss else 0
+    ss_rojas  = ss.get("rojas", 0)           if ss else 0
+    ss_var    = ss.get("decisiones_var", 0)  if ss else 0
+    ss_pp     = ss.get("penales_partido", 0) if ss else 0
+
+    corrections: dict = {}
+
+    # SofaScore solo corrige si da un valor MAYOR que el ya aplicado (API+ESPN)
+    if ss_amar > cur_amar:
+        corrections["amarillas"] = ss_amar
+        logger.info(f"  SofaScore J: {local} vs {visitante} — amarillas {cur_amar} → {ss_amar} ✓ (mayor)")
+    elif ss and ss_amar < cur_amar:
+        logger.info(f"  SofaScore J: {local} vs {visitante} — SS={ss_amar} < actual={cur_amar}, mantiene API/ESPN")
+
+    if ss_rojas > cur_rojas:
+        corrections["rojas"] = ss_rojas
+        logger.info(f"  SofaScore K: {local} vs {visitante} — rojas {cur_rojas} → {ss_rojas} ✓ (mayor)")
+    elif ss and ss_rojas < cur_rojas:
+        logger.info(f"  SofaScore K: {local} vs {visitante} — SS={ss_rojas} < actual={cur_rojas}, mantiene API/ESPN")
+
+    if ss_var > cur_var:
+        corrections["decisiones_var"] = ss_var
+        logger.info(f"  SofaScore L: {local} vs {visitante} — var {cur_var} → {ss_var} ✓ (mayor)")
+    elif ss and ss_var < cur_var:
+        logger.info(f"  SofaScore L: {local} vs {visitante} — SS={ss_var} < actual={cur_var}, mantiene API/ESPN")
+
+    if ss_pp > cur_pp:
+        corrections["penales_partido"] = ss_pp
+        logger.info(f"  SofaScore M: {local} vs {visitante} — penales_partido {cur_pp} → {ss_pp} ✓ (mayor)")
+    elif ss and ss_pp < cur_pp:
+        logger.info(f"  SofaScore M: {local} vs {visitante} — SS={ss_pp} < actual={cur_pp}, mantiene API/ESPN")
+
+    if corrections:
+        set_clauses = ", ".join(f"{k} = :{k}" for k in corrections)
+        await db.execute(
+            text(f"UPDATE partido SET {set_clauses} WHERE id = :pid"),
+            {**corrections, "pid": partido_id},
+        )
+        logger.info(f"  SofaScore 🔧 corregido partido_id={partido_id} ({local} vs {visitante}): {corrections}")
+    else:
+        if ss:
+            logger.info(f"  SofaScore ✓ sin correcciones (API/ESPN >= SS) — {local} vs {visitante}")
+
+    # Valores finales en BD después de todas las fases
+    final_amar  = corrections.get("amarillas",      cur_amar)
+    final_rojas = corrections.get("rojas",           cur_rojas)
+    final_var   = corrections.get("decisiones_var",  cur_var)
+    final_pp    = corrections.get("penales_partido", cur_pp)
+
+    # Determinar qué fuente ganó para cada campo
+    api_a  = (api_vals or {}).get("amarillas",       cur_amar)
+    api_r  = (api_vals or {}).get("rojas",            cur_rojas)
+    api_v  = (api_vals or {}).get("decisiones_var",   cur_var)
+    api_p  = (api_vals or {}).get("penales_partido",  cur_pp)
+    espn_a = (espn_raw or {}).get("amarillas",        0)
+    espn_r = (espn_raw or {}).get("rojas",            0)
+    espn_v = (espn_raw or {}).get("decisiones_var",   0)
+    espn_p = (espn_raw or {}).get("penales_partido",  0)
+
+    def _fuente(api_v_: int, espn_v_: int, ss_v_: int, final_v_: int) -> str:
+        if final_v_ == ss_v_ and ss_v_ > 0 and ss_v_ >= api_v_ and ss_v_ >= espn_v_:
+            return "sofascore"
+        if final_v_ == espn_v_ and espn_v_ > 0 and espn_v_ >= api_v_:
+            return "espn"
+        if api_v_ > 0:
+            return "api"
+        return "igual"
+
+    fuente_a = _fuente(api_a, espn_a, ss_amar,  final_amar)
+    fuente_r = _fuente(api_r, espn_r, ss_rojas, final_rojas)
+    fuente_v = _fuente(api_v, espn_v, ss_var,   final_var)
+    fuente_p = _fuente(api_p, espn_p, ss_pp,    final_pp)
+
+    # UPSERT en tabla de auditoría de fuentes
+    try:
+        fecha_date     = fecha.strftime("%Y-%m-%d") if hasattr(fecha, "strftime") else str(fecha)[:10]
+        torneo_id_aux  = db_p.get("torneo_id")
+        numero_fifa_aux = db_p.get("numero_fifa")
+        await db.execute(text("SAVEPOINT _sf_upsert_sp"))
+        await db.execute(
+            text("""
+                INSERT INTO partido_stats_fuentes (
+                    partido_id, torneo_id, numero_fifa, fecha, local, visitante,
+                    api_amarillas, api_rojas, api_var, api_penales,
+                    espn_amarillas, espn_rojas, espn_var, espn_penales,
+                    ss_amarillas, ss_rojas, ss_var, ss_penales,
+                    final_amarillas, final_rojas, final_var, final_penales,
+                    fuente_amarillas, fuente_rojas, fuente_var, fuente_penales,
+                    estado, ultimo_minuto, fuentes_run_at, synced_at
+                ) VALUES (
+                    :pid, :tid, :num_fifa, :fecha, :local, :visit,
+                    :api_a, :api_r, :api_v, :api_p,
+                    :espn_a, :espn_r, :espn_v, :espn_p,
+                    :ss_a, :ss_r, :ss_v, :ss_p,
+                    :fin_a, :fin_r, :fin_v, :fin_p,
+                    :f_a, :f_r, :f_v, :f_p,
+                    :estado, :ult_min, NOW(), NOW()
+                )
+                ON CONFLICT (partido_id) DO UPDATE SET
+                    torneo_id        = EXCLUDED.torneo_id,
+                    numero_fifa      = EXCLUDED.numero_fifa,
+                    fecha            = EXCLUDED.fecha,
+                    local            = EXCLUDED.local,
+                    visitante        = EXCLUDED.visitante,
+                    api_amarillas    = EXCLUDED.api_amarillas,
+                    api_rojas        = EXCLUDED.api_rojas,
+                    api_var          = EXCLUDED.api_var,
+                    api_penales      = EXCLUDED.api_penales,
+                    espn_amarillas   = EXCLUDED.espn_amarillas,
+                    espn_rojas       = EXCLUDED.espn_rojas,
+                    espn_var         = EXCLUDED.espn_var,
+                    espn_penales     = EXCLUDED.espn_penales,
+                    ss_amarillas     = EXCLUDED.ss_amarillas,
+                    ss_rojas         = EXCLUDED.ss_rojas,
+                    ss_var           = EXCLUDED.ss_var,
+                    ss_penales       = EXCLUDED.ss_penales,
+                    final_amarillas  = EXCLUDED.final_amarillas,
+                    final_rojas      = EXCLUDED.final_rojas,
+                    final_var        = EXCLUDED.final_var,
+                    final_penales    = EXCLUDED.final_penales,
+                    fuente_amarillas = EXCLUDED.fuente_amarillas,
+                    fuente_rojas     = EXCLUDED.fuente_rojas,
+                    fuente_var       = EXCLUDED.fuente_var,
+                    fuente_penales   = EXCLUDED.fuente_penales,
+                    -- No hacer downgrade: finalizado nunca retrocede a live/pendiente
+                    estado           = CASE
+                        WHEN partido_stats_fuentes.estado = 'finalizado'
+                        THEN 'finalizado'
+                        ELSE EXCLUDED.estado
+                    END,
+                    ultimo_minuto    = EXCLUDED.ultimo_minuto,
+                    fuentes_run_at   = NOW(),
+                    synced_at        = NOW()
+            """),
+            {
+                "pid": partido_id, "tid": torneo_id_aux, "num_fifa": numero_fifa_aux,
+                "fecha": fecha_date, "local": local, "visit": visitante,
+                "api_a": api_a if api_vals else None,
+                "api_r": api_r if api_vals else None,
+                "api_v": api_v if api_vals else None,
+                "api_p": api_p if api_vals else None,
+                "espn_a": espn_a if espn_raw else None,
+                "espn_r": espn_r if espn_raw else None,
+                "espn_v": espn_v if espn_raw else None,
+                "espn_p": espn_p if espn_raw else None,
+                "ss_a": ss_amar  if ss else None,
+                "ss_r": ss_rojas if ss else None,
+                "ss_v": ss_var   if ss else None,
+                "ss_p": ss_pp    if ss else None,
+                "fin_a": final_amar, "fin_r": final_rojas,
+                "fin_v": final_var,  "fin_p": final_pp,
+                "f_a": fuente_a, "f_r": fuente_r,
+                "f_v": fuente_v, "f_p": fuente_p,
+                "estado":  estado_partido,
+                "ult_min": minuto_actual,
+            },
+        )
+        await db.execute(text("RELEASE SAVEPOINT _sf_upsert_sp"))
+    except Exception as e:
+        try:
+            await db.execute(text("ROLLBACK TO SAVEPOINT _sf_upsert_sp"))
+        except Exception:
+            pass
+        logger.warning(f"  partido_stats_fuentes UPSERT error partido {partido_id}: {e}")
+        print(f"  [DIAG] UPSERT error partido {partido_id}: {e}", flush=True)
+
     return corrections
 
 
@@ -668,7 +1326,7 @@ async def sync_torneo(
 
     # ── 2. Cargar partidos DB con api_fixture_id ──────────────────────────────
     _ff_extra = "AND DATE(p.fecha AT TIME ZONE 'UTC') = :ffecha" if fecha_filtro else ""
-    _ff_params = {"ffecha": str(fecha_filtro)} if fecha_filtro else {}
+    _ff_params = {"ffecha": fecha_filtro} if fecha_filtro else {}
     _sql2 = (
         "SELECT p.id, p.api_fixture_id, p.estado,"
         " p.equipo_local_id, p.equipo_visitante_id,"
@@ -716,8 +1374,57 @@ async def sync_torneo(
     sin_match: list[int] = []
     errores: list[dict] = []
     espn_corrections: list = []   # correcciones ESPN — inicializado antes del async with
+    ss_corrections: list = []     # correcciones SofaScore — inicializado antes del async with
+    to_detail: list = []          # partidos a actualizar — inicializado antes del async with
 
     LIVE_STATUSES = {"1H", "HT", "2H", "ET", "BT", "P", "LIVE"}
+
+    # ── Incremental pre-check: si todos los partidos DB ya están finalizados,
+    #    no hace falta ninguna llamada a API-Football. ──────────────────────────
+    if not force:
+        now_utc_pre = datetime.now(timezone.utc)
+        pending_fix_ids: set[int] = set()
+        for fix_id, db_p in db_partidos.items():
+            if db_p["estado"] != "finalizado":
+                pending_fix_ids.add(fix_id)
+                continue
+            # Aunque esté "finalizado" en BD, incluir si está en ventana temporal
+            # (por si el estado BD está desactualizado — muy raro pero defensivo)
+            fecha = db_p.get("fecha")
+            if fecha:
+                try:
+                    if hasattr(fecha, "tzinfo") and fecha.tzinfo:
+                        elapsed = (now_utc_pre - fecha).total_seconds() / 60
+                    else:
+                        elapsed = (datetime.utcnow() - fecha).total_seconds() / 60
+                    if 0.0 <= elapsed <= 300.0:   # ventana 5h
+                        pending_fix_ids.add(fix_id)
+                except Exception:
+                    pass
+
+        if not pending_fix_ids:
+            logger.info(
+                f"Incremental skip: todos los {len(db_partidos)} partidos ya finalizados "
+                f"— 0 llamadas API-Football"
+            )
+            return {
+                "ok": True,
+                "actualizados": 0,
+                "ya_finalizados": [db_p["id"] for db_p in db_partidos.values()],
+                "sin_match": [],
+                "api_calls": 0,
+                "errores": [],
+                "ids_actualizados": [],
+                "ids_errores": [],
+                "auto_mapeo": mapeo_summary,
+                "msg": "Incremental: sin partidos pendientes — 0 llamadas API",
+            }
+
+        logger.info(
+            f"Incremental: {len(pending_fix_ids)} partido(s) pendientes de {len(db_partidos)} totales"
+        )
+    else:
+        pending_fix_ids = set(db_partidos.keys())
 
     async with httpx.AsyncClient(timeout=30) as client:
         # ── 4a. Finalizados ──────────────────────────────────────────────────
@@ -782,7 +1489,8 @@ async def sync_torneo(
                 sin_match.append(fix_id)
                 continue
             db_p = db_partidos[fix_id]
-            if not force and db_p["estado"] == "finalizado":
+            # Incremental: saltar si ya estaba finalizado Y no estaba en pending_fix_ids
+            if fix_id not in pending_fix_ids:
                 ya_finalizados.append(db_p["id"])
                 continue
             to_detail.append((fix_id, db_p, False))
@@ -849,84 +1557,172 @@ async def sync_torneo(
             logger.info(f"  [{tag}] Monitoreando: fixture={fix_id} partido_id={db_p['id']} — {_nm}")
 
         # ── 5. Llamadas individuales (events + statistics) ───────────────────
-        # Los partidos en vivo siempre se procesan con detalle individual
-        # (ignorando max_detalle) para obtener score en tiempo real.
-        all_finished = finished_fixtures  # para fallback básico
+        # Fase A: fetch HTTP en PARALELO (todas las llamadas simultáneas).
+        # Fase B: escritura a BD en secuencial (una sesión asyncpg no soporta concurrencia).
+        all_finished = finished_fixtures
         detalle_count = 0
-        espn_cache: dict = {}          # {date_str: [espn_events]} — cache por fecha
-        espn_corrections: list = []    # log de correcciones ESPN aplicadas
+        espn_cache: dict = {}
+        espn_corrections: list = []
+
+        # Separar los que van a detalle vs los que van a básico
+        to_fetch_detail = []
+        to_basic_only   = []
         for fix_id, db_p, is_live in to_detail:
+            if is_live or detalle_count < max_detalle:
+                to_fetch_detail.append((fix_id, db_p, is_live))
+                detalle_count += 1
+            else:
+                to_basic_only.append((fix_id, db_p, is_live))
+
+        # Básicos sin call individual
+        for fix_id, db_p, is_live in to_basic_only:
+            match_name = f"{db_p.get('local_nombre','?')} vs {db_p.get('visit_nombre','?')}"
+            logger.info(f"  Límite max_detalle={max_detalle} alcanzado; básico para {match_name}")
+            fix_basic = next((f for f in all_finished if f["fixture"]["id"] == fix_id), None)
+            if fix_basic:
+                try:
+                    await _update_partido_basic(db, db_p["id"], fix_basic, team_id_map)
+                    actualizados.append(db_p["id"])
+                except Exception as e:
+                    errores.append({"partido_id": db_p["id"], "error": str(e)})
+
+        # Fase A: fetch en paralelo
+        async def _fetch_one(fix_id: int, db_p: dict, is_live: bool):
+            tag = "🔴 LIVE" if is_live else "FT"
+            match_name = f"{db_p.get('local_nombre','?')} vs {db_p.get('visit_nombre','?')}"
+            t0 = time.time()
+            try:
+                resp = await client.get(
+                    f"{API_BASE}/fixtures", params={"id": fix_id}, headers=_headers()
+                )
+                resp.raise_for_status()
+                elapsed = time.time() - t0
+                logger.info(f"  Fetch [{tag}] {match_name} OK ({elapsed:.1f}s)")
+                return fix_id, db_p, is_live, resp, t0, None
+            except Exception as e:
+                elapsed = time.time() - t0
+                logger.warning(f"  Fetch [{tag}] {match_name} ERROR ({elapsed:.1f}s): {e}")
+                return fix_id, db_p, is_live, None, t0, str(e)
+
+        import asyncio as _asyncio
+        fetch_results = await _asyncio.gather(
+            *[_fetch_one(fix_id, db_p, is_live) for fix_id, db_p, is_live in to_fetch_detail]
+        )
+        api_calls += sum(1 for r in fetch_results if r[3] is not None)
+
+        # Fase B: log + update DB secuencial
+        finished_to_espn = []
+        api_vals_map: dict[int, dict] = {}   # partido_id → valores crudos API-Football
+        for fix_id, db_p, is_live, resp, t0, err in fetch_results:
             partido_id = db_p["id"]
             match_name = f"{db_p.get('local_nombre','?')} vs {db_p.get('visit_nombre','?')}"
 
-            if not is_live and detalle_count >= max_detalle:
-                # Límite alcanzado: actualizar solo con dato básico del listado
-                logger.info(f"  Límite max_detalle={max_detalle} alcanzado; básico para {match_name}")
-                fix_basic = next(
-                    (f for f in all_finished if f["fixture"]["id"] == fix_id), None
-                )
-                if fix_basic:
-                    try:
-                        await _update_partido_basic(db, partido_id, fix_basic, team_id_map)
-                        actualizados.append(partido_id)
-                    except Exception as e:
-                        errores.append({"partido_id": partido_id, "error": str(e)})
+            if err:
+                await _log(db, "/fixtures", {"id": fix_id}, None, t0,
+                           error=err, contexto=match_name)
+                errores.append({"partido_id": partido_id, "error": f"fetch individual: {err}"})
                 continue
 
-            # Fetch individual con eventos y estadísticas
-            t0 = time.time()
-            tag = "🔴 LIVE" if is_live else "FT"
-            _p_det = {"id": fix_id}
-            logger.info(f"  Fetch detalle API [{tag}]: fixture={fix_id} — {match_name}")
-            try:
-                resp2 = await client.get(f"{API_BASE}/fixtures", params=_p_det, headers=_headers())
-                resp2.raise_for_status()
-                api_calls += 1
-                detalle_count += 1
-                await _log(db, "/fixtures", _p_det, resp2, t0,
-                           contexto=f"{tag} {match_name}")
-            except Exception as e:
-                elapsed = time.time() - t0
-                mm, ss = divmod(elapsed, 60)
-                await _log(db, "/fixtures", _p_det, None, t0,
-                           error=str(e), contexto=f"{tag} {match_name}")
-                errores.append({"partido_id": partido_id, "error": f"fetch individual: {e}"})
-                logger.warning(f"  Error fetch {match_name} ({int(mm):02d}:{ss:05.2f}): {e}")
-                continue
-
-            fixtures_resp = resp2.json().get("response", [])
+            await _log(db, "/fixtures", {"id": fix_id}, resp, t0, contexto=match_name)
+            fixtures_resp = resp.json().get("response", [])
             if not fixtures_resp:
-                errores.append({"partido_id": partido_id, "error": "respuesta vacía en fetch individual"})
+                errores.append({"partido_id": partido_id, "error": "respuesta vacía"})
                 continue
 
             fix_full = fixtures_resp[0]
             try:
-                await _update_partido_full(db, partido_id, fix_full, team_id_map)
+                api_raw = await _update_partido_full(db, partido_id, fix_full, team_id_map)
                 await db.commit()
+                api_vals_map[partido_id] = api_raw
                 actualizados.append(partido_id)
-                elapsed = time.time() - t0
-                mm, ss = divmod(elapsed, 60)
-                logger.info(f"  ✓ Actualizado: {match_name} (partido_id={partido_id}) [{int(mm):02d}:{ss:05.2f}]")
-
-                # ── Verificación ESPN (solo partidos finalizados) ─────────────
+                logger.info(f"  ✓ Actualizado: {match_name} (partido_id={partido_id})")
                 fix_status = fix_full.get("fixture", {}).get("status", {}).get("short", "")
                 if fix_status in STATUS_FINAL:
-                    try:
-                        corr = await _espn_verify_and_patch(
-                            db, client, db_p, partido_id, espn_cache
-                        )
-                        if corr:
-                            await db.commit()
-                            espn_corrections.append({"partido_id": partido_id, "corr": corr})
-                    except Exception as e_espn:
-                        logger.warning(f"  ESPN verify error {match_name}: {e_espn}")
-
+                    finished_to_espn.append((partido_id, db_p))
             except Exception as e:
                 await db.rollback()
-                elapsed = time.time() - t0
-                mm, ss = divmod(elapsed, 60)
                 errores.append({"partido_id": partido_id, "error": str(e)})
-                logger.warning(f"  ✗ Error actualizando {match_name} [{int(mm):02d}:{ss:05.2f}]: {e}")
+                logger.warning(f"  ✗ Error actualizando {match_name}: {e}")
+
+        # Fase C: ESPN verify en paralelo (scoreboard cacheado por fecha)
+        # ESPN: usado solo para minuto_primer_gol, penales tanda y penales partido (fallback).
+        # Para tarjetas y VAR: solo como fallback cuando API-Football no tiene datos (=0).
+        espn_raw_map: dict[int, dict] = {}   # partido_id → valores crudos ESPN
+        if finished_to_espn:
+            # Pre-cargar scoreboards ESPN (agrupados por fecha, 1 call por fecha)
+            fechas_unicas = set()
+            for _pid, _dbp in finished_to_espn:
+                _f = _dbp.get("fecha")
+                if _f:
+                    ds = _f.strftime("%Y%m%d") if hasattr(_f, "strftime") else str(_f)[:10].replace("-", "")
+                    fechas_unicas.add((ds, _f))
+            for ds, fecha_obj in fechas_unicas:
+                if ds not in espn_cache:
+                    espn_cache[ds] = await _espn_scoreboard(client, fecha_obj)
+
+            async def _espn_one(partido_id, db_p):
+                out_raw: dict = {}
+                try:
+                    corr = await _espn_verify_and_patch(
+                        db, client, db_p, partido_id, espn_cache, out_raw=out_raw
+                    )
+                    return partido_id, corr, out_raw
+                except Exception as e:
+                    logger.warning(f"  ESPN verify error partido {partido_id}: {e}")
+                    return partido_id, {}, out_raw
+
+            espn_results = await _asyncio.gather(
+                *[_espn_one(pid, dbp) for pid, dbp in finished_to_espn]
+            )
+            for pid, corr, raw in espn_results:
+                if raw:
+                    espn_raw_map[pid] = raw
+                if corr:
+                    await db.commit()
+                    espn_corrections.append({"partido_id": pid, "corr": corr})
+
+        # Fase D: SofaScore verify en paralelo.
+        # Nueva lógica: SofaScore solo corrige si su valor es MAYOR que el actual (API+ESPN).
+        # SofaScore distingue correctamente 1ª amarilla de 2ª amarilla (expulsión),
+        # y reporta VAR como eventos discretos (sin sobreconteo de commentary).
+        # También hace UPSERT en partido_stats_fuentes para auditoría.
+        ss_cache: dict = {}
+        ss_corrections: list = []
+        if finished_to_espn:
+            async def _ss_one(partido_id, db_p):
+                try:
+                    corr = await _sofascore_verify_and_patch(
+                        db, client, db_p, partido_id, ss_cache,
+                        api_vals=api_vals_map.get(partido_id),
+                        espn_raw=espn_raw_map.get(partido_id),
+                    )
+                    return partido_id, corr
+                except Exception as e:
+                    logger.warning(f"  SofaScore verify error partido {partido_id}: {e}")
+                    return partido_id, {}
+
+            ss_results = await _asyncio.gather(
+                *[_ss_one(pid, dbp) for pid, dbp in finished_to_espn]
+            )
+            for pid, corr in ss_results:
+                if corr:
+                    await db.commit()
+                    ss_corrections.append({"partido_id": pid, "corr": corr})
+
+        # Fase E: Inicializar filas pendientes y procesar transiciones live/pending.
+        # Corre en cada sync para detectar cambios de estado sin gastar cuota API-Football.
+        try:
+            await _init_stats_fuentes_pending(db, torneo_id)
+            live_pending_result = await _process_live_pending_updates(
+                db, client, torneo_id, ss_cache, espn_cache,
+            )
+            if live_pending_result.get("actualizados", 0) > 0:
+                await _log_warn(
+                    db,
+                    f"📡 live/pending actualizados: {live_pending_result['actualizados']} partido(s)"
+                )
+        except Exception as _e_fase_e:
+            logger.warning(f"  Fase E (live/pending tracking) error: {_e_fase_e}")
 
     # ── Advertencias post-sync en el log ─────────────────────────────────────
     if _quota_remaining is not None and _quota_remaining < 20:
@@ -942,6 +1738,9 @@ async def sync_torneo(
     if espn_corrections:
         espn_ids = [c["partido_id"] for c in espn_corrections]
         await _log_warn(db, f"ESPN correcciones: {len(espn_corrections)} partidos {espn_ids}")
+    if ss_corrections:
+        ss_ids = [c["partido_id"] for c in ss_corrections]
+        await _log_warn(db, f"SofaScore correcciones: {len(ss_corrections)} partidos {ss_ids}")
 
     return {
         "ok": True,
@@ -955,8 +1754,440 @@ async def sync_torneo(
         "limite_detalle": max_detalle,
         "detalle_usados": min(len(actualizados), max_detalle),
         "espn_correcciones": espn_corrections,
+        "sofascore_correcciones": ss_corrections,
         **({"auto_mapeo": mapeo_summary} if mapeo_summary else {}),
     }
+
+# ── Live/Pending tracking para partido_stats_fuentes ────────────────────────
+
+async def _init_stats_fuentes_pending(
+    db: AsyncSession,
+    torneo_id: int,
+) -> int:
+    """
+    Inicializa filas en partido_stats_fuentes para todos los partidos del torneo
+    que aún NO tienen fila (estado pendiente o live).
+    No sobrescribe filas existentes.
+    Retorna cantidad de filas creadas.
+    """
+    try:
+        tid = int(torneo_id)
+        rq = await db.execute(
+            text(f"""
+                INSERT INTO partido_stats_fuentes (partido_id, torneo_id, numero_fifa, fecha, local, visitante, estado)
+                SELECT
+                    p.id,
+                    {tid},
+                    p.numero_fifa::TEXT,
+                    DATE(p.fecha),
+                    COALESCE(el.nombre_es, el.nombre, '?'),
+                    COALESCE(ev.nombre_es, ev.nombre, '?'),
+                    CASE
+                        WHEN p.estado = 'finalizado' THEN 'finalizado'
+                        WHEN p.estado = 'en_juego'   THEN 'live'
+                        ELSE 'pendiente'
+                    END
+                FROM partido p
+                LEFT JOIN equipo el ON el.id = p.equipo_local_id
+                LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+                WHERE p.torneo_id = {tid}
+                  AND NOT EXISTS (
+                      SELECT 1 FROM partido_stats_fuentes sf WHERE sf.partido_id = p.id
+                  )
+            """),
+        )
+        count = rq.rowcount or 0
+        await db.commit()
+        return count
+    except Exception as e:
+        await db.rollback()
+        logger.warning(f"  _init_stats_fuentes_pending error: {e}")
+        return 0
+
+
+async def _process_live_pending_updates(
+    db: AsyncSession,
+    client: httpx.AsyncClient,
+    torneo_id: int,
+    ss_cache: dict,
+    espn_cache: dict,
+) -> dict:
+    """
+    Fase E del sync: procesa transiciones de estado y actualizaciones live.
+
+    Para cada fila en partido_stats_fuentes con estado 'pendiente' o 'live':
+      - pendiente → en_juego:   cambia a 'live', lanza ESPN+SS
+      - pendiente → finalizado: cambia a 'finalizado', lanza ESPN+SS
+      - live (minuto nuevo):    si partido.minuto_actual cambió, lanza ESPN+SS
+      - live → finalizado:      cambia a 'finalizado', lanza ESPN+SS una vez
+
+    Las consultas ESPN y SofaScore no consumen cuota de API-Football.
+    Retorna resumen con conteo de actualizaciones.
+    """
+    try:
+        rq = await db.execute(
+            text("""
+                SELECT sf.partido_id, sf.estado AS sf_estado, sf.ultimo_minuto,
+                       p.estado AS p_estado, p.minuto_actual, p.fecha,
+                       COALESCE(el.nombre_es, el.nombre, '?') AS local_nombre,
+                       COALESCE(ev.nombre_es, ev.nombre, '?') AS visit_nombre
+                FROM partido_stats_fuentes sf
+                JOIN partido p ON p.id = sf.partido_id
+                LEFT JOIN equipo el ON el.id = p.equipo_local_id
+                LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+                WHERE sf.torneo_id = :tid
+                  AND sf.estado IN ('pendiente', 'live')
+            """),
+            {"tid": torneo_id},
+        )
+        rows = list(rq.mappings())
+    except Exception as e:
+        logger.warning(f"  _process_live_pending: error leyendo tabla: {e}")
+        return {"procesados": 0, "actualizados": 0, "errores": 0}
+
+    if not rows:
+        return {"procesados": 0, "actualizados": 0, "errores": 0}
+
+    to_update: list[tuple] = []  # (partido_id, db_p, estado_target, minuto_target)
+
+    for row in rows:
+        sf_estado = row["sf_estado"]
+        p_estado  = row["p_estado"]
+        p_minuto  = row["minuto_actual"]
+        sf_minuto = row["ultimo_minuto"]
+
+        db_p = {
+            "id":           row["partido_id"],
+            "fecha":        row["fecha"],
+            "local_nombre": row["local_nombre"],
+            "visit_nombre": row["visit_nombre"],
+            "torneo_id":    torneo_id,
+        }
+
+        if sf_estado == "pendiente":
+            if p_estado == "en_juego":
+                logger.info(f"  📡 pendiente→live: {row['local_nombre']} vs {row['visit_nombre']}")
+                to_update.append((row["partido_id"], db_p, "live", p_minuto))
+            elif p_estado == "finalizado":
+                logger.info(f"  ✅ pendiente→finalizado: {row['local_nombre']} vs {row['visit_nombre']}")
+                to_update.append((row["partido_id"], db_p, "finalizado", None))
+            # Si sigue pendiente: solo actualizar estado en tabla (sin llamar fuentes)
+            else:
+                try:
+                    await db.execute(text("SAVEPOINT _upd_pend_sp"))
+                    await db.execute(
+                        text("UPDATE partido_stats_fuentes SET synced_at=NOW() WHERE partido_id=:pid"),
+                        {"pid": row["partido_id"]},
+                    )
+                    await db.execute(text("RELEASE SAVEPOINT _upd_pend_sp"))
+                except Exception:
+                    await db.execute(text("ROLLBACK TO SAVEPOINT _upd_pend_sp"))
+
+        elif sf_estado == "live":
+            if p_estado == "finalizado":
+                logger.info(f"  ✅ live→finalizado: {row['local_nombre']} vs {row['visit_nombre']}")
+                to_update.append((row["partido_id"], db_p, "finalizado", None))
+            elif p_estado == "en_juego":
+                # Solo actualizar si el minuto cambió
+                if p_minuto is not None and p_minuto != sf_minuto:
+                    logger.info(
+                        f"  ⏱ live min {sf_minuto}→{p_minuto}: "
+                        f"{row['local_nombre']} vs {row['visit_nombre']}"
+                    )
+                    to_update.append((row["partido_id"], db_p, "live", p_minuto))
+                else:
+                    logger.info(
+                        f"  ⏱ live sin cambio (min={sf_minuto}): "
+                        f"{row['local_nombre']} vs {row['visit_nombre']}"
+                    )
+
+    if not to_update:
+        return {"procesados": len(rows), "actualizados": 0, "errores": 0}
+
+    actualizados = 0
+    errores = 0
+
+    for pid, db_p, estado_target, minuto_target in to_update:
+        try:
+            local     = db_p["local_nombre"]
+            visitante = db_p["visit_nombre"]
+            fecha     = db_p.get("fecha")
+
+            # ESPN raw (sin aplicar cambios a partido si es solo live check)
+            espn_raw_e: dict = {}
+            if fecha:
+                ds = fecha.strftime("%Y%m%d") if hasattr(fecha, "strftime") else str(fecha)[:10].replace("-", "")
+                if ds not in espn_cache:
+                    espn_cache[ds] = await _espn_scoreboard(client, fecha)
+                espn_evts = espn_cache.get(ds, [])
+                if espn_evts:
+                    gid = _espn_find_game_id(espn_evts, local, visitante)
+                    if gid:
+                        summary = await _espn_get_summary(client, gid)
+                        if summary:
+                            est = _espn_extract_stats(summary)
+                            espn_raw_e = {
+                                "amarillas":       est.get("amarillas",       0),
+                                "rojas":           est.get("rojas",           0),
+                                "decisiones_var":  est.get("decisiones_var",  0),
+                                "penales_partido": est.get("penales_partido", 0),
+                            }
+                            # Aplicar correcciones ESPN al partido (fallback)
+                            await _espn_verify_and_patch(db, client, db_p, pid, espn_cache)
+
+            # SofaScore + UPSERT con nuevo estado
+            await _sofascore_verify_and_patch(
+                db, client, db_p, pid, ss_cache,
+                api_vals=None,
+                espn_raw=espn_raw_e or None,
+                estado_partido=estado_target,
+                minuto_actual=minuto_target,
+            )
+            await db.commit()
+            actualizados += 1
+
+        except Exception as e:
+            await db.rollback()
+            errores += 1
+            logger.warning(f"  _process_live_pending: error partido {pid}: {e}")
+
+    return {
+        "procesados": len(rows),
+        "actualizados": actualizados,
+        "errores": errores,
+    }
+
+
+# ── Backfill tabla partido_stats_fuentes ────────────────────────────────────
+
+async def populate_stats_fuentes_all(
+    db: AsyncSession,
+    torneo_id: int,
+    client: httpx.AsyncClient,
+) -> dict:
+    """
+    Pobla/actualiza partido_stats_fuentes para TODOS los partidos finalizados del torneo.
+
+    Para cada partido:
+    - Llama ESPN (scoreboard por fecha, cacheado) → obtiene valores crudos ESPN.
+    - Llama SofaScore (incidents) → obtiene valores crudos SS.
+    - Lee el valor actual en BD como "final" (ya tiene API+ESPN+SS merged).
+    - Hace UPSERT en partido_stats_fuentes.
+    - Aplica la nueva lógica "máximo": si SS > final, actualiza partido y tabla.
+
+    No usa cuota de API-Football (solo ESPN y SofaScore).
+    Retorna resumen: {procesados, corregidos_ss, errores, partidos}.
+    """
+    # 1. Inicializar filas pendientes para todos los partidos sin fila aún
+    init_count = await _init_stats_fuentes_pending(db, torneo_id)
+    if init_count:
+        logger.info(f"  populate_stats_fuentes: {init_count} nuevas filas pendientes inicializadas")
+
+    # 2. Obtener TODOS los partidos del torneo (sin filtrar por estado)
+    tid = int(torneo_id)
+    rq = await db.execute(
+        text(f"""
+            SELECT p.id, p.fecha, p.estado AS partido_estado,
+                   COALESCE(el.nombre_es, el.nombre, 'Local') AS local_nombre,
+                   COALESCE(ev.nombre_es, ev.nombre, 'Visitante') AS visit_nombre,
+                   p.amarillas, p.rojas, p.decisiones_var, p.penales_partido,
+                   p.minuto_primer_gol, p.numero_fifa,
+                   {tid} AS torneo_id
+            FROM partido p
+            LEFT JOIN equipo el ON el.id = p.equipo_local_id
+            LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+            WHERE p.torneo_id = {tid}
+            ORDER BY p.numero_fifa NULLS LAST, p.fecha
+        """),
+    )
+    partidos = [dict(r) for r in rq.mappings().all()]
+
+    if not partidos:
+        return {
+            "procesados": 0, "corregidos_ss": 0, "errores": 0,
+            "partidos": [], "filas_inicializadas": init_count,
+        }
+
+    espn_cache: dict = {}
+    ss_cache:   dict = {}
+    procesados = 0
+    corregidos  = 0
+    errores     = 0
+    resultado   = []
+
+    for db_p in partidos:
+        partido_id    = db_p["id"]
+        local         = db_p.get("local_nombre", "")
+        visitante     = db_p.get("visit_nombre", "")
+        fecha         = db_p.get("fecha")
+        estado_actual = db_p.get("partido_estado", "pendiente")
+
+        # Mapear estado BD → estado tabla stats_fuentes
+        if estado_actual == "finalizado":
+            estado_sf = "finalizado"
+        elif estado_actual == "en_juego":
+            estado_sf = "live"
+        else:
+            estado_sf = "pendiente"
+
+        try:
+            # Valores actuales en partido (fuente de verdad para final_*)
+            final_amar    = db_p.get("amarillas")         or 0
+            final_rojas   = db_p.get("rojas")              or 0
+            final_var     = db_p.get("decisiones_var")     or 0
+            final_pp      = db_p.get("penales_partido")    or 0
+            final_minuto  = db_p.get("minuto_primer_gol")  # puede ser NULL si no hubo gol
+
+            # ESPN raw: solo si el partido tiene fecha (finalizado o en_juego)
+            espn_amar = espn_rojas = espn_var = espn_pp = espn_minuto = None
+            if fecha and estado_actual in ("finalizado", "en_juego"):
+                ds = fecha.strftime("%Y%m%d") if hasattr(fecha, "strftime") else str(fecha)[:10].replace("-", "")
+                if ds not in espn_cache:
+                    espn_cache[ds] = await _espn_scoreboard(client, fecha)
+                espn_events = espn_cache.get(ds, [])
+                if espn_events:
+                    game_id = _espn_find_game_id(espn_events, local, visitante)
+                    if game_id:
+                        summary = await _espn_get_summary(client, game_id)
+                        if summary:
+                            es = _espn_extract_stats(summary)
+                            espn_amar   = es.get("amarillas",       0)
+                            espn_rojas  = es.get("rojas",           0)
+                            espn_var    = es.get("decisiones_var",  0)
+                            espn_pp     = es.get("penales_partido", 0)
+                            espn_minuto = es.get("minuto_primer_gol")  # puede ser None
+
+            # SofaScore
+            ss_amar = ss_rojas = ss_var = ss_pp = ss_minuto = None
+            if fecha and estado_actual in ("finalizado", "en_juego"):
+                date_str = fecha.strftime("%Y-%m-%d") if hasattr(fecha, "strftime") else str(fecha)[:10]
+                if date_str not in ss_cache:
+                    ss_cache[date_str] = await _sofascore_scoreboard(client, fecha)
+                events = ss_cache.get(date_str, [])
+                if events:
+                    event_id = _sofascore_find_event(events, local, visitante)
+                    if event_id:
+                        incidents = await _sofascore_get_incidents(client, event_id)
+                        if incidents:
+                            ss = _sofascore_extract_stats(incidents)
+                            ss_amar    = ss.get("amarillas",       0)
+                            ss_rojas   = ss.get("rojas",           0)
+                            ss_var     = ss.get("decisiones_var",  0)
+                            ss_pp      = ss.get("penales_partido", 0)
+                            ss_minuto  = ss.get("minuto_primer_gol")   # puede ser None
+
+            # UPSERT directo — sin SAVEPOINT, sin lógica compleja
+            # asyncpg necesita objeto date, no string
+            from datetime import date as _date_cls
+            if fecha is None:
+                fecha_date = None
+            elif hasattr(fecha, "date") and callable(fecha.date):
+                fecha_date = fecha.date()   # datetime → date
+            elif isinstance(fecha, _date_cls):
+                fecha_date = fecha
+            else:
+                fecha_date = None
+
+            # api_* = valores actuales en tabla partido (poblados por API-Football sync)
+            api_amar   = final_amar    # partido.amarillas ya fue corregido post-ESPN/SS
+            api_rojas  = final_rojas   # idem
+            api_var    = final_var     # idem
+            api_pp     = final_pp      # idem
+            api_minuto = final_minuto  # idem (partido.minuto_primer_gol)
+
+            await db.execute(
+                text("""
+                    INSERT INTO partido_stats_fuentes (
+                        partido_id, torneo_id, numero_fifa, fecha, local, visitante,
+                        api_amarillas,   api_rojas,   api_var,   api_penales,
+                        espn_amarillas,  espn_rojas,  espn_var,  espn_penales,
+                        ss_amarillas,    ss_rojas,    ss_var,    ss_penales,
+                        final_amarillas, final_rojas, final_var, final_penales,
+                        api_minuto,  espn_minuto,  ss_minuto,  minuto_primer_gol,
+                        estado, fuentes_run_at, synced_at
+                    ) VALUES (
+                        :pid, :tid, :num_fifa, :fecha, :local, :visit,
+                        :api_a,  :api_r,  :api_v,  :api_p,
+                        :espn_a, :espn_r, :espn_v, :espn_p,
+                        :ss_a,   :ss_r,   :ss_v,   :ss_p,
+                        :fin_a,  :fin_r,  :fin_v,  :fin_p,
+                        :api_min, :espn_min, :ss_min, :min_gol,
+                        :estado, NOW(), NOW()
+                    )
+                    ON CONFLICT (partido_id) DO UPDATE SET
+                        torneo_id          = EXCLUDED.torneo_id,
+                        numero_fifa        = EXCLUDED.numero_fifa,
+                        fecha              = EXCLUDED.fecha,
+                        local              = EXCLUDED.local,
+                        visitante          = EXCLUDED.visitante,
+                        api_amarillas      = EXCLUDED.api_amarillas,
+                        api_rojas          = EXCLUDED.api_rojas,
+                        api_var            = EXCLUDED.api_var,
+                        api_penales        = EXCLUDED.api_penales,
+                        espn_amarillas     = EXCLUDED.espn_amarillas,
+                        espn_rojas         = EXCLUDED.espn_rojas,
+                        espn_var           = EXCLUDED.espn_var,
+                        espn_penales       = EXCLUDED.espn_penales,
+                        ss_amarillas       = EXCLUDED.ss_amarillas,
+                        ss_rojas           = EXCLUDED.ss_rojas,
+                        ss_var             = EXCLUDED.ss_var,
+                        ss_penales         = EXCLUDED.ss_penales,
+                        final_amarillas    = EXCLUDED.final_amarillas,
+                        final_rojas        = EXCLUDED.final_rojas,
+                        final_var          = EXCLUDED.final_var,
+                        final_penales      = EXCLUDED.final_penales,
+                        api_minuto         = EXCLUDED.api_minuto,
+                        espn_minuto        = EXCLUDED.espn_minuto,
+                        ss_minuto          = EXCLUDED.ss_minuto,
+                        minuto_primer_gol  = EXCLUDED.minuto_primer_gol,
+                        estado             = EXCLUDED.estado,
+                        fuentes_run_at     = NOW(),
+                        synced_at          = NOW()
+                """),
+                {
+                    "pid": partido_id, "tid": tid,
+                    "num_fifa": str(db_p.get("numero_fifa")) if db_p.get("numero_fifa") is not None else None,
+                    "fecha": fecha_date, "local": local, "visit": visitante,
+                    "api_a": api_amar, "api_r": api_rojas, "api_v": api_var, "api_p": api_pp,
+                    "espn_a": espn_amar, "espn_r": espn_rojas, "espn_v": espn_var, "espn_p": espn_pp,
+                    "ss_a": ss_amar, "ss_r": ss_rojas, "ss_v": ss_var, "ss_p": ss_pp,
+                    "fin_a": final_amar, "fin_r": final_rojas, "fin_v": final_var, "fin_p": final_pp,
+                    "api_min": api_minuto, "espn_min": espn_minuto, "ss_min": ss_minuto,
+                    "min_gol": final_minuto,
+                    "estado": estado_sf,
+                },
+            )
+            await db.commit()
+            corr = {}
+            if ss_amar is not None or espn_amar is not None:
+                corr = {"espn": espn_amar, "ss": ss_amar}
+                corregidos += 1
+
+            procesados += 1
+            resultado.append({
+                "partido_id": partido_id,
+                "match": f"{local} vs {visitante}",
+                "fecha": str(fecha)[:10] if fecha else None,
+                "corregido": bool(corr),
+                "corrections": corr,
+            })
+
+        except Exception as e:
+            errores += 1
+            logger.warning(f"  populate_stats_fuentes: error partido {partido_id} ({local} vs {visitante}): {e}")
+            resultado.append({
+                "partido_id": partido_id,
+                "match": f"{local} vs {visitante}",
+                "error": str(e),
+            })
+
+    return {
+        "procesados": procesados,
+        "corregidos_ss": corregidos,
+        "errores": errores,
+        "partidos": resultado,
+    }
+
 
 # ── Helpers de actualización ─────────────────────────────────────────────────
 
@@ -1016,8 +2247,9 @@ async def _update_partido_full(
     partido_id: int,
     fix: dict,
     team_id_map: dict[int, int],
-) -> None:
-    """Actualiza un partido con datos completos (goals + events + statistics)."""
+) -> dict:
+    """Actualiza un partido con datos completos (goals + events + statistics).
+    Retorna los valores J/K/L/M extraídos por API-Football (antes de ESPN/SS)."""
     status_short = fix["fixture"]["status"]["short"]
     goals_home   = fix["goals"]["home"]
     goals_away   = fix["goals"]["away"]
@@ -1053,7 +2285,12 @@ async def _update_partido_full(
     # Ordenar eventos por minuto
     events_sorted = sorted(events, key=lambda e: e.get("time", {}).get("elapsed") or 999)
 
-    rojas_events = 0  # fallback si statistics llegan tarde (partidos en vivo)
+    rojas_events    = 0  # fallback si statistics llegan tarde (partidos en vivo)
+    amarillas_events = 0  # solo primeras amarillas (excluye 2ª amarilla=expulsión)
+    # NOTA: la estadística "Yellow Cards" de API-Football incluye la 2ª amarilla
+    # (que resulta en expulsión), inflando el total. Los eventos distinguen
+    # "Yellow Card" (primera) de "Second Yellow card" (expulsión → roja).
+    # Por eso usamos amarillas_events como fuente primaria para partidos finalizados.
 
     # Penales cobrados durante el partido (ítem M): convertidos + fallados.
     # NO incluye la tanda de penales (ítem O), que se cuenta aparte por score.penalty.
@@ -1073,8 +2310,11 @@ async def _update_partido_full(
                 if elapsed is not None:
                     goles_anulados_minutos.add(elapsed)
 
-        if ev_type == "Card" and ev_detail in ("Red Card", "Second Yellow card"):
-            rojas_events += 1
+        if ev_type == "Card":
+            if ev_detail == "Yellow Card":
+                amarillas_events += 1          # primera amarilla: cuenta como amarilla
+            elif ev_detail in ("Red Card", "Second Yellow card"):
+                rojas_events += 1              # roja directa o 2ª amarilla: cuenta como roja
 
         # Penal cobrado durante el juego (convertido o fallado)
         if ev_type == "Goal" and ev_detail == "Penalty":
@@ -1098,9 +2338,17 @@ async def _update_partido_full(
 
     decisiones_var = var_count  # siempre 0+ — null impide comparar con pronóstico
 
-    # Si las statistics aún no reflejan las rojas (partido en vivo), usar conteo de eventos
+    # Rojas: si los eventos capturaron más expulsiones que las estadísticas (partido en vivo
+    # o stats incompletas), usar el conteo de eventos.
     if rojas_events > 0 and (rojas_total is None or rojas_total < rojas_events):
         rojas_total = rojas_events
+
+    # Amarillas: preferir eventos sobre estadísticas para partidos finalizados.
+    # Las stats de "Yellow Cards" incluyen la 2ª amarilla (que debería contarse como roja),
+    # inflando el total. Los eventos son más precisos: "Yellow Card" = primera amarilla.
+    if amarillas_events > 0:
+        amarillas_total = amarillas_events  # más preciso: excluye 2ª amarilla
+
     elapsed_now = fix["fixture"]["status"].get("elapsed")
 
     # Para partidos finalizados con eventos procesados: los nulos pasan a 0
@@ -1157,3 +2405,10 @@ async def _update_partido_full(
         },
     )
     await db.commit()
+    # Retornar valores crudos de API-Football para la tabla de auditoría
+    return {
+        "amarillas":       amarillas_total if amarillas_total is not None else 0,
+        "rojas":           rojas_total     if rojas_total     is not None else 0,
+        "decisiones_var":  decisiones_var  if decisiones_var  is not None else 0,
+        "penales_partido": penales_partido_total,
+    }

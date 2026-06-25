@@ -156,15 +156,22 @@ class CopasMundoScoringEngine:
                 and apuesta_global["pred_peor_equipo_id"] == torneo_resultados["peor_equipo_id"]):
             score.pts_peor_equipo = CONFIG.pts_peor_equipo
 
-        # E — Mayor goleada: ganador (10) + perdedor (10)
-        if (apuesta_global.get("pred_goleada_ganador") is not None
-                and torneo_resultados.get("goleada_ganador") is not None
-                and apuesta_global["pred_goleada_ganador"] == torneo_resultados["goleada_ganador"]):
-            score.pts_mayor_goleada += CONFIG.pts_mayor_goleada_ganador
-        if (apuesta_global.get("pred_goleada_perdedor") is not None
-                and torneo_resultados.get("goleada_perdedor") is not None
-                and apuesta_global["pred_goleada_perdedor"] == torneo_resultados["goleada_perdedor"]):
-            score.pts_mayor_goleada += CONFIG.pts_mayor_goleada_perdedor
+        # E — Mayor goleada: premiar el MAYOR número (ganador) y el MENOR número (perdedor)
+        # Se usan los conjuntos de valores de TODOS los partidos con la diferencia máxima.
+        # Ej. si 7-1 y 6-0 tienen ambos diff=6:
+        #   ganadores_set = {6, 7} → pred_ganador ∈ {6,7} → +10 pts
+        #   perdedores_set = {0, 1} → pred_perdedor ∈ {0,1} → +10 pts
+        # Componentes independientes.
+        pred_g = apuesta_global.get("pred_goleada_ganador")
+        pred_p = apuesta_global.get("pred_goleada_perdedor")
+        gan_set  = torneo_resultados.get("goleada_ganadores_set")
+        perd_set = torneo_resultados.get("goleada_perdedores_set")
+        if gan_set is not None and pred_g is not None:
+            if pred_g in gan_set:
+                score.pts_mayor_goleada += CONFIG.pts_mayor_goleada_ganador
+        if perd_set is not None and pred_p is not None:
+            if pred_p in perd_set:
+                score.pts_mayor_goleada += CONFIG.pts_mayor_goleada_perdedor
 
         # F — Etapa Paraguay (6 pts)
         # Normalización: acepta texto libre y variantes del select histórico.

@@ -275,6 +275,10 @@ class ScoringCalculator:
             result["peor_equipo_id"] = None
 
         # E — Mayor goleada del torneo
+        # Criterio FIFA: mayor diferencia primero; en empate, más goles totales.
+        # Solo el partido ganador (LIMIT 1) es la referencia.
+        # Ej. 7-1 (8 goles) > 6-0 (6 goles) → referencia = 7-1
+        # Tolerancia ±1: ganadores={6,7}, perdedores={0,1}
         try:
             r = await db.execute(
                 text("""
@@ -291,8 +295,14 @@ class ScoringCalculator:
             goleada = r.mappings().first()
             if goleada:
                 gl, gv = goleada["goles_local"], goleada["goles_visitante"]
-                result["goleada_ganador"]  = max(gl, gv)
-                result["goleada_perdedor"] = min(gl, gv)
+                real_g = max(gl, gv)
+                real_p = min(gl, gv)
+                result["max_diferencia"]        = abs(gl - gv)
+                result["goleada_ganador"]        = real_g
+                result["goleada_perdedor"]       = real_p
+                # Exact match: solo gana quien puso exactamente el valor del partido referencia
+                result["goleada_ganadores_set"]  = [real_g]   # ej. {7}
+                result["goleada_perdedores_set"] = [real_p]   # ej. {1}
         except Exception:
             pass
 
@@ -347,7 +357,7 @@ class ScoringCalculator:
                 JOIN fase f ON f.id = p.fase_id
                 LEFT JOIN equipo el ON el.id = p.equipo_local_id
                 LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
-                WHERE p.torneo_id = :tid AND p.estado = 'finalizado'
+                WHERE f.torneo_id = :tid AND p.estado = 'finalizado'
                   AND p.goles_local IS NOT NULL AND p.goles_visitante IS NOT NULL
             """),
             {"tid": torneo_id},
@@ -359,17 +369,21 @@ class ScoringCalculator:
         r = await db.execute(
             text("""
                 SELECT a.id, a.apostador_id, a.partido_id,
-                       a.pred_local, a.pred_visitante,
-                       a.pred_minuto_gol, a.pred_amarillas, a.pred_var,
+                       COALESCE(a.pred_local,    0) AS pred_local,
+                       COALESCE(a.pred_visitante,0) AS pred_visitante,
+                       a.pred_minuto_gol,
+                       COALESCE(a.pred_amarillas,      0) AS pred_amarillas,
+                       COALESCE(a.pred_var,            0) AS pred_var,
                        a.pred_penales,
-                       a.pred_rojas,
+                       COALESCE(a.pred_rojas,          0) AS pred_rojas,
                        a.pred_penales_local_tanda,
                        a.pred_penales_visitante_tanda,
-                       a.pred_penales_partido,
+                       COALESCE(a.pred_penales_partido,0) AS pred_penales_partido,
                        a.pred_equipo_clasifica
                 FROM apuesta a
                 JOIN partido p ON p.id = a.partido_id
-                WHERE p.torneo_id = :tid
+                JOIN fase f ON f.id = p.fase_id
+                WHERE f.torneo_id = :tid
                   AND p.estado = 'finalizado'
                   AND p.goles_local IS NOT NULL
                   AND p.goles_visitante IS NOT NULL
@@ -426,7 +440,14 @@ class ScoringCalculator:
     def _compute_minuto_winners(
         self, apuestas: list[dict], partidos: dict[int, dict]
     ) -> set[int]:
-        """Devuelve el conjunto de apuesta_ids que ganan el bonus de minuto_gol."""
+        """Devuelve el conjunto de apuesta_ids que ganan el bonus de minuto_gol.
+
+        Regla oficial: gana quien predijo el minuto MÁS CERCANO al real.
+        Si hay empate de distancia, todos los empatados ganan.
+        El partido puede durar más de 90 min (injury time, alargue):
+          minutos 91, 92, 95, etc. son goles válidos.
+        Sentinel "sin primer gol": NULL o el valor 99 (legacy) → nadie gana.
+        """
         minuto_preds: dict[int, list[tuple[int, int]]] = defaultdict(list)
         for ap in apuestas:
             if ap.get("pred_minuto_gol") is not None:
@@ -435,8 +456,10 @@ class ScoringCalculator:
         winners: set[int] = set()
         for pid, preds in minuto_preds.items():
             real_min = (partidos.get(pid) or {}).get("minuto_primer_gol")
-            if real_min is None:
+            # None o 99 (sentinel "sin gol") → nadie gana
+            if real_min is None or real_min == 99:
                 continue
+            # Gana el/los más cercanos (puede haber empate → todos ganan)
             min_dist = min(abs(pred - real_min) for _, pred in preds)
             for aid, pred in preds:
                 if abs(pred - real_min) == min_dist:

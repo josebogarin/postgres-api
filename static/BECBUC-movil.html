@@ -963,7 +963,7 @@ function faseChipTap(fid){
 function renderPronos(){
   const el=document.getElementById('page-pronos');
   const tabs=[['grupos','🏟 Grupos'],['playoffs','⚔️ Playoffs'],['globales','🌐 Globales'],
-    ['envivo','🔴 En Vivo'],['partidos','📊 Resultados']];
+    ['envivo','🔴 En Vivo'],['partidos','📊 Resultados'],['terceros','3️⃣ 3ros']];
   let h=`<div id="m-today-bar" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:4px 0 8px;min-height:48px;align-items:center;"></div>`;
   if(_isAdmin){
     h+=`<div id="pronAdminSel" style="padding:6px 12px;background:rgba(99,102,241,.08);border-bottom:1px solid rgba(99,102,241,.2);display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -1109,6 +1109,59 @@ async function _loadPronosSubTab(){
   else if(_pronosTab==='globales') await _renderPronosGlobalesM(el);
   else if(_pronosTab==='partidos') await _renderPronosPartidosM(el);
   else if(_pronosTab==='envivo')   await _renderPronosEnVivoM(el);
+  else if(_pronosTab==='terceros') await _renderTercerosProvisoriosM(el);
+}
+
+async function _renderTercerosProvisoriosM(el){
+  if(!_torneoId){el.innerHTML='<div class="banner warn">Sin torneo activo.</div>';return;}
+  el.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:.8rem;">Cargando…</div>';
+  let data;
+  try{
+    data=await api(`/api/v1/bets/mejores-terceros-provisorios/${_torneoId}`);
+  }catch(e){
+    el.innerHTML=`<div class="banner err">❌ ${e.message}</div>`;return;
+  }
+  const{terceros=[],corte_pts,margen,grupos_totales,grupos_completos}=data;
+  if(!terceros.length){el.innerHTML='<div class="banner warn">Sin datos de grupos aún.</div>';return;}
+  const faltanGrupos=grupos_totales-grupos_completos;
+
+  const rows=terceros.map((t,i)=>{
+    const isIn=t.dentro;
+    const gdStr=(t.gd??0)>=0?`+${t.gd??0}`:`${t.gd??0}`;
+    const pend=t.pendientes>0?`<span style="color:var(--amber);font-size:.65rem"> ${t.pendientes}↻</span>`:'';
+    const cutStyle=i===8?'border-top:2px solid var(--amber);':'';
+    return`<tr style="${cutStyle}">
+      <td style="text-align:center;font-weight:700;color:${isIn?'var(--green)':'var(--red)'}">${t.rank}</td>
+      <td style="font-size:.75rem">${t.nombre}<span style="background:var(--row);color:var(--muted);border-radius:3px;padding:0 4px;font-size:.62rem;font-weight:700;margin-left:3px">${t.grupo}</span>${pend}</td>
+      <td style="text-align:center;font-weight:700;color:${isIn?'var(--green)':'var(--red)'}">${t.pts??0}</td>
+      <td style="text-align:center;font-size:.7rem;color:${(t.gd??0)>0?'var(--green)':(t.gd??0)<0?'var(--red)':'var(--muted)'}">${gdStr}</td>
+      <td style="text-align:center;">
+        <span style="font-size:.6rem;padding:2px 5px;border-radius:8px;font-weight:700;background:${isIn?'rgba(34,197,94,.15)':'rgba(239,68,68,.15)'};color:${isIn?'var(--green)':'var(--red)'}">
+          ${isIn?'✓':'✗'}
+        </span>
+      </td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML=`
+    <div style="font-size:.72rem;color:var(--muted);padding:4px 2px 8px;display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between">
+      <span><b style="color:var(--text)">${grupos_completos}/${grupos_totales}</b> grupos cerrados${faltanGrupos>0?` · <span style="color:var(--amber)">Faltan ${faltanGrupos}</span>`:''}</span>
+      ${corte_pts!=null?`<span>Corte: <b style="color:var(--text)">${corte_pts}pts</b>${margen!=null?` · Margen: <b style="color:var(--amber)">${margen}pts</b>`:''}</span>`:''}
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:.72rem;">
+      <thead><tr style="border-bottom:1px solid var(--line)">
+        <th style="padding:4px 2px;text-align:center;color:var(--muted);font-size:.62rem;">#</th>
+        <th style="padding:4px 2px;color:var(--muted);font-size:.62rem;">Equipo</th>
+        <th style="padding:4px 2px;text-align:center;color:var(--muted);font-size:.62rem;">Pts</th>
+        <th style="padding:4px 2px;text-align:center;color:var(--muted);font-size:.62rem;">DG</th>
+        <th style="padding:4px 2px;text-align:center;color:var(--muted);font-size:.62rem;"></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="font-size:.65rem;color:var(--muted);margin-top:8px;line-height:1.5;text-align:center;">
+      📌 Provisional · Criterio FIFA: Pts → DG → GF → Fair Play → Ranking FIFA
+      ${faltanGrupos>0?'<br><span style="color:var(--amber)">↻ = partidos pendientes en el grupo</span>':''}
+    </div>`;
 }
 
 function _renderPronosGruposM(el){
@@ -2472,6 +2525,7 @@ async function loadAdmin(){
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn-save" style="flex:1;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.4);color:#818cf8;font-size:.71rem;padding:6px 10px;border-radius:8px" onclick="amSyncResultadosM(this)">🔄 Actualizar hoy</button>
         <button class="btn-save" id="btnResyncAyerM" style="flex:1;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.35);color:#a78bfa;font-size:.71rem;padding:6px 10px;border-radius:8px" onclick="amResyncAyerM(this)">🔁 Re-sync ayer</button>
+        <button class="btn-save" id="btnSofascoreM" style="flex:1 1 100%;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.4);color:#c4b5fd;font-size:.71rem;padding:6px 10px;border-radius:8px" onclick="amSofascoreVerifyM(this)">🟣 SofaScore J/K/L/M (ayer)</button>
       </div>
     </div>
     <div id="amMsg" style="padding:0 12px 6px;font-size:.73rem;min-height:20px"></div>
@@ -2605,6 +2659,32 @@ async function amResyncAyerM(btn){
     if(ok>0) _loadMonDashM();
   }catch(e){msg.innerHTML=`<span style="color:var(--red)">✗ ${esc(e.message)}</span>`;}
   if(btn){btn.disabled=false;btn.textContent='🔁 Re-sync de ayer';}
+}
+
+async function amSofascoreVerifyM(btn){
+  const msg = document.getElementById('amMsg');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Consultando SofaScore…';}
+  if(msg) msg.innerHTML='';
+  try{
+    const r = await api(`/api/v1/bets/sofascore-verify/${_torneoId}?fecha=ayer`,{method:'POST'});
+    const corr = r.correcciones||[];
+    const sinM = r.sin_match_sofascore||[];
+    let txt = `✓ ${r.partidos_revisados??0} partidos revisados`;
+    if(corr.length){
+      txt += ` · 🔧 ${corr.length} corregidos`;
+      corr.forEach(c=>{
+        const u=Object.entries(c.updates).map(([k,v])=>`${k}=${v}`).join(', ');
+        txt+=`<br>&nbsp;&nbsp;• ${esc(c.local)} vs ${esc(c.visitante)}: ${esc(u)}`;
+      });
+    } else {
+      txt += ' · sin diferencias';
+    }
+    if(r.puntajes_recalculados) txt+=' · 📊 puntajes OK';
+    if(sinM.length) txt+=` · ⚠️ sin match: ${sinM.map(esc).join(', ')}`;
+    if(msg) msg.innerHTML=`<span style="color:${corr.length?'var(--green)':'var(--muted)'}">${txt}</span>`;
+    if(corr.length>0) _loadMonDashM();
+  }catch(e){if(msg)msg.innerHTML=`<span style="color:var(--red)">✗ ${esc(e.message)}</span>`;}
+  if(btn){btn.disabled=false;btn.textContent='🟣 SofaScore J/K/L/M (ayer)';}
 }
 
 async function amAvanzarBracketM(btn){

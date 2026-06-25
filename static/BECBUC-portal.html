@@ -1395,6 +1395,7 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <button class="bet-tab-btn"        onclick="betSwitchTab('playoffs')" id="btab-playoffs">⚔️ Playoffs</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('globales')" id="btab-globales">🌐 Globales</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('partidos')" id="btab-partidos">📊 Resultados</button>
+            <button class="bet-tab-btn"        onclick="betSwitchTab('terceros')" id="btab-terceros">3️⃣ Mejores 3ros</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('envivo')"   id="btab-envivo">🔴 En Vivo</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('ranking')"  id="btab-ranking">🏆 Ranking</button>
             <button class="btn-actualizar-pronos" id="btnActualizarPronos" onclick="refreshPronos(this)" title="Recarga partidos en vivo" style="display:none">🔄 Actualizar</button>
@@ -1506,6 +1507,9 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
               </button>
               <button class="mon-act-btn" id="btnResyncAyer" onclick="syncResyncFecha('ayer')" style="width:100%;">
                 <i class="ti ti-reload"></i> Re-sync de ayer
+              </button>
+              <button class="mon-act-btn" id="btnSofascoreAyer" onclick="sofascoreVerify('ayer')" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.4);color:#a78bfa;width:100%;">
+                <i class="ti ti-brand-databricks"></i> SofaScore (J/K/L/M)
               </button>
             </div>
           </div>
@@ -4725,6 +4729,7 @@ async function loadBetTab() {
     if (_betTab === 'globales')  await renderBetGlobales(el);
     if (_betTab === 'ranking')   await renderBetRanking(el);
     if (_betTab === 'partidos')  await renderBetPartidos(el);
+    if (_betTab === 'terceros')  await renderBetTercerosProvisorios(el);
     if (_betTab === 'envivo')    await renderBetEnVivo(el);
     if (_betTab === 'fases')     await renderBetTransparencia(el);
   } catch(e) {
@@ -6607,6 +6612,39 @@ async function syncResyncFecha(fechaParam) {
   }
 }
 
+async function sofascoreVerify(fechaParam = 'ayer') {
+  /* Corre verificación SofaScore sobre partidos finalizados. Sin cuota API-Football. */
+  if (!_betTorneoId) return;
+  const btn = document.getElementById('btnSofascoreAyer');
+  const msg = document.getElementById('syncMsg');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Consultando SofaScore…'; }
+  if (msg) msg.innerHTML = '';
+  try {
+    const qs = fechaParam ? `?fecha=${fechaParam}` : '';
+    const r = await api(`/api/v1/bets/sofascore-verify/${_betTorneoId}${qs}`, { method: 'POST' });
+    const corr = r.correcciones || [];
+    const sinM = r.sin_match_sofascore || [];
+    const steps = [`📅 ${r.fecha || fechaParam} · ${r.partidos_revisados ?? 0} partidos`];
+    if (corr.length > 0) {
+      steps.push(`🔧 ${corr.length} corregidos`);
+      corr.forEach(c => {
+        const u = Object.entries(c.updates).map(([k,v]) => `${k}=${v}`).join(', ');
+        steps.push(`&nbsp;&nbsp;• ${c.local} vs ${c.visitante}: ${u}`);
+      });
+    } else {
+      steps.push('✓ sin diferencias');
+    }
+    if (r.puntajes_recalculados) steps.push('📊 puntajes recalculados');
+    if (sinM.length) steps.push(`⚠️ sin match: ${sinM.join(', ')}`);
+    if (msg) msg.innerHTML = `<span style="color:${corr.length?'var(--green)':'var(--muted)'}">${steps.join('<br>')}</span>`;
+    if (corr.length > 0) { loadBecbucKpis(); loadRankingDash(true); }
+  } catch(e) {
+    if (msg) msg.innerHTML = `<span style="color:var(--red)">✗ ${e.message}</span>`;
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-brand-databricks"></i> SofaScore (J/K/L/M)'; }
+  }
+}
+
 async function simularIntegral() {
   if (!_betTorneoId) return;
   const btn = document.getElementById('btnSimIntegral');
@@ -7835,6 +7873,72 @@ async function saveGlobales() {
     if (msg) { msg.style.color = 'var(--red)'; msg.textContent = '❌ ' + e.message; }
     if (btn) { btn.disabled = false; btn.textContent = '💾 Guardar globales'; }
   }
+}
+
+/* ══════════════════════════════════════════════════════
+   TAB MEJORES TERCEROS PROVISORIOS — Standings reales
+   ══════════════════════════════════════════════════════ */
+async function renderBetTercerosProvisorios(el) {
+  if (!_betTorneoId) { el.innerHTML = '<div class="state-msg">Seleccioná un torneo.</div>'; return; }
+  el.innerHTML = '<div class="state-msg"><i class="ti ti-loader-2" style="display:block;margin-bottom:6px;"></i>Cargando…</div>';
+  let data;
+  try {
+    data = await fetchApi(`/api/v1/bets/mejores-terceros-provisorios/${_betTorneoId}`);
+  } catch(e) {
+    el.innerHTML = `<div class="state-msg" style="color:var(--red);">❌ ${esc(e.message)}</div>`;
+    return;
+  }
+
+  const { terceros = [], corte_pts, margen, grupos_totales, grupos_completos } = data;
+  if (!terceros.length) {
+    el.innerHTML = '<div class="state-msg">Sin datos de grupos aún.</div>'; return;
+  }
+
+  const faltanGrupos = grupos_totales - grupos_completos;
+  const corteHtml = corte_pts != null
+    ? `<span>Corte actual: <b>${corte_pts} pts</b>${margen != null ? ` · Margen 8°/9°: <b style="color:var(--amber)">${margen} pts</b>` : ''}</span>`
+    : '';
+
+  const rows = terceros.map((t,i) => {
+    const isIn   = t.dentro;
+    const cutRow = i === 8 ? 'style="border-top:2px solid var(--amber);"' : '';
+    const gdStr  = (t.gd??0) >= 0 ? `+${t.gd??0}` : `${t.gd??0}`;
+    const pend   = t.pendientes > 0 ? ` <span style="color:var(--amber);font-size:.7rem">(${t.pendientes}↻)</span>` : '';
+    return `<tr ${cutRow}>
+      <td style="font-weight:700;color:${isIn?'var(--green)':'var(--red)'};text-align:center;">${t.rank}</td>
+      <td>${esc(t.nombre)}<span style="background:var(--surface);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:.65rem;font-weight:700;margin-left:4px;">${t.grupo}</span>${pend}</td>
+      <td style="text-align:center;">${t.pj??0}</td>
+      <td style="text-align:center;font-weight:700;color:${isIn?'var(--green)':'var(--red)'};">${t.pts??0}</td>
+      <td style="text-align:center;color:${(t.gd??0)>0?'var(--green)':(t.gd??0)<0?'var(--red)':'var(--muted)'};">${gdStr}</td>
+      <td style="text-align:center;">${t.gf??0}</td>
+      <td style="text-align:center;">
+        <span class="pts-chip ${isIn?'green':'red'}">${isIn?'✓ ADENTRO':'✗ AFUERA'}</span>
+      </td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="padding:10px 4px;font-size:.8rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);margin-bottom:10px;">
+      <span><b style="color:var(--fg)">${grupos_completos}/${grupos_totales}</b> grupos cerrados${faltanGrupos>0?` · <span style="color:var(--amber)">Faltan ${faltanGrupos}</span>`:''}</span>
+      ${corteHtml}
+    </div>
+    <table class="bet-table">
+      <thead><tr>
+        <th style="text-align:center;">#</th>
+        <th>Equipo</th>
+        <th style="text-align:center;">PJ</th>
+        <th style="text-align:center;">Pts</th>
+        <th style="text-align:center;">DG</th>
+        <th style="text-align:center;">GF</th>
+        <th style="text-align:center;">Estado</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="font-size:.7rem;color:var(--muted);margin-top:10px;line-height:1.6;">
+      📌 Provisional — basado en standings reales actuales.<br>
+      Criterio FIFA: Pts → DG → GF → Fair Play → Ranking FIFA → Grupo.<br>
+      ${faltanGrupos>0?`<span style="color:var(--amber)">↻ = partidos pendientes · El 3° actual puede subir, bajar o quedar en la misma posición.</span>`:''}
+    </div>`;
 }
 
 /* ══════════════════════════════════════════════════════
