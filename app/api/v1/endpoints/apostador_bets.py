@@ -38,6 +38,7 @@ from app.services.bracket_service import (
     seleccionar_mejores_terceros,
     armar_ronda32,
     propagar_ko_usuario,
+    _sort_grupo as _sort_grupo_fifa,   # H2H + fair_play + FIFA ranking
 )
 from app.services import ko_scoring
 from app.services.ko_scoring import PHASE_MULT, TIPO_NUM_RANGE, KO_FEEDERS  # noqa: F401
@@ -449,7 +450,7 @@ async def grupos_standings(torneo_id: int, db: DBSession) -> list[dict]:
         await db.rollback()
 
     rf = await db.execute(
-        text("SELECT id, nombre FROM fase WHERE torneo_id=:tid AND tipo='grupo' ORDER BY nombre"),
+        text("SELECT id, nombre FROM fase WHERE torneo_id=:tid AND tipo='grupo' AND nombre NOT ILIKE '%mejores%' ORDER BY nombre"),
         {"tid": torneo_id}
     )
     fases = [dict(r) for r in rf.mappings()]
@@ -535,7 +536,7 @@ async def mejores_terceros_provisorios(torneo_id: int, db: DBSession) -> dict:
     """
     # ── Leer standings reales de todos los grupos ─────────────────────────────
     rf = await db.execute(
-        text("SELECT id, nombre FROM fase WHERE torneo_id=:tid AND tipo='grupo' ORDER BY nombre"),
+        text("SELECT id, nombre FROM fase WHERE torneo_id=:tid AND tipo='grupo' AND nombre NOT ILIKE '%mejores%' ORDER BY nombre"),
         {"tid": torneo_id},
     )
     fases = [dict(r) for r in rf.mappings()]
@@ -560,32 +561,78 @@ async def mejores_terceros_provisorios(torneo_id: int, db: DBSession) -> dict:
                        pa.pj, pa.gf, pa.gc,
                        (pa.gf - pa.gc) AS gd,
                        pa.pts, pa.posicion,
-                       COALESCE(pa.fair_play_pts, 0) AS fair_play_pts
+                       COALESCE((
+                           SELECT SUM(
+                               CASE WHEN p2.equipo_local_id = e.id
+                                    THEN COALESCE(p2.local_amarillas,0)   + COALESCE(p2.local_rojas,0)*3
+                                    ELSE COALESCE(p2.visitante_amarillas,0) + COALESCE(p2.visitante_rojas,0)*3
+                               END)
+                           FROM partido p2
+                           JOIN fase f2 ON f2.id = p2.fase_id
+                                       AND f2.tipo = 'grupo'
+                                       AND f2.nombre NOT ILIKE '%mejores%'
+                           WHERE p2.torneo_id = :tid
+                             AND p2.estado = 'finalizado'
+                             AND (p2.equipo_local_id = e.id OR p2.equipo_visitante_id = e.id)
+                       ), 0) AS fair_play_pts
                 FROM participacion pa
                 JOIN equipo e ON e.id = pa.equipo_id
                 WHERE pa.fase_id = :fid
                 ORDER BY pa.posicion ASC NULLS LAST,
                          pa.pts DESC, (pa.gf - pa.gc) DESC, pa.gf DESC
             """),
-            {"fid": fid},
+            {"fid": fid, "tid": torneo_id},
         )
         equipos = [dict(r) for r in rs.mappings()]
         if not equipos:
             continue
 
-        # Partidos del grupo para saber cuántos faltan
+        # Partidos del grupo para saber cuántos faltan + overlay en_juego
         rp = await db.execute(
             text("""
-                SELECT COUNT(*) AS total,
-                       SUM(CASE WHEN estado='finalizado' THEN 1 ELSE 0 END) AS finalizados
-                FROM partido WHERE fase_id = :fid
+                SELECT p.id, p.estado,
+                       p.equipo_local_id, p.equipo_visitante_id,
+                       p.goles_local, p.goles_visitante
+                FROM partido p WHERE p.fase_id = :fid
             """),
             {"fid": fid},
         )
-        pm = dict(rp.mappings().first() or {})
-        total_p     = int(pm.get("total") or 0)
-        finalizados = int(pm.get("finalizados") or 0)
+        partidos_grupo = [dict(r) for r in rp.mappings()]
+        total_p     = len(partidos_grupo)
+        finalizados = sum(1 for p in partidos_grupo if p["estado"] == "finalizado")
+        en_juego_g  = [p for p in partidos_grupo if p["estado"] == "en_juego"
+                       and p["goles_local"] is not None]
         pendientes  = total_p - finalizados
+
+        # Overlay provisional: ajustar standings con partidos en_juego
+        if en_juego_g:
+            eq_map = {e["equipo_id"]: e for e in equipos}
+            for lp in en_juego_g:
+                gl = lp["goles_local"]  or 0
+                gv = lp["goles_visitante"] or 0
+                loc_id = lp["equipo_local_id"]
+                vis_id = lp["equipo_visitante_id"]
+                if gl > gv:   pts_l, pts_v = 3, 0
+                elif gl < gv: pts_l, pts_v = 0, 3
+                else:         pts_l, pts_v = 1, 1
+                for eid, dpts, dgf, dgc in [
+                    (loc_id, pts_l, gl, gv),
+                    (vis_id, pts_v, gv, gl),
+                ]:
+                    if eid in eq_map:
+                        eq_map[eid]["pts"] = (eq_map[eid].get("pts") or 0) + dpts
+                        eq_map[eid]["pj"]  = (eq_map[eid].get("pj")  or 0) + 1
+                        eq_map[eid]["gf"]  = (eq_map[eid].get("gf")  or 0) + dgf
+                        eq_map[eid]["gc"]  = (eq_map[eid].get("gc")  or 0) + dgc
+                        eq_map[eid]["gd"]  = eq_map[eid]["gf"] - eq_map[eid]["gc"]
+            # Re-ordenar con standings overlay antes de elegir tercero
+            equipos = sorted(eq_map.values(), key=lambda e: (
+                -(e.get("pts") or 0),
+                -(e.get("gd")  or 0),
+                -(e.get("gf")  or 0),
+                (e.get("fair_play_pts") or 0),
+                (e.get("fifa_ranking")  or 9999),
+            ))
 
         # Tercer lugar: índice 2 en el orden actual
         if len(equipos) >= 3:
@@ -595,6 +642,7 @@ async def mejores_terceros_provisorios(torneo_id: int, db: DBSession) -> dict:
                 "grupo":      letra,
                 "pendientes": pendientes,
                 "pj":         tercer.get("pj") or 0,
+                "provisorio": len(en_juego_g) > 0,
             })
             grupos_con_datos += 1
 
@@ -658,18 +706,20 @@ async def bracket_real(torneo_id: int, db: DBSession) -> dict:
 
     rp = await db.execute(
         text("""
-            SELECT p.id, p.estado,
+            SELECT p.id, p.estado, p.fecha,
                    p.equipo_local_id     AS local_id,
                    p.equipo_visitante_id AS visit_id,
                    p.goles_local, p.goles_visitante,
                    p.penales_local, p.penales_visitante,
                    el.nombre AS local_nombre, el.nombre_es AS local_nombre_es, el.logo_url AS local_logo,
-                   ev.nombre AS visit_nombre, ev.nombre_es AS visit_nombre_es, ev.logo_url AS visit_logo
+                   COALESCE(el.codigo_iso, '') AS local_iso,
+                   ev.nombre AS visit_nombre, ev.nombre_es AS visit_nombre_es, ev.logo_url AS visit_logo,
+                   COALESCE(ev.codigo_iso, '') AS visit_iso
             FROM partido p
             JOIN fase f ON f.id = p.fase_id
             LEFT JOIN equipo el ON el.id = p.equipo_local_id
             LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
-            WHERE p.torneo_id = :tid AND f.tipo <> 'grupo'
+            WHERE f.torneo_id = :tid AND f.tipo <> 'grupo'
         """),
         {"tid": torneo_id},
     )
@@ -690,18 +740,25 @@ async def bracket_real(torneo_id: int, db: DBSession) -> dict:
                 ganador = "visitante"
             elif pl is not None and pv is not None and pl != pv:
                 ganador = "local" if pl > pv else "visitante"
+        # Serializar fecha a ISO string con "Z" (UTC) para que JS convierta a hora local CR
+        fecha_iso = r["fecha"].strftime("%Y-%m-%dT%H:%M:%SZ") if r["fecha"] else None
         out.append({
             "num":        num,
             "tipo":       num2tipo.get(num),
             "finalizado": fin,
+            "en_vivo":    r["estado"] == "en_juego",
             "ganador":    ganador,
             "gl": gl, "gv": gv, "pen_l": pl, "pen_v": pv,
+            "fecha":      fecha_iso,
+            "provisional": r["local_id"] is None or r["visit_id"] is None,
             "local": ({"id": r["local_id"],
                        "nombre": r["local_nombre_es"] or r["local_nombre"],
-                       "logo_url": r["local_logo"]} if r["local_id"] else None),
+                       "logo_url": r["local_logo"],
+                       "iso": r["local_iso"]} if r["local_id"] else None),
             "visitante": ({"id": r["visit_id"],
                            "nombre": r["visit_nombre_es"] or r["visit_nombre"],
-                           "logo_url": r["visit_logo"]} if r["visit_id"] else None),
+                           "logo_url": r["visit_logo"],
+                           "iso": r["visit_iso"]} if r["visit_id"] else None),
         })
     return {"partidos": out}
 
@@ -1303,9 +1360,26 @@ async def _ranking_export_inner(torneo_id: int, current, db):
         await db.rollback()
         glob_map = {}
 
+    # Clasificados grupos (item P — no incluido en puntaje_detalle para grupos)
+    try:
+        r_clas = await db.execute(
+            text("""
+                SELECT apostador_id, pts_obtenidos AS pts_grupos_p
+                FROM apostador_clasificados
+                WHERE torneo_id = :tid AND fase_tipo = 'grupo'
+            """),
+            {"tid": torneo_id},
+        )
+        clas_map = {row["apostador_id"]: int(row["pts_grupos_p"] or 0)
+                    for row in r_clas.mappings()}
+    except Exception:
+        await db.rollback()
+        clas_map = {}
+
     for row in rk_rows:
         row["pts_globales"] = glob_map.get(row["apostador_id"], 0) or 0
-        row["pts_total"] = row["pts_partidos"] + row["pts_globales"]
+        row["pts_grupos_p"] = clas_map.get(row["apostador_id"], 0) or 0
+        row["pts_total"] = row["pts_partidos"] + row["pts_globales"] + row["pts_grupos_p"]
     rk_rows.sort(key=lambda r: -r["pts_total"])
 
     # ── 2. Detalle por fase (para hojas por fase) ───────────────────────────
@@ -2084,8 +2158,8 @@ async def resultados_partidos(torneo_id: int, db: DBSession) -> list[dict]:
         out = []
         for row in r.mappings():
             d = dict(row)
-            if d.get("fecha") and hasattr(d["fecha"], "isoformat"):
-                d["fecha"] = d["fecha"].isoformat()
+            if d.get("fecha") and hasattr(d["fecha"], "strftime"):
+                d["fecha"] = d["fecha"].strftime("%Y-%m-%dT%H:%M:%SZ")
             out.append(d)
         return out
     except Exception as e:
@@ -2093,35 +2167,66 @@ async def resultados_partidos(torneo_id: int, db: DBSession) -> list[dict]:
         raise HTTPException(500, f"Error resultados-partidos: {e}")
 
 
+async def _auto_lock_completed_grupos(db, torneo_id: int) -> int:
+    """Bloquea fases de grupos donde todos los partidos están finalizados. Retorna N fases bloqueadas."""
+    try:
+        r = await db.execute(text("""
+            UPDATE fase SET bloqueada = TRUE
+            WHERE torneo_id = :tid
+              AND tipo ILIKE 'grupo%'
+              AND COALESCE(bloqueada, FALSE) = FALSE
+              AND (SELECT COUNT(*) FROM partido p WHERE p.fase_id = fase.id AND p.estado != 'finalizado') = 0
+              AND (SELECT COUNT(*) FROM partido p WHERE p.fase_id = fase.id) > 0
+        """), {"tid": torneo_id})
+        return r.rowcount if hasattr(r, 'rowcount') else 0
+    except Exception:
+        return 0
+
+
 @router.get("/ranking/{torneo_id}", summary="Ranking de apostadores en el torneo con desglose por categoría")
 async def ranking(torneo_id: int, db: DBSession) -> list[dict]:
-    _sql_base = """
-        SELECT
-            a.apostador_id,
-            COALESCE(SUM(a.puntos),       0)::int AS puntos_partidos,
-            COALESCE(SUM(a.puntos_bonus),  0)::int AS puntos_bonus_partido,
-            (COALESCE(SUM(a.puntos),0)
-             + COALESCE(SUM(a.puntos_bonus),0))::int AS puntos_partidos_total,
-            COUNT(CASE WHEN p.estado='finalizado' THEN a.id END)::int AS apuestas_total,
-            SUM(CASE WHEN p.estado='finalizado' AND a.puntos>0 AND a.puntos%3=0  THEN 1 ELSE 0 END)::int AS plenos,
-            SUM(CASE WHEN p.estado='finalizado' AND a.puntos>0 AND a.puntos%3<>0 THEN 1 ELSE 0 END)::int AS aciertos,
-            SUM(CASE WHEN p.estado='finalizado' AND a.puntos=0  THEN 1 ELSE 0 END)::int AS fallos,
-            SUM(CASE WHEN p.estado='finalizado'
-                     AND COALESCE(a.puntos_bonus,0)>0 THEN 1 ELSE 0 END)::int          AS bonus_count
-        FROM apuesta a
-        JOIN partido p ON p.id = a.partido_id
-        WHERE p.torneo_id = :tid
-        GROUP BY a.apostador_id
-    """
+    _ITEMS = [
+        "pts_resultado", "pts_marcador", "pts_amarillas", "pts_rojas",
+        "pts_var", "pts_minuto", "pts_penales_partido", "pts_penales_tanda", "pts_equipo"
+    ]
+    _SUM_EXPR = " + ".join(f"COALESCE(pd.{c}, 0)" for c in _ITEMS)
+
+    # ── Puntajes totales y por item desde puntaje_detalle (fuente única) ──────
     try:
-        r = await db.execute(text(_sql_base), {"tid": torneo_id})
+        rd = await db.execute(
+            text(f"""
+                SELECT
+                    pd.apostador_id,
+                    COALESCE(SUM({_SUM_EXPR}), 0)::int AS puntos_partidos_total,
+                    COUNT(DISTINCT pd.partido_id)::int  AS apuestas_total,
+                    SUM(CASE WHEN COALESCE(pd.pts_marcador,0) > 0 THEN 1 ELSE 0 END)::int AS plenos,
+                    SUM(CASE WHEN COALESCE(pd.pts_resultado,0) > 0
+                              AND COALESCE(pd.pts_marcador,0) = 0
+                             THEN 1 ELSE 0 END)::int AS aciertos,
+                    SUM(CASE WHEN COALESCE(pd.pts_resultado,0) = 0
+                              AND COALESCE(pd.pts_marcador,0) = 0
+                             THEN 1 ELSE 0 END)::int AS fallos,
+                    COALESCE(SUM(pd.pts_resultado),                   0)::int AS cat_resultado,
+                    COALESCE(SUM(pd.pts_marcador),                    0)::int AS cat_marcador,
+                    COALESCE(SUM(pd.pts_amarillas),                   0)::int AS cat_amarillas,
+                    COALESCE(SUM(COALESCE(pd.pts_rojas,0)),           0)::int AS cat_rojas,
+                    COALESCE(SUM(pd.pts_var),                         0)::int AS cat_var,
+                    COALESCE(SUM(pd.pts_minuto),                      0)::int AS cat_minuto,
+                    COALESCE(SUM(COALESCE(pd.pts_penales_partido,0)), 0)::int AS cat_penales_partido,
+                    COALESCE(SUM(COALESCE(pd.pts_penales_tanda,0)),   0)::int AS cat_penales_tanda,
+                    COALESCE(SUM(COALESCE(pd.pts_equipo,0)),          0)::int AS cat_equipo
+                FROM puntaje_detalle pd
+                WHERE pd.torneo_id = :tid
+                GROUP BY pd.apostador_id
+            """),
+            {"tid": torneo_id},
+        )
+        rows = [dict(row) for row in rd.mappings()]
     except Exception:
         await db.rollback()
-        r = await db.execute(text(_sql_base), {"tid": torneo_id})
+        rows = []
 
-    rows = [dict(row) for row in r.mappings()]
-
-    # Puntajes globales A-G
+    # ── Puntajes globales A-G ─────────────────────────────────────────────────
     try:
         rg = await db.execute(
             text("SELECT apostador_id, pts_total FROM puntaje_global WHERE torneo_id = :tid"),
@@ -2131,33 +2236,63 @@ async def ranking(torneo_id: int, db: DBSession) -> list[dict]:
     except Exception:
         global_pts = {}
 
-    # Desglose por categoría desde puntaje_detalle
+    # ── Puntos P grupos (apostador_clasificados) ──────────────────────────────
     try:
-        rd = await db.execute(
+        rc = await db.execute(
             text("""
-                SELECT
-                    apostador_id,
-                    COALESCE(SUM(pts_resultado),        0)::int AS cat_resultado,
-                    COALESCE(SUM(pts_marcador),         0)::int AS cat_marcador,
-                    COALESCE(SUM(pts_amarillas),        0)::int AS cat_amarillas,
-                    COALESCE(SUM(pts_rojas),            0)::int AS cat_rojas,
-                    COALESCE(SUM(pts_var),              0)::int AS cat_var,
-                    COALESCE(SUM(pts_minuto),           0)::int AS cat_minuto,
-                    COALESCE(SUM(pts_penales_partido),  0)::int AS cat_penales_partido,
-                    COALESCE(SUM(pts_penales_tanda),    0)::int AS cat_penales_tanda,
-                    COALESCE(SUM(pts_equipo),           0)::int AS cat_equipo
-                FROM puntaje_detalle
-                WHERE torneo_id = :tid
-                GROUP BY apostador_id
+                SELECT apostador_id, COALESCE(pts_obtenidos, 0) AS pts_grupos_p
+                FROM apostador_clasificados
+                WHERE torneo_id = :tid AND fase_tipo = 'grupo'
             """),
             {"tid": torneo_id},
         )
-        cat_pts = {row["apostador_id"]: dict(row) for row in rd.mappings()}
+        clas_pts = {row["apostador_id"]: int(row["pts_grupos_p"] or 0) for row in rc.mappings()}
     except Exception:
-        cat_pts = {}
+        clas_pts = {}
 
-    # Todos los apostadores activos (rol 'apostador'), aunque no tengan apuestas
-    ids = [row["apostador_id"] for row in rows]
+    # ── Puntos D (peor equipo) por separado ───────────────────────────────────
+    try:
+        rd2 = await db.execute(
+            text("SELECT apostador_id, COALESCE(pts_peor_equipo, 0) AS pts_d FROM puntaje_global WHERE torneo_id = :tid"),
+            {"tid": torneo_id},
+        )
+        peor_equipo_pts = {row["apostador_id"]: int(row["pts_d"] or 0) for row in rd2.mappings()}
+    except Exception:
+        peor_equipo_pts = {}
+
+    # ── Desglose por fase ─────────────────────────────────────────────────────
+    try:
+        rf = await db.execute(
+            text(f"""
+                SELECT
+                    pd.apostador_id,
+                    f.id AS fase_id,
+                    f.tipo AS fase_tipo,
+                    f.nombre AS fase_nombre,
+                    COALESCE(SUM({_SUM_EXPR}), 0)::int AS pts_fase
+                FROM puntaje_detalle pd
+                JOIN partido p ON p.id = pd.partido_id
+                JOIN fase f ON f.id = p.fase_id
+                WHERE pd.torneo_id = :tid
+                GROUP BY pd.apostador_id, f.id, f.tipo, f.nombre
+                ORDER BY pd.apostador_id, f.id
+            """),
+            {"tid": torneo_id},
+        )
+        fases_raw = [dict(row) for row in rf.mappings()]
+    except Exception:
+        fases_raw = []
+
+    fases_by_uid: dict[int, list] = {}
+    for fr in fases_raw:
+        uid = fr["apostador_id"]
+        fases_by_uid.setdefault(uid, []).append({
+            "tipo": fr["fase_tipo"],
+            "nombre": fr["fase_nombre"],
+            "pts": fr["pts_fase"],
+        })
+
+    # ── Todos los apostadores activos ─────────────────────────────────────────
     async with _app_engine.connect() as conn:
         ar = await conn.execute(
             text("""
@@ -2169,6 +2304,7 @@ async def ranking(torneo_id: int, db: DBSession) -> list[dict]:
             """)
         )
         apostadores_all = {row["id"]: row["username"] for row in ar.mappings()}
+        ids = [row["apostador_id"] for row in rows]
         user_map = dict(apostadores_all)
         if ids:
             ur = await conn.execute(
@@ -2189,24 +2325,31 @@ async def ranking(torneo_id: int, db: DBSession) -> list[dict]:
         if uid not in present:
             rows.append({
                 "apostador_id": uid,
-                "puntos_partidos": 0, "puntos_bonus_partido": 0,
                 "puntos_partidos_total": 0, "apuestas_total": 0,
-                "plenos": 0, "aciertos": 0, "fallos": 0, "bonus_count": 0,
+                "plenos": 0, "aciertos": 0, "fallos": 0,
             })
 
     for row in rows:
         uid = row["apostador_id"]
-        row["nombre"]          = user_map.get(uid, f"Usuario {uid}")
-        pts_globales           = global_pts.get(uid, 0) or 0
-        pts_partidos           = row.get("puntos_partidos_total") or 0
-        row["pts_globales"]    = pts_globales
-        row["puntos_total"]    = pts_partidos + pts_globales
-        row.setdefault("puntos_partidos", row.get("puntos_partidos", 0))
-        # Merge per-category breakdown
-        cats = cat_pts.get(uid, _ZERO_CATS)
-        row.update({k: cats.get(k, 0) for k in _ZERO_CATS})
-        # Online status
-        row["online_source"] = _is_online(uid)
+        row["nombre"]                = user_map.get(uid, f"Usuario {uid}")
+        pts_globales                 = global_pts.get(uid, 0) or 0
+        pts_partidos                 = row.get("puntos_partidos_total") or 0
+        pts_grupos_p                 = clas_pts.get(uid, 0) or 0
+        pts_peor_equipo_d            = peor_equipo_pts.get(uid, 0) or 0
+        row["pts_globales"]          = pts_globales
+        row["pts_grupos_p"]          = pts_grupos_p
+        row["pts_peor_equipo_d"]     = pts_peor_equipo_d
+        row["puntos_total"]          = pts_partidos + pts_globales + pts_grupos_p
+        row["puntos_partidos"]       = pts_partidos
+        row["puntos_partidos_total"] = pts_partidos
+        row.update({k: row.get(k, 0) for k in _ZERO_CATS})
+        row["fases"]                 = fases_by_uid.get(uid, [])
+        row.setdefault("plenos",  0)
+        row.setdefault("aciertos", 0)
+        row.setdefault("fallos",  0)
+        row["bonus_count"]           = 0
+        row["puntos_bonus_partido"]  = 0
+        row["online_source"]         = _is_online(uid)
 
     rows.sort(key=lambda r: (-(r.get("puntos_total") or 0),
                              -(r.get("apuestas_total") or 0),
@@ -2894,8 +3037,8 @@ async def monitor_dashboard(torneo_id: int, current: CurrentUser, db: DBSession)
         partidos_activos = []
         for row in r_pa.mappings():
             d = dict(row)
-            if d.get("fecha") and hasattr(d["fecha"], "isoformat"):
-                d["fecha"] = d["fecha"].isoformat()
+            if d.get("fecha") and hasattr(d["fecha"], "strftime"):
+                d["fecha"] = d["fecha"].strftime("%Y-%m-%dT%H:%M:%SZ")
             partidos_activos.append(d)
         result["partidos_activos"] = partidos_activos
     except Exception:
@@ -3648,7 +3791,20 @@ async def fases_apuesta_estado(torneo_id: int, current: CurrentUser, db: DBSessi
 
 
 async def _calc_standings_reales(db: DBSession, torneo_id: int) -> dict:
-    """Calcula standings de grupos desde los resultados reales (goles en tabla partido)."""
+    """Calcula standings de grupos desde los resultados reales (goles en tabla partido).
+    También acumula tarjetas por equipo (fair_play_pts) si las columnas existen."""
+    # Garantizar columnas de tarjetas por equipo (idempotente)
+    for _col in [
+        "ALTER TABLE partido ADD COLUMN IF NOT EXISTS local_amarillas     INT",
+        "ALTER TABLE partido ADD COLUMN IF NOT EXISTS visitante_amarillas INT",
+        "ALTER TABLE partido ADD COLUMN IF NOT EXISTS local_rojas         INT",
+        "ALTER TABLE partido ADD COLUMN IF NOT EXISTS visitante_rojas     INT",
+        "ALTER TABLE participacion ADD COLUMN IF NOT EXISTS fair_play_pts INT DEFAULT 0",
+    ]:
+        try:
+            await db.execute(text(_col))
+        except Exception:
+            pass
     r_teams = await db.execute(
         text("""
             SELECT f.id AS fase_id, f.nombre AS fase_nombre,
@@ -3659,7 +3815,7 @@ async def _calc_standings_reales(db: DBSession, torneo_id: int) -> dict:
             FROM participacion pa
             JOIN equipo e ON e.id = pa.equipo_id
             JOIN fase f ON f.id = pa.fase_id
-            WHERE f.torneo_id = :tid AND f.tipo = 'grupo'
+            WHERE f.torneo_id = :tid AND f.tipo = 'grupo' AND f.nombre NOT ILIKE '%mejores%'
         """),
         {"tid": torneo_id},
     )
@@ -3682,14 +3838,20 @@ async def _calc_standings_reales(db: DBSession, torneo_id: int) -> dict:
         text("""
             SELECT f.id AS fase_id,
                    p.equipo_local_id, p.equipo_visitante_id,
-                   p.goles_local, p.goles_visitante
+                   p.goles_local, p.goles_visitante,
+                   COALESCE(p.local_amarillas, 0)     AS local_amarillas,
+                   COALESCE(p.visitante_amarillas, 0) AS visitante_amarillas,
+                   COALESCE(p.local_rojas, 0)         AS local_rojas,
+                   COALESCE(p.visitante_rojas, 0)     AS visitante_rojas
             FROM partido p
-            JOIN fase f ON f.id = p.fase_id AND f.tipo = 'grupo'
+            JOIN fase f ON f.id = p.fase_id AND f.tipo = 'grupo' AND f.nombre NOT ILIKE '%mejores%'
             WHERE p.torneo_id = :tid AND p.estado = 'finalizado'
               AND p.goles_local IS NOT NULL AND p.goles_visitante IS NOT NULL
         """),
         {"tid": torneo_id},
     )
+    # Guardar resultados por grupo para H2H
+    resultados_por_grupo: dict[int, list[dict]] = {}
     for p in r_parts.mappings():
         fid = p["fase_id"]
         lid, vid = p["equipo_local_id"], p["equipo_visitante_id"]
@@ -3707,12 +3869,21 @@ async def _calc_standings_reales(db: DBSession, torneo_id: int) -> dict:
             loc["pe"] += 1; loc["pts"] += 1; vis["pe"] += 1; vis["pts"] += 1
         else:
             vis["pg"] += 1; vis["pts"] += 3; loc["pp"] += 1
+        # Fair play acumulado: amarilla=1pt, roja=3pts (menor = mejor conducta FIFA)
+        loc["fair_play_pts"] += p["local_amarillas"]     + p["local_rojas"]     * 3
+        vis["fair_play_pts"] += p["visitante_amarillas"] + p["visitante_rojas"] * 3
+        # Guardar resultado para desempate H2H
+        resultados_por_grupo.setdefault(fid, []).append(
+            {"lid": lid, "vid": vid, "gl": gl, "gv": gv}
+        )
 
     result = {}
     for fid, teams in grupos.items():
-        sorted_teams = sorted(
-            teams.values(),
-            key=lambda x: (-x["pts"], -x["gd"], -x["gf"], x["fifa_ranking"]),
+        # Ordenar usando criterio completo FIFA 2026:
+        # pts → DG → GF → H2H pts → H2H DG → H2H GF → fair_play_pts (↓) → FIFA ranking → nombre
+        sorted_teams = _sort_grupo_fifa(
+            list(teams.values()),
+            resultados_por_grupo.get(fid, []),
         )
         nombre = grupo_nombres[fid]
         grupo_letra = nombre.replace("Grupo ", "").strip()
@@ -3738,13 +3909,15 @@ async def _recalc_participacion(db: DBSession, torneo_id: int) -> int:
                     UPDATE participacion
                     SET pj=:pj, pg=:pg, pe=:pe, pp=:pp,
                         gf=:gf, gc=:gc, pts=:pts,
-                        posicion=:pos, clasifica=:clasifica
+                        posicion=:pos, clasifica=:clasifica,
+                        fair_play_pts=:fp
                     WHERE fase_id=:fid AND equipo_id=:eid
                 """),
                 {
                     "pj": eq["pj"], "pg": eq["pg"], "pe": eq["pe"], "pp": eq["pp"],
                     "gf": eq["gf"], "gc": eq["gc"], "pts": eq["pts"],
                     "pos": eq["pos"], "clasifica": eq["pos"] <= 2,
+                    "fp":  eq.get("fair_play_pts", 0),
                     "fid": fase_id, "eid": eq["equipo_id"],
                 },
             )
@@ -4559,6 +4732,9 @@ async def calcular_puntajes(torneo_id: int, current: CurrentUser, db: DBSession)
 
     await _ensure_detalle_table(db)
 
+    # Auto-bloquear fases de grupos completadas antes de recalcular
+    _grupos_auto_bloqueadas = await _auto_lock_completed_grupos(db, torneo_id)
+
     # ── Columnas puntaje_detalle (idempotente, compatibilidad v1 + v2) ───────
     for col_sql in [
         "ALTER TABLE puntaje_detalle ADD COLUMN IF NOT EXISTS teams_match BOOLEAN DEFAULT TRUE",
@@ -4655,6 +4831,30 @@ async def calcular_puntajes(torneo_id: int, current: CurrentUser, db: DBSession)
     global_result = await calc.calculate_global(torneo_id, engine)
     globales_procesadas = global_result.get("procesadas", 0)
 
+    # ── Item P: clasificados por fase (grupos + KO audit trail) ──────────────
+    # Obtenemos IDs de apostadores reales (rol 'apostador') para excluir admins/test
+    valid_apostador_ids: set[int] = set()
+    try:
+        async with _app_engine.connect() as _aconn:
+            _ar = await _aconn.execute(text("""
+                SELECT u.id FROM users u
+                JOIN user_roles ur ON ur.user_id = u.id
+                JOIN roles ro ON ro.id = ur.role_id
+                WHERE ro.name = 'apostador' AND u.is_active = TRUE
+            """))
+            valid_apostador_ids = {row[0] for row in _ar.fetchall()}
+    except Exception:
+        valid_apostador_ids = set()  # Si falla, sin filtro (procesa todos)
+
+    try:
+        clas_result = await calc.calculate_clasificados(torneo_id, engine,
+                                                        valid_ids=valid_apostador_ids or None)
+        grupos_clas_procesados = clas_result.get("grupos_procesados", 0)
+        ko_clas_fases = clas_result.get("ko_fases", [])
+    except Exception:
+        grupos_clas_procesados = 0
+        ko_clas_fases = []
+
     await db.commit()
     await _audit_log("puntajes:calculo", "bets", current=current, method="POST",
                      path=f"/api/v1/bets/calcular-puntajes/{torneo_id}",
@@ -4673,7 +4873,60 @@ async def calcular_puntajes(torneo_id: int, current: CurrentUser, db: DBSession)
         "fallos":  fallos,
         "por_fase": por_fase,
         "globales_procesadas": globales_procesadas,
+        "grupos_auto_bloqueados": _grupos_auto_bloqueadas,
+        "clasificados_grupos": grupos_clas_procesados,
+        "clasificados_ko_fases": ko_clas_fases,
     }
+
+
+@router.get("/clasificados/{torneo_id}", summary="Auditoría: equipos clasificados predichos vs reales por fase (admin)")
+async def get_clasificados(torneo_id: int, current: CurrentUser, db: DBSession) -> dict:
+    """
+    Devuelve la auditoría de item P (equipo clasifica) por apostador × fase.
+    Incluye equipos predichos, reales, aciertos y puntos obtenidos.
+    """
+    if not await _check_admin(current):
+        raise HTTPException(403, "Se requiere rol admin o superadmin")
+    try:
+        r = await db.execute(
+            text("""
+                SELECT ac.apostador_id,
+                       ac.fase_tipo,
+                       ac.equipos_pronosticados,
+                       ac.equipos_reales,
+                       ac.aciertos,
+                       ac.pts_por_acierto,
+                       ac.pts_obtenidos,
+                       ac.calculado_at
+                FROM apostador_clasificados ac
+                WHERE ac.torneo_id = :tid
+                ORDER BY ac.fase_tipo, ac.apostador_id
+            """),
+            {"tid": torneo_id},
+        )
+        rows = [dict(row) for row in r.mappings()]
+    except Exception as e:
+        raise HTTPException(500, f"Error consultando clasificados: {e}")
+
+    # Enriquecer con usernames
+    ids = list({row["apostador_id"] for row in rows})
+    nombre_map: dict = {}
+    if ids:
+        try:
+            async with _app_engine.connect() as conn:
+                nr = await conn.execute(
+                    text("SELECT id, COALESCE(nombre, username) AS nombre, username FROM users WHERE id = ANY(:ids)"),
+                    {"ids": ids},
+                )
+                nombre_map = {r[0]: {"nombre": r[1], "username": r[2]} for r in nr.fetchall()}
+        except Exception:
+            pass
+
+    for row in rows:
+        info = nombre_map.get(row["apostador_id"], {})
+        row["apostador"] = info.get("username") or f"Apostador {row['apostador_id']}"
+
+    return {"torneo_id": torneo_id, "registros": rows, "total": len(rows)}
 
 
 @router.post("/sync-resultados/{torneo_id}", summary="Sincronizar resultados desde API-Football (admin)")
@@ -4768,6 +5021,11 @@ async def sync_resultados(
         )
     except ValueError as e:
         raise HTTPException(400, str(e))
+    except Exception as e:
+        # Captura errores de BD (columna faltante, etc.) y los retorna como 400
+        # en vez de dejar caer el servidor con 500
+        await db.rollback()
+        raise HTTPException(400, f"Error en sync: {e}")
 
     # Commit resultados antes de recalcular standings y avanzar bracket
     await db.commit()
@@ -5112,7 +5370,7 @@ async def test_verificacion(torneo_id: int, current: CurrentUser, db: DBSession)
             SELECT p.id, p.goles_local, p.goles_visitante,
                    p.minuto_primer_gol, p.amarillas, p.decisiones_var
             FROM partido p
-            JOIN fase f ON f.id = p.fase_id AND f.tipo = 'grupo'
+            JOIN fase f ON f.id = p.fase_id AND f.tipo = 'grupo' AND f.nombre NOT ILIKE '%mejores%'
             WHERE p.torneo_id = :tid AND p.estado = 'finalizado'
               AND p.goles_local IS NOT NULL AND p.goles_visitante IS NOT NULL
         """),
@@ -5514,22 +5772,27 @@ async def _resetear_ko_post_r32(db, torneo_id: int) -> None:
 async def _avanzar_bracket(db, torneo_id: int, maps: dict, hasta_tipo: str | None = None):
     """Avanza el bracket real asignando equipos a las fases KO según resultados.
 
-    - Si grupos NO están completos: resetea TODOS los partidos KO a TBD.
-    - Si grupos SÍ están completos: arma R32 desde standings y propaga KO.
+    - Si grupos NO están completos: actualiza R32 con los mejores terceros
+      provisionales según standings actuales; resetea R16+ a TBD.
+    - Si grupos SÍ están completos: arma R32 definitivo y propaga todo el KO.
     - Si hasta_tipo se indica, sólo avanza hasta esa fase (inclusive).
     """
     orden_tipos = ["ronda32", "ronda16", "cuartos", "semis", "tercer_puesto", "final"]
 
-    if not await _grupos_completos(db, torneo_id):
-        # Grupos incompletos → limpiar todo el bracket KO a TBD
-        await _resetear_ko_a_tbd(db, torneo_id)
-        return
+    grupos_ok = await _grupos_completos(db, torneo_id)
+    standings  = await _calc_standings_reales(db, torneo_id)
 
-    # Grupos completos → armar R32 desde standings reales
-    standings = await _calc_standings_reales(db, torneo_id)
     if standings:
-        mejores, _ = seleccionar_mejores_terceros(standings)
+        # fill_incomplete=False: solo usa grupos con TODOS sus partidos finalizados.
+        # Terceros de grupos incompletos quedan TBD hasta que terminen.
+        # El sync automático recalcula el bracket al finalizar cada partido.
+        mejores, _ = seleccionar_mejores_terceros(standings, fill_incomplete=False)
         await ko_scoring.avanzar_ronda32(db, torneo_id, maps["num2pid"], standings, mejores)
+
+    if not grupos_ok:
+        # Grupos incompletos → R32 con terceros de grupos completos; R16+ a TBD
+        await _resetear_ko_post_r32(db, torneo_id)
+        return
 
     if hasta_tipo == "ronda32":
         return
@@ -5569,7 +5832,7 @@ async def avanzar_bracket_provisional(torneo_id: int, current: CurrentUser, db: 
     standings = await _calc_standings_reales(db, torneo_id)
     r32_fills = 0
     if standings:
-        mejores, _ = seleccionar_mejores_terceros(standings)
+        mejores, _ = seleccionar_mejores_terceros(standings, fill_incomplete=False)
         r32_fills = await ko_scoring.avanzar_ronda32(db, torneo_id, maps["num2pid"], standings, mejores)
     # Reset ronda16+ to TBD regardless
     await _resetear_ko_post_r32(db, torneo_id)
@@ -6216,7 +6479,7 @@ async def transparencia(torneo_id: int, current: CurrentUser, db: DBSession,
     try:
         st = await _calc_standings_reales(db, torneo_id)
         if st:
-            mejores, _ = seleccionar_mejores_terceros(st)
+            mejores, _ = seleccionar_mejores_terceros(st, fill_incomplete=False)
             terceros_ids = {t["equipo_id"] for t in mejores}
             for letra in sorted(st.keys()):
                 eqs = st[letra]["equipos"]
@@ -6493,6 +6756,350 @@ async def descargar_auditoria(auditoria_id: int, current: CurrentUser, db: DBSes
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         filename=os.path.basename(filepath),
     )
+
+
+# ── Confirmar datos de partido (protege del sync) ────────────────────────────
+
+@router.post("/confirmar-partido-stats/{torneo_id}", summary="Migra columna datos_confirmados y confirma todos los finalizados (admin)")
+async def confirmar_partido_stats(torneo_id: int, current: CurrentUser, db: DBSession) -> dict:
+    """Agrega la columna datos_confirmados (si no existe) y marca como confirmados
+    todos los partidos finalzados del torneo. Los partidos confirmados no son
+    sobreescritos por el sync automático de API-Football."""
+    if not await _check_admin(current):
+        raise HTTPException(403, "Se requiere rol admin o superadmin")
+    # Migración idempotente
+    await db.execute(text(
+        "ALTER TABLE partido ADD COLUMN IF NOT EXISTS datos_confirmados BOOLEAN DEFAULT FALSE"
+    ))
+    # Marcar todos los finalizados del torneo
+    r = await db.execute(
+        text("""
+            UPDATE partido SET datos_confirmados = TRUE
+            WHERE torneo_id = :tid AND estado = 'finalizado'
+        """),
+        {"tid": torneo_id},
+    )
+    confirmados = r.rowcount
+    await db.commit()
+    return {"ok": True, "confirmados": confirmados, "msg": f"{confirmados} partidos marcados como confirmados — el sync los omitirá"}
+
+
+@router.patch("/confirmar-partido/{partido_id}", summary="Activar/desactivar protección de un partido (admin)")
+async def toggle_partido_confirmado(
+    partido_id: int,
+    current: CurrentUser,
+    db: DBSession,
+    confirmar: bool = True,
+) -> dict:
+    """Activa o desactiva datos_confirmados para un partido individual."""
+    if not await _check_admin(current):
+        raise HTTPException(403, "Se requiere rol admin o superadmin")
+    await db.execute(
+        text("UPDATE partido SET datos_confirmados = :val WHERE id = :pid"),
+        {"val": confirmar, "pid": partido_id},
+    )
+    await db.commit()
+    accion = "confirmado (protegido del sync)" if confirmar else "des-confirmado (sync habilitado)"
+    return {"ok": True, "partido_id": partido_id, "datos_confirmados": confirmar, "msg": f"Partido {accion}"}
+
+
+@router.post("/recalc-fair-play/{torneo_id}", summary="Re-extrae tarjetas por equipo de API-Football y recalcula fair play (admin)")
+async def recalc_fair_play(
+    torneo_id: int,
+    current: CurrentUser,
+    db: DBSession,
+    max_partidos: int = 50,
+) -> dict:
+    """
+    Re-fetcha los eventos de los partidos de grupo desde API-Football para obtener
+    las tarjetas por equipo (local_amarillas / visitante_amarillas / local_rojas /
+    visitante_rojas). No modifica goles, estado, ni ningún otro campo confirmado.
+
+    Usa cuota de API-Football (1 call por partido + 1 bulk). Con el plan Free
+    (100 calls/día) y max_partidos=50, consume hasta 51 calls.
+
+    Luego recalcula fair_play_pts en participacion y por tanto el ranking de
+    mejores terceros pasa a aplicar el criterio FIFA de forma correcta.
+    """
+    if not await _check_admin(current):
+        raise HTTPException(403, "Se requiere rol admin o superadmin")
+
+    # Asegurar columnas de tarjetas por equipo
+    for _col in [
+        "ALTER TABLE partido ADD COLUMN IF NOT EXISTS local_amarillas     INT",
+        "ALTER TABLE partido ADD COLUMN IF NOT EXISTS visitante_amarillas INT",
+        "ALTER TABLE partido ADD COLUMN IF NOT EXISTS local_rojas         INT",
+        "ALTER TABLE partido ADD COLUMN IF NOT EXISTS visitante_rojas     INT",
+        "ALTER TABLE participacion ADD COLUMN IF NOT EXISTS fair_play_pts INT DEFAULT 0",
+    ]:
+        try:
+            await db.execute(text(_col))
+        except Exception:
+            pass
+    await db.commit()
+
+    # Partidos de grupo finalizados con api_fixture_id
+    r_torneo = await db.execute(
+        text("""
+            SELECT t.api_season, c.api_league_id
+            FROM torneo t
+            LEFT JOIN competicion c ON c.id = t.competicion_id
+            WHERE t.id = :tid
+        """),
+        {"tid": torneo_id},
+    )
+    row_t = r_torneo.mappings().first()
+    if not row_t:
+        raise HTTPException(404, f"Torneo {torneo_id} no encontrado")
+
+    r_parts = await db.execute(
+        text("""
+            SELECT p.id AS partido_id, p.api_fixture_id,
+                   p.equipo_local_id, p.equipo_visitante_id,
+                   COALESCE(el.api_team_id, 0) AS local_api_id,
+                   COALESCE(ev.api_team_id, 0) AS visitante_api_id
+            FROM partido p
+            JOIN fase f ON f.id = p.fase_id AND f.tipo = 'grupo' AND f.nombre NOT ILIKE '%mejores%'
+            LEFT JOIN equipo el ON el.id = p.equipo_local_id
+            LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+            WHERE p.torneo_id = :tid
+              AND p.estado = 'finalizado'
+              AND p.api_fixture_id IS NOT NULL
+            ORDER BY p.numero_fifa ASC NULLS LAST
+            LIMIT :lim
+        """),
+        {"tid": torneo_id, "lim": max_partidos},
+    )
+    partidos = [dict(r) for r in r_parts.mappings()]
+
+    if not partidos:
+        return {"ok": False, "msg": "Sin partidos de grupo finalizados con api_fixture_id mapeado"}
+
+    from app.services.sync_api_football import _headers, API_BASE
+    import httpx, asyncio as _aio
+
+    actualizados = 0
+    errores: list[dict] = []
+    api_calls = 0
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        async def _fetch_events(fix_id: int):
+            try:
+                r = await client.get(
+                    f"{API_BASE}/fixtures",
+                    params={"id": fix_id},
+                    headers=_headers(),
+                )
+                r.raise_for_status()
+                return fix_id, r.json().get("response", [])
+            except Exception as e:
+                return fix_id, None
+
+        # Procesar en lotes de 10 para no saturar la API en una sola ráfaga
+        results = []
+        batch_size = 10
+        for i in range(0, len(partidos), batch_size):
+            batch = partidos[i:i + batch_size]
+            batch_results = await _aio.gather(*[_fetch_events(p["api_fixture_id"]) for p in batch])
+            results.extend(batch_results)
+        api_calls = len(partidos)
+
+    # Procesar resultados y actualizar tarjetas por equipo
+    fix_to_partido = {p["api_fixture_id"]: p for p in partidos}
+    for fix_id, response in results:
+        if not response:
+            errores.append({"api_fixture_id": fix_id, "error": "sin respuesta"})
+            continue
+        fix = response[0]
+        p = fix_to_partido[fix_id]
+        local_api_id    = p["local_api_id"]
+        visitante_api_id = p["visitante_api_id"]
+
+        loc_amar = vis_amar = loc_rojas = vis_rojas = 0
+        for ev in fix.get("events", []):
+            if ev.get("type") != "Card":
+                continue
+            detail   = ev.get("detail", "")
+            team_id  = ev.get("team", {}).get("id")
+            is_local = team_id == local_api_id
+
+            if detail == "Yellow Card":
+                if is_local:    loc_amar += 1
+                elif team_id == visitante_api_id: vis_amar += 1
+            elif detail in ("Red Card", "Second Yellow card"):
+                if is_local:    loc_rojas += 1
+                elif team_id == visitante_api_id: vis_rojas += 1
+
+        try:
+            await db.execute(
+                text("""
+                    UPDATE partido
+                    SET local_amarillas     = :la,
+                        visitante_amarillas = :va,
+                        local_rojas         = :lr,
+                        visitante_rojas     = :vr
+                    WHERE id = :pid
+                """),
+                {"la": loc_amar, "va": vis_amar, "lr": loc_rojas, "vr": vis_rojas,
+                 "pid": p["partido_id"]},
+            )
+            await db.commit()
+            actualizados += 1
+        except Exception as e:
+            await db.rollback()
+            errores.append({"partido_id": p["partido_id"], "error": str(e)})
+
+    # Recalcular standings + fair_play_pts en participacion
+    fp_ok = False
+    try:
+        await _recalc_participacion(db, torneo_id)
+        await db.commit()
+        fp_ok = True
+    except Exception as e:
+        await db.rollback()
+        errores.append({"recalc": str(e)})
+
+    return {
+        "ok": True,
+        "partidos_procesados": len(partidos),
+        "actualizados": actualizados,
+        "api_calls": api_calls,
+        "fair_play_recalculado": fp_ok,
+        "errores": errores,
+        "msg": f"Fair play recalculado para {actualizados}/{len(partidos)} partidos de grupo",
+    }
+
+
+# ── Ranking fair play mejores terceros ───────────────────────────────────────
+
+@router.get("/fair-play-terceros/{torneo_id}", summary="Ranking FIFA de los 12 terceros por fair play (admin)")
+async def fair_play_terceros(torneo_id: int, current: CurrentUser, db: DBSession) -> dict:
+    """
+    Devuelve los 12 terceros (uno por grupo) rankeados con el criterio FIFA 2026:
+      1. Puntos  2. DG  3. GF  4. Fair Play (amarillas×1 + rojas×3, menor=mejor)
+      5. FIFA Ranking  6. Nombre grupo
+
+    Los primeros 8 clasifican a Ronda 32.
+    Requiere haber corrido POST /recalc-fair-play/{torneo_id} para tener tarjetas
+    por equipo pobladas desde API-Football.
+    """
+    if not await _check_admin(current):
+        raise HTTPException(403, "Se requiere rol admin o superadmin")
+
+    standings = await _calc_standings_reales(db, torneo_id)
+    if not standings:
+        raise HTTPException(404, "Sin grupos disponibles para este torneo")
+
+    mejores, eliminados = seleccionar_mejores_terceros(standings, fill_incomplete=False)
+
+    def _fmt(eq: dict, clasifica: bool, pos: int) -> dict:
+        fp = eq.get("fair_play_pts", 0)
+        return {
+            "pos":             pos,
+            "clasifica":       clasifica,
+            "grupo":           eq.get("grupo", "?"),
+            "equipo":          eq.get("nombre", "?"),
+            "pts":             eq.get("pts", 0),
+            "dg":              eq.get("gd", 0),
+            "gf":              eq.get("gf", 0),
+            "pj":              eq.get("pj", 0),
+            "pg":              eq.get("pg", 0),
+            "pe":              eq.get("pe", 0),
+            "pp":              eq.get("pp", 0),
+            "fair_play_pts":   fp,
+            "amarillas_acum":  eq.get("amarillas_acum"),   # solo si disponible
+            "rojas_acum":      eq.get("rojas_acum"),
+            "fifa_ranking":    eq.get("fifa_ranking"),
+            # Desglose del criterio FIFA para transparencia
+            "criterio": {
+                "1_pts":        eq.get("pts", 0),
+                "2_dg":         eq.get("gd", 0),
+                "3_gf":         eq.get("gf", 0),
+                "4_fair_play":  fp,
+                "5_fifa_rank":  eq.get("fifa_ranking") or 999,
+                "6_grupo":      eq.get("grupo", "?"),
+            },
+        }
+
+    ranking = (
+        [_fmt(e, True, i + 1) for i, e in enumerate(mejores)] +
+        [_fmt(e, False, i + 9) for i, e in enumerate(eliminados)]
+    )
+
+    # Estadísticas agregadas de tarjetas para diagnóstico
+    total_fp_data = sum(1 for e in mejores + eliminados
+                        if e.get("fair_play_pts", 0) > 0)
+
+    return {
+        "torneo_id": torneo_id,
+        "clasifican": [r["equipo"] for r in ranking if r["clasifica"]],
+        "eliminados": [r["equipo"] for r in ranking if not r["clasifica"]],
+        "ranking":    ranking,
+        "datos_tarjetas_ok": total_fp_data,
+        "aviso": (
+            "⚠️ fair_play_pts = 0 para todos — correr POST /recalc-fair-play para poblar tarjetas"
+            if total_fp_data == 0 else None
+        ),
+    }
+
+
+# ── Fix stats desde Excel (temporal) ─────────────────────────────────────────
+
+@router.post("/fix-stats-excel/{torneo_id}", summary="Aplica correcciones de minuto_gol y var desde Excel oficial (admin)")
+async def fix_stats_excel(torneo_id: int, current: CurrentUser, db: DBSession) -> dict:
+    """Endpoint temporal: actualiza minuto_primer_gol y decisiones_var para los
+    44 partidos de grupo confirmados en el Excel oficial 20260623check.xlsx."""
+    if not await _check_admin(current):
+        raise HTTPException(403, "Se requiere rol admin o superadmin")
+
+    # decisiones_var fixes (5 partidos)
+    var_fixes = [
+        (146, 2), (150, 0), (148, 0), (169, 2), (180, 1),
+    ]
+    # minuto_primer_gol updates (44 partidos; None = sin primer gol / 0-0)
+    minuto_fixes = [
+        (143,10),(144,59),(145,21),(146,7),(149,28),(150,27),(148,21),(147,17),
+        (153,90),(151,6),(152,51),(154,7),(157,41),(158,7),(156,20),(159,66),
+        (160,29),(161,17),(162,21),(165,95),(164,12),(163,6),(166,40),(167,6),
+        (168,74),(169,16),(170,50),(173,23),(172,2),(174,2),(171,11),(176,30),
+        (177,None),(175,5),(178,4),(181,21),(180,None),(182,15),(185,43),(184,14),
+        (183,38),(186,36),(155,None),(179,10),
+    ]
+
+    var_ok = 0
+    for pid, val in var_fixes:
+        await db.execute(text("UPDATE partido SET decisiones_var = :v WHERE id = :id"),
+                         {"v": val, "id": pid})
+        var_ok += 1
+
+    min_ok = 0
+    for pid, val in minuto_fixes:
+        await db.execute(text("UPDATE partido SET minuto_primer_gol = :v WHERE id = :id"),
+                         {"v": val, "id": pid})
+        min_ok += 1
+
+    await db.commit()
+
+    # Recalcular puntajes
+    from app.services.scoring import registry as scoring_registry
+    from app.services.scoring.calculator import ScoringCalculator
+    comp_r = await db.execute(
+        text("SELECT c.codigo FROM torneo t JOIN competicion c ON c.id=t.competicion_id WHERE t.id=:tid"),
+        {"tid": torneo_id})
+    comp_row = comp_r.one_or_none()
+    engine = scoring_registry.get_engine(comp_row[0] if comp_row else None)
+    calc_result = await ScoringCalculator(db).calculate(torneo_id, engine)
+    await ScoringCalculator(db).calculate_global(torneo_id, engine)
+    await db.commit()
+
+    return {
+        "ok": True,
+        "var_actualizados": var_ok,
+        "minuto_actualizados": min_ok,
+        "partidos_procesados": calc_result.get("partidos_procesados", 0),
+        "plenos": calc_result.get("plenos", 0),
+        "aciertos": calc_result.get("aciertos", 0),
+    }
 
 
 # ── Mensajes del administrador ───────────────────────────────────────────────
@@ -7236,6 +7843,9 @@ async def sync_historico(
         sync_summary = await sync_torneo(db, torneo_id, force=True, max_detalle=max_detalle)
     except ValueError as e:
         raise HTTPException(400, str(e))
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(400, f"Error en sync histórico: {e}")
 
     await db.commit()
 
@@ -7246,6 +7856,7 @@ async def sync_historico(
         await _recalc_participacion(db, torneo_id)
         await db.commit()
     except Exception as e:
+        await db.rollback()
         sync_summary["participacion_error"] = str(e)
 
     # Bracket
@@ -7256,6 +7867,7 @@ async def sync_historico(
         await db.commit()
         bracket_ok = True
     except Exception as e:
+        await db.rollback()
         sync_summary["bracket_error"] = str(e)
 
     # Puntajes
@@ -7288,46 +7900,51 @@ async def sync_historico(
                 "globales_procesadas": global_result.get("procesadas", 0),
             }
     except Exception as e:
+        await db.rollback()
         sync_summary["puntajes_error"] = str(e)
 
     # Detalle de cada partido importado (para verificación en UI)
     partidos_importados: list[dict] = []
     ids_act = sync_summary.get("ids_actualizados") or []
     if ids_act:
-        ids_sql = ",".join(str(i) for i in ids_act)
-        r_p = await db.execute(
-            text(f"""
-                SELECT p.id,
-                       COALESCE(el.nombre_es, el.nombre, '?') AS local,
-                       COALESCE(ev.nombre_es, ev.nombre, '?') AS visitante,
-                       p.goles_local, p.goles_visitante, p.estado,
-                       p.amarillas, p.rojas, p.decisiones_var,
-                       p.penales_local, p.penales_visitante, p.minuto_primer_gol,
-                       p.api_fixture_id
-                FROM partido p
-                LEFT JOIN equipo el ON el.id = p.equipo_local_id
-                LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
-                WHERE p.id IN ({ids_sql})
-                ORDER BY p.fecha
-            """)
-        )
-        for row in r_p.mappings():
-            gl = row["goles_local"]
-            gv = row["goles_visitante"]
-            pl = row["penales_local"]
-            pv = row["penales_visitante"]
-            partidos_importados.append({
-                "partido_id":     row["id"],
-                "nombre":         f"{row['local']} vs {row['visitante']}",
-                "resultado":      f"{gl if gl is not None else '?'}-{gv if gv is not None else '?'}",
-                "penales":        f"({pl}-{pv})" if pl is not None else None,
-                "estado":         row["estado"],
-                "amarillas":      row["amarillas"],
-                "rojas":          row["rojas"],
-                "var":            row["decisiones_var"],
-                "minuto_gol":     row["minuto_primer_gol"],
-                "api_fixture_id": row["api_fixture_id"],
-            })
+        try:
+            ids_sql = ",".join(str(i) for i in ids_act)
+            r_p = await db.execute(
+                text(f"""
+                    SELECT p.id,
+                           COALESCE(el.nombre_es, el.nombre, '?') AS local,
+                           COALESCE(ev.nombre_es, ev.nombre, '?') AS visitante,
+                           p.goles_local, p.goles_visitante, p.estado,
+                           p.amarillas, p.rojas, p.decisiones_var,
+                           p.penales_local, p.penales_visitante, p.minuto_primer_gol,
+                           p.api_fixture_id
+                    FROM partido p
+                    LEFT JOIN equipo el ON el.id = p.equipo_local_id
+                    LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+                    WHERE p.id IN ({ids_sql})
+                    ORDER BY p.fecha
+                """)
+            )
+            for row in r_p.mappings():
+                gl = row["goles_local"]
+                gv = row["goles_visitante"]
+                pl = row["penales_local"]
+                pv = row["penales_visitante"]
+                partidos_importados.append({
+                    "partido_id":     row["id"],
+                    "nombre":         f"{row['local']} vs {row['visitante']}",
+                    "resultado":      f"{gl if gl is not None else '?'}-{gv if gv is not None else '?'}",
+                    "penales":        f"({pl}-{pv})" if pl is not None else None,
+                    "estado":         row["estado"],
+                    "amarillas":      row["amarillas"],
+                    "rojas":          row["rojas"],
+                    "var":            row["decisiones_var"],
+                    "minuto_gol":     row["minuto_primer_gol"],
+                    "api_fixture_id": row["api_fixture_id"],
+                })
+        except Exception as e:
+            await db.rollback()
+            sync_summary["partidos_importados_error"] = str(e)
 
     await _audit_log(
         "sync:historico", "bets",
@@ -7360,9 +7977,9 @@ async def verificar_importacion(
     torneo_id: int,
     current: CurrentUser,
     db: DBSession,
-    limite: int = 30,
+    limite: int = 100,
 ) -> dict:
-    if current.role not in ("admin", "superadmin"):
+    if not await _check_admin(current):
         raise HTTPException(status_code=403, detail="Solo admin")
     r = await db.execute(
         text("""
@@ -7426,10 +8043,16 @@ async def live_panel(
             p.penales_partido,
             p.penales_local                       AS penales_tanda_local,
             p.penales_visitante                   AS penales_tanda_visitante,
+            p.equipo_clasificado_id,
+            COALESCE(p.local_amarillas, 0)        AS local_amarillas,
+            COALESCE(p.visitante_amarillas, 0)    AS visitante_amarillas,
+            COALESCE(p.local_rojas, 0)            AS local_rojas,
+            COALESCE(p.visitante_rojas, 0)        AS visitante_rojas,
             f.nombre                              AS fase_nombre,
             f.tipo                                AS fase_tipo,
             el.logo_url                           AS logo_local,
             ev.logo_url                           AS logo_visitante,
+            p.eventos_api::text                   AS eventos_api_raw,
             (el.nombre ILIKE '%paraguay%'
              OR el.nombre_es ILIKE '%paraguay%'
              OR ev.nombre ILIKE '%paraguay%'
@@ -7472,6 +8095,18 @@ async def live_panel(
         return {"partido": None, "apostadores": [], "numeros_fifa": [], "partidos_en_juego": []}
 
     partido      = dict(partido_row)
+    # Serializar fecha con "Z" (UTC) para que JS calcule countdown correcto en CR (UTC-6)
+    from datetime import datetime as _dtp
+    if partido.get("fecha") and isinstance(partido["fecha"], _dtp):
+        partido["fecha"] = partido["fecha"].strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Parsear eventos_api (JSON almacenado por sync)
+    import json as _json_lp
+    raw_ev = partido.pop("eventos_api_raw", None)
+    try:
+        partido["eventos_api"] = _json_lp.loads(raw_ev) if raw_ev else []
+    except Exception:
+        partido["eventos_api"] = []
+
     partido_id   = partido_row["id"]
     partido_nfifa = partido_row["numero_fifa"] or 0
 
@@ -7519,7 +8154,8 @@ async def live_panel(
                 a.pred_local, a.pred_visitante,
                 a.pred_minuto_gol, a.pred_amarillas,
                 a.pred_var, a.pred_rojas, a.pred_penales_partido,
-                a.pred_penales_local_tanda, a.pred_penales_visitante_tanda
+                a.pred_penales_local_tanda, a.pred_penales_visitante_tanda,
+                a.pred_equipo_clasifica
             FROM apuesta a
             WHERE a.partido_id = :pid
         """),
@@ -7569,7 +8205,43 @@ async def live_panel(
         _live_pd_error = str(_e)
         print(f"[live_panel] ERROR v_copamundial_puntajes: {_e}")
         await db.rollback()
-        vista_map = {}
+        # Fallback: leer puntaje_detalle + puntaje_global directamente
+        try:
+            fb_r = await db.execute(text("""
+                SELECT d.apostador_id,
+                       COALESCE(SUM(d.pts_resultado),0)        AS pts_H,
+                       COALESCE(SUM(d.pts_marcador),0)         AS pts_I,
+                       COALESCE(SUM(d.pts_amarillas),0)        AS pts_J,
+                       COALESCE(SUM(d.pts_rojas),0)            AS pts_K,
+                       COALESCE(SUM(d.pts_var),0)              AS pts_L,
+                       COALESCE(SUM(d.pts_penales_partido),0)  AS pts_M,
+                       COALESCE(SUM(d.pts_minuto),0)           AS pts_N,
+                       COALESCE(SUM(d.pts_penales_tanda),0)    AS pts_O,
+                       COALESCE(SUM(d.pts_resultado)+SUM(d.pts_marcador)+SUM(d.pts_amarillas)
+                         +SUM(d.pts_rojas)+SUM(d.pts_var)+SUM(d.pts_penales_partido)
+                         +SUM(d.pts_minuto)+SUM(d.pts_penales_tanda),0) AS total_partidos
+                FROM puntaje_detalle d
+                JOIN partido p ON p.id = d.partido_id
+                JOIN fase    f ON f.id = p.fase_id
+                WHERE f.torneo_id = :tid
+                GROUP BY d.apostador_id
+            """), {"tid": torneo_id})
+            for row in fb_r.mappings().fetchall():
+                aid = int(row["apostador_id"])
+                vista_map[aid] = {
+                    "nombre": f"Apostador {aid}",
+                    "pts_H": int(row["pts_H"] or 0), "pts_I": int(row["pts_I"] or 0),
+                    "pts_J": int(row["pts_J"] or 0), "pts_K": int(row["pts_K"] or 0),
+                    "pts_L": int(row["pts_L"] or 0), "pts_M": int(row["pts_M"] or 0),
+                    "pts_N": int(row["pts_N"] or 0), "pts_O": int(row["pts_O"] or 0),
+                    "pts_A": 0, "pts_B": 0, "pts_C": 0, "pts_D": 0,
+                    "pts_E": 0, "pts_F": 0, "pts_G": 0,
+                    "subtotal_globales": 0,
+                    "total": int(row["total_partidos"] or 0),
+                }
+        except Exception as _e2:
+            print(f"[live_panel] ERROR fallback puntaje_detalle: {_e2}")
+            vista_map = {}
 
     # 4b. Puntos de ESTE partido en puntaje_detalle (para excluirlos del acumulado "antes del partido")
     #     Si el partido ya está finalizado y se recalcularon puntajes, total_puntos LO INCLUYE.
@@ -7599,6 +8271,85 @@ async def live_panel(
         await db.rollback()
         pts_este_partido = {}
 
+    # 4c. Puntos KO por ítem (solo fases no-grupo, excluyendo partido actual)
+    # Permite mostrar el acumulado KO por ítem en el panel live.
+    try:
+        ko_r = await db.execute(
+            text("""
+                SELECT d.apostador_id,
+                       COALESCE(SUM(d.pts_resultado),       0) AS ko_h,
+                       COALESCE(SUM(d.pts_marcador),        0) AS ko_i,
+                       COALESCE(SUM(d.pts_amarillas),       0) AS ko_j,
+                       COALESCE(SUM(d.pts_rojas),           0) AS ko_k,
+                       COALESCE(SUM(d.pts_var),             0) AS ko_l,
+                       COALESCE(SUM(d.pts_penales_partido), 0) AS ko_m,
+                       COALESCE(SUM(d.pts_minuto),          0) AS ko_n,
+                       COALESCE(SUM(d.pts_penales_tanda),   0) AS ko_o,
+                       COALESCE(SUM(d.pts_equipo),          0) AS ko_p
+                FROM puntaje_detalle d
+                JOIN partido p2 ON p2.id = d.partido_id
+                JOIN fase    f2 ON f2.id = p2.fase_id
+                WHERE d.torneo_id = :tid
+                  AND f2.tipo NOT ILIKE 'grupo%%'
+                  AND d.partido_id != :pid
+                GROUP BY d.apostador_id
+            """),
+            {"tid": torneo_id, "pid": partido_id},
+        )
+        ko_pts: dict[int, dict] = {
+            int(r["apostador_id"]): {
+                "H": int(r["ko_h"] or 0), "I": int(r["ko_i"] or 0),
+                "J": int(r["ko_j"] or 0), "K": int(r["ko_k"] or 0),
+                "L": int(r["ko_l"] or 0), "M": int(r["ko_m"] or 0),
+                "N": int(r["ko_n"] or 0), "O": int(r["ko_o"] or 0),
+                "P": int(r["ko_p"] or 0),
+            }
+            for r in ko_r.mappings().fetchall()
+        }
+    except Exception:
+        await db.rollback()
+        ko_pts = {}
+
+    # 4d. Extra-bonus grupos P (clasificados a R32 — calculado una vez al cerrar grupos)
+    try:
+        gp_r = await db.execute(
+            text("""
+                SELECT apostador_id,
+                       aciertos, pts_obtenidos AS pts_grupos_p,
+                       equipos_pronosticados, equipos_reales
+                FROM apostador_clasificados
+                WHERE torneo_id = :tid AND fase_tipo = 'grupo'
+            """),
+            {"tid": torneo_id},
+        )
+        grupos_p_map: dict[int, dict] = {
+            int(r["apostador_id"]): {
+                "aciertos": int(r["aciertos"] or 0),
+                "pts": int(r["pts_grupos_p"] or 0),
+                "pronosticados": list(r["equipos_pronosticados"] or []),
+                "reales": list(r["equipos_reales"] or []),
+            }
+            for r in gp_r.mappings().fetchall()
+        }
+    except Exception:
+        await db.rollback()
+        grupos_p_map = {}
+
+    # 4e. Nombres de equipos reales en R32 (para mostrar lista de 32 con bonus info)
+    equipos_r32_nombres: dict[int, str] = {}
+    try:
+        r32_reales = set()
+        for gp_data in grupos_p_map.values():
+            r32_reales.update(gp_data.get("reales", []))
+        if r32_reales:
+            ids_sql_r32 = ",".join(str(x) for x in r32_reales)
+            eq_r = await db.execute(
+                text(f"SELECT id, COALESCE(nombre_es, nombre) AS nombre FROM equipo WHERE id IN ({ids_sql_r32})")
+            )
+            equipos_r32_nombres = {int(r["id"]): r["nombre"] for r in eq_r.mappings().fetchall()}
+    except Exception:
+        pass
+
     # 5. Usernames desde app_db — para todos (ranking usa alias, no nombre completo)
     names_map: dict = {}
     all_ids = list(set(list(apuestas_map.keys()) + list(vista_map.keys())))
@@ -7613,12 +8364,27 @@ async def live_panel(
         except Exception:
             pass
 
+    # 5b. Filtrar solo apostadores reales (excluir admins/test como 'jose')
+    valid_apostador_ids_lp: set[int] = set()
+    try:
+        async with _app_engine.connect() as _aconn_lp:
+            _ar_lp = await _aconn_lp.execute(text("""
+                SELECT u.id FROM users u
+                JOIN user_roles ur ON ur.user_id = u.id
+                JOIN roles ro ON ro.id = ur.role_id
+                WHERE ro.name = 'apostador' AND u.is_active = TRUE
+            """))
+            valid_apostador_ids_lp = {row[0] for row in _ar_lp.fetchall()}
+    except Exception:
+        valid_apostador_ids_lp = set()
+
     # 6. Ensamblar lista de predicciones de este partido
     # Iteramos sobre vista_map (todos los apostadores del torneo) para que,
     # aunque el partido actual no tenga apuestas enlazadas, el panel igualmente
     # muestre a todos con sus puntos acumulados (pred_* quedan null → 0 pts live).
     apostadores = []
-    base_ids = list(vista_map.keys()) if vista_map else list(apuestas_map.keys())
+    all_base_ids = list(vista_map.keys()) if vista_map else list(apuestas_map.keys())
+    base_ids = [uid for uid in all_base_ids if not valid_apostador_ids_lp or uid in valid_apostador_ids_lp]
     for uid in base_ids:
         ap = apuestas_map.get(uid, {})
         info = names_map.get(uid, {})
@@ -7630,6 +8396,8 @@ async def live_panel(
                                     "subtotal_globales":0,"total":0})
         pts_ya_calc  = pts_este_partido.get(uid, 0)
         puntos_antes = max(0, v["total"] - pts_ya_calc)
+        ko_a = ko_pts.get(uid, {"H":0,"I":0,"J":0,"K":0,"L":0,"M":0,"N":0,"O":0,"P":0})
+        gp   = grupos_p_map.get(uid, {"aciertos": 0, "pts": 0, "pronosticados": [], "reales": []})
         apostadores.append({
             "apostador_id": uid,
             "nombre":       info.get("nombre") or v.get("nombre") or f"Usuario {uid}",
@@ -7638,11 +8406,14 @@ async def live_panel(
             "acum": {k: v[k] for k in ["pts_H","pts_I","pts_J","pts_K","pts_L","pts_M","pts_N","pts_O",
                                         "pts_A","pts_B","pts_C","pts_D","pts_E","pts_F","pts_G",
                                         "subtotal_globales"]},
+            "ko_acum": ko_a,
+            "grupos_p": gp,
             **{k: ap.get(k) for k in [
                 "pred_local", "pred_visitante",
                 "pred_minuto_gol", "pred_amarillas", "pred_var",
                 "pred_rojas", "pred_penales_partido",
                 "pred_penales_local_tanda", "pred_penales_visitante_tanda",
+                "pred_equipo_clasifica",
             ]},
         })
 
@@ -7651,9 +8422,13 @@ async def live_panel(
     # 7. Ranking completo desde vista_map — usa username (alias) como nombre de display
     ranking_vista = []
     for aid, v in vista_map.items():
+        if valid_apostador_ids_lp and aid not in valid_apostador_ids_lp:
+            continue
         pts_ya_calc  = pts_este_partido.get(aid, 0)
         puntos_antes = max(0, v["total"] - pts_ya_calc)
         info = names_map.get(aid, {})
+        ko_a = ko_pts.get(aid, {"H":0,"I":0,"J":0,"K":0,"L":0,"M":0,"N":0,"O":0,"P":0})
+        gp   = grupos_p_map.get(aid, {"aciertos": 0, "pts": 0, "pronosticados": [], "reales": []})
         ranking_vista.append({
             "apostador_id": aid,
             "nombre":       v.get("nombre") or f"Apostador {aid}",
@@ -7662,6 +8437,8 @@ async def live_panel(
             "acum": {k: v[k] for k in ["pts_H","pts_I","pts_J","pts_K","pts_L","pts_M","pts_N","pts_O",
                                         "pts_A","pts_B","pts_C","pts_D","pts_E","pts_F","pts_G",
                                         "subtotal_globales"]},
+            "ko_acum": ko_a,
+            "grupos_p": gp,
         })
     ranking_vista.sort(key=lambda x: -x["puntos_antes"])
 
@@ -7671,6 +8448,7 @@ async def live_panel(
         "numeros_fifa":     numeros_fifa,
         "partidos_en_juego": partidos_en_juego,
         "ranking_vista":    ranking_vista,
+        "equipos_r32":      equipos_r32_nombres,
         "_debug":           {"pd_error": _live_pd_error} if _live_pd_error else None,
     }
 
@@ -7766,6 +8544,7 @@ async def espn_verify_live(
     pq = await db.execute(
         text("""
             SELECT p.id, p.estado, p.fecha,
+                   COALESCE(p.datos_confirmados, FALSE) AS datos_confirmados,
                    COALESCE(el.nombre_es, el.nombre) AS local_nombre,
                    COALESCE(ev.nombre_es, ev.nombre) AS visit_nombre
             FROM partido p
@@ -7778,6 +8557,14 @@ async def espn_verify_live(
     row = pq.mappings().fetchone()
     if not row:
         raise HTTPException(404, f"Partido {partido_id} no encontrado")
+    if row["datos_confirmados"]:
+        return {
+            "ok":         True,
+            "partido_id": partido_id,
+            "estado":     row["estado"],
+            "correcciones": {},
+            "msg": "Partido confirmado — datos protegidos, ESPN verify omitido",
+        }
     async with _httpx.AsyncClient(timeout=20) as client:
         correcciones = await _espn_verify_and_patch(db, client, dict(row), partido_id, {})
     await db.commit()

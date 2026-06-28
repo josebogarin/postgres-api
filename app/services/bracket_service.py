@@ -543,10 +543,21 @@ def _h2h_stats(team_ids: list[int], resultados: list[dict]) -> dict[int, dict]:
 
 def _sort_grupo(equipos: list[dict], resultados: list[dict]) -> list[dict]:
     """
-    Ordena equipos con criterios de desempate FIFA 2026:
-    1. Pts general  2. DG general  3. GF general
-    4. H2H pts  5. H2H DG  6. H2H GF
-    7. Fair play pts (0 = mejor)  8. FIFA ranking (menor = mejor)  9. Nombre
+    Ordena equipos dentro de un grupo con criterios de desempate FIFA 2026
+    (Art. 13 del Reglamento de Competición):
+
+    1. Puntos (general)
+    2. Diferencia de goles (general)
+    3. Goles marcados (general)
+    4. Puntos H2H (entre equipos empatados)
+    5. Diferencia de goles H2H
+    6. Goles marcados H2H
+    7. Fair play: amarillas×1 + rojas×3  (menor = mejor conducta)
+    8. Ranking FIFA (menor = mejor)
+    9. Nombre (alfabético, solo para determinismo)
+
+    Nota: fair_play_pts debe estar calculado y presente en cada equipo.
+    Si = 0 para todos, el criterio 7 no tiene efecto (datos de tarjetas no disponibles).
     """
     def primary_key(e: dict) -> tuple:
         return (-e["pts"], -e["gd"], -e["gf"])
@@ -692,24 +703,74 @@ async def simular_standings_usuario(
 
 def seleccionar_mejores_terceros(
     standings_por_grupo: dict[str, dict],
+    fill_incomplete: bool = True,
+    sort_unified: bool = False,
 ) -> tuple[list[dict], list[dict]]:
     """
     Rankea los 12 terceros (uno por grupo) y devuelve (mejores_8, eliminados_4).
-    Criterio: pts -> DG -> GF -> fair_play_pts -> fifa_ranking -> grupo.
-    """
-    terceros = []
-    for grupo_letra, grupo in standings_por_grupo.items():
-        eqs = grupo["equipos"]
-        if len(eqs) >= 3:
-            terceros.append({**eqs[2], "grupo": grupo_letra})
 
-    terceros.sort(key=lambda e: (
+    Criterio FIFA 2026 para comparar terceros ENTRE grupos (Art. 13.3):
+      1. Puntos
+      2. Diferencia de goles
+      3. Goles marcados
+      4. Fair play: amarillas×1 + rojas×3  (menor = mejor conducta)
+      5. Ranking FIFA (menor = mejor)
+      6. Nombre del grupo (solo para determinismo)
+
+    Nota: H2H NO aplica al comparar terceros de grupos distintos (FIFA Art. 13.3).
+
+    fill_incomplete=True (default): rellena slots faltantes con los mejores
+      terceros de grupos incompletos (útil para bracket de apostador / simulación).
+      Los terceros de grupos completos se ordenan PRIMERO y luego se agregan los
+      incompletos para llegar a 8.
+    fill_incomplete=False: solo usa terceros de grupos completos; si hay < 8
+      grupos completos los slots restantes quedan vacíos → el bracket muestra TBD.
+
+    sort_unified=True: ordena TODOS los terceros juntos (completos e incompletos)
+      sin distinción, igual que el endpoint mejores-terceros-provisorios. Usar para
+      el bracket REAL provisional cuando hay grupos aún en curso — produce el mismo
+      ranking que la tabla de provisorios y asegura coherencia entre vistas.
+    """
+    _sort_key = lambda e: (
         -e["pts"], -e["gd"], -e["gf"],
         e.get("fair_play_pts") or 0,
         e.get("fifa_ranking") or 9999,
         e["grupo"],
-    ))
-    return terceros[:8], terceros[8:]
+    )
+
+    terceros = []
+    incompletos: list[dict] = []
+
+    for grupo_letra, grupo in standings_por_grupo.items():
+        eqs = grupo["equipos"]
+        if len(eqs) < 3:
+            continue
+        pj_esperado = len(eqs) - 1
+        pj_min = min(eq.get("pj", 0) for eq in eqs)
+        tercero = {**eqs[2], "grupo": grupo_letra}
+        if pj_min >= pj_esperado:
+            terceros.append(tercero)
+        else:
+            incompletos.append(tercero)
+
+    if sort_unified:
+        # Ordena TODOS juntos (mismo criterio que mejores-terceros-provisorios).
+        # Produce ranking coherente con la vista provisional; no da prioridad
+        # a grupos completos sobre incompletos.
+        todos = sorted(terceros + incompletos, key=_sort_key)
+        return todos[:8], todos[8:]
+
+    # Modo por fases: completos primero, luego incompletos rellanan hasta 8
+    terceros.sort(key=_sort_key)
+
+    if fill_incomplete and len(terceros) < 8 and incompletos:
+        incompletos.sort(key=_sort_key)
+        faltantes = 8 - len(terceros)
+        terceros.extend(incompletos[:faltantes])
+        incompletos = incompletos[faltantes:]
+
+    todos = terceros + incompletos
+    return todos[:8], todos[8:]
 
 
 # ---------------------------------------------------------------------------
@@ -917,7 +978,7 @@ async def propagar_ko_usuario(
             "local_id": local_id, "visit_id": visit_id,
             "local": local_obj, "visitante": visit_obj,
             "pred_gl": pred_gl, "pred_gv": pred_gv, "pred_penales": pred_pen,
-            "winner_id": winner_id, "loser_id": loser_id,
+                        "winner_id": winner_id, "loser_id": loser_id,
         })
 
     # ── R16 → Final (en orden topológico garantizado por la secuencia) ────
@@ -938,12 +999,10 @@ async def propagar_ko_usuario(
             pred_pen = ap.get("pred_penales")
 
             # Si el partido ya está finalizado, usar ganador real
-            # (sobrescribe local_id/visit_id con los del partido real)
             real = real_results.get(pid, {}) if pid else {}
             if real.get("estado") == "finalizado":
                 real_lid = real.get("local_id")
                 real_vid = real.get("visit_id")
-                # Usar equipos reales del partido (pueden diferir si la propagación diverge)
                 if real_lid:
                     local_id = real_lid
                 if real_vid:

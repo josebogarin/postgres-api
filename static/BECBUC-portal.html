@@ -425,6 +425,7 @@ body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',system-ui,sans-
 .bk-ko-phase-hdr{font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:8px 0 5px;border-bottom:1px solid var(--border);margin-bottom:6px;}
 .bk-ko-matches{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:8px;}
 .bk-ko-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.bk-ko-card.bk-provisional{border-color:#f59e0b;}
 .bk-ko-card-hdr{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--surface2);border-bottom:1px solid var(--border);}
 .bk-ko-mnum{font-size:.7rem;font-weight:800;color:var(--accent2);}
 .bk-ko-feeders{font-size:.58rem;color:var(--muted2);}
@@ -1271,6 +1272,66 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
               </div>
             </div>
 
+            <!-- Confirmar datos de partido -->
+            <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:16px 18px;margin-bottom:14px;">
+              <div style="display:flex;align-items:flex-start;gap:12px;">
+                <i class="ti ti-shield-check" style="font-size:1.4rem;color:#4ade80;margin-top:2px;flex-shrink:0;"></i>
+                <div style="flex:1;">
+                  <div style="font-weight:700;font-size:.88rem;color:var(--fg);margin-bottom:4px;">🔒 Blindar partidos finalizados</div>
+                  <div style="font-size:.75rem;color:var(--muted);margin-bottom:12px;line-height:1.5;">
+                    Marca todos los partidos finalizados como <strong>confirmados</strong>: el sync automático
+                    de API-Football ya no podrá sobreescribir sus stats (J/K/L/M/N/goles).
+                    Ejecutar después de verificar los datos contra el Excel oficial.
+                  </div>
+                  <button id="btnConfirmarStats" onclick="confirmarPartidoStats()"
+                    style="background:linear-gradient(135deg,#16a34a,#15803d);border:none;color:#fff;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:6px;">
+                    <i class="ti ti-shield-lock"></i> Blindar partidos finalizados
+                  </button>
+                  <button id="btnRecalcFairPlay" onclick="recalcFairPlay()"
+                    style="margin-top:8px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border:none;color:#fff;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:6px;">
+                    <i class="ti ti-trophy"></i> Recalcular Fair Play (mejores terceros)
+                  </button>
+                  <button id="btnVerFairPlay" onclick="verFairPlayTerceros()"
+                    style="margin-top:8px;background:linear-gradient(135deg,#0891b2,#0e7490);border:none;color:#fff;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:6px;">
+                    <i class="ti ti-list-numbers"></i> Ver ranking mejores 8 terceros
+                  </button>
+                  <div id="confirmarStatsMsg" style="font-size:.72rem;margin-top:8px;min-height:16px;"></div>
+                  <!-- Panel fair play terceros -->
+                  <div id="fairPlayPanel" style="display:none;margin-top:14px;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+                    <div style="background:var(--surface3,#1e293b);padding:8px 12px;font-weight:700;font-size:.8rem;color:var(--fg);display:flex;justify-content:space-between;align-items:center;">
+                      <span>🏆 Ranking mejores terceros — criterio FIFA 2026</span>
+                      <button onclick="document.getElementById('fairPlayPanel').style.display='none'"
+                        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;">✕</button>
+                    </div>
+                    <div style="font-size:.68rem;color:var(--muted);padding:4px 12px 6px;background:var(--surface3,#1e293b);border-bottom:1px solid var(--border);">
+                      Criterio: Pts → DG → GF → Fair Play (↓mejor) → Ranking FIFA → Grupo
+                    </div>
+                    <table style="width:100%;border-collapse:collapse;font-size:.72rem;">
+                      <thead>
+                        <tr style="background:var(--surface2);color:var(--muted);text-align:center;">
+                          <th style="padding:5px 8px;text-align:left;">Pos</th>
+                          <th style="padding:5px 4px;">Gpo</th>
+                          <th style="padding:5px 8px;text-align:left;">Equipo</th>
+                          <th style="padding:5px 4px;">PJ</th>
+                          <th style="padding:5px 4px;">PG</th>
+                          <th style="padding:5px 4px;">PE</th>
+                          <th style="padding:5px 4px;">PP</th>
+                          <th style="padding:5px 4px;">GF</th>
+                          <th style="padding:5px 4px;">GC</th>
+                          <th style="padding:5px 4px;">DG</th>
+                          <th style="padding:5px 4px;">Pts</th>
+                          <th style="padding:5px 4px;" title="amarillas×1 + rojas×3 — menor es mejor">FP ↓</th>
+                          <th style="padding:5px 4px;">FIFA</th>
+                          <th style="padding:5px 6px;">Clasifica</th>
+                        </tr>
+                      </thead>
+                      <tbody id="fairPlayTbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Cargar datos del torneo -->
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px 18px;">
               <div style="display:flex;align-items:flex-start;gap:12px;">
@@ -1395,7 +1456,6 @@ input[type=number]{-moz-appearance:textfield;appearance:textfield;}
             <button class="bet-tab-btn"        onclick="betSwitchTab('playoffs')" id="btab-playoffs">⚔️ Playoffs</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('globales')" id="btab-globales">🌐 Globales</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('partidos')" id="btab-partidos">📊 Resultados</button>
-            <button class="bet-tab-btn"        onclick="betSwitchTab('terceros')" id="btab-terceros">3️⃣ Mejores 3ros</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('envivo')"   id="btab-envivo">🔴 En Vivo</button>
             <button class="bet-tab-btn"        onclick="betSwitchTab('ranking')"  id="btab-ranking">🏆 Ranking</button>
             <button class="btn-actualizar-pronos" id="btnActualizarPronos" onclick="refreshPronos(this)" title="Recarga partidos en vivo" style="display:none">🔄 Actualizar</button>
@@ -3166,6 +3226,103 @@ function cfgTab(tab) {
   if (tab === 'tema') _applyThemeBtnStyles(localStorage.getItem('becbuc_theme') || 'dark');
 }
 
+async function confirmarPartidoStats() {
+  const btn = document.getElementById('btnConfirmarStats');
+  const msg = document.getElementById('confirmarStatsMsg');
+  const tid = _betTorneoId || 2;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> Blindando…';
+  msg.style.color = 'var(--muted)';
+  msg.textContent = 'Aplicando protección…';
+  try {
+    const r = await api(`/api/v1/bets/confirmar-partido-stats/${tid}`, { method: 'POST' });
+    msg.style.color = 'var(--green, #4ade80)';
+    msg.textContent = `✓ ${r.confirmados} partidos blindados — el sync no los sobreescribirá`;
+    btn.innerHTML = '<i class="ti ti-shield-check"></i> Blindados';
+    setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="ti ti-shield-lock"></i> Blindar partidos finalizados'; }, 4000);
+  } catch (e) {
+    msg.style.color = 'var(--red, #f87171)';
+    msg.textContent = '✗ Error: ' + (e.message || e);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-shield-lock"></i> Blindar partidos finalizados';
+  }
+}
+
+async function recalcFairPlay() {
+  const btn = document.getElementById('btnRecalcFairPlay');
+  const msg = document.getElementById('confirmarStatsMsg');
+  const tid = _betTorneoId || 2;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> Recalculando…';
+  msg.style.color = 'var(--muted)';
+  msg.textContent = 'Descargando eventos de API-Football y recalculando fair play…';
+  try {
+    const r = await api(`/api/v1/bets/recalc-fair-play/${tid}`, { method: 'POST' });
+    msg.style.color = 'var(--green, #4ade80)';
+    msg.textContent = `✓ ${r.actualizados}/${r.partidos_procesados} partidos actualizados · ${r.api_calls} API calls · Fair play: ${r.fair_play_recalculado ? 'OK' : 'ERROR'}`;
+    btn.innerHTML = '<i class="ti ti-check"></i> Fair Play Recalculado';
+    setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="ti ti-trophy"></i> Recalcular Fair Play (mejores terceros)'; }, 6000);
+  } catch (e) {
+    msg.style.color = 'var(--red, #f87171)';
+    msg.textContent = '✗ Error: ' + (e.message || e);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-trophy"></i> Recalcular Fair Play (mejores terceros)';
+  }
+}
+
+async function verFairPlayTerceros() {
+  const btn   = document.getElementById('btnVerFairPlay');
+  const panel = document.getElementById('fairPlayPanel');
+  const tbody = document.getElementById('fairPlayTbody');
+  const msg   = document.getElementById('confirmarStatsMsg');
+  const tid   = _betTorneoId || 2;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2"></i> Cargando…';
+  try {
+    const r = await api(`/api/v1/bets/fair-play-terceros/${tid}`);
+    if (r.aviso) {
+      msg.style.color = '#f59e0b';
+      msg.textContent = r.aviso;
+    } else {
+      msg.style.color = 'var(--muted)';
+      msg.textContent = `✓ Clasifican: ${r.clasifican.join(', ')}`;
+    }
+    tbody.innerHTML = r.ranking.map(t => {
+      const cls = t.clasifica;
+      const rowBg = cls ? 'background:rgba(74,222,128,.08);' : '';
+      const badge = cls
+        ? '<span style="color:#4ade80;font-weight:700;">✓</span>'
+        : '<span style="color:#f87171;">✗</span>';
+      const fp = t.fair_play_pts ?? '—';
+      const fpColor = fp === 0 ? '#94a3b8' : fp <= 3 ? '#4ade80' : fp <= 6 ? '#fbbf24' : '#f87171';
+      const gc = (t.gf != null && t.dg != null) ? (t.gf - t.dg) : '—';
+      return `<tr style="border-top:1px solid var(--border);${rowBg}">
+        <td style="padding:5px 8px;font-weight:700;color:${cls?'#4ade80':'var(--muted)'}">${t.pos}</td>
+        <td style="padding:5px 4px;text-align:center;font-weight:600;">${t.grupo}</td>
+        <td style="padding:5px 8px;font-weight:600;">${t.equipo}</td>
+        <td style="padding:5px 4px;text-align:center;">${t.pj}</td>
+        <td style="padding:5px 4px;text-align:center;">${t.pg}</td>
+        <td style="padding:5px 4px;text-align:center;">${t.pe}</td>
+        <td style="padding:5px 4px;text-align:center;">${t.pp}</td>
+        <td style="padding:5px 4px;text-align:center;">${t.gf}</td>
+        <td style="padding:5px 4px;text-align:center;">${gc}</td>
+        <td style="padding:5px 4px;text-align:center;font-weight:600;">${t.dg >= 0 ? '+'+t.dg : t.dg}</td>
+        <td style="padding:5px 4px;text-align:center;font-weight:700;">${t.pts}</td>
+        <td style="padding:5px 4px;text-align:center;font-weight:700;color:${fpColor}">${fp}</td>
+        <td style="padding:5px 4px;text-align:center;color:var(--muted);">${t.fifa_ranking ?? '—'}</td>
+        <td style="padding:5px 6px;text-align:center;">${badge}</td>
+      </tr>`;
+    }).join('');
+    panel.style.display = 'block';
+  } catch (e) {
+    msg.style.color = 'var(--red, #f87171)';
+    msg.textContent = '✗ Error: ' + (e.message || e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-list-numbers"></i> Ver ranking mejores 8 terceros';
+  }
+}
+
 async function cfgSincronizar() {
   const btn = document.getElementById('btnCfgSincronizar');
   const msg = document.getElementById('cfgSincMsg');
@@ -4729,7 +4886,7 @@ async function loadBetTab() {
     if (_betTab === 'globales')  await renderBetGlobales(el);
     if (_betTab === 'ranking')   await renderBetRanking(el);
     if (_betTab === 'partidos')  await renderBetPartidos(el);
-    if (_betTab === 'terceros')  await renderBetTercerosProvisorios(el);
+
     if (_betTab === 'envivo')    await renderBetEnVivo(el);
     if (_betTab === 'fases')     await renderBetTransparencia(el);
   } catch(e) {
@@ -5414,8 +5571,7 @@ function _renderBetApostarBody() {
       <i class="ti ti-device-floppy"></i> Guardar pronósticos (<span id="save-grupos-count-bottom">0</span>)
     </button>
   </div>`;
-  // Panel mejores terceros (se rellena al calcular standings)
-  html += `<div id="mejores-terceros-panel" style="margin-top:8px"></div>`;
+  // Panel mejores terceros eliminado (provisorios removidos — solo terceros confirmados en bracket)
   el.innerHTML = html;
   _wireInputNav(allInputIds);
   // Recalcular standings con predicciones guardadas ya cargadas en _betMisAp
@@ -5804,7 +5960,6 @@ function onScoreChange(partidoId, faseId) {
       if (tbody) tbody.innerHTML = rows.map((r,i) => _stRow(r,i,3,affected)).join('');
     }
   }
-  _renderMejoresTerceros();  // siempre actualizar ranking de terceros (independiente de faseId)
   renderSlip();
 }
 
@@ -5818,7 +5973,6 @@ function recalcularTodos() {
     const tbody = document.getElementById(`gst-${g.fase_id}`);
     if (tbody) tbody.innerHTML = rows.map((r,i) => _stRow(r,i,3,affected)).join('');
   }
-  _renderMejoresTerceros();
   // Feedback visual breve en el botón
   const btn = document.querySelector('[onclick="recalcularTodos()"]');
   if (btn) {
@@ -6854,7 +7008,7 @@ async function renderBetPlayoffs(el) {
 
   const _va = _viewAsParam();
   const [data, realBrk, misAp, faseEst] = await Promise.all([
-    api(`/api/v1/bets/mi-bracket/${_betTorneoId}${_va}`),
+    api(`/api/v1/bets/mi-bracket/${_betTorneoId}${_va}`).catch(()=>({ko_bracket:[],mejores_terceros:[],terceros_eliminados:[],ronda_32:[],grupos_simulados:[]})),
     api(`/api/v1/bets/bracket-real/${_betTorneoId}`).catch(()=>({partidos:[]})),
     api(`/api/v1/bets/mis-apuestas/${_betTorneoId}${_va}`).catch(()=>[]),
     api(`/api/v1/bets/fases-apuesta-estado/${_betTorneoId}`).catch(()=>null),
@@ -6977,6 +7131,21 @@ function _renderBracketTree(koData, realMap, faseEst) {
   return _renderPlayoffPhases(koData, realMap, faseEst);
 }
 
+/* Formatea fecha ISO a "Vie 27 Jun · 17:00" (hora UTC) */
+function _fmtKoDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const dia = dias[d.getUTCDay()];
+  const mes = meses[d.getUTCMonth()];
+  const dd = String(d.getUTCDate()).padStart(2,'0');
+  const hh = String(d.getUTCHours()).padStart(2,'0');
+  const mm = String(d.getUTCMinutes()).padStart(2,'0');
+  return `${dia} ${dd} ${mes} · ${hh}:${mm}`;
+}
+
 /* Genera tarjetas KO — siempre editables cuando hay equipos, con bonus inline */
 function _koCards(nums, koMap, realMap, forceEdit = false, locked = false) {
   return nums.map(num => {
@@ -7077,10 +7246,15 @@ function _koCards(nums, koMap, realMap, forceEdit = false, locked = false) {
       </div>`;
     }
 
-    return `<div class="bk-ko-card" id="bkc-${num}">
+    const fechaStr = _fmtKoDate(real?.fecha);
+    const isProvisional = real?.provisional && !real?.finalizado;
+    const provBadge = isProvisional ? `<span style="background:#f59e0b;color:#000;font-size:.58rem;font-weight:800;padding:1px 5px;border-radius:3px;margin-left:auto">⚠ Pendiente</span>` : '';
+    const fechaEl = fechaStr && !real?.finalizado ? `<span style="font-size:.6rem;color:var(--muted2);margin-left:4px">${fechaStr}</span>` : '';
+    return `<div class="bk-ko-card${isProvisional?' bk-provisional':''}" id="bkc-${num}">
       <div class="bk-ko-card-hdr">
         <span class="bk-ko-mnum">P${num}</span>
         <span class="bk-ko-feeders">${feeders}</span>
+        ${fechaEl}${provBadge}
       </div>
       ${bodyHtml}
     </div>`;
@@ -8154,8 +8328,10 @@ async function renderBetRanking(el) {
     🟨<b>J</b>=amar. &nbsp;
     🟥<b>K</b>=rojas &nbsp;
     📺<b>L</b>=VAR &nbsp;
-    ⏱<b>N</b>=minuto &nbsp;
     ⚡<b>M</b>=pen.partido &nbsp;
+    ⏱<b>N</b>=minuto &nbsp;
+    🥅<b>O</b>=pen.tanda &nbsp;
+    🏳<b>P</b>=clasifica &nbsp;
     🌐=globales
   </span>`;
   el.innerHTML = `
@@ -8216,13 +8392,15 @@ async function _renderRkPronTotal() {
     const rows    = showAll ? allRows : allRows.filter(r => r.apostador_id === myId);
 
     const CATS = [
-      {key:'cat_resultado',       hdr:'Res.',   title:'H – Resultado gana/pierde/empate'},
-      {key:'cat_marcador',        hdr:'Exact.', title:'I – Marcador exacto'},
-      {key:'cat_amarillas',       hdr:'Amar.',  title:'J – Amarillas'},
-      {key:'cat_rojas',           hdr:'Rojas',  title:'K – Tarjetas rojas'},
-      {key:'cat_var',             hdr:'VAR',    title:'L – Decisiones VAR'},
-      {key:'cat_minuto',          hdr:'Min.',   title:'N – Minuto 1er gol'},
-      {key:'cat_penales_partido', hdr:'Pen.',   title:'M – Penales en el partido'},
+      {key:'cat_resultado',       hdr:'H', title:'H – Resultado gana/pierde/empate'},
+      {key:'cat_marcador',        hdr:'I', title:'I – Marcador exacto'},
+      {key:'cat_amarillas',       hdr:'J', title:'J – Amarillas'},
+      {key:'cat_rojas',           hdr:'K', title:'K – Tarjetas rojas'},
+      {key:'cat_var',             hdr:'L', title:'L – Decisiones VAR'},
+      {key:'cat_penales_partido', hdr:'M', title:'M – Penales en el partido'},
+      {key:'cat_minuto',          hdr:'N', title:'N – Minuto 1er gol'},
+      {key:'cat_penales_tanda',   hdr:'O', title:'O – Penales en tanda (KO)'},
+      {key:'cat_equipo',          hdr:'P', title:'P – Equipo que clasifica (KO)'},
     ];
 
     // ── Tabla principal ──
@@ -8235,7 +8413,8 @@ async function _renderRkPronTotal() {
       const isMe  = r.apostador_id === myId;
       const sub   = CATS.reduce((s, c) => s + (r[c.key]||0), 0);
       const glob  = r.pts_globales || 0;
-      const total = (r.puntos_total != null) ? r.puntos_total : (sub + glob);
+      const gp    = r.pts_grupos_p || 0;
+      const total = (r.puntos_total != null) ? r.puntos_total : (sub + glob + gp);
       const bg    = isMe ? 'background:rgba(224,80,32,.07);' : (i%2===0?'':'background:rgba(255,255,255,.02);');
       const catCells = CATS.map(c => {
         const v = r[c.key]||0;
@@ -8262,7 +8441,7 @@ async function _renderRkPronTotal() {
             <th style="padding:6px 8px;text-align:center;width:26px">#</th>
             <th style="padding:6px 8px;text-align:left;min-width:80px">Apostador</th>
             ${thCats}
-            <th style="padding:6px 6px;text-align:center" title="Subtotal partidos (H+I+J+K+L+N+M)">Sub</th>
+            <th style="padding:6px 6px;text-align:center" title="Subtotal partidos (H+I+J+K+L+M+N+O+P)">Sub</th>
             <th style="padding:6px 6px;text-align:center" title="Globales A-G">Glob</th>
             <th style="padding:6px 6px;text-align:center">Total</th>
           </tr>
@@ -8278,9 +8457,24 @@ async function _renderRkPronTotal() {
       const isMe  = r.apostador_id === myId;
       const sub   = CATS.reduce((s, c) => s + (r[c.key]||0), 0);
       const glob  = r.pts_globales || 0;
-      const total = (r.puntos_total != null) ? r.puntos_total : (sub + glob);
+      const gp2   = r.pts_grupos_p || 0;
+      const total = (r.puntos_total != null) ? r.puntos_total : (sub + glob + gp2);
       const aid   = r.apostador_id;
       const open  = !!window._rkTreeOpen[aid];
+      const fasesDetail = (r.fases && r.fases.length > 0)
+        ? `<div style="padding:6px 14px 4px;border-bottom:1px solid var(--border)">
+             <div style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">pts por fase</div>
+             <table style="width:100%;border-collapse:collapse;font-size:.67rem">
+               ${r.fases.map(f => `<tr><td style="padding:2px 0;color:var(--text)">${esc(f.nombre||f.tipo)}</td><td style="padding:2px 0;text-align:right;font-weight:700;color:var(--amber)">${f.pts}</td></tr>`).join('')}
+               ${(r.pts_grupos_p||0)>0?`<tr><td style="padding:2px 0;color:#86efac">🏅 P — Clasificados R32</td><td style="padding:2px 0;text-align:right;font-weight:700;color:#86efac">${r.pts_grupos_p}</td></tr>`:''}
+               ${(r.pts_peor_equipo_d||0)>0?`<tr><td style="padding:2px 0;color:#fbbf24">🐢 D — Peor equipo</td><td style="padding:2px 0;text-align:right;font-weight:700;color:#fbbf24">${r.pts_peor_equipo_d}</td></tr>`:''}
+               ${(r.pts_globales||0)>0?`<tr><td style="padding:2px 0;color:var(--muted)">🌐 Globales A-G</td><td style="padding:2px 0;text-align:right;color:#818cf8">${r.pts_globales}</td></tr>`:''}
+             </table>
+           </div>`
+        : '';
+      const initialContent = open
+        ? fasesDetail + `<div id="rk-partidos-${aid}"><div style="padding:6px 14px;color:var(--muted);font-size:.65rem">Cargando partidos…</div></div>`
+        : fasesDetail + `<div id="rk-partidos-${aid}"></div>`;
       return `<div class="rk-tree-node" id="rk-node-${aid}">
         <div style="padding:5px 10px;border-bottom:1px solid var(--border);font-size:.71rem;display:flex;align-items:center;gap:4px;cursor:pointer;
                     ${isMe?'background:rgba(224,80,32,.07);font-weight:700;':''}"
@@ -8291,7 +8485,7 @@ async function _renderRkPronTotal() {
           <span class="pts-chip ${total>0?'green':'gray'}" style="font-size:.64rem;padding:1px 5px">${total}</span>
         </div>
         <div id="rk-detail-${aid}" style="display:${open?'block':'none'};background:rgba(0,0,0,.15)">
-          <div style="padding:6px 14px;color:var(--muted);font-size:.65rem">Cargando…</div>
+          ${initialContent}
         </div>
       </div>`;
     }).join('');
@@ -8302,7 +8496,7 @@ async function _renderRkPronTotal() {
     <div style="display:grid;grid-template-columns:60% 40%;overflow:hidden">
       <div style="border-right:1px solid var(--border);overflow:hidden">
         <div style="padding:2px 8px;font-size:.57rem;color:var(--muted);border-bottom:1px solid var(--border)">
-          Sub = H+I+J+K+L+N+M &nbsp;|&nbsp; Glob = A-G globales
+          Sub = H+I+J+K+L+M+N+O+P &nbsp;|&nbsp; Glob = A-G globales
         </div>
         ${mainTable}
       </div>
@@ -8343,7 +8537,14 @@ function _rkToggleNode(aid) {
   const open   = window._rkTreeOpen[aid];
   if (arrow)  arrow.textContent = open ? '▾' : '▸';
   if (detail) detail.style.display = open ? 'block' : 'none';
-  if (open) _rkLoadNodeContent(aid);
+  if (open) {
+    // Show placeholder in partidos sub-div if not yet loaded
+    const partidosDiv = document.getElementById(`rk-partidos-${aid}`);
+    if (partidosDiv && !partidosDiv.dataset.loaded && !partidosDiv.innerHTML.trim()) {
+      partidosDiv.innerHTML = '<div style="padding:6px 14px;color:var(--muted);font-size:.65rem">Cargando partidos…</div>';
+    }
+    _rkLoadNodeContent(aid);
+  }
 }
 
 // Nivel 2→3: toggle items de un partido dentro del árbol
@@ -8359,12 +8560,15 @@ function _rkTogglePartido(aid, pid) {
 
 async function _rkLoadNodeContent(aid) {
   const detail = document.getElementById(`rk-detail-${aid}`);
-  if (!detail || detail.dataset.loaded) return;
+  if (!detail) return;
+  // Use the partidos sub-div if it exists, else fall back to full detail div
+  const target = document.getElementById(`rk-partidos-${aid}`) || detail;
+  if (target.dataset.loaded) return;
   const myAposId = _rkMyAposId();
   const canLoad  = _isAdmin || aid === myAposId;
   if (!canLoad) {
-    detail.innerHTML = '<div style="padding:8px 14px;color:var(--muted);font-size:.65rem">Solo disponible para admins.</div>';
-    detail.dataset.loaded = '1';
+    target.innerHTML = '<div style="padding:8px 14px;color:var(--muted);font-size:.65rem">Solo disponible para admins.</div>';
+    target.dataset.loaded = '1';
     return;
   }
   try {
@@ -8462,10 +8666,10 @@ async function _rkLoadNodeContent(aid) {
     } else {
       h = '<div style="padding:10px 14px;color:var(--muted);font-size:.65rem">Sin partidos finalizados.</div>';
     }
-    detail.innerHTML = h;
-    detail.dataset.loaded = '1';
+    target.innerHTML = h;
+    target.dataset.loaded = '1';
   } catch(e) {
-    detail.innerHTML = `<div style="padding:6px 14px;color:var(--muted);font-size:.65rem">Error: ${esc(e.message)}</div>`;
+    target.innerHTML = `<div style="padding:6px 14px;color:var(--muted);font-size:.65rem">Error: ${esc(e.message)}</div>`;
   }
 }
 

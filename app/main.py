@@ -154,3 +154,12 @@ if _static_dir.exists():
     @app.get("/importar-apuestas", response_class=HTMLResponse, include_in_schema=False)
     async def importar_apuestas_page():
         return FileResponse(str(_static_dir / "importar-apuestas.html"))
+
+    @app.get("/live", response_class=HTMLResponse, include_in_schema=False)
+    async def becbuc_live_page():
+        """Sirve becbuc-live.html con headers no-cache para evitar problemas en mobile."""
+        resp = FileResponse(str(_static_dir / "becbuc-live.html"))
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp

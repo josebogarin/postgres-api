@@ -147,7 +147,7 @@ async def _set_teams(db, pid: int, local_id: int | None, visit_id: int | None):
     if local_id is None or visit_id is None:
         return
     r = await db.execute(
-        text("SELECT equipo_local_id, equipo_visitante_id FROM partido WHERE id = :pid"),
+        text("SELECT equipo_local_id, equipo_visitante_id, estado FROM partido WHERE id = :pid"),
         {"pid": pid},
     )
     row = r.mappings().first()
@@ -155,7 +155,12 @@ async def _set_teams(db, pid: int, local_id: int | None, visit_id: int | None):
         return
     if row["equipo_local_id"] == local_id and row["equipo_visitante_id"] == visit_id:
         return  # sin cambios: conserva el resultado existente
-    # Los equipos cambiaron -> reasignar y limpiar resultado + puntos en cascada
+    # Partidos ya FINALIZADOS no se tocan: el resultado es canónico.
+    # avanzar_ronda32 puede calcular local/visitante en orden diferente al oficial,
+    # lo que borraría el resultado de un partido ya jugado.
+    if row["estado"] == "finalizado":
+        return
+    # Los equipos cambiaron y el partido NO está finalizado -> reasignar y limpiar
     await db.execute(
         text("""
             UPDATE partido

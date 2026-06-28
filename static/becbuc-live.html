@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>BECBUC En Vivo</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -281,8 +284,8 @@
     .tab-icon { font-size: 22px; line-height: 1; }
     .tab-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
 
-    /* ── GRUPOS (tab) ── */
-    #panel-grupos { display: none; padding: 12px 12px 80px; max-width: 640px; margin: 0 auto; }
+    /* ── 16AVOS BRACKET (tab) ── */
+    #panel-r32 { display: none; padding: 12px 12px 80px; max-width: 640px; margin: 0 auto; }
     .grp-section { margin-bottom: 18px; }
     .grp-title {
       font-size: 12px; font-weight: 700; color: #6ee7b7;
@@ -303,6 +306,54 @@
     .grp-table td.pts-col { font-weight: 700; color: #fff; font-size: 13px; }
     .grp-table td.gd-pos { color: #6ee7b7; }
     .grp-table td.gd-neg { color: #f87171; }
+
+    /* ── R32 BRACKET CARDS ── */
+    .r32-subtitle { font-size:10px;color:#6b7280;text-align:center;margin-bottom:10px;letter-spacing:.4px; }
+    .r32-match {
+      display:flex; align-items:stretch; gap:0;
+      background:#111827; border:1px solid #1f2937; border-radius:10px;
+      margin-bottom:7px; overflow:hidden; position:relative;
+    }
+    .r32-match.r32-fin  { border-color:#1f3a2a; }
+    .r32-match.r32-live { border-color:rgba(239,68,68,.45); background:rgba(239,68,68,.04); }
+    .r32-num {
+      width:28px; min-width:28px; background:#0d1117; display:flex; align-items:center;
+      justify-content:center; font-size:9px; font-weight:700; color:#374151;
+      border-right:1px solid #1f2937; letter-spacing:.3px;
+    }
+    .r32-teams { flex:1; padding:8px 10px; }
+    .r32-team {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:3px 0;
+    }
+    .r32-team + .r32-team { border-top:1px solid #1f2937; }
+    .r32-team-name { font-size:13px; font-weight:600; color:#e5e7eb; }
+    .r32-team-name.tbd { color:#4b5563; font-style:italic; }
+    .r32-team-name.winner { color:#6ee7b7; }
+    .r32-score {
+      font-size:15px; font-weight:700; color:#fff; min-width:20px; text-align:right;
+    }
+    .r32-score.winner-s { color:#6ee7b7; }
+    .r32-score.loser-s  { color:#6b7280; }
+    .r32-score.tbd      { color:#374151; font-size:11px; }
+    .r32-pen {
+      font-size:9px; color:#f59e0b; padding:0 4px;
+      display:inline-block; white-space:nowrap;
+    }
+    .r32-status {
+      width:54px; min-width:54px; display:flex; align-items:center; justify-content:center;
+      font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+      color:#4b5563; padding:0 6px; text-align:center; border-left:1px solid #1f2937;
+    }
+    .r32-status.live  { color:#f87171; animation: r32pulse 1.2s ease-in-out infinite; }
+    .r32-status.done  { color:#6ee7b7; }
+    .r32-status.pend  { color:#374151; }
+    @keyframes r32pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .r32-section-hdr {
+      font-size:9px; font-weight:700; color:#4b5563;
+      text-transform:uppercase; letter-spacing:.8px;
+      padding:10px 2px 4px; margin-top:4px;
+    }
 
     /* ── MEJORES TERCEROS (tab) ── */
     .t3-header { font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.6px;padding:4px 8px 8px;display:flex;align-items:center;gap:8px; }
@@ -328,6 +379,50 @@
     .t3-corte b { color:#d1d5db; }
     .t3-note  { font-size:10px;color:#4b5563;margin-top:8px;text-align:center;line-height:1.5; }
 
+    /* ── EVENTOS POR EQUIPO ── */
+    #team-events { display:flex;gap:8px;padding:8px 0 2px;justify-content:space-between; }
+    .te-col { flex:1;background:#111827;border:1px solid #1f2937;border-radius:10px;padding:8px 10px; }
+    .te-col-title { font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;text-align:center; }
+    .te-stat { display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #1a2235;font-size:12px; }
+    .te-stat:last-child { border-bottom:none; }
+    .te-stat-lbl { color:#6b7280;font-size:11px; }
+    .te-stat-val { font-weight:700;color:#e5e7eb; }
+    /* Desglose expandible por apostador */
+    tr.bet-detail-row td { background:#0c1420;padding:0; }
+    .bet-detail-wrap { padding:6px 8px 8px 36px;display:flex;flex-wrap:wrap;gap:5px; }
+    .bet-chip { display:inline-flex;align-items:center;gap:4px;border-radius:6px;padding:3px 7px;font-size:11px;border:1px solid; }
+    .bet-chip.win  { background:rgba(110,231,183,.12);border-color:rgba(110,231,183,.3);color:#6ee7b7; }
+    .bet-chip.lose { background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.2);color:#f87171; }
+    .bet-chip.pend { background:rgba(75,85,99,.2);border-color:#374151;color:#6b7280; }
+    .bet-chip b { font-weight:700; }
+
+    /* ── PANEL KO ACUMULADO ── */
+    #ko-panel { margin:14px 0 0; }
+    #ko-panel .sec-title { display:flex;align-items:center;gap:8px; }
+    .ko-phase-badge { font-size:11px;font-weight:600;color:#f59e0b;background:rgba(245,158,11,.12);
+      border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:2px 8px; }
+    .ko-tbl-wrap { overflow-x:auto; }
+    .ko-tbl-wrap table { font-size:12px; }
+    .ko-hit-live { color:#34d399;font-weight:700;font-size:13px; }
+    .ko-hit-hist { color:#60a5fa;font-weight:600; }
+    .ko-total    { color:#fbbf24;font-weight:700;font-size:13px; }
+    .ko-hint { font-size:10px;color:#374151;padding:3px 2px; }
+    .ko-live-row { background:rgba(52,211,153,.04); }
+
+    /* ── PANEL GRUPOS P — Lista de 32 ── */
+    #gp-panel { margin:14px 0 0;background:#0d1117;border:1px solid #1f2937;border-radius:8px;padding:10px 12px; }
+    #gp-panel .sec-title { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
+    .gp-subtitle { font-size:11px;color:#6b7280;margin-bottom:6px; }
+    .gp-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:4px 6px;max-height:280px;overflow-y:auto; }
+    .gp-team { display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:6px;font-size:11px;font-weight:500;
+               background:#111827;border:1px solid #1f2937;transition:background .2s; }
+    .gp-team.hit { background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);color:#34d399; }
+    .gp-team.miss { background:#111827;color:#374151; }
+    .gp-team.unchecked { color:#6b7280; }
+    .gp-hit-icon { font-size:12px; }
+    .gp-summary { font-size:11px;color:#6b7280;margin-top:6px; }
+    .gp-summary b { color:#fbbf24; }
+
     /* ── RESULTADOS (tab) ── */
     #panel-resultados { display: none; padding: 12px 12px 80px; max-width: 640px; margin: 0 auto; }
     .res-card {
@@ -339,7 +434,12 @@
       font-size: 9px; font-weight: 700; color: #6ee7b7; text-transform: uppercase;
       letter-spacing: 0.6px; display: flex; justify-content: space-between; align-items: center;
     }
-    .res-fecha { font-size: 9px; color: #4b5563; font-weight: 600; letter-spacing: .3px; }
+    .res-fecha { font-size: 11px; color: #6ee7b7; font-weight: 700; letter-spacing: .3px; }
+    .prox-card { background:#0d1117; border:1px solid #1f2937; border-radius:10px; padding:9px 12px; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+    .prox-num  { font-size:9px; color:#374151; font-weight:700; min-width:26px; }
+    .prox-fecha{ font-size:11px; color:#6ee7b7; font-weight:700; min-width:100px; }
+    .prox-match{ font-size:12px; color:#d1d5db; font-weight:600; flex:1; }
+    .prox-fase { font-size:9px; color:#4b5563; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
     .res-main {
       display: flex; align-items: center; justify-content: center;
       gap: 8px; margin: 8px 0 6px;
@@ -407,10 +507,8 @@
   <div id="hdr-right">
     <span id="hdr-clock"></span>
     <button class="hdr-btn" id="btn-live" onclick="navAuto()" title="Ir al partido en vivo" style="display:none;">🔴 En vivo</button>
-    <button class="hdr-btn" id="btn-ss" onclick="sofascoreVerifyLive('ayer')" title="Corrige J/K/L/M de ayer con SofaScore" style="background:rgba(139,92,246,.2);border-color:rgba(139,92,246,.5);color:#c4b5fd;">🟣 SS ayer</button>
-    <button class="hdr-btn" id="btn-ss-hoy" onclick="sofascoreVerifyLive('hoy')" title="Corrige J/K/L/M de hoy con SofaScore" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#a78bfa;">🟣 SS hoy</button>
-    <button class="hdr-btn" id="btn-edit-stats" onclick="openEditStats()" title="Corrección manual de stats" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.4);color:#fbbf24;">✏️ Stats</button>
-    <button class="hdr-btn" id="btn-sync" onclick="sincronizar()">🔄 Sincronizar</button>
+    <button class="hdr-btn" id="btn-sync" onclick="sincronizar()"
+      title="Descarga goles y estadísticas actualizadas desde API-Football y recalcula puntajes">🔄 Sincronizar</button>
   </div>
 </div>
 
@@ -431,9 +529,9 @@
     <span class="tab-icon">🏆</span>
     <span class="tab-label">Ranking</span>
   </div>
-  <div class="tab-btn" id="tab-grupos" onclick="switchTab('grupos')">
-    <span class="tab-icon">📊</span>
-    <span class="tab-label">Grupos</span>
+  <div class="tab-btn" id="tab-r32" onclick="switchTab('r32')">
+    <span class="tab-icon">⚔️</span>
+    <span class="tab-label">Bracket</span>
   </div>
   <div class="tab-btn" id="tab-resultados" onclick="switchTab('resultados')">
     <span class="tab-icon">📋</span>
@@ -507,6 +605,8 @@
     </div>
     <div id="py-banner">🇵🇾 Partido Paraguay — puntaje doble ×2</div>
     <div id="match-stats"></div>
+    <!-- EVENTOS POR EQUIPO -->
+    <div id="team-events" style="display:none;"></div>
   </div>
 
   <!-- PREDICCIONES -->
@@ -543,15 +643,64 @@
     <div id="rank-grid"></div>
   </div>
 
+  <!-- PANEL KO ACUMULADO (visible solo en fases KO) -->
+  <div id="ko-panel" style="display:none;">
+    <div class="sec-title">
+      Fase KO — Acumulado
+      <span class="ko-phase-badge" id="ko-phase-label">—</span>
+    </div>
+    <div class="ko-tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:30px;">#</th>
+            <th class="nm">Apostador</th>
+            <th title="Resultado (ganador / empate)">🏆</th>
+            <th title="Marcador exacto">🎯</th>
+            <th title="Tarjetas amarillas">🟨</th>
+            <th title="Tarjetas rojas">🟥</th>
+            <th title="Decisiones VAR">📺</th>
+            <th title="Penales cobrados en el partido">🥅</th>
+            <th title="Minuto del primer gol">⏱</th>
+            <th title="Penales en tanda">🔢</th>
+            <th title="Equipo clasifica (bonus por fase)">🏅</th>
+            <th class="tt" title="Total acumulado fase KO">Total KO</th>
+          </tr>
+        </thead>
+        <tbody id="ko-tbl-body"></tbody>
+      </table>
+    </div>
+    <div class="ko-hint">🟢 Verde = puntos en este partido (live) · 🔵 Azul = acumulado KO previo</div>
+  </div>
+
+  <!-- PANEL GRUPOS P — Lista de 32 equipos clasificados con bonus por apostador -->
+  <div id="gp-panel" style="display:none;">
+    <div class="sec-title">
+      🏅 Grupos P — Lista de 32
+      <span class="ko-phase-badge" id="gp-total-badge">—</span>
+    </div>
+    <div class="gp-subtitle">Equipos que clasificaron a R32 · Verde = apostador pronosticó correctamente</div>
+    <div id="gp-apostador-sel" style="margin-bottom:6px;font-size:11px;color:#6b7280;">
+      <label>Apostador: <select id="gp-ap-select" onchange="renderGpPanel()"
+        style="background:#1f2937;color:#e5e7eb;border:1px solid #374151;border-radius:4px;padding:2px 6px;font-size:11px;">
+        <option value="">— todos —</option>
+      </select></label>
+    </div>
+    <div id="gp-grid-wrap">
+      <div class="gp-grid" id="gp-teams-grid"></div>
+      <div class="gp-summary" id="gp-summary-line"></div>
+    </div>
+  </div>
+
   <div id="footer">
     Actualización automática cada 60 s · Última: <span id="last-sync">—</span>
   </div>
 </div>
 </div><!-- /panel-partido -->
 
-<!-- Panel Grupos -->
-<div id="panel-grupos">
-  <div id="grupos-content" style="color:#6b7280;font-size:13px;text-align:center;padding-top:40px;">Cargando grupos…</div>
+<!-- Panel Bracket KO -->
+<div id="panel-r32">
+  <div id="r32-content" style="color:#6b7280;font-size:13px;text-align:center;padding-top:40px;">Cargando bracket…</div>
 </div>
 
 <!-- Panel Resultados -->
@@ -609,6 +758,8 @@ let _lastEspnCheck  = 0;      // timestamp último chequeo ESPN (ms)
 let _partEnJuego    = [];     // partidos simultáneos en_juego
 let _allMatchData   = [];     // datos de todos los partidos simultáneos [{partido,apostoles,ranking,results}]
 let _modoSimult     = false;  // true cuando hay 2+ en_juego y estamos en modo auto
+let _statsAntes     = {};     // {partido_id: {goles_local, goles_visitante, amarillas, rojas, decisiones_var, penales_partido, estado}}
+let _equiposR32     = {};     // {equipo_id: nombre} — los 32 equipos reales clasificados a R32
 
 // ════════════════════════════════════════════════
 // TOKEN PERSISTENTE 24h
@@ -701,20 +852,30 @@ function irAlPortal() {
 // ════════════════════════════════════════════════
 // MOTOR DE SCORING (JS puro, sin BD)
 // ════════════════════════════════════════════════
+// Claves exactas de f.tipo en la BD (definidas en seed_playoff_mundial.sql)
 const FASE_PTS = {
-  grupos:   { H:4,  I:8  },
-  '16avos': { H:6,  I:12 },
-  '8avos':  { H:8,  I:16 },
-  '4tos':   { H:10, I:20 },
-  semi:     { H:12, I:24 },
-  tercero:  { H:14, I:28 },
-  final:    { H:20, I:40 },
+  grupo:         { H:4,  I:8,  P:1  },
+  grupos:        { H:4,  I:8,  P:1  },   // alias
+  ronda32:       { H:6,  I:12, P:2  },   // Ronda de 32 (16 avos)
+  ronda16:       { H:8,  I:16, P:4  },   // Octavos de Final
+  cuartos:       { H:10, I:20, P:6  },   // Cuartos de Final
+  semis:         { H:12, I:24, P:8  },   // Semifinales
+  tercer_puesto: { H:14, I:28 },   // Tercer Puesto
+  final:         { H:20, I:40 },   // Final
+  // Aliases legacy (por compatibilidad)
+  '16avos':      { H:6,  I:12, P:2  },
+  '8avos':       { H:8,  I:16, P:4  },
+  '4tos':        { H:10, I:20, P:6  },
+  semi:          { H:12, I:24, P:8  },
+  tercer_puesto: { H:14, I:28, P:10 },
+  tercero:       { H:14, I:28, P:10 },
+  final:         { H:20, I:40, P:12 },
 };
 
 function scoreApostador(partido, ap, allMinutos) {
   const ft   = FASE_PTS[partido.fase_tipo] || FASE_PTS.grupos;
   const mult = partido.es_paraguay ? 2 : 1;
-  const d    = { H:0, I:0, J:0, K:0, L:0, M:0, N:0, O:0 };
+  const d    = { H:0, I:0, J:0, K:0, L:0, M:0, N:0, O:0, P:0 };
 
   const gl = partido.goles_local, gv = partido.goles_visitante;
   const pl = ap.pred_local,       pv = ap.pred_visitante;
@@ -745,6 +906,14 @@ function scoreApostador(partido, ap, allMinutos) {
   if (partido.penales_tanda_local !== null && partido.penales_tanda_local !== undefined) {
     if (ap.pred_penales_local_tanda    === partido.penales_tanda_local)     d.O += 2 * mult;
     if (ap.pred_penales_visitante_tanda === partido.penales_tanda_visitante) d.O += 2 * mult;
+  }
+
+  // P — Equipo clasifica (bonus de fase, solo KO y solo al finalizar el partido)
+  // Solo se puede saber si el equipo_clasificado_id está definido (partido finalizado)
+  if (partido.equipo_clasificado_id != null && ap.pred_equipo_clasifica != null
+      && partido.equipo_clasificado_id === ap.pred_equipo_clasifica) {
+    const ptsP = ft.P || 0;
+    d.P = ptsP * mult;
   }
 
   const total = Object.values(d).reduce((a, b) => a + b, 0);
@@ -1065,11 +1234,137 @@ function flag(iso, nombre) {
 }
 
 // ════════════════════════════════════════════════
+// DEMO MODE (?demo=1) — datos ficticios, sin API
+// ════════════════════════════════════════════════
+function cargarDemo() {
+  _torneoId = 2;
+  _numFifa  = 74;
+
+  // IDs ficticios para los 32 equipos R32 (0-31)
+  const r32ids = Array.from({length:32}, (_,i) => i+100);
+  const r32names = [
+    'Alemania','Argentina','Australia','Bélgica','Bosnia y Herz.','Brasil',
+    'Cabo Verde','Canadá','Colombia','Corea del Sur','Congo DR','Costa de Marfil',
+    'Croacia','Ecuador','Egipto','España','Estados Unidos','Francia',
+    'Ghana','Holanda','Inglaterra','Japón','Marruecos','México',
+    'Noruega','Paraguay','Portugal','Senegal','Sudáfrica','Suecia',
+    'Suiza','Suráfrica'
+  ];
+  r32ids.forEach((id,i) => { _equiposR32[id] = r32names[i] || `Equipo ${id}`; });
+
+  // Partido: Germany vs Paraguay, R32, min 67, 1-1 (¡PARAGUAY DUPLICA!)
+  _partido = {
+    id: 74, numero_fifa: 74,
+    fase_tipo: 'ronda32', fase_nombre: 'Ronda de 32',
+    equipo_local: 'Germany', equipo_visitante: 'Paraguay',
+    equipo_local_id: 201, equipo_visitante_id: 226,
+    bandera_local: 'DE', bandera_visitante: 'PY',
+    goles_local: 1, goles_visitante: 1,
+    estado: 'en_juego', minuto_actual: 67,
+    minuto_primer_gol: 23,
+    amarillas: 3, local_amarillas: 2, visitante_amarillas: 1,
+    rojas: 0, local_rojas: 0, visitante_rojas: 0,
+    decisiones_var: 1, penales_partido: 0,
+    penales_local: null, penales_visitante: null,
+    equipo_clasificado_id: null,
+    es_paraguay: true, mult_paraguay: 2,
+    fecha: new Date(Date.now() + 23*60*1000).toISOString()
+  };
+
+  // 12 apostadores con predicciones variadas
+  const apNames = ['quiroga','perez','mendez','castro','vargas',
+                   'rios','mora','leon','rojas','fuentes','silva','herrera'];
+  const apPreds = [
+    // pred_local, pred_vis, pred_amar, pred_minuto, ko_H, ko_I, total_prev
+    [1,1, 3, 23,  28, 8,  320],  // empate exacto + min exacto 🎯
+    [2,1, 2, 30,  20, 0,  280],  // acierte resultado, no marcador
+    [2,0, 1, 15,  24, 4,  295],  // resultado local, no marcador
+    [1,1, 3, 40,  16, 8,  310],  // empate exacto (sin min)
+    [0,2, 1, 20,  28, 0,  265],  // falla resultado (Paraguay gana)
+    [1,1, 2, 23,  20, 8,  305],  // empate exacto + min exacto
+    [2,1, 3, 30,  24, 4,  288],  // resultado local
+    [1,1, 1, 35,  28, 8,  315],  // empate exacto
+    [0,1, 2, 25,  20, 0,  270],  // falla resultado
+    [1,2, 3, 20,  16, 0,  260],  // falla resultado (Paraguay gana)
+    [2,1, 2, 30,  24, 4,  290],  // resultado local
+    [1,1, 3, 23,  28, 8,  325],  // empate exacto + min exacto 🎯
+  ];
+
+  _apostoles = apNames.map((username, i) => {
+    const p = apPreds[i];
+    return {
+      apostador_id: 10+i, apostador: username,
+      puntos_antes: p[6],
+      pred_local: p[0], pred_visitante: p[1],
+      pred_amarillas: p[2], pred_rojas: 0, pred_var: i%3===0?1:0,
+      pred_penales_partido: 0, pred_minuto_gol: p[3],
+      pred_penales_local_tanda: null, pred_penales_visitante_tanda: null,
+      pred_equipo_clasifica: i%5===0 ? 226 : null,  // algunos pronostican Paraguay
+      ko_acum: { H: p[4], I: p[5], J: i%3===0?1:0, K:0, L: i%3===0?1:0, M:0, N: i%4===0?1:0, O:0 }
+    };
+  });
+
+  // ranking_vista con grupos_p
+  const pronosBase = r32ids.slice(0, 28);  // base para todos
+  _ranking = apNames.map((username, i) => {
+    const pts = apPreds[i][6] + (i%2===0 ? 24 : 0); // algunos con bonus
+    // Varía 23-28 aciertos por apostador
+    const aciertos = 23 + (i % 6);
+    const pronos = r32ids.slice(0, aciertos).concat(r32ids.slice(28));
+    return {
+      apostador_id: 10+i,
+      apostador: username,
+      username: username,
+      nombre: username,
+      puntos_total: pts,
+      pts_globales: 20,
+      ko_acum: apPreds[i][4] > 0 ? { H: apPreds[i][4], I: apPreds[i][5], J:0,K:0,L:0,M:0,N:0,O:0 } : null,
+      grupos_p: {
+        aciertos: aciertos,
+        pts: aciertos,
+        pronosticados: pronos.slice(0, 32),
+        reales: r32ids
+      }
+    };
+  });
+
+  // Ordenar ranking por puntos desc
+  _ranking.sort((a,b) => b.puntos_total - a.puntos_total);
+
+  _modoSimult = false;
+  _allMatchData = [];
+  showScreen('main');
+  try { calcularTodos(); } catch(e) { console.error('demo calcularTodos:', e); }
+  try { render(); }        catch(e) { console.error('demo render:', e); }
+  try { renderNav(); }     catch(e) { console.error('demo renderNav:', e); }
+  try { renderSimBar(); }  catch(e) { console.error('demo renderSimBar:', e); }
+  updateStatusBar();
+
+  // Badge demo
+  setTimeout(() => {
+    const sb = document.getElementById('status-bar');
+    if (sb) {
+      const badge = document.createElement('span');
+      badge.style.cssText = 'background:#7c3aed;color:#c4b5fd;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:8px;';
+      badge.textContent = '🎭 DEMO';
+      sb.appendChild(badge);
+    }
+  }, 200);
+}
+
+// ════════════════════════════════════════════════
 // INIT & CARGA
 // ════════════════════════════════════════════════
 async function init() {
   showScreen('loading');
   startClock();
+
+  // ── MODO DEMO (?demo=1) — carga datos ficticios sin API ni BD ────────────────
+  if (new URLSearchParams(window.location.search).get('demo') === '1') {
+    cargarDemo();
+    return;
+  }
+
   // Siempre arrancar en modo auto (partido live) al cargar/refrescar la página.
   // El parámetro ?p= solo se usa para navegación dentro de la sesión (history.replaceState).
   _numFifa = null;
@@ -1081,13 +1376,27 @@ async function init() {
   try {
     await ensureToken();
     const torneos = await api('/api/v1/torneo/activas');
-    if (!torneos || torneos.length === 0) throw new Error('Sin torneo activo');
+    if (!torneos || torneos.length === 0) throw new Error('Sin torneo activo — verificar config en el portal');
     _torneoId = torneos[0].id;
     await cargar();
     startAutoRefresh();
   } catch (e) {
     showScreen('error');
-    document.getElementById('err-msg').textContent = e.message || 'Error de conexión';
+    let msg = e.message || 'Error de conexión';
+    // Mensajes más descriptivos según el tipo de error
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('ERR_CONNECTION')) {
+      msg = 'No se puede conectar con el servidor — verificar que uvicorn esté activo (puerto 8000)';
+      // Limpiar token cacheado para que el próximo reintento haga login fresco
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(TOKEN_TS);
+    } else if (msg.includes('401') || msg.includes('Login fallido')) {
+      msg = 'Credenciales inválidas — verificar usuario/contraseña';
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(TOKEN_TS);
+    } else if (msg.includes('403')) {
+      msg = 'Sin permiso — verificar rol del usuario';
+    }
+    document.getElementById('err-msg').textContent = msg;
   }
 }
 
@@ -1099,43 +1408,79 @@ async function cargar() {
     _partido   = data.partido;
     _apostoles = data.apostadores || [];
     _ranking   = data.ranking_vista || [];
+    if (data.equipos_r32 && Object.keys(data.equipos_r32).length)
+      _equiposR32 = data.equipos_r32;
     if (data._debug?.pd_error) {
       showToast('⚠ Error BD scores: ' + data._debug.pd_error.slice(0,80), 'err');
     }
     if (data.numeros_fifa && data.numeros_fifa.length) _allNumeros = data.numeros_fifa;
     if (data.partidos_en_juego) _partEnJuego = data.partidos_en_juego;
 
-    // ── MODO SIMULTÁNEO: cuando hay 2+ en_juego y estamos en auto ──────────
-    const simEnJuego = (data.partidos_en_juego || []).filter(p => p.numero_fifa !== data.partido.numero_fifa);
-    _modoSimult = _numFifa == null && simEnJuego.length > 0;
-
-    if (_modoSimult) {
-      // Cargar los otros partidos en paralelo
-      const extras = await Promise.all(
-        simEnJuego.map(p => api('/api/v1/bets/live-panel/' + _torneoId + '?numero_fifa=' + p.numero_fifa).catch(() => null))
-      );
-      // Construir _allMatchData: [{partido, apostoles, ranking}]
-      _allMatchData = [
-        { partido: data.partido, apostoles: data.apostadores || [], ranking: data.ranking_vista || [] },
-        ...extras.filter(r => r && r.partido).map(r => ({
-          partido: r.partido, apostoles: r.apostadores || [], ranking: r.ranking_vista || []
-        }))
-      ];
-      // Calcular scoring para cada partido
-      _allMatchData.forEach(md => { md.results = calcMatch(md.partido, md.apostoles, md.ranking); });
-      renderDual();
-      renderSimBar();
-      showScreen('main');
-    } else {
-      _modoSimult = false;
-      _allMatchData = [];
-      calcularTodos();
-      render();
-      renderNav();
-      renderSimBar();
-      showScreen('main');
-    }
+    // ── Siempre modo partido único: los tabs funcionan en todos los casos ──────
+    // La sim-bar (renderSimBar) se encarga de mostrar botones de navegación
+    // cuando hay 2+ partidos en_juego, sin romper los tabs.
+    _modoSimult = false;
+    _allMatchData = [];
+    showScreen('main');  // mostrar ANTES de render
+    try { calcularTodos(); } catch(re) { console.error('calcularTodos:', re); }
+    try { render(); }    catch(re) { console.error('render:', re); }
+    try { renderNav(); } catch(re) { console.error('renderNav:', re); }
+    try { renderSimBar(); } catch(re) { console.error('renderSimBar:', re); }
     updateStatusBar();
+
+    // ── Detectar eventos nuevos en vivo (goles, tarjetas, VAR, penales) ────────
+    const todosPartidos = _modoSimult && _allMatchData.length > 0
+      ? _allMatchData.map(md => md.partido)
+      : (_partido ? [_partido] : []);
+
+    for (const p of todosPartidos) {
+      if (!p || !p.id) continue;
+      const antes = _statsAntes[p.id];
+      if (antes && (p.estado === 'en_juego' || p.estado === 'finalizado')) {
+        const loc = p.equipo_local  || 'Local';
+        const vis = p.equipo_visitante || 'Visitante';
+        const gl  = p.goles_local     ?? 0;
+        const gv  = p.goles_visitante ?? 0;
+        const lbl = `${loc} ${gl}–${gv} ${vis}`;
+
+        // ⚽ GOL (5s, más dramático)
+        const difL = gl - (antes.goles_local ?? 0);
+        const difV = gv - (antes.goles_visitante ?? 0);
+        for (let i = 0; i < difL; i++) showToast(`⚽ ¡GOL de ${loc}! · ${lbl}`, 'ok', 5000);
+        for (let i = 0; i < difV; i++) showToast(`⚽ ¡GOL de ${vis}! · ${lbl}`, 'ok', 5000);
+
+        // 🟨 Amarilla
+        const difAm = (p.amarillas ?? 0) - (antes.amarillas ?? 0);
+        if (difAm > 0) showToast(`🟨 Amarilla${difAm > 1 ? ` ×${difAm}` : ''} · ${loc} vs ${vis}`, 'warn');
+
+        // 🟥 Roja
+        const difRo = (p.rojas ?? 0) - (antes.rojas ?? 0);
+        if (difRo > 0) showToast(`🟥 ¡ROJA! · ${loc} vs ${vis}`, 'err', 5000);
+
+        // 📺 VAR
+        const difVar = (p.decisiones_var ?? 0) - (antes.decisiones_var ?? 0);
+        if (difVar > 0) showToast(`📺 Decisión VAR · ${loc} vs ${vis}`, 'warn');
+
+        // 🥅 Penal en el partido
+        const difPen = (p.penales_partido ?? 0) - (antes.penales_partido ?? 0);
+        if (difPen > 0) showToast(`🥅 Penal cobrado · ${loc} vs ${vis}`, 'warn');
+
+        // 🏁 Partido terminado
+        if (antes.estado === 'en_juego' && p.estado === 'finalizado') {
+          showToast(`🏁 FINAL · ${lbl}`, 'ok', 5000);
+        }
+      }
+      // Guardar estado actual
+      _statsAntes[p.id] = {
+        goles_local:      p.goles_local     ?? 0,
+        goles_visitante:  p.goles_visitante ?? 0,
+        amarillas:        p.amarillas       ?? 0,
+        rojas:            p.rojas           ?? 0,
+        decisiones_var:   p.decisiones_var  ?? 0,
+        penales_partido:  p.penales_partido ?? 0,
+        estado:           p.estado,
+      };
+    }
 
     // ESPN verify cada ~20 min durante partido(s) en vivo
     const ESPN_INTERVAL = 20 * 60 * 1000;
@@ -1174,6 +1519,26 @@ async function cargar() {
     }
     document.getElementById('last-sync').textContent =
       new Date().toLocaleTimeString('es-CR');
+
+    // Si hay partido(s) en vivo: actualizar terceros en background y detectar cambio de clasificación
+    const hayEnJuego = _partido?.estado === 'en_juego' ||
+                       (_partEnJuego || []).some(p => p.estado === 'en_juego');
+    _hayPartidoEnVivo = hayEnJuego;
+    if (hayEnJuego) {
+      _tercerosTs = 0;     // invalidar cache: forzar recarga en próxima visita al tab
+      _r32Ts      = 0;     // invalidar cache bracket para que próximo cargar lo refresque
+      _resultadosTs = 0;
+      checkTercerosChange(); // en background, sin await
+    }
+
+    // ── Refrescar el tab activo si no es el partido principal ──────────────────
+    if (_liveTab === 'r32')         loadBracket32(true).catch(() => {});
+    else if (_liveTab === 'resultados') loadResultados(true).catch(() => {});
+    else if (_liveTab === 'terceros')   loadTerceros().catch(() => {});
+    // Siempre pre-cargar bracket en background para que esté listo al navegar al tab
+    // (los equipos se almacenan en BD y se recuperan desde ahí)
+    else loadBracket32(false).catch(() => {});
+
   } catch (e) {
     showToast('Error al actualizar: ' + e.message, 'err');
   }
@@ -1381,10 +1746,19 @@ async function sincronizar() {
     const s = await apiPost('/api/v1/bets/sync-resultados/' + _torneoId + '?force=true');
     const act  = s.actualizados ?? 0;
     const plen = s.puntajes?.plenos ?? 0;
-    const acrt = s.puntajes?.aciertos ?? 0;
-    showToast(`Sync OK · ${act} actualizado(s) · ${plen}⭐ plenos`, 'ok');
+    const mapeoInfo = s.auto_mapeo?.auto_mapeo
+      ? ` · 🔗 ${s.auto_mapeo.partidos_nuevos ?? 0} KO mapeados`
+      : (s.auto_mapeo?.warn ? ' · ⚠ Re-mapeo KO falló' : '');
+    const toastMsg = act > 0
+      ? `Sync OK · ${act} actualizado(s) · ${plen}⭐ plenos${mapeoInfo}`
+      : `Sync OK · sin cambios${mapeoInfo} · puntajes actualizados`;
+    showToast(toastMsg, act > 0 ? 'ok' : 'warn');
     await cargar();
     renderRanking();   // actualiza ranking aunque no sea el tab activo
+    // Refrescar tabs de bracket/resultados/terceros siempre después de sync
+    loadBracket32(true).catch(() => {});
+    loadResultados(true).catch(() => {});
+    _tercerosTs = 0; // forzar recarga en terceros tab
   } catch (e) {
     showToast('Error sync: ' + e.message, 'err');
   } finally {
@@ -1477,6 +1851,48 @@ function render() {
         `<div class="stat-chip">${ico} ${lbl} <b>${v}</b></div>`).join('')
     : '<span style="font-size:11px;color:#374151;padding:2px 0;">Sin estadísticas aún</span>';
 
+  // Panel de eventos por equipo (stats desglosadas local vs visitante)
+  const teEl = document.getElementById('team-events');
+  const hasTeStats = (p.local_amarillas !== undefined || p.visitante_amarillas !== undefined);
+  const isActive = p.estado === 'en_juego' || p.estado === 'finalizado';
+  if (hasTeStats && isActive) {
+    const la = p.local_amarillas   ?? 0, va = p.visitante_amarillas ?? 0;
+    const lr = p.local_rojas       ?? 0, vr = p.visitante_rojas     ?? 0;
+    const gl = p.goles_local       ?? 0, gv = p.goles_visitante     ?? 0;
+    function teRow(lbl, lv, vv, ico) {
+      const lCls = lv > vv ? 'style="color:#6ee7b7"' : '';
+      const vCls = vv > lv ? 'style="color:#6ee7b7"' : '';
+      return `<div class="te-stat">
+        <span class="te-stat-lbl">${ico} ${lbl}</span>
+        <span class="te-stat-val" ${lCls}>${lv}</span>
+        <span style="color:#374151;font-size:10px;">vs</span>
+        <span class="te-stat-val" ${vCls}>${vv}</span>
+      </div>`;
+    }
+    teEl.style.display = 'flex';
+    teEl.innerHTML = `
+      <div class="te-col">
+        <div class="te-col-title">${esc(p.equipo_local || 'Local')}</div>
+        ${teRow('Goles',     gl, gv, '⚽')}
+        ${teRow('Amarillas', la, va, '🟨')}
+        ${teRow('Rojas',     lr, vr, '🟥')}
+      </div>
+      <div class="te-col" style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 8px;min-width:48px;">
+        <div style="font-size:22px;font-weight:800;color:#e5e7eb;">${gl}:${gv}</div>
+        ${p.decisiones_var > 0 ? `<div style="font-size:10px;color:#9ca3af;margin-top:4px;">📺 VAR ×${p.decisiones_var}</div>` : ''}
+        ${p.penales_partido > 0 ? `<div style="font-size:10px;color:#9ca3af;">🥅 Pen ×${p.penales_partido}</div>` : ''}
+        ${p.minuto_primer_gol != null ? `<div style="font-size:10px;color:#9ca3af;">⏱ ${p.minuto_primer_gol}'</div>` : ''}
+      </div>
+      <div class="te-col">
+        <div class="te-col-title">${esc(p.equipo_visitante || 'Visitante')}</div>
+        ${teRow('Goles',     gv, gl, '⚽')}
+        ${teRow('Amarillas', va, la, '🟨')}
+        ${teRow('Rojas',     vr, lr, '🟥')}
+      </div>`;
+  } else {
+    teEl.style.display = 'none';
+  }
+
   // Tabla partido: # | apostador | pred | pts de ESTE partido (H-O) | Total▼
   // H-O vienen de sim_detail (scoreApostador del partido actual)
   // Total = acumulado otros partidos + pts de este partido
@@ -1505,15 +1921,49 @@ function render() {
     const liveTitle  = hayGoles ? `title="Ranking ${r.puntos_antes} + este partido ${r.sim_pts}"` : '';
     const liveCol    = `<td><span class="pts-tt" style="font-size:15px;" ${liveTitle}>${r.total}</span></td>`;
 
-    return `<tr>
+    // Desglose expandible: chip por item con pred→real→estado
+    const CHIP_ICO = { H:'🏆', I:'🎯', J:'🟨', K:'🟥', L:'📺', M:'🥅', N:'⏱', O:'🔢' };
+    const CHIP_LBL = { H:'Resultado', I:'Exacto', J:'Amarillas', K:'Rojas', L:'VAR', M:'Pen.juego', N:'Min.gol', O:'Pen.tanda' };
+    const ap = _apostoles.find(a => a.apostador_id === r.apostador_id) || {};
+
+    function betChip(k) {
+      const pts = sd[k] || 0;
+      let predVal = '—', realVal = '—';
+      if (k === 'H') { predVal = pred; realVal = hayGoles ? (p.goles_local + '-' + p.goles_visitante) : '—'; }
+      else if (k === 'I') { predVal = pred; realVal = hayGoles ? (p.goles_local + '-' + p.goles_visitante) : '—'; }
+      else if (k === 'J') { predVal = ap.pred_amarillas ?? '?'; realVal = p.amarillas ?? '?'; }
+      else if (k === 'K') { predVal = ap.pred_rojas ?? '?'; realVal = p.rojas ?? '?'; }
+      else if (k === 'L') { predVal = ap.pred_var ?? '?'; realVal = p.decisiones_var ?? '?'; }
+      else if (k === 'M') { predVal = ap.pred_penales_partido ?? '?'; realVal = p.penales_partido ?? '?'; }
+      else if (k === 'N') { predVal = ap.pred_minuto_gol != null ? ap.pred_minuto_gol + "'" : '?'; realVal = p.minuto_primer_gol != null ? p.minuto_primer_gol + "'" : '?'; }
+      else if (k === 'O') { predVal = (ap.pred_penales_local_tanda != null) ? ap.pred_penales_local_tanda + '-' + ap.pred_penales_visitante_tanda : '?'; realVal = (p.penales_tanda_local != null) ? p.penales_tanda_local + '-' + p.penales_tanda_visitante : '—'; }
+      const cls = !hayGoles ? 'pend' : pts > 0 ? 'win' : 'lose';
+      return `<span class="bet-chip ${cls}" title="${CHIP_LBL[k]}">
+        ${CHIP_ICO[k]} <span style="opacity:.6;font-size:10px;">${predVal}</span>
+        ${cls === 'pend' ? '' : `<b style="margin-left:2px;">${pts > 0 ? '+' + pts : '✗'}</b>`}
+      </span>`;
+    }
+    const detailRow = `<tr class="bet-detail-row" id="det-${r.apostador_id}" style="display:none;">
+      <td colspan="13"><div class="bet-detail-wrap">
+        ${['H','I','J','K','L','M','N','O'].map(betChip).join('')}
+      </div></td>
+    </tr>`;
+
+    return `<tr style="cursor:pointer;" onclick="toggleBetDetail(${r.apostador_id})">
       <td style="text-align:center;font-size:13px;">${posLabel}</td>
       <td class="nm">${display}</td>
       <td><span class="pred-tag">${pred}</span></td>
       ${cells}
       ${rankingCol}
       ${liveCol}
-    </tr>`;
+    </tr>${detailRow}`;
   }).join('');
+
+  // Panel KO acumulado (solo fases playoffs)
+  renderKoPanel();
+
+  // Panel Grupos P — Lista de 32
+  renderGpPanel();
 
   // Si el tab ranking está abierto, actualizar también
   if (_liveTab === 'ranking') renderRanking();
@@ -1542,6 +1992,193 @@ function render() {
       ${delta}
     </div>`;
   }).join('');
+}
+
+// ════════════════════════════════════════════════
+// PANEL KO ACUMULADO
+// ════════════════════════════════════════════════
+function renderKoPanel() {
+  const koPanel = document.getElementById('ko-panel');
+  if (!koPanel) return;
+
+  const p = _partido;
+  // Solo mostrar en fases KO (no grupos)
+  const ft = (p && p.fase_tipo || '').toLowerCase();
+  const isKO = p && ft && !ft.startsWith('grupo');
+  koPanel.style.display = isKO ? 'block' : 'none';
+  if (!isKO) return;
+
+  // Label de fase
+  const lbl = document.getElementById('ko-phase-label');
+  if (lbl) lbl.textContent = p.fase_nombre || ft;
+
+  const ITEMS    = ['H','I','J','K','L','M','N','O','P'];
+  const ITBL_LBL = { H:'Resultado', I:'Marcador exacto', J:'Amarillas', K:'Rojas',
+                     L:'VAR', M:'Pen. partido', N:'Min. gol', O:'Pen. tanda',
+                     P:'Equipo clasifica (bonus fase)' };
+
+  // Mapa de sim_detail por apostador_id (calculado en calcularTodos)
+  const resultMap = {};
+  _results.forEach(r => { resultMap[r.apostador_id] = r; });
+
+  // Construir filas combinando ko_acum (histórico KO) + sim_detail (partido actual)
+  const koRows = _ranking.map(rv => {
+    const r   = resultMap[rv.apostador_id] || {};
+    const sd  = r.sim_detail || {};
+    const ko  = rv.ko_acum   || {};
+
+    // Total KO = sum ko_acum + sum sim_detail
+    const totalKo = ITEMS.reduce((s, k) => s + (ko[k] || 0) + (sd[k] || 0), 0);
+    return { apostador_id: rv.apostador_id, nombre: rv.username || rv.nombre, ko, sd, totalKo };
+  }).sort((a, b) => b.totalKo - a.totalKo);
+
+  const medals3 = ['🥇','🥈','🥉'];
+  const hayGoles = p.goles_local !== null && p.goles_local !== undefined;
+
+  document.getElementById('ko-tbl-body').innerHTML = koRows.map((row, i) => {
+    const cells = ITEMS.map(k => {
+      const hist = row.ko[k] || 0;
+      const live = hayGoles ? (row.sd[k] || 0) : 0;
+      const tot  = hist + live;
+
+      if (tot === 0) return `<td><span class="pts-zero">·</span></td>`;
+
+      if (live > 0 && hist > 0) {
+        // Tiene pts históricos KO + está acertando en este partido
+        return `<td><span class="ko-hit-live" title="${ITBL_LBL[k]}: ${hist} previo + ${live} ahora">${hist}+${live}</span></td>`;
+      } else if (live > 0) {
+        // Solo acertando en este partido
+        return `<td><span class="ko-hit-live" title="${ITBL_LBL[k]}: +${live} ahora">+${live}</span></td>`;
+      } else {
+        // Solo histórico KO
+        return `<td><span class="ko-hit-hist" title="${ITBL_LBL[k]}: ${hist} pts KO">${hist}</span></td>`;
+      }
+    }).join('');
+
+    const posLabel   = i < 3 ? medals3[i] : (i + 1) + '.';
+    const hasLivePts = hayGoles && Object.values(row.sd || {}).some(v => v > 0);
+    const rowCls     = hasLivePts ? ' class="ko-live-row"' : '';
+    const totalCell  = `<td><span class="ko-total">${row.totalKo}</span></td>`;
+
+    return `<tr${rowCls}>
+      <td style="text-align:center;font-size:13px;">${posLabel}</td>
+      <td class="nm">${esc(row.nombre)}</td>
+      ${cells}
+      ${totalCell}
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+// PANEL GRUPOS P — Lista de 32 (bonus clasificados a R32)
+// ════════════════════════════════════════════════
+function renderGpPanel() {
+  const gpPanel = document.getElementById('gp-panel');
+  if (!gpPanel) return;
+
+  // Solo mostrar si hay datos de grupos_p (clasificados calculados)
+  const hasData = Object.keys(_equiposR32).length > 0 ||
+                  _ranking.some(rv => rv.grupos_p && rv.grupos_p.reales && rv.grupos_p.reales.length > 0);
+  gpPanel.style.display = hasData ? 'block' : 'none';
+  if (!hasData) return;
+
+  // Recolectar lista de equipos reales (unión de todos los apostadores)
+  const realesSet = new Set();
+  _ranking.forEach(rv => {
+    (rv.grupos_p?.reales || []).forEach(id => realesSet.add(id));
+  });
+  // También usar _equiposR32 si viene del backend
+  Object.keys(_equiposR32).forEach(id => realesSet.add(parseInt(id)));
+
+  const realesArr = Array.from(realesSet).sort((a,b) => {
+    const na = (_equiposR32[a] || '');
+    const nb = (_equiposR32[b] || '');
+    return na.localeCompare(nb);
+  });
+
+  // Populate apostador select
+  const sel = document.getElementById('gp-ap-select');
+  if (sel && sel.options.length <= 1) {
+    _ranking.forEach(rv => {
+      const opt = document.createElement('option');
+      opt.value = rv.apostador_id;
+      opt.textContent = rv.username || rv.nombre;
+      sel.appendChild(opt);
+    });
+  }
+
+  // Apostador seleccionado (o null = sumatorio de todos)
+  const selectedAid = sel ? (parseInt(sel.value) || null) : null;
+
+  let grid = '';
+  let totalAciertos = 0;
+  let totalPronosticados = 0;
+
+  if (selectedAid) {
+    // Modo apostador individual
+    const rv = _ranking.find(r => r.apostador_id === selectedAid);
+    const gp = rv?.grupos_p || { pronosticados: [], reales: [], aciertos: 0, pts: 0 };
+    const pronosSet = new Set(gp.pronosticados || []);
+
+    realesArr.forEach(eid => {
+      const nombre = _equiposR32[eid] || `Equipo ${eid}`;
+      const hit    = pronosSet.has(eid);
+      const cls    = hit ? 'hit' : 'miss';
+      const icon   = hit ? '✅' : '❌';
+      grid += `<div class="gp-team ${cls}">
+        <span class="gp-hit-icon">${icon}</span>
+        <span>${esc(nombre)}</span>
+      </div>`;
+    });
+
+    totalAciertos = gp.aciertos || 0;
+    totalPronosticados = (gp.pronosticados || []).length;
+
+    const badge = document.getElementById('gp-total-badge');
+    if (badge) badge.textContent = `${totalAciertos}/32 aciertos · ${gp.pts || 0} pts`;
+
+    const summary = document.getElementById('gp-summary-line');
+    if (summary) summary.innerHTML = `<b>${totalAciertos}</b> de 32 equipos correctos · <b>${gp.pts || 0} pts</b> obtenidos`;
+
+  } else {
+    // Modo resumen: para cada equipo, contar cuántos apostadores lo pronosticaron correctamente
+    const hitCount = {};
+    realesArr.forEach(eid => { hitCount[eid] = 0; });
+    _ranking.forEach(rv => {
+      const pronosSet = new Set(rv.grupos_p?.pronosticados || []);
+      realesArr.forEach(eid => {
+        if (pronosSet.has(eid)) hitCount[eid]++;
+      });
+    });
+    const total = _ranking.length || 1;
+
+    realesArr.forEach(eid => {
+      const nombre = _equiposR32[eid] || `Equipo ${eid}`;
+      const cnt    = hitCount[eid] || 0;
+      const pct    = Math.round(cnt / total * 100);
+      const cls    = cnt > total * 0.5 ? 'hit' : cnt > 0 ? 'unchecked' : 'miss';
+      grid += `<div class="gp-team ${cls}" title="${cnt} apostadores pronosticaron este equipo (${pct}%)">
+        <span class="gp-hit-icon" style="font-size:10px;min-width:22px;text-align:center;">${cnt}/${total}</span>
+        <span>${esc(nombre)}</span>
+      </div>`;
+    });
+
+    const badge = document.getElementById('gp-total-badge');
+    if (badge) badge.textContent = `${realesArr.length} equipos confirmados`;
+
+    const summary = document.getElementById('gp-summary-line');
+    if (summary) summary.innerHTML = `Fracción de apostadores que pronosticaron cada equipo en R32`;
+  }
+
+  const gridEl = document.getElementById('gp-teams-grid');
+  if (gridEl) gridEl.innerHTML = grid;
+}
+
+// Expandir/colapsar desglose de apuesta por apostador
+function toggleBetDetail(aid) {
+  const row = document.getElementById('det-' + aid);
+  if (!row) return;
+  row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
 }
 
 // ════════════════════════════════════════════════
@@ -1673,7 +2310,7 @@ function updateStatusBar() {
   } else {
     dot.className = 'sb-dot prox';
     const cd = p.fecha ? ' · ' + countdownText(p.fecha) : '';
-    txt.textContent = `Próximo: ${l} vs ${v}${cd}`;
+    txt.innerHTML = `Próximo: <b>${l} vs ${v}</b>${cd} &nbsp;·&nbsp; <span style="color:#a78bfa;font-size:10px;">🔄 Sincronizar descarga goles/stats en tiempo real desde API-Football</span>`;
   }
 }
 
@@ -1707,7 +2344,7 @@ function switchTab(t) {
   const panels = {
     partido:   'panel-partido',
     ranking:   'panel-ranking',
-    grupos:    'panel-grupos',
+    r32:       'panel-r32',
     resultados:'panel-resultados',
     terceros:  'panel-terceros',
   };
@@ -1715,20 +2352,110 @@ function switchTab(t) {
     const el = document.getElementById(id);
     if (el) el.style.display = (key === t) ? 'block' : 'none';
   });
-  ['partido','ranking','grupos','resultados','terceros'].forEach(key => {
+  ['partido','ranking','r32','resultados','terceros'].forEach(key => {
     const btn = document.getElementById('tab-' + key);
     if (btn) btn.className = 'tab-btn' + (key === t ? ' active' : '');
   });
-  if (t === 'ranking')   renderRanking();
-  if (t === 'grupos')    loadGrupos();
+  if (t === 'ranking')    renderRanking();
+  if (t === 'r32')        loadBracket32();
   if (t === 'resultados') loadResultados();
-  if (t === 'terceros')  loadTerceros();
+  if (t === 'terceros')   loadTerceros();
 }
 
 /* ── MEJORES TERCEROS TAB ── */
-let _tercerosCache = null;
-let _tercerosTs    = 0;
+let _tercerosCache      = null;
+let _tercerosTs         = 0;
+let _hayPartidoEnVivo   = false;
+let _prevTop8           = null;   // [{equipo_id, nombre}] último top-8 conocido
 
+/* Detecta si el top-8 cambió y muestra toast. Llama en background desde cargar(). */
+let _tercerosChecking = false;
+async function checkTercerosChange() {
+  if (!_torneoId || _tercerosChecking) return;
+  _tercerosChecking = true;
+  try {
+    const data = await api('/api/v1/bets/mejores-terceros-provisorios/' + _torneoId);
+    _tercerosCache = data;
+    _tercerosTs    = Date.now();
+
+    const top8 = (data.terceros || []).slice(0, 8);
+
+    if (_prevTop8 !== null) {
+      const entran = top8.filter(t => !_prevTop8.some(p => p.equipo_id === t.equipo_id));
+      const salen  = _prevTop8.filter(p => !top8.some(t => t.equipo_id === p.equipo_id));
+      if (entran.length > 0 || salen.length > 0) {
+        const partes = [];
+        if (entran.length) partes.push('✅ Entra: ' + entran.map(t => t.nombre).join(', '));
+        if (salen.length)  partes.push('❌ Sale: '  + salen.map(t => t.nombre).join(', '));
+        showToast('🔄 Terceros cambió! ' + partes.join(' · '), 'warn');
+        // Redibujar si el tab está visible
+        const panel = document.getElementById('panel-terceros');
+        if (panel && panel.style.display !== 'none') renderTerceros(data);
+      }
+    }
+    _prevTop8 = top8.map(t => ({ equipo_id: t.equipo_id, nombre: t.nombre }));
+  } catch(_) { /* silencioso */ }
+  finally { _tercerosChecking = false; }
+}
+
+// ── RESULTADOS (standings de grupos) ──────────────────────────────────────
+let _resultadosCache = null;
+let _resultadosTs    = 0;
+
+async function loadResultados(force = false) {
+  if (!_torneoId) return;
+  const STALE = 60 * 1000;
+  if (!force && _resultadosCache && Date.now() - _resultadosTs < STALE) {
+    renderResultados(_resultadosCache); return;
+  }
+  const el = document.getElementById('resultados-content');
+  if (el) el.innerHTML = '<div style="color:#6b7280;font-size:13px;text-align:center;padding-top:40px;">Cargando…</div>';
+  try {
+    const data = await api('/api/v1/bets/grupos/' + _torneoId);
+    _resultadosCache = data;
+    _resultadosTs    = Date.now();
+    renderResultados(data);
+  } catch(e) {
+    if (el) el.innerHTML = `<div style="color:#f87171;text-align:center;padding:24px;">Error: ${e.message}</div>`;
+  }
+}
+
+function renderResultados(grupos) {
+  const el = document.getElementById('resultados-content');
+  if (!el) return;
+  if (!grupos || !grupos.length) {
+    el.innerHTML = '<div style="color:#6b7280;text-align:center;padding:24px;">Sin datos de grupos</div>';
+    return;
+  }
+  let html = '';
+  for (const g of grupos) {
+    const nombre = g.fase_nombre || '';
+    const letra  = nombre.replace(/[^A-Z]/gi,'').toUpperCase().slice(-1) || nombre.slice(-1);
+    html += `<div style="margin-bottom:18px;">`;
+    html += `<div style="font-size:11px;font-weight:700;color:#6b7280;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">GRUPO ${letra}</div>`;
+    html += `<table class="grp-table"><thead><tr>`;
+    html += `<th></th><th style="text-align:left">Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th>`;
+    html += `</tr></thead><tbody>`;
+    const st = g.standings || [];
+    st.forEach((t, idx) => {
+      const rowCls = idx === 0 ? 'cls-1' : idx === 1 ? 'cls-2' : idx === 2 ? 'cls-3' : '';
+      const flag = t.logo_url
+        ? `<img src="${t.logo_url}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;">`
+        : `<span style="font-size:13px;">${t.nombre?.slice(0,3)?.toUpperCase()??''}</span>`;
+      const gd = (t.gd ?? (t.gf - t.gc));
+      const gdStr = gd > 0 ? `<td class="gd-pos">+${gd}</td>` : gd < 0 ? `<td class="gd-neg">${gd}</td>` : `<td>${gd}</td>`;
+      html += `<tr class="${rowCls}">`;
+      html += `<td>${flag}</td><td>${t.nombre}</td>`;
+      html += `<td>${t.pj??0}</td><td>${t.pg??0}</td><td>${t.pe??0}</td><td>${t.pp??0}</td>`;
+      html += `<td>${t.gf??0}</td><td>${t.gc??0}</td>${gdStr}<td class="pts-col">${t.pts??0}</td>`;
+      html += `</tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+  el.innerHTML = html;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 async function loadTerceros() {
   if (!_torneoId) return;
   const STALE = 60 * 1000; // refrescar cada 60s
@@ -1739,6 +2466,7 @@ async function loadTerceros() {
     const data = await api('/api/v1/bets/mejores-terceros-provisorios/' + _torneoId);
     _tercerosCache = data;
     _tercerosTs    = Date.now();
+    if (_prevTop8 === null) _prevTop8 = (data.terceros || []).slice(0,8).map(t => ({ equipo_id: t.equipo_id, nombre: t.nombre }));
     renderTerceros(data);
   } catch(e) {
     document.getElementById('terceros-content').innerHTML =
@@ -1761,228 +2489,235 @@ function renderTerceros(data) {
     : '';
   const grupos_info = `${grupos_completos}/${grupos_totales} grupos cerrados${faltanGrupos > 0 ? ` · Faltan ${faltanGrupos}` : ''}`;
 
+  const allFpZero = terceros.every(t => !(t.fair_play_pts));
+
   const rows = terceros.map((t, i) => {
-    const isCut  = i === 7;   // línea de corte entre 8° y 9°
-    const cls    = t.dentro ? 't3-in' : 't3-out';
-    const cutCls = isCut && !t.dentro ? ' t3-cut' : '';  // flecha visual solo debajo del 8°
     const isCutAbove = i === 8 && terceros[7]?.dentro;
+    const cls    = t.dentro ? 't3-in' : 't3-out';
     const pend   = t.pendientes > 0 ? `<span class="t3-pend"> (${t.pendientes}↻)</span>` : '';
+    const prov   = t.provisorio ? `<span style="color:#f59e0b;font-size:10px;margin-left:4px;" title="Incluye resultado en vivo">⚡</span>` : '';
     const gdStr  = (t.gd ?? 0) >= 0 ? `+${t.gd ?? 0}` : `${t.gd ?? 0}`;
+    const fp     = t.fair_play_pts ?? 0;
+    const fpColor = fp === 0 ? '#6b7280' : fp <= 3 ? '#6ee7b7' : fp <= 6 ? '#fbbf24' : '#f87171';
+    const fpCell  = allFpZero
+      ? `<td style="color:#4b5563;font-size:10px;">—</td>`
+      : `<td style="font-weight:700;color:${fpColor}" title="Amarillas×1 + Rojas×3 (↓menor=mejor)">${fp}</td>`;
+    const pjColor = t.provisorio ? 'color:#f59e0b;font-weight:700' : '';
     return `<tr class="${cls}${isCutAbove ? ' t3-cut' : ''}">
       <td class="t3-rank">${t.rank}</td>
-      <td class="t3-name">${t.nombre}<span class="t3-grp">${t.grupo}</span>${pend}</td>
-      <td>${t.pj ?? 0}</td>
+      <td class="t3-name">${t.nombre}<span class="t3-grp">${t.grupo}</span>${pend}${prov}</td>
+      <td style="${pjColor}">${t.pj ?? 0}</td>
       <td style="font-weight:700;color:${t.dentro?'#6ee7b7':'#f87171'}">${t.pts ?? 0}</td>
       <td style="color:${(t.gd??0)>0?'#6ee7b7':(t.gd??0)<0?'#f87171':'#9ca3af'}">${gdStr}</td>
       <td>${t.gf ?? 0}</td>
-      <td><span class="t3-badge ${t.dentro?'in':'out'}">${t.dentro ? '✓ ADENTRO' : '✗ AFUERA'}</span></td>
+      ${fpCell}
+      <td><span class="t3-badge ${t.dentro?'in':'out'}">${t.dentro ? '✓' : '✗'}</span></td>
     </tr>`;
   }).join('');
 
+  const fpHeader = allFpZero
+    ? `<th title="Fair Play no disponible — correr Recalc. Fair Play">FP</th>`
+    : `<th title="Fair Play: Amarillas×1 + Rojas×3 (↓menor=mejor)">FP↓</th>`;
+
+  const liveBanner = _hayPartidoEnVivo
+    ? `<div style="background:#78350f;color:#fef3c7;border:1px solid #92400e;padding:6px 12px;border-radius:6px;margin-bottom:8px;font-size:12px;text-align:center;">⚡ PROVISORIO — incluye resultado en vivo (actualiza cada 60s)</div>`
+    : '';
+
   el.innerHTML = `
+    ${liveBanner}
     <div class="t3-corte">${grupos_info}${corteInfo ? ' · ' + corteInfo : ''}</div>
     <table class="t3-table">
       <thead><tr>
         <th>#</th>
         <th class="t3-name">Equipo</th>
-        <th>PJ</th>
-        <th>Pts</th>
-        <th>DG</th>
-        <th>GF</th>
-        <th>Estado</th>
+        <th title="Partidos jugados">PJ</th>
+        <th title="Puntos">Pts</th>
+        <th title="Diferencia de goles">DG</th>
+        <th title="Goles a favor">GF</th>
+        ${fpHeader}
+        <th>Clasif.</th>
       </tr></thead>
       <tbody>${rows}</tbody>
-    </table>
-    <div class="t3-note">
-      Provisional — faltando ${faltanGrupos} fecha(s). Criterio FIFA: Pts → DG → GF → Fair Play → Ranking.<br>
-      <span class="t3-pend">↻</span> = partidos pendientes en el grupo.
-    </div>`;
+    </table>`;
 }
 
-/* ── GRUPOS TAB ── */
-let _gruposCache = null;
-let _gruposTs = 0;
+/* ── 16AVOS (R32) BRACKET TAB ── */
+let _r32Cache = null;
+let _r32Ts    = 0;
 
-async function loadGrupos(force = false) {
+async function avanzarBracket() {
+  if (!_torneoId) return;
+  const btn = document.getElementById('btn-avanzar-bracket');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Avanzando…'; }
+  try {
+    const r = await apiPost('/api/v1/bets/avanzar-bracket/' + _torneoId);
+    showToast('✅ Bracket actualizado', 'ok');
+    loadBracket32(true);
+  } catch (e) {
+    showToast('Error al avanzar bracket: ' + e.message, 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⚡ Avanzar bracket'; }
+  }
+}
+
+async function loadBracket32(force = false) {
   const now = Date.now();
-  if (!force && _gruposCache && (now - _gruposTs) < 120000) {
-    renderGrupos(_gruposCache);
+  if (!force && _r32Cache && (now - _r32Ts) < 60000) {
+    renderBracket32(_r32Cache);
     return;
   }
-  const el = document.getElementById('grupos-content');
-  if (el) el.innerHTML = '<div style="color:#6b7280;font-size:13px;text-align:center;padding-top:40px;">Cargando grupos…</div>';
+  const el = document.getElementById('r32-content');
+  if (el) el.innerHTML = '<div style="color:#6b7280;font-size:13px;text-align:center;padding-top:40px;">Cargando bracket…</div>';
   try {
     const tid = _torneoId || 2;
-    const d = await api(`/api/v1/bets/grupos/${tid}`);
-    _gruposCache = d;
-    _gruposTs = now;
-    renderGrupos(d);
+    const d = await api(`/api/v1/bets/bracket-real/${tid}`);
+    _r32Cache = d;
+    _r32Ts = now;
+    renderBracket32(d);
   } catch(e) {
-    if (el) el.innerHTML = `<div style="color:#f87171;font-size:13px;text-align:center;padding-top:40px;">Error al cargar grupos: ${esc(e.message)}</div>`;
+    if (el) el.innerHTML = `<div style="color:#f87171;font-size:13px;text-align:center;padding-top:40px;">Error: ${esc(e.message)}</div>`;
   }
 }
 
-function renderGrupos(grupos) {
-  const el = document.getElementById('grupos-content');
+// Orden y etiquetas de las fases KO
+const KO_FASE_ORDER = ['ronda32','ronda16','cuartos','semis','tercer_puesto','final'];
+const KO_FASE_LABEL = {
+  ronda32:       '16avos',
+  ronda16:       '8avos',
+  cuartos:       '4tos',
+  semis:         'Semi',
+  tercer_puesto: 'Tercer',
+  final:         'Final',
+};
+
+function renderBracket32(data) {
+  const el = document.getElementById('r32-content');
   if (!el) return;
 
-  // Filtrar "Mejores terceros" y otras fases no-grupo
-  const gruposFiltrados = grupos.filter(g =>
-    g.fase_nombre && /grupo/i.test(g.fase_nombre) && g.standings && g.standings.length > 0
-  );
+  // Mostrar TODAS las fases KO (no solo ronda32)
+  const allKO = (data.partidos || []).slice().sort((a, b) => a.num - b.num);
 
-  if (!gruposFiltrados.length) {
-    el.innerHTML = '<div style="color:#6b7280;font-size:13px;text-align:center;padding-top:40px;">Sin datos de grupos disponibles.</div>';
+  if (!allKO.length) {
+    el.innerHTML = '<div style="color:#6b7280;font-size:13px;text-align:center;padding-top:40px;">El bracket KO se publicará al completarse la fase de grupos.</div>';
     return;
   }
 
-  let html = '';
-  for (const g of gruposFiltrados) {
-    const rows = [...g.standings].sort((a, b) => {
-      if (b.pts !== a.pts) return b.pts - a.pts;
-      if (b.gd  !== a.gd)  return b.gd  - a.gd;
-      if (b.gf  !== a.gf)  return b.gf  - a.gf;
-      return (a.nombre || '').localeCompare(b.nombre || '');
-    });
+  // Agrupar por tipo de fase
+  const byFase = {};
+  allKO.forEach(p => {
+    const t = p.tipo || 'ronda32';
+    if (!byFase[t]) byFase[t] = [];
+    byFase[t].push(p);
+  });
 
-    html += `<div class="grp-section">
-      <div class="grp-title">${esc(g.fase_nombre)}</div>
-      <table class="grp-table">
-        <thead>
-          <tr>
-            <th>#</th><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th>
-            <th>GF</th><th>GC</th><th>DG</th><th class="pts-col">PTS</th>
-          </tr>
-        </thead>
-        <tbody>`;
+  const totalFin  = allKO.filter(p => p.finalizado).length;
+  const totalLive = allKO.filter(p => p.en_vivo).length;
+  const ahoraStr  = new Date().toLocaleTimeString('es-CR', {hour:'2-digit', minute:'2-digit'});
+  const liveLabel = totalLive > 0 ? ` · <span style="color:#f87171;animation:r32pulse 1.2s ease-in-out infinite;">● ${totalLive} en vivo</span>` : '';
 
-    rows.forEach((eq, idx) => {
-      const pos = idx + 1;
-      // pos 1 y 2 = clasifican directo; pos 3 = posible mejor tercero
-      const cls = pos === 1 ? 'cls-1' : pos === 2 ? 'cls-2' : pos === 3 ? 'cls-3' : '';
-      const gd = (eq.gd ?? (eq.gf - eq.gc));
-      const gdCls = gd > 0 ? 'gd-pos' : gd < 0 ? 'gd-neg' : '';
-      const gdTxt = gd > 0 ? `+${gd}` : `${gd}`;
-      html += `<tr class="${cls}">
-        <td>${pos}</td>
-        <td>${esc(eq.nombre || '?')}</td>
-        <td>${eq.pj ?? 0}</td><td>${eq.pg ?? 0}</td><td>${eq.pe ?? 0}</td><td>${eq.pp ?? 0}</td>
-        <td>${eq.gf ?? 0}</td><td>${eq.gc ?? 0}</td>
-        <td class="${gdCls}">${gdTxt}</td>
-        <td class="pts-col">${eq.pts ?? 0}</td>
-      </tr>`;
-    });
+  let html = `<div class="r32-subtitle">
+    ${totalFin} de ${allKO.length} finalizados${liveLabel}
+    <span style="float:right;font-size:.68rem;color:#6b7280">🕐 ${ahoraStr}
+      <button onclick="loadBracket32(true)" style="background:none;border:none;color:#6ee7b7;cursor:pointer;font-size:.72rem;padding:0 0 0 4px">↺</button>
+      <button onclick="avanzarBracket()" id="btn-avanzar-bracket" style="background:rgba(110,231,183,.1);border:1px solid rgba(110,231,183,.3);color:#6ee7b7;cursor:pointer;font-size:.7rem;padding:2px 8px;border-radius:4px;margin-left:6px;">⚡ Avanzar bracket</button>
+    </span>
+  </div>`;
 
-    html += `</tbody></table>
-      <div style="font-size:9px;color:#374151;margin-top:4px;padding-left:4px;">
-        <span style="display:inline-block;width:8px;height:8px;background:rgba(16,185,129,.3);border-radius:2px;margin-right:3px;"></span>Clasifica ·
-        <span style="display:inline-block;width:8px;height:8px;background:rgba(59,130,246,.2);border-radius:2px;margin-left:6px;margin-right:3px;"></span>Clasifica 2° ·
-        <span style="display:inline-block;width:8px;height:8px;background:rgba(245,158,11,.15);border-radius:2px;margin-left:6px;margin-right:3px;"></span>Posible mejor 3°
-      </div>
-    </div>`;
-  }
+  // Detectar la fase más avanzada con partidos para resaltarla
+  const fasesConDatos = KO_FASE_ORDER.filter(t => byFase[t]?.length > 0);
+  // La fase "activa" = última con algún partido no finalizado, o la más avanzada
+  const faseActiva = fasesConDatos.slice().reverse().find(t =>
+    byFase[t]?.some(p => !p.finalizado)
+  ) || fasesConDatos[fasesConDatos.length - 1];
+
+  KO_FASE_ORDER.forEach(tipo => {
+    const partidos = byFase[tipo];
+    if (!partidos || !partidos.length) return;
+
+    const label    = KO_FASE_LABEL[tipo] || tipo;
+    const finCount = partidos.filter(p => p.finalizado).length;
+    const liveInFase = partidos.filter(p => p.en_vivo).length;
+    const isActiva = tipo === faseActiva;
+    const hdrColor = isActiva ? '#6ee7b7' : '#4b5563';
+    const liveBadge = liveInFase > 0
+      ? `<span style="background:rgba(239,68,68,.2);color:#f87171;border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700;margin-left:6px;animation:r32pulse 1.2s ease-in-out infinite;">● EN VIVO</span>`
+      : '';
+    const statBadge = `<span style="font-size:9px;color:#4b5563;margin-left:6px;">${finCount}/${partidos.length}</span>`;
+
+    html += `<div class="r32-section-hdr" style="color:${hdrColor};">${label}${liveBadge}${statBadge}</div>`;
+
+    partidos.forEach(p => {
+      const lNom = p.local?.nombre     || null;
+      const vNom = p.visitante?.nombre || null;
+      const tbd  = !lNom || !vNom;
+      const fin  = p.finalizado;
+      const live = p.en_vivo || false;
+      const lWin = fin && p.ganador === 'local';
+      const vWin = fin && p.ganador === 'visitante';
+
+      const glTxt  = p.gl != null ? String(p.gl) : '—';
+      const gvTxt  = p.gv != null ? String(p.gv) : '—';
+      const penTxt  = (p.pen_l != null && p.pen_v != null) ? `<span class="r32-pen">(${p.pen_l}–${p.pen_v} p)</span>` : '';
+      const cardCls = live ? 'r32-match r32-live' : fin ? 'r32-match r32-fin' : 'r32-match';
+      const lNameCls = 'r32-team-name' + (tbd ? ' tbd' : lWin ? ' winner' : '');
+      const vNameCls = 'r32-team-name' + (tbd ? ' tbd' : vWin ? ' winner' : '');
+      const lScoreCls = 'r32-score' + (tbd ? ' tbd' : lWin ? ' winner-s' : fin ? ' loser-s' : '');
+      const vScoreCls = 'r32-score' + (tbd ? ' tbd' : vWin ? ' winner-s' : fin ? ' loser-s' : '');
+      const statusCls = live ? 'r32-status live' : fin ? 'r32-status done' : 'r32-status pend';
+      const statusTxt = live ? '● VIVO' : fin ? 'FINAL' : 'PRÓX';
+
+      // Fecha para partidos pendientes
+      let fechaLbl = '';
+      if (!fin && p.fecha) {
+        try {
+          const d   = new Date(p.fecha);
+          const cr  = new Date(d.getTime() - 6 * 3600000);
+          const dias   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+          const meses  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+          const hh = String(cr.getUTCHours()).padStart(2,'0');
+          const mm = String(cr.getUTCMinutes()).padStart(2,'0');
+          fechaLbl = `<div style="font-size:8px;color:#6ee7b7;margin-top:2px;white-space:nowrap;">📅 ${dias[cr.getUTCDay()]} ${cr.getUTCDate()} ${meses[cr.getUTCMonth()]} ${hh}:${mm}</div>`;
+        } catch(_) {}
+      }
+
+      html += `<div class="${cardCls}">
+        <div class="r32-num">P${p.num ?? ''}</div>
+        <div class="r32-teams">
+          <div class="r32-team">
+            <span class="${lNameCls}">${lNom ?? 'Por definir'}</span>
+            <span class="${lScoreCls}">${tbd ? '?' : glTxt}</span>
+          </div>
+          <div class="r32-team">
+            <span class="${vNameCls}">${vNom ?? 'Por definir'}</span>
+            <span class="${vScoreCls}">${tbd ? '?' : gvTxt}</span>
+          </div>
+          ${penTxt ? `<div style="text-align:right;padding-top:2px;">${penTxt}</div>` : ''}
+          ${fechaLbl}
+        </div>
+        <div class="${statusCls}">${statusTxt}</div>
+      </div>`;
+    }); // end partidos.forEach
+  }); // end KO_FASE_ORDER.forEach
 
   el.innerHTML = html;
 }
 
-/* ── RESULTADOS TAB ── */
-let _resultadosCache = null;
-let _resultadosTs = 0;
-
-async function loadResultados(force = false) {
-  const now = Date.now();
-  if (!force && _resultadosCache && (now - _resultadosTs) < 120000) {
-    renderResultados(_resultadosCache);
-    return;
-  }
-  const el = document.getElementById('resultados-content');
-  if (el) el.innerHTML = '<div style="color:#6b7280;font-size:13px;text-align:center;padding-top:40px;">Cargando resultados…</div>';
-  try {
-    const tid = _torneoId || 2;
-    const d = await api(`/api/v1/bets/resultados-partidos/${tid}`);
-    _resultadosCache = d;
-    _resultadosTs = now;
-    renderResultados(d);
-  } catch(e) {
-    if (el) el.innerHTML = `<div style="color:#f87171;font-size:13px;text-align:center;padding-top:40px;">Error al cargar resultados: ${esc(e.message)}</div>`;
-  }
+/* ── Cola de toasts: muestra uno a la vez, encola los siguientes ── */
+let _toastQueue = [];
+let _toastBusy  = false;
+function showToast(msg, type = 'ok', ms = 3500) {
+  _toastQueue.push({ msg, type, ms });
+  if (!_toastBusy) _nextToast();
 }
-
-function fmtFechaRes(iso) {
-  if (!iso) return '';
-  try {
-    const dt = new Date(iso);
-    if (isNaN(dt)) return '';
-    return dt.toLocaleDateString('es-CR', { day: '2-digit', month: 'short' }) +
-           ' · ' + dt.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' });
-  } catch(_) { return ''; }
-}
-
-function renderResultados(partidos) {
-  const el = document.getElementById('resultados-content');
-  if (!el) return;
-
-  if (!Array.isArray(partidos) || !partidos.length) {
-    el.innerHTML = '<div style="color:#6b7280;font-size:13px;text-align:center;padding-top:40px;">Aún no hay partidos finalizados.</div>';
-    return;
-  }
-
-  let html = '';
-  for (const p of partidos) {
-    const esPy = /paraguay/i.test(p.equipo_local || '') || /paraguay/i.test(p.equipo_visitante || '');
-    const flagL = flag(p.bandera_local, p.equipo_local);
-    const flagV = flag(p.bandera_visitante, p.equipo_visitante);
-    const gl = p.goles_local ?? 0, gv = p.goles_visitante ?? 0;
-
-    // Penales tanda (solo si ambos definidos)
-    let penHtml = '';
-    if (p.penales_local != null && p.penales_visitante != null) {
-      penHtml = `<div class="res-pen">🔢 Penales: ${p.penales_local} - ${p.penales_visitante}</div>`;
-    }
-
-    // Items / estadísticas
-    const stats = [];
-    if (p.amarillas != null)        stats.push(`<span class="res-stat">🟨 <b>${p.amarillas}</b></span>`);
-    if (p.rojas != null)            stats.push(`<span class="res-stat">🟥 <b>${p.rojas}</b></span>`);
-    if (p.decisiones_var != null)   stats.push(`<span class="res-stat">📺 VAR <b>${p.decisiones_var}</b></span>`);
-    if (p.penales_partido != null)  stats.push(`<span class="res-stat">🥅 <b>${p.penales_partido}</b></span>`);
-    if (p.minuto_primer_gol != null) stats.push(`<span class="res-stat">⏱ 1er gol <b>${p.minuto_primer_gol}'</b></span>`);
-
-    html += `<div class="res-card${esPy ? ' py' : ''}">
-      <div class="res-fase">
-        <span>${esc(p.fase || '')}${esPy ? ' · 🇵🇾 ×2' : ''}</span>
-        <span class="res-fecha">${esc(fmtFechaRes(p.fecha))}</span>
-      </div>
-      <div class="res-main">
-        <div class="res-team local">
-          <span class="res-tname">${esc(p.equipo_local || '?')}</span>
-          <span class="res-flag">${flagL}</span>
-        </div>
-        <div class="res-score">${gl} - ${gv}</div>
-        <div class="res-team visit">
-          <span class="res-flag">${flagV}</span>
-          <span class="res-tname">${esc(p.equipo_visitante || '?')}</span>
-        </div>
-      </div>
-      ${penHtml}
-      <div class="res-stats">${stats.join('') || '<span class="res-stat" style="color:#4b5563;">Sin datos de items</span>'}</div>
-    </div>`;
-  }
-
-  el.innerHTML = html;
-
-  // Twemoji: render banderas como imágenes (Windows/desktop)
-  if (typeof twemoji !== 'undefined') {
-    el.querySelectorAll('.res-flag').forEach(f => {
-      twemoji.parse(f, { folder: 'svg', ext: '.svg', base: 'https://twemoji.maxcdn.com/v/latest/' });
-    });
-  }
-}
-
-function showToast(msg, type = 'ok') {
+function _nextToast() {
+  if (!_toastQueue.length) { _toastBusy = false; return; }
+  _toastBusy = true;
+  const { msg, type, ms } = _toastQueue.shift();
   const t = document.getElementById('toast');
-  t.textContent = msg; t.className = type; t.style.display = 'block';
-  setTimeout(() => { t.style.display = 'none'; }, 3500);
+  t.textContent = msg;
+  t.className = type;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; setTimeout(_nextToast, 200); }, ms);
 }
 
 function startClock() {
@@ -1992,41 +2727,32 @@ function startClock() {
 }
 
 function esc(s) {
-  return String(s || '').replace(/[&<>"']/g, c =>
-    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])
-  );
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ════════════════════════════════════════════════
-// COUNTDOWN (para partidos próximos)
-// ════════════════════════════════════════════════
-function countdownText(fechaISO) {
-  if (!fechaISO) return 'Por confirmar';
-  const diff = new Date(fechaISO) - new Date();
-  if (diff <= 0) return 'Próximamente';
-  const totalMin = Math.floor(diff / 60000);
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  if (h >= 24) {
-    const d = Math.floor(h / 24);
-    return `Faltan ${d}d ${h % 24}h`;
-  }
-  if (h > 0) return `Faltan ${h}h ${m}min`;
-  if (m > 0) return `Faltan ${m} min`;
-  return 'Próximamente';
+function countdownText(fechaIso) {
+  if (!fechaIso) return '';
+  try {
+    const diff = new Date(fechaIso) - Date.now();
+    if (diff <= 0) return 'Iniciando…';
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    if (h > 0) return `en ${h}h ${m}m`;
+    if (m > 0) return `en ${m}m`;
+    return 'en menos de 1m';
+  } catch(_) { return ''; }
 }
 
-function startCountdown(fechaISO) {
+function startCountdown(fechaIso) {
   stopCountdown();
-  if (!fechaISO) return;
+  if (!fechaIso) return;
   _cdTimer = setInterval(() => {
     const sub = document.getElementById('score-sub');
-    if (!sub || !_partido || _partido.estado === 'en_juego' || _partido.estado === 'finalizado') {
-      stopCountdown(); return;
+    if (sub && sub.classList.contains('countdown-txt')) {
+      sub.textContent = '⏰ ' + countdownText(fechaIso);
     }
-    sub.textContent = countdownText(fechaISO);
-    updateStatusBar();
-  }, 30_000);
+  }, 30000);
 }
 
 function stopCountdown() {
@@ -2035,22 +2761,22 @@ function stopCountdown() {
 
 init();
 
-// ════════════════════════════════════════════════
-// CORRECCIÓN MANUAL DE STATS
-// ════════════════════════════════════════════════
-function openEditStats() {
-  if (!_partido) { showToast('Sin partido activo', 'warn'); return; }
-  document.getElementById('es-pid').value   = _partido.id || '';
-  document.getElementById('es-label').textContent = `${_partido.local || '?'} vs ${_partido.visitante || '?'}`;
-  document.getElementById('es-j').value     = _partido.amarillas      ?? '';
-  document.getElementById('es-k').value     = _partido.rojas          ?? '';
-  document.getElementById('es-l').value     = _partido.decisiones_var ?? '';
-  document.getElementById('es-m').value     = _partido.penales_partido ?? '';
-  document.getElementById('edit-stats-modal').style.display = 'flex';
+/* ── EDIT STATS MODAL (admin) ── */
+function openEditStats(pid, label) {
+  const modal = document.getElementById('edit-stats-modal');
+  if (!modal) return;
+  document.getElementById('es-pid').value   = pid;
+  document.getElementById('es-label').textContent = label || ('Partido #' + pid);
+  document.getElementById('es-j').value = '';
+  document.getElementById('es-k').value = '';
+  document.getElementById('es-l').value = '';
+  document.getElementById('es-m').value = '';
+  modal.style.display = 'flex';
 }
 
 function closeEditStats() {
-  document.getElementById('edit-stats-modal').style.display = 'none';
+  const modal = document.getElementById('edit-stats-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 async function saveEditStats() {
@@ -2100,20 +2826,16 @@ async function saveEditStats() {
     <input type="hidden" id="es-pid">
     <div id="es-label" style="font-size:.78rem;color:#9ca3af;margin-bottom:14px;"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-      <label style="font-size:.78rem;">
-        🟨 Amarillas (J)
+      <label style="font-size:.78rem;">🟨 Amarillas (J)
         <input id="es-j" type="number" min="0" max="20" style="width:100%;margin-top:4px;background:#111827;border:1px solid #374151;border-radius:6px;padding:6px 8px;color:#f3f4f6;font-size:.88rem;">
       </label>
-      <label style="font-size:.78rem;">
-        🟥 Rojas (K)
+      <label style="font-size:.78rem;">🟥 Rojas (K)
         <input id="es-k" type="number" min="0" max="10" style="width:100%;margin-top:4px;background:#111827;border:1px solid #374151;border-radius:6px;padding:6px 8px;color:#f3f4f6;font-size:.88rem;">
       </label>
-      <label style="font-size:.78rem;">
-        📺 VAR (L)
+      <label style="font-size:.78rem;">📺 VAR (L)
         <input id="es-l" type="number" min="0" max="10" style="width:100%;margin-top:4px;background:#111827;border:1px solid #374151;border-radius:6px;padding:6px 8px;color:#f3f4f6;font-size:.88rem;">
       </label>
-      <label style="font-size:.78rem;">
-        🥅 Penales partido (M)
+      <label style="font-size:.78rem;">🥅 Penales partido (M)
         <input id="es-m" type="number" min="0" max="10" style="width:100%;margin-top:4px;background:#111827;border:1px solid #374151;border-radius:6px;padding:6px 8px;color:#f3f4f6;font-size:.88rem;">
       </label>
     </div>

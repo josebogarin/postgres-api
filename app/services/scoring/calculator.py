@@ -47,15 +47,28 @@ class ScoringCalculator:
         minuto_bonus_ids = self._compute_minuto_winners(apuestas, partidos)
 
         # 7) Limpiar puntaje_detalle previo (recalculo idempotente)
+        # Solo borra fases NO bloqueadas — las bloqueadas conservan sus puntajes.
         await db.execute(
-            text("DELETE FROM puntaje_detalle WHERE torneo_id=:tid"),
+            text("""DELETE FROM puntaje_detalle
+                    WHERE torneo_id = :tid
+                      AND partido_id IN (
+                          SELECT p.id FROM partido p
+                          JOIN fase f ON f.id = p.fase_id
+                          WHERE f.torneo_id = :tid AND COALESCE(f.bloqueada, FALSE) = FALSE
+                      )"""),
             {"tid": torneo_id},
         )
 
         # Limpiar ítems de partido de puntaje_item (los globales se borran en calculate_global)
         try:
             await db.execute(
-                text("DELETE FROM puntaje_item WHERE torneo_id=:tid AND partido_id IS NOT NULL"),
+                text("""DELETE FROM puntaje_item
+                        WHERE torneo_id = :tid AND partido_id IS NOT NULL
+                          AND partido_id IN (
+                              SELECT p.id FROM partido p
+                              JOIN fase f ON f.id = p.fase_id
+                              WHERE f.torneo_id = :tid AND COALESCE(f.bloqueada, FALSE) = FALSE
+                          )"""),
                 {"tid": torneo_id},
             )
         except Exception:
@@ -138,21 +151,9 @@ class ScoringCalculator:
 
         torneo_resultados = await self._load_torneo_resultados(db, torneo_id)
 
-        # ── REGLA: globales solo al terminar el torneo (cuando hay campeón) ──
-        if not torneo_resultados.get("campeon_id"):
-            # Sin campeón → borrar cualquier puntaje_global previo y salir
-            await db.execute(
-                text("DELETE FROM puntaje_global WHERE torneo_id = :tid"),
-                {"tid": torneo_id},
-            )
-            try:
-                await db.execute(
-                    text("DELETE FROM puntaje_item WHERE torneo_id=:tid AND partido_id IS NULL"),
-                    {"tid": torneo_id},
-                )
-            except Exception:
-                pass
-            return {"procesadas": 0, "torneo_resultados": torneo_resultados, "sin_campeon": True}
+        # NOTA: globales se calculan SIEMPRE, no solo al terminar el torneo.
+        # D (peor equipo) y E/F/G se resuelven durante el torneo.
+        # A (campeón) y B (finalistas) darán 0 hasta que haya partido final.
 
         r = await db.execute(
             text("SELECT * FROM apuesta_global WHERE torneo_id = :tid"),
@@ -359,6 +360,7 @@ class ScoringCalculator:
                 LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
                 WHERE f.torneo_id = :tid AND p.estado = 'finalizado'
                   AND p.goles_local IS NOT NULL AND p.goles_visitante IS NOT NULL
+                  AND COALESCE(f.bloqueada, FALSE) = FALSE
             """),
             {"tid": torneo_id},
         )
@@ -387,6 +389,7 @@ class ScoringCalculator:
                   AND p.estado = 'finalizado'
                   AND p.goles_local IS NOT NULL
                   AND p.goles_visitante IS NOT NULL
+                  AND COALESCE(f.bloqueada, FALSE) = FALSE
             """),
             {"tid": torneo_id},
         )
@@ -933,3 +936,228 @@ class ScoringCalculator:
              "apuesta": str(ag.get("pred_goles_paraguay")),
              "puntaje": score.pts_goles_paraguay},
         ]
+
+    # ── Item P: Clasificados por fase ─────────────────────────────────────────
+
+    async def calculate_clasificados(
+        self, torneo_id: int, engine: ScoringEngine,
+        valid_ids: set[int] | None = None
+    ) -> dict:
+        """
+        Item P — Equipo clasifica (extra-bonus calculado UNA VEZ al cerrar cada fase).
+        valid_ids: set de apostador_ids con rol 'apostador' (excluye admins/test).
+                   Si None, procesa todos los que tienen apuestas.
+
+        GRUPOS (1 pt/equipo):
+            Simula standings predichos por cada apostador → genera su R32 predicho (32 equipos).
+            Compara contra los 32 equipos reales del R32 ya armado.
+            Resultado persiste en apostador_clasificados (fase_tipo='grupo').
+
+        KO (2/4/6/8/10/12 pts/equipo según fase):
+            pts_equipo ya está calculado en puntaje_detalle por el engine (per-match).
+            Este método solo agrega el audit trail en apostador_clasificados por fase.
+
+        Retorna {grupos_procesados, ko_fases}.
+        """
+        db = self.db
+
+        PTS_FASE = {
+            "grupo": 1, "ronda32": 2, "ronda16": 4,
+            "cuartos": 6, "semis": 8, "tercer_puesto": 10, "final": 12,
+        }
+
+        # Asegurar tabla existe (idempotente)
+        try:
+            await db.execute(text("""
+                CREATE TABLE IF NOT EXISTS apostador_clasificados (
+                    id                    SERIAL PRIMARY KEY,
+                    torneo_id             INTEGER NOT NULL,
+                    apostador_id          INTEGER NOT NULL,
+                    fase_tipo             VARCHAR(50) NOT NULL,
+                    equipos_pronosticados INTEGER[] DEFAULT '{}',
+                    equipos_reales        INTEGER[] DEFAULT '{}',
+                    aciertos              INTEGER DEFAULT 0,
+                    pts_por_acierto       INTEGER DEFAULT 1,
+                    pts_obtenidos         INTEGER DEFAULT 0,
+                    calculado_at          TIMESTAMP DEFAULT NOW(),
+                    UNIQUE(torneo_id, apostador_id, fase_tipo)
+                )
+            """))
+            await db.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_apclas_torneo_ap
+                    ON apostador_clasificados(torneo_id, apostador_id)
+            """))
+        except Exception:
+            pass
+
+        # ── 1. GRUPOS: 32 clasificados a R32 ──────────────────────────────────
+        grupos_procesados = 0
+        try:
+            # Equipos reales que llegaron a R32 (los que están en las 16 cards P73-P88)
+            r = await db.execute(text("""
+                SELECT DISTINCT
+                    unnest(ARRAY[p.equipo_local_id, p.equipo_visitante_id]) AS equipo_id
+                FROM partido p
+                JOIN fase f ON f.id = p.fase_id
+                WHERE f.torneo_id = :tid
+                  AND (LOWER(f.tipo) = 'ronda32' OR LOWER(f.tipo) LIKE '%ronda32%'
+                       OR LOWER(f.tipo) LIKE '%16avos%')
+                  AND p.equipo_local_id IS NOT NULL
+                  AND p.equipo_visitante_id IS NOT NULL
+                  AND p.equipo_local_id > 0
+                  AND p.equipo_visitante_id > 0
+            """), {"tid": torneo_id})
+            real_r32: set[int] = {
+                row["equipo_id"] for row in r.mappings() if row["equipo_id"]
+            }
+
+            if real_r32:
+                # Apostadores con apuestas de grupos
+                r2 = await db.execute(text("""
+                    SELECT DISTINCT a.apostador_id
+                    FROM apuesta a
+                    JOIN partido p ON p.id = a.partido_id
+                    JOIN fase f ON f.id = p.fase_id
+                    WHERE f.torneo_id = :tid AND LOWER(f.tipo) LIKE '%grupo%'
+                """), {"tid": torneo_id})
+                apostadores = [row["apostador_id"] for row in r2.mappings()]
+                if valid_ids:
+                    apostadores = [uid for uid in apostadores if uid in valid_ids]
+
+                ppa_g = PTS_FASE["grupo"]
+                for uid in apostadores:
+                    pred_teams = await self._get_apostador_predicted_r32(db, torneo_id, uid)
+                    aciertos = len(pred_teams & real_r32)
+                    pts = aciertos * ppa_g
+
+                    await db.execute(text("""
+                        INSERT INTO apostador_clasificados
+                          (torneo_id, apostador_id, fase_tipo,
+                           equipos_pronosticados, equipos_reales,
+                           aciertos, pts_por_acierto, pts_obtenidos, calculado_at)
+                        VALUES (:tid, :uid, 'grupo',
+                                :pred, :real,
+                                :aciertos, :ppa, :pts, NOW())
+                        ON CONFLICT (torneo_id, apostador_id, fase_tipo) DO UPDATE SET
+                          equipos_pronosticados = EXCLUDED.equipos_pronosticados,
+                          equipos_reales        = EXCLUDED.equipos_reales,
+                          aciertos              = EXCLUDED.aciertos,
+                          pts_por_acierto       = EXCLUDED.pts_por_acierto,
+                          pts_obtenidos         = EXCLUDED.pts_obtenidos,
+                          calculado_at          = NOW()
+                    """), {
+                        "tid": torneo_id, "uid": uid,
+                        "pred": list(pred_teams),
+                        "real": list(real_r32),
+                        "aciertos": aciertos, "ppa": ppa_g, "pts": pts,
+                    })
+                    grupos_procesados += 1
+        except Exception as _eg:
+            print(f"[clasificados] ERROR grupos: {_eg}")
+            pass  # No bloquear si algo falla
+
+        # ── 2. KO fases: audit trail (pts_equipo ya en puntaje_detalle) ───────
+        ko_fases: list[str] = []
+        for fase_tipo, ppa in PTS_FASE.items():
+            if fase_tipo == "grupo":
+                continue
+            try:
+                # Equipos reales clasificados en esta fase (equipo_clasificado_id)
+                r3 = await db.execute(text("""
+                    SELECT DISTINCT p.equipo_clasificado_id AS equipo_id
+                    FROM partido p
+                    JOIN fase f ON f.id = p.fase_id
+                    WHERE f.torneo_id = :tid
+                      AND LOWER(f.tipo) = LOWER(:ftipo)
+                      AND p.estado = 'finalizado'
+                      AND p.equipo_clasificado_id IS NOT NULL
+                """), {"tid": torneo_id, "ftipo": fase_tipo})
+                real_fase: set[int] = {
+                    row["equipo_id"] for row in r3.mappings() if row["equipo_id"]
+                }
+                if not real_fase:
+                    continue
+
+                # Por apostador: pred_equipo_clasifica + pts_equipo ya calculados
+                r4 = await db.execute(text("""
+                    SELECT a.apostador_id,
+                           array_agg(DISTINCT a.pred_equipo_clasifica)
+                               FILTER (WHERE a.pred_equipo_clasifica IS NOT NULL) AS preds,
+                           COALESCE(SUM(pd.pts_equipo), 0)::int AS pts_ko_p
+                    FROM apuesta a
+                    JOIN partido p ON p.id = a.partido_id
+                    JOIN fase f ON f.id = p.fase_id
+                    LEFT JOIN puntaje_detalle pd
+                        ON pd.partido_id = p.id AND pd.apostador_id = a.apostador_id
+                    WHERE f.torneo_id = :tid
+                      AND LOWER(f.tipo) = LOWER(:ftipo)
+                      AND p.estado = 'finalizado'
+                    GROUP BY a.apostador_id
+                """), {"tid": torneo_id, "ftipo": fase_tipo})
+
+                for row in r4.mappings():
+                    uid = row["apostador_id"]
+                    if valid_ids and uid not in valid_ids:
+                        continue
+                    pred_teams: set[int] = set(row["preds"] or [])
+                    pts_ko = int(row["pts_ko_p"] or 0)
+                    aciertos = len(pred_teams & real_fase)
+
+                    await db.execute(text("""
+                        INSERT INTO apostador_clasificados
+                          (torneo_id, apostador_id, fase_tipo,
+                           equipos_pronosticados, equipos_reales,
+                           aciertos, pts_por_acierto, pts_obtenidos, calculado_at)
+                        VALUES (:tid, :uid, :ftipo,
+                                :pred, :real,
+                                :aciertos, :ppa, :pts, NOW())
+                        ON CONFLICT (torneo_id, apostador_id, fase_tipo) DO UPDATE SET
+                          equipos_pronosticados = EXCLUDED.equipos_pronosticados,
+                          equipos_reales        = EXCLUDED.equipos_reales,
+                          aciertos              = EXCLUDED.aciertos,
+                          pts_por_acierto       = EXCLUDED.pts_por_acierto,
+                          pts_obtenidos         = EXCLUDED.pts_obtenidos,
+                          calculado_at          = NOW()
+                    """), {
+                        "tid": torneo_id, "uid": uid, "ftipo": fase_tipo,
+                        "pred": list(pred_teams), "real": list(real_fase),
+                        "aciertos": aciertos, "ppa": ppa, "pts": pts_ko,
+                    })
+                ko_fases.append(fase_tipo)
+            except Exception:
+                continue
+
+        print(f"[clasificados] grupos_procesados={grupos_procesados}, ko_fases={ko_fases}")
+        return {"grupos_procesados": grupos_procesados, "ko_fases": ko_fases}
+
+    async def _get_apostador_predicted_r32(
+        self, db, torneo_id: int, uid: int
+    ) -> set[int]:
+        """
+        Simula los standings del apostador para la fase de grupos y retorna el
+        set de equipo_ids que este apostador predijo que clasificarían a R32.
+        Usa simular_standings_usuario → seleccionar_mejores_terceros → armar_ronda32.
+        """
+        try:
+            from app.services.bracket_service import (
+                simular_standings_usuario,
+                seleccionar_mejores_terceros,
+                armar_ronda32,
+            )
+            pred_st = await simular_standings_usuario(db, uid, torneo_id)
+            if not pred_st:
+                return set()
+            pred_mej, _ = seleccionar_mejores_terceros(pred_st, fill_incomplete=False)
+            r32_bracket = armar_ronda32(pred_st, pred_mej)
+            teams: set[int] = set()
+            for m in r32_bracket:
+                loc = m.get("local")
+                vis = m.get("visitante")
+                if loc and loc.get("equipo_id"):
+                    teams.add(int(loc["equipo_id"]))
+                if vis and vis.get("equipo_id"):
+                    teams.add(int(vis["equipo_id"]))
+            return teams
+        except Exception as _e:
+            print(f"[clasificados] _get_apostador_predicted_r32 uid={uid} error: {_e}")
+            return set()
