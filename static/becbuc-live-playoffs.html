@@ -938,8 +938,9 @@ function renderBracketTree() {
 
   // Bracket positions: {num → {col, yCenter, yTop}}
   const pos = {};
-  const LEFT  = [[73,74,75,76,77,78,79,80],[89,90,91,92],[97,98],[101]];
-  const RIGHT = [[81,82,83,84,85,86,87,88],[93,94,95,96],[99,100],[102]];
+  // Agrupacion correcta segun KO_FEEDERS (izq→P101, der→P102)
+  const LEFT  = [[74,77,73,75,83,84,81,82],[89,90,93,94],[97,98],[101]];
+  const RIGHT = [[76,78,79,80,86,88,85,87],[91,92,95,96],[99,100],[102]];
   LEFT.forEach((nums, L) => nums.forEach((n,i) => pos[n]={col:L, yc:yCenter(L,i), yt:yTop(L,i)}));
   RIGHT.forEach((nums, L) => nums.forEach((n,i) => pos[n]={col:8-L, yc:yCenter(L,i), yt:yTop(L,i)}));
   pos[104] = {col:4, yc:yCenter(3,0), yt:yTop(3,0)};  // Final (same Y as SF)
@@ -982,16 +983,18 @@ function renderBracketTree() {
     svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C}" stroke-width="1.5" stroke-linecap="round"/>`;
   };
 
-  // Left bracket connectors (→ center)
-  pairR(73,74,89); pairR(75,76,90); pairR(77,78,91); pairR(79,80,92);
-  pairR(89,90,97); pairR(91,92,98);
-  pairR(97,98,101);
+  // Left bracket connectors (→ center) — segun KO_FEEDERS
+  pairR(74,77,89); pairR(73,75,90);   // R32→R16: Germany/France→P89, Canada/Netherlands→P90
+  pairR(83,84,93); pairR(81,82,94);   // R32→R16: Portugal/Spain→P93, USA/Belgium→P94
+  pairR(89,90,97); pairR(93,94,98);   // R16→QF
+  pairR(97,98,101);                    // QF→SF izq
   single(101,104,true);
 
-  // Right bracket connectors (← center)
-  pairL(81,82,93); pairL(83,84,94); pairL(85,86,95); pairL(87,88,96);
-  pairL(93,94,99); pairL(95,96,100);
-  pairL(99,100,102);
+  // Right bracket connectors (← center) — segun KO_FEEDERS
+  pairL(76,78,91); pairL(79,80,92);   // R32→R16: Brazil/IvoryCoast→P91, Mexico/England→P92
+  pairL(86,88,95); pairL(85,87,96);   // R32→R16: Argentina/Australia→P95, Swiss/Colombia→P96
+  pairL(91,92,99); pairL(95,96,100);  // R16→QF
+  pairL(99,100,102);                   // QF→SF der
   single(102,104,false);
 
   svg += '</svg>';

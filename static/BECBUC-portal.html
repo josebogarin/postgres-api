@@ -7128,7 +7128,109 @@ function _renderPlayoffPhases(koData, realMap, faseEst) {
 
 /* Alias usado por renderBetPlayoffs */
 function _renderBracketTree(koData, realMap, faseEst) {
-  return _renderPlayoffPhases(koData, realMap, faseEst);
+  let h = '';
+  if (koData.length) {
+    h += '<div style="overflow-x:auto;margin-bottom:18px;padding-bottom:4px">' + _renderBracketSVGTree(koData, realMap) + '</div>';
+    h += '<div style="font-size:.72rem;color:var(--muted);margin:0 0 10px;padding:6px 10px;background:rgba(255,255,255,.03);border-radius:8px">★ = pronosticás este ganador · <span style="color:var(--green)">verde</span> = acertaste · <span style="color:var(--red)">rojo</span> = fallaste</div>';
+  }
+  h += _renderPlayoffPhases(koData, realMap, faseEst);
+  return h;
+}
+
+/* Arbol visual bracket SVG — mismo layout que becbuc-live-playoffs.html */
+function _renderBracketSVGTree(koData, realMap) {
+  const S=68, CW=126, CH=48, GAP=22, PAD_L=12, PAD_T=32;
+  const CP = CW + GAP;
+  const totalH = 8*S + PAD_T + 20;
+  const totalW = 9*CP + PAD_L*2;
+  const colX = c => PAD_L + c*CP;
+  const yCenter = (L,n) => PAD_T + Math.pow(2,L)*(n+0.5)*S;
+  const yTop    = (L,n) => yCenter(L,n) - CH/2;
+
+  const pos = {};
+  // Agrupacion correcta segun KO_FEEDERS
+  const LEFT  = [[74,77,73,75,83,84,81,82],[89,90,93,94],[97,98],[101]];
+  const RIGHT = [[76,78,79,80,86,88,85,87],[91,92,95,96],[99,100],[102]];
+  LEFT.forEach( (nums,L) => nums.forEach((n,i) => pos[n]={col:L,   yc:yCenter(L,i), yt:yTop(L,i)}));
+  RIGHT.forEach((nums,L) => nums.forEach((n,i) => pos[n]={col:8-L, yc:yCenter(L,i), yt:yTop(L,i)}));
+  pos[104] = {col:4, yc:yCenter(3,0),          yt:yTop(3,0)};
+  pos[103] = {col:4, yc:yCenter(3,0)+S*2.5,    yt:yTop(3,0)+S*2.5};
+
+  const koMap = {};
+  for (const m of koData) koMap[m.num] = m;
+
+  const C = '#2a3a6a';
+  let svg = `<svg style="position:absolute;top:0;left:0;width:${totalW}px;height:${totalH}px;pointer-events:none;z-index:0" xmlns="http://www.w3.org/2000/svg">`;
+  const rx = n => colX(pos[n].col)+CW, lx = n => colX(pos[n].col), cy = n => pos[n].yc;
+  const pairR = (s1,s2,d) => {
+    if (!pos[s1]||!pos[s2]||!pos[d]) return;
+    const mx = (rx(s1)+lx(d))/2, yd=cy(d);
+    svg += `<polyline points="${rx(s1)},${cy(s1)} ${mx},${cy(s1)} ${mx},${yd} ${lx(d)},${yd}" fill="none" stroke="${C}" stroke-width="1.5"/>`;
+    svg += `<polyline points="${rx(s2)},${cy(s2)} ${mx},${cy(s2)} ${mx},${yd} ${lx(d)},${yd}" fill="none" stroke="${C}" stroke-width="1.5"/>`;
+  };
+  const pairL = (s1,s2,d) => {
+    if (!pos[s1]||!pos[s2]||!pos[d]) return;
+    const mx = (lx(s1)+rx(d))/2, yd=cy(d);
+    svg += `<polyline points="${lx(s1)},${cy(s1)} ${mx},${cy(s1)} ${mx},${yd} ${rx(d)},${yd}" fill="none" stroke="${C}" stroke-width="1.5"/>`;
+    svg += `<polyline points="${lx(s2)},${cy(s2)} ${mx},${cy(s2)} ${mx},${yd} ${rx(d)},${yd}" fill="none" stroke="${C}" stroke-width="1.5"/>`;
+  };
+  const single = (s,d,fromR) => {
+    if (!pos[s]||!pos[d]) return;
+    svg += `<line x1="${fromR?rx(s):lx(s)}" y1="${cy(s)}" x2="${fromR?lx(d):rx(d)}" y2="${cy(d)}" stroke="${C}" stroke-width="1.5"/>`;
+  };
+  pairR(74,77,89); pairR(73,75,90); pairR(83,84,93); pairR(81,82,94);
+  pairR(89,90,97); pairR(93,94,98); pairR(97,98,101); single(101,104,true);
+  pairL(76,78,91); pairL(79,80,92); pairL(86,88,95); pairL(85,87,96);
+  pairL(91,92,99); pairL(95,96,100); pairL(99,100,102); single(102,104,false);
+  svg += '</svg>';
+
+  const LABELS = [{c:0,t:'R32'},{c:1,t:'R16'},{c:2,t:'4tos'},{c:3,t:'Semis'},{c:4,t:'FINAL'},{c:5,t:'Semis'},{c:6,t:'4tos'},{c:7,t:'R16'},{c:8,t:'R32'}];
+  const labels = LABELS.map(l=>`<div style="position:absolute;left:${colX(l.c)}px;width:${CW}px;top:8px;text-align:center;font-size:.58rem;color:var(--muted);font-weight:700;letter-spacing:.04em">${l.t}</div>`).join('');
+
+  const tn = (n,mx=11) => n&&n.length>mx ? n.slice(0,mx-1)+'…' : (n||'?');
+
+  let cards = '';
+  for (const num of Object.keys(pos).map(Number)) {
+    const p = pos[num];
+    const m = koMap[num];
+    const real = realMap ? realMap[num] : null;
+    const x = colX(p.col), y = p.yt;
+    let inner = '';
+    const lnm = m?.local?.nombre || real?.local?.nombre || '';
+    const vnm = m?.visitante?.nombre || real?.visitante?.nombre || '';
+    if (!lnm && !vnm) {
+      inner = `<div style="color:var(--muted);font-size:.58rem;text-align:center;line-height:${CH}px">Por definir</div>`;
+    } else {
+      const realFin = real?.finalizado;
+      const pred = m?.ganador, realG = real?.ganador;
+      const lStar = pred==='local' ? '★' : '';
+      const vStar = pred==='visitante' ? '★' : '';
+      const lClr = realFin ? (pred==='local'&&realG==='local'?'var(--green)':(pred==='local'&&realG!=='local'?'var(--red)':'var(--fg)')) : 'var(--fg)';
+      const vClr = realFin ? (pred==='visitante'&&realG==='visitante'?'var(--green)':(pred==='visitante'&&realG!=='visitante'?'var(--red)':'var(--fg)')) : 'var(--fg)';
+      const gl = real?.gl ?? ''; const gv = real?.gv ?? '';
+      inner = `<div style="display:flex;align-items:center;padding:1px 4px;border-bottom:1px solid rgba(255,255,255,.06);height:${CH/2}px;box-sizing:border-box">
+        <span style="font-size:.5rem;color:var(--amber);width:8px">${lStar}</span>
+        <span style="font-size:.6rem;color:${lClr};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(tn(lnm))}</span>
+        ${realFin&&gl!==''?`<span style="font-size:.6rem;color:var(--muted);min-width:12px;text-align:right">${gl}</span>`:''}
+      </div><div style="display:flex;align-items:center;padding:1px 4px;height:${CH/2}px;box-sizing:border-box">
+        <span style="font-size:.5rem;color:var(--amber);width:8px">${vStar}</span>
+        <span style="font-size:.6rem;color:${vClr};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(tn(vnm))}</span>
+        ${realFin&&gv!==''?`<span style="font-size:.6rem;color:var(--muted);min-width:12px;text-align:right">${gv}</span>`:''}
+      </div>`;
+    }
+    const isFinal = num===104;
+    const bg = isFinal ? 'rgba(251,191,36,.15)' : 'rgba(255,255,255,.04)';
+    const bdr = isFinal ? '1px solid rgba(251,191,36,.4)' : '1px solid rgba(255,255,255,.1)';
+    cards += `<div style="position:absolute;left:${x}px;top:${y}px;width:${CW}px;height:${CH}px;background:${bg};border:${bdr};border-radius:7px;overflow:hidden;box-sizing:border-box" title="P${num}">${inner}</div>`;
+  }
+  const trophy = `<div style="position:absolute;left:${colX(4)+CW/2-10}px;top:${pos[104].yt-22}px;font-size:18px">🏆</div>`;
+  const lbl3 = pos[103] ? `<div style="position:absolute;left:${colX(4)}px;width:${CW}px;top:${pos[103].yt-12}px;text-align:center;font-size:.55rem;color:var(--muted)">3er Puesto</div>` : '';
+
+  return `<div style="position:relative;width:${totalW}px;height:${totalH+26}px">
+    ${svg}
+    <div style="position:absolute;top:0;left:0;width:${totalW}px;height:26px">${labels}</div>
+    <div style="position:absolute;top:24px;left:0;width:${totalW}px;height:${totalH}px">${trophy}${lbl3}${cards}</div>
+  </div>`;
 }
 
 /* Formatea fecha ISO a "Vie 27 Jun · 17:00" (hora UTC) */
