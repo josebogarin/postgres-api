@@ -386,6 +386,39 @@ button{cursor:pointer;border:none;outline:none;background:none;color:inherit;fon
 .btc-fecha{font-size:7.5px;color:#6ee7b7;text-align:center;border-top:1px solid #1e2850;padding:1px 2px 0;white-space:nowrap;overflow:hidden;line-height:1.4}
 .match-fecha-lbl{font-size:10px;color:#6ee7b7;font-weight:700;margin-top:2px}
 .match-card-next-badge{position:absolute;top:6px;right:6px;background:#3b82f6;color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px}
+
+/* ── TAB APUESTAS ──────────────────────────────────────────────── */
+.ap-filter{display:flex;gap:6px;overflow-x:auto;padding:10px 12px 4px;scrollbar-width:none}
+.ap-filter::-webkit-scrollbar{display:none}
+.ap-pill{padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;color:#555;background:#0f1225;border:1px solid #1a1f35;cursor:pointer;transition:all .15s}
+.ap-pill.active{background:#1e3a8a;color:#93c5fd;border-color:#2563eb}
+.ap-match-list{padding:8px 10px 20px}
+.ap-match-card{background:#0c0e1a;border:1px solid #1a1f35;border-radius:12px;margin-bottom:10px;overflow:hidden}
+.ap-match-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#0f1225;border-bottom:1px solid #1a1f35}
+.ap-match-num{font-size:10px;color:#334;font-weight:700;min-width:30px}
+.ap-match-teams{flex:1;font-size:13px;font-weight:600;color:#cbd5e1;display:flex;align-items:center;gap:6px}
+.ap-match-score{font-size:15px;font-weight:800;color:#f1f5f9;letter-spacing:.5px}
+.ap-match-score.done{color:#86efac}
+.ap-match-score.live{color:#f87171}
+.ap-match-date{font-size:9px;color:#334;margin-left:auto}
+.ap-match-pen{font-size:9px;color:#60a5fa;margin-left:4px}
+.ap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#0f1225}
+.ap-cell{padding:5px 6px;background:#0a0c18;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:default;min-height:44px;justify-content:center}
+.ap-cell:hover{background:#0f1830}
+.ap-cell-alias{font-size:9px;color:#475569;font-weight:600;text-align:center;line-height:1.2;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ap-cell-pred{font-size:13px;font-weight:800;color:#94a3b8}
+.ap-cell.ap-pleno .ap-cell-pred{color:#22c55e}
+.ap-cell.ap-pleno .ap-cell-alias{color:#166534}
+.ap-cell.ap-res   .ap-cell-pred{color:#eab308}
+.ap-cell.ap-res   .ap-cell-alias{color:#713f12}
+.ap-cell.ap-miss  .ap-cell-pred{color:#ef4444;text-decoration:line-through;opacity:.7}
+.ap-cell.ap-miss  .ap-cell-alias{color:#7f1d1d}
+.ap-cell.ap-pend  .ap-cell-pred{color:#475569}
+.ap-cell-pts{font-size:8px;color:#374151}
+.ap-cell.ap-pleno .ap-cell-pts{color:#14532d}
+.ap-cell.ap-res   .ap-cell-pts{color:#78350f}
+.ap-empty{text-align:center;padding:32px 16px;color:#334;font-size:13px}
+.ap-count{font-size:10px;color:#334;padding:4px 12px 8px;text-align:right}
 </style>
 </head>
 <body>
@@ -494,8 +527,6 @@ button{cursor:pointer;border:none;outline:none;background:none;color:inherit;fon
       <div class="sub-tabs">
         <button class="sub-tab active" onclick="setSubTab('partido')">Partido</button>
         <button class="sub-tab" onclick="setSubTab('miprono')">Mi Prono</button>
-        <button class="sub-tab" onclick="setSubTab('predicciones')">Todos</button>
-        <button class="sub-tab" onclick="setSubTab('ranking')">Ranking</button>
       </div>
       <div id="sub-partido" class="sub-pane active">
         <div class="ev-timeline" id="ev-timeline"></div>
@@ -513,11 +544,6 @@ button{cursor:pointer;border:none;outline:none;background:none;color:inherit;fon
       <div id="sub-miprono" class="sub-pane">
         <div id="mp-content"></div>
       </div>
-      <div id="sub-predicciones" class="sub-pane">
-        <div class="pred-real-bar" id="pred-real-bar"></div>
-        <div class="pred-list" id="pred-list"></div>
-      </div>
-      <div id="sub-ranking" class="sub-pane"><div class="rank-list" id="rank-list"></div></div>
     </div>
   </div>
 
@@ -592,8 +618,17 @@ button{cursor:pointer;border:none;outline:none;background:none;color:inherit;fon
     <button class="bn-btn" id="bn-scores" onclick="setTab('scores')">
       <span class="bn-icon">📊</span>Puntajes
     </button>
+    <button class="bn-btn" id="bn-apuestas" onclick="setTab('apuestas')">
+      <span class="bn-icon">📋</span>Apuestas
+    </button>
   </div>
 </div>
+
+  <!-- ─── APUESTAS TAB ────────────────────────────────────────── -->
+  <div id="tab-apuestas" class="tab-pane">
+    <div class="ap-filter" id="ap-filter-row"></div>
+    <div id="ap-match-list" class="ap-match-list"></div>
+  </div>
 
 <div class="toast" id="toast"></div>
 
@@ -660,6 +695,145 @@ async function ensureToken() {
 }
 
 // ── INIT ─────────────────────────────────────────────────────────
+
+/* ══════════════════════════════════════════════════════════════
+   TAB APUESTAS — predicciones de todos los apostadores por partido KO
+   ══════════════════════════════════════════════════════════════ */
+async function loadAllBets() {
+  if (_allBets) return _allBets;
+  if (!_torneoId) return null;
+  try {
+    const r = await api(`/api/v1/bets/apuestas-ko/${_torneoId}`);
+    _allBets = r.partidos || [];
+  } catch(e) {
+    _allBets = [];
+    console.warn('loadAllBets error:', e);
+  }
+  return _allBets;
+}
+
+function _apuestasFaseLabel(tipo) {
+  const MAP = {
+    ronda32:'R32', ronda16:'8vos', cuartos:'4tos',
+    semis:'Semis', tercer_puesto:'3P', final:'Final'
+  };
+  return MAP[tipo] || tipo;
+}
+
+function _apuestasCls(pred_l, pred_v, real_l, real_v) {
+  if (real_l === null || real_l === undefined) return 'ap-pend';
+  if (pred_l === null || pred_l === undefined) return 'ap-pend';
+  if (pred_l === real_l && pred_v === real_v) return 'ap-pleno';
+  const rRes = real_l > real_v ? 'L' : real_v > real_l ? 'V' : 'E';
+  const pRes = pred_l > pred_v ? 'L' : pred_v > pred_l ? 'V' : 'E';
+  if (rRes === pRes) return 'ap-res';
+  return 'ap-miss';
+}
+
+function _apPts(apuesta) {
+  return (apuesta.h || 0) + (apuesta.i || 0) > 0
+    ? `+${(apuesta.h||0)+(apuesta.i||0)}` : '';
+}
+
+function renderApuestasTab() {
+  const listEl   = document.getElementById('ap-match-list');
+  const filterEl = document.getElementById('ap-filter-row');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="ap-empty">Cargando…</div>';
+
+  loadAllBets().then(partidos => {
+    if (!partidos || !partidos.length) {
+      listEl.innerHTML = '<div class="ap-empty">Sin datos de apuestas KO</div>';
+      return;
+    }
+
+    // Construir mapa alias desde _apostadores
+    const aliasMap = {};
+    (_apostadores||[]).forEach(a => {
+      const id = a.apostador_id || a.id;
+      aliasMap[id] = (a.apostador || a.username || '?');
+    });
+
+    // Fases disponibles
+    const fasesDisp = [...new Set(partidos.map(p=>p.tipo))];
+    const FASE_ORDER = ['ronda32','ronda16','cuartos','semis','tercer_puesto','final'];
+
+    // Filtro chips
+    const pills = ['<button class="ap-pill '+(_apuestasFase==='all'?'active':'')+'" onclick="setApFase('all')">Todas</button>']
+      .concat(
+        FASE_ORDER.filter(f=>fasesDisp.includes(f)).map(f =>
+          `<button class="ap-pill ${_apuestasFase===f?'active':''}" onclick="setApFase('${f}')">${_apuestasFaseLabel(f)}</button>`
+        )
+      );
+    filterEl.innerHTML = pills.join('');
+
+    // Filtrar
+    const filtered = _apuestasFase === 'all'
+      ? partidos
+      : partidos.filter(p=>p.tipo===_apuestasFase);
+
+    if (!filtered.length) {
+      listEl.innerHTML = '<div class="ap-empty">Sin partidos en esta fase</div>';
+      return;
+    }
+
+    let html = '';
+    filtered.forEach(p => {
+      const done = p.estado === 'finalizado';
+      const live = p.estado === 'en_juego';
+      const gl = p.gl, gv = p.gv;
+
+      let scoreStr = '–';
+      if (done || live) scoreStr = `${gl ?? '?'} – ${gv ?? '?'}`;
+      const scoreCls = done ? 'done' : live ? 'live' : '';
+
+      let penStr = '';
+      if (p.pen_l !== null && p.pen_l !== undefined) {
+        penStr = `(${p.pen_l}–${p.pen_v} pen)`;
+      }
+
+      const fechaStr = p.fecha ? fmtFechaCorta(p.fecha) : '';
+      const flagL = p.local_iso  ? flagEmoji(p.local_iso, '') : '🏳';
+      const flagV = p.visit_iso  ? flagEmoji(p.visit_iso,'') : '🏳';
+      const faseLabel = _apuestasFaseLabel(p.tipo);
+
+      // Ordenar apostadores por alias
+      const apEntries = Object.entries(p.apuestas||{});
+      apEntries.sort(([a],[b]) => {
+        return (aliasMap[a]||'').localeCompare(aliasMap[b]||'');
+      });
+
+      // Celdas
+      let cellsHtml = '';
+      apEntries.forEach(([uid, ap]) => {
+        const alias = aliasMap[uid] || `#${uid}`;
+        const predStr = (ap.pl !== null && ap.pl !== undefined)
+          ? `${ap.pl}–${ap.pv}`
+          : '–';
+        const cls = _apuestasCls(ap.pl, ap.pv, gl, gv);
+        const pts = (done && cls !== 'ap-pend') ? _apPts(ap) : '';
+        cellsHtml += `<div class="ap-cell ${cls}"><span class="ap-cell-alias">${alias}</span><span class="ap-cell-pred">${predStr}</span>${pts?`<span class="ap-cell-pts">${pts}</span>`:''}</div>`;
+      });
+
+      const total = apEntries.length;
+      const plenos   = apEntries.filter(([,ap])=>_apuestasCls(ap.pl,ap.pv,gl,gv)==='ap-pleno').length;
+      const aciertos = apEntries.filter(([,ap])=>_apuestasCls(ap.pl,ap.pv,gl,gv)==='ap-res').length;
+      const countStr = done
+        ? `🟢 ${plenos} plenos · 🟡 ${aciertos} aciertos · ${total-plenos-aciertos} fallos de ${total}`
+        : `${total} predicciones`;
+
+      html += `<div class="ap-match-card"><div class="ap-match-hdr"><span class="ap-match-num">P${p.num} <span style="color:#334;font-weight:400">${faseLabel}</span></span><span class="ap-match-teams">${flagL} ${p.local} <span style="color:#334;font-size:10px;font-weight:400">vs</span> ${p.visitante} ${flagV}</span><span class="ap-match-score ${scoreCls}">${scoreStr}</span>${penStr?`<span class="ap-match-pen">${penStr}</span>`:''}<span class="ap-match-date">${fechaStr}</span></div><div class="ap-count">${countStr}</div><div class="ap-grid">${cellsHtml}</div></div>`;
+    });
+
+    listEl.innerHTML = html;
+  });
+}
+
+function setApFase(fase) {
+  _apuestasFase = fase;
+  renderApuestasTab();
+}
+
 async function init() {
   setMsg('Autenticando…');
   try {
@@ -807,8 +981,7 @@ function startAutoRefresh() {
     }
     if (_activeTab==='live') {
       if (_activeSubTab==='miprono') renderMiProno(_liveData?.partido);
-      else if (_activeSubTab==='predicciones') { const p=_liveData?.partido; if(p) renderPredictions(p); }
-      else if (_activeSubTab==='ranking') renderRanking();
+
     }
   }, 60000);
 }
@@ -1258,15 +1431,18 @@ function renderScoresBreakdown() {
   const me = _apostadores.find(a=>(a.apostador_id||a.id)===_viewAsId);
   if (!me) return;
 
-  // live_panel: puntos_total=partidos+globales, grupos_p.pts=P bonus, acum.pts_D=peor equipo
   const ptsGlob0 = me.acum?.subtotal_globales || 0;
   const ptsPD    = me.acum?.pts_D || 0;
-  const ptsPart  = Math.max(0, (me.puntos_total||0) - ptsGlob0);
   const ptsGP    = me.grupos_p?.pts || 0;
-  const ptsGlob  = ptsGlob0 - ptsPD;  // globales sin D (D se muestra por separado)
+  const ptsGlob  = ptsGlob0 - ptsPD;
   const ptsTotal = (me.puntos_total||0) + ptsGP;
 
-  // Buscar o crear el section div
+  const FASE_LABELS = {
+    ronda32:'R32 · 16avos', ronda16:'8vos de Final',
+    cuartos:'Cuartos de Final', semis:'Semifinales',
+    tercer_puesto:'3er Puesto', final:'Final'
+  };
+
   let bdiv = document.getElementById('sb-breakdown-section');
   if (!bdiv) {
     bdiv = document.createElement('div');
@@ -1278,30 +1454,40 @@ function renderScoresBreakdown() {
     }
   }
 
-  // Solo mostrar si hay datos relevantes
-  const hasExtra = ptsGP > 0 || ptsPD > 0 || ptsGlob > 0;
-  if (!hasExtra && ptsPart === 0) { bdiv.style.display='none'; return; }
+  if (ptsTotal === 0 && ptsGP === 0 && ptsGlob0 === 0) { bdiv.style.display='none'; return; }
   bdiv.style.display = 'block';
+
+  let fasesRows = '', totalKO = 0;
+  for (const fase of ['ronda32','ronda16','cuartos','semis','tercer_puesto','final']) {
+    const pts = _phaseTotals[fase];
+    if (pts === undefined) continue;
+    totalKO += pts;
+    const col = pts > 0 ? 'color:#86efac' : 'color:#374151';
+    fasesRows += `<div class="sb-bk-row">
+      <span class="sb-bk-lbl" style="padding-left:10px;font-size:11px">${FASE_LABELS[fase]||fase}</span>
+      <span class="sb-bk-pts" style="${col}">${pts}</span>
+    </div>`;
+  }
 
   bdiv.innerHTML = `
     <div class="sb-breakdown-title">Desglose de puntos</div>
-    <div class="sb-bk-row">
-      <span class="sb-bk-lbl">⚽ Partidos (H-O)</span>
-      <span class="sb-bk-pts">${ptsPart}</span>
-    </div>
     ${ptsGP>0?`<div class="sb-bk-row">
-      <span class="sb-bk-lbl">🏅 P — Clasificados R32</span>
-      <span class="sb-bk-pts" style="color:#86efac">${ptsGP}</span>
+      <span class="sb-bk-lbl">🏟️ Grupos — P (clasificados R32)</span>
+      <span class="sb-bk-pts" style="color:#fbbf24">${ptsGP}</span>
     </div>`:''}
-    ${ptsPD>0?`<div class="sb-bk-row">
-      <span class="sb-bk-lbl">🐢 D — Peor equipo (Iraq)</span>
-      <span class="sb-bk-pts" style="color:#fbbf24">${ptsPD}</span>
+    ${fasesRows?`<div class="sb-bk-row" style="margin-top:6px;border-top:1px solid #1a2240">
+      <span class="sb-bk-lbl" style="font-weight:700;color:#64748b">⚽ Playoffs (H–O)</span>
+      <span class="sb-bk-pts" style="color:#64748b">${totalKO}</span>
+    </div>${fasesRows}`:''}
+    ${ptsPD>0?`<div class="sb-bk-row" style="border-top:1px solid #1a2240">
+      <span class="sb-bk-lbl">🐢 D — Peor equipo</span>
+      <span class="sb-bk-pts" style="color:#f97316">${ptsPD}</span>
     </div>`:''}
     ${ptsGlob>0?`<div class="sb-bk-row">
-      <span class="sb-bk-lbl">🌐 Globales A-G (otros)</span>
+      <span class="sb-bk-lbl">🌐 Globales A-G</span>
       <span class="sb-bk-pts" style="color:#93c5fd">${ptsGlob}</span>
     </div>`:''}
-    <div class="sb-bk-row">
+    <div class="sb-bk-row" style="border-top:2px solid #1e3a5f;margin-top:4px">
       <span class="sb-bk-total-lbl">TOTAL</span>
       <span class="sb-bk-total">${ptsTotal}</span>
     </div>`;
@@ -2127,26 +2313,25 @@ function showToast(msg) {
 
 function setTab(t) {
   _activeTab = t;
-  ['bracket','live','prono','scores'].forEach(n=>{
+  ['bracket','live','prono','scores','apuestas'].forEach(n=>{
     const tab=document.getElementById('tab-'+n);
     const bn=document.getElementById('bn-'+n);
     if(tab) tab.classList.toggle('active',n===t);
     if(bn) bn.classList.toggle('active',n===t);
   });
+  if (t==='apuestas') renderApuestasTab();
 }
 
 function setSubTab(t) {
   _activeSubTab = t;
-  ['partido','miprono','predicciones','ranking'].forEach(n=>{
+  ['partido','miprono'].forEach(n=>{
     const el=document.getElementById('sub-'+n);
     if(el) el.classList.toggle('active',n===t);
   });
   document.querySelectorAll('.sub-tab').forEach((b,i)=>{
-    b.classList.toggle('active',['partido','miprono','predicciones','ranking'][i]===t);
+    b.classList.toggle('active',['partido','miprono'][i]===t);
   });
   if (t==='miprono') renderMiProno(_liveData?.partido);
-  if (t==='predicciones') { const p=_liveData?.partido; if(p) renderPredictions(p); }
-  if (t==='ranking') renderRanking();
 }
 
 init();

@@ -8798,6 +8798,122 @@ async def populate_stats_fuentes(
     }
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+@router.get(
+    "/apuestas-ko/{torneo_id}",
+    summary="Todas las apuestas KO de todos los apostadores (transparencia playoffs)",
+)
+async def apuestas_ko(
+    torneo_id: int,
+    current: CurrentUser,
+    db: DBSession,
+) -> dict:
+    """Devuelve todas las apuestas de fases KO agrupadas por número FIFA de partido.
+    Incluye resultado real y predicciones de todos los apostadores.
+    Útil para construir la vista de transparencia KO en el cliente."""
+    from app.services import ko_scoring as _ks
+
+    maps = await _ks.build_num_maps(db, torneo_id)
+    pid2num = maps.get("pid2num", {})
+    num2tipo = maps.get("num2tipo", {})
+    if not pid2num:
+        return {"partidos": []}
+
+    # ── Partidos KO con equipos y resultado real ──────────────────────────────
+    rp = await db.execute(
+        text("""
+            SELECT p.id, p.estado, p.fecha,
+                   p.goles_local  AS gl, p.goles_visitante AS gv,
+                   p.penales_local AS pen_l, p.penales_visitante AS pen_v,
+                   p.amarillas,
+                   el.nombre AS local_nombre,
+                   COALESCE(el.codigo_iso, '') AS local_iso,
+                   ev.nombre AS visit_nombre,
+                   COALESCE(ev.codigo_iso, '') AS visit_iso
+            FROM partido p
+            JOIN fase f ON f.id = p.fase_id
+            LEFT JOIN equipo el ON el.id = p.equipo_local_id
+            LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+            WHERE f.torneo_id = :tid AND f.tipo <> 'grupo'
+            ORDER BY p.id
+        """),
+        {"tid": torneo_id},
+    )
+
+    meta: dict[int, dict] = {}
+    for r in rp.mappings():
+        num = pid2num.get(r["id"])
+        if num is None:
+            continue
+        fecha = r["fecha"]
+        meta[num] = {
+            "num": num,
+            "tipo": num2tipo.get(num, ""),
+            "estado": r["estado"] or "programado",
+            "local": r["local_nombre"] or "TBD",
+            "visitante": r["visit_nombre"] or "TBD",
+            "local_iso": r["local_iso"],
+            "visit_iso": r["visit_iso"],
+            "gl": r["gl"],
+            "gv": r["gv"],
+            "pen_l": r["pen_l"],
+            "pen_v": r["pen_v"],
+            "amarillas": r["amarillas"],
+            "fecha": fecha.strftime("%Y-%m-%dT%H:%M:%SZ") if fecha else None,
+            "apuestas": {},
+        }
+
+    if not meta:
+        return {"partidos": []}
+
+    # ── Todas las apuestas de estos partidos ─────────────────────────────────
+    ids_sql = ",".join(str(pid) for pid in pid2num.keys())
+    ra = await db.execute(
+        text(f"""
+            SELECT a.partido_id, a.apostador_id,
+                   a.pred_local, a.pred_visitante,
+                   a.pred_amarillas,
+                   a.pred_penales_local_tanda  AS ptl,
+                   a.pred_penales_visitante_tanda AS ptv
+            FROM apuesta a
+            WHERE a.partido_id IN ({ids_sql})
+              AND a.pred_local IS NOT NULL
+        """)
+    )
+
+    for r in ra.mappings():
+        num = pid2num.get(r["partido_id"])
+        if num is not None and num in meta:
+            meta[num]["apuestas"][str(r["apostador_id"])] = {
+                "pl": r["pred_local"],
+                "pv": r["pred_visitante"],
+                "pj": r["pred_amarillas"],
+                "ptl": r["ptl"],
+                "ptv": r["ptv"],
+            }
+
+    # ── Puntajes reales por apostador x partido ────────────────────────────
+    rpts = await db.execute(
+        text(f"""
+            SELECT pd.apostador_id, pd.partido_id,
+                   COALESCE(pd.pts_resultado,0) AS h,
+                   COALESCE(pd.pts_marcador,0)  AS i
+            FROM puntaje_detalle pd
+            WHERE pd.partido_id IN ({ids_sql})
+        """)
+    )
+    for r in rpts.mappings():
+        num = pid2num.get(r["partido_id"])
+        if num in meta:
+            aid = str(r["apostador_id"])
+            if aid in meta[num]["apuestas"]:
+                meta[num]["apuestas"][aid]["h"] = r["h"]
+                meta[num]["apuestas"][aid]["i"] = r["i"]
+
+    partidos_sorted = sorted(meta.values(), key=lambda x: x["num"])
+    return {"partidos": partidos_sorted}
+
+
 @router.get(
     "/stats-fuentes/{torneo_id}",
     summary="Ver tabla de comparación de fuentes por partido (admin)",
