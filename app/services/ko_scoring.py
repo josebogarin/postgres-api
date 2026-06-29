@@ -42,14 +42,21 @@ TIPO_NUM_RANGE: dict[str, list[int]] = {
 # R32 (73-88) se arma desde standings de grupos, no tiene feeders aquí.
 KO_FEEDERS: dict[int, tuple[tuple[str, int], tuple[str, int]]] = {
     # Octavos (R16)
-    89: (("W", 74), ("W", 77)),
-    90: (("W", 73), ("W", 75)),
-    91: (("W", 76), ("W", 78)),
-    92: (("W", 79), ("W", 80)),
-    93: (("W", 83), ("W", 84)),
-    94: (("W", 81), ("W", 82)),
-    95: (("W", 86), ("W", 88)),
-    96: (("W", 85), ("W", 87)),
+    # NOTA: Los números BECBUC P73-P88 SÍ coinciden 1:1 con los números oficiales FIFA.
+    # Verificado jun-2026 contra BD real:
+    #   P73=South Africa/Canada  P74=Germany/Paraguay  P75=Netherlands/Morocco
+    #   P76=Brazil/Japan  P77=France/Sweden  P78=Ivory Coast/Norway
+    #   P79=Mexico/Ecuador  P80=England/Congo DR  P81=USA/Bosnia
+    #   P82=Belgium/Senegal  P83=Portugal/Croatia  P84=Spain/Austria
+    #   P85=Switzerland/Algeria  P86=Argentina/Cape Verde  P87=Colombia/Ghana  P88=Australia/Egypt
+    89: (("W", 74), ("W", 77)),   # Germany/Paraguay vs France/Sweden
+    90: (("W", 73), ("W", 75)),   # South Africa/Canada vs Netherlands/Morocco
+    91: (("W", 76), ("W", 78)),   # Brazil/Japan vs Ivory Coast/Norway
+    92: (("W", 79), ("W", 80)),   # Mexico/Ecuador vs England/Congo DR
+    93: (("W", 83), ("W", 84)),   # Portugal/Croatia vs Spain/Austria
+    94: (("W", 81), ("W", 82)),   # USA/Bosnia vs Belgium/Senegal
+    95: (("W", 86), ("W", 88)),   # Argentina/Cape Verde vs Australia/Egypt
+    96: (("W", 85), ("W", 87)),   # Switzerland/Algeria vs Colombia/Ghana
     # Cuartos
     97:  (("W", 89), ("W", 90)),
     98:  (("W", 93), ("W", 94)),
