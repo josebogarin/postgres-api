@@ -60,12 +60,16 @@ if (Test-Path $guia) {
     Copy-Item $guia -Destination "$destino\BECBUC_Guia_Recuperacion.docx"
 }
 
-# 6. Copiar codigo (excluye .venv, __pycache__, node_modules)
+# 6. Copiar codigo (SCOPE: solo fuente liviano).
+#    Se excluye lo pesado/regenerable: entornos, dependencias, backups, logs,
+#    generados (Excel/auditorias/exports) y zips. Los DATOS van aparte (dumps en \db).
 Write-Host ""
-Write-Host "[4/4] Copiando codigo fuente..." -ForegroundColor Yellow
-$excluir = @(".venv", "__pycache__", "*.pyc", "node_modules", ".git", "alembic\versions\*.pyc")
-robocopy "$raiz" "$destino\codigo" /E /XD ".venv" "__pycache__" "node_modules" ".git" /XF "*.pyc" /NFL /NDL /NJH /NJS | Out-Null
-Write-Host "      OK - codigo copiado" -ForegroundColor Green
+Write-Host "[4/4] Copiando codigo fuente (scope liviano)..." -ForegroundColor Yellow
+robocopy "$raiz" "$destino\codigo" /E `
+    /XD ".venv" "__pycache__" "node_modules" ".git" "_backups" "auditorias" "exports" ".next" ".pytest_cache" ".turbo" ".claude" `
+    /XF "*.pyc" "*.log" "*.zip" `
+    /NFL /NDL /NJH /NJS | Out-Null
+Write-Host "      OK - codigo copiado (sin venv/node_modules/logs/generados)" -ForegroundColor Green
 
 # 7. Comprimir todo en ZIP
 Write-Host ""

@@ -40,6 +40,18 @@ backup_becbuc/
 _backups/
 *_out.txt
 
+# ── Generados / reportes de salida BECBUC (no versionar: se regeneran) ──────────
+backend/static/auditorias/
+backend/static/exports/
+becbuc_*.xlsx
+puntajes_copa_mundial.xlsx
+puntaje_grupos_*.xlsx
+ranking_auditoria.xlsx
+auditoria_*.xlsx
+BECBUC_verificacion*.xlsx
+becbuc_*.txt
+# nota: tests/golden/*.json SÍ se versiona (es la referencia de no-regresión)
+
 # ── Sistema operativo / editores ────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
