@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Config Cabecera-Detalle</title>
+<style>
+:root{
+  --bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#252d3f;
+  --accent:#E05020;--accent2:#FF6B35;--accent-dim:#E0502022;
+  --text:#e8eaf0;--text2:#8892a4;--text3:#555e72;
+  --border:#2a3347;--border2:#3a4560;
+  --success:#22c55e;--warning:#f59e0b;--danger:#ef4444;
+  --radius:8px;--radius-sm:5px;--shadow:0 4px 24px #00000060;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* topbar */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:48px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.logo{font-size:20px;font-weight:900;color:var(--accent);}
+.topbar-sep{width:1px;height:22px;background:var(--border);}
+.topbar-title{font-size:13px;color:var(--text2);font-weight:600;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.sys-sel{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 9px;border-radius:var(--radius-sm);font-size:12px;outline:none;}
+.sys-sel:focus{border-color:var(--accent);}
+.btn-sm{padding:4px 11px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;transition:all .15s;}
+.btn-sm:hover{color:var(--text);border-color:var(--border2);}
+
+/* layout: 3 panels */
+.layout{display:flex;flex:1;overflow:hidden;}
+
+/* ── Panel A: árbol de tablas ── */
+.panel-tree{width:220px;min-width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.panel-hdr{padding:7px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.tree-search{padding:6px 8px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.tree-search input{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:var(--radius-sm);font-size:11px;width:100%;outline:none;}
+.tree-search input:focus{border-color:var(--accent);}
+.tree-body{flex:1;overflow-y:auto;padding:4px;}
+.tree-sec{padding:5px 8px 2px;font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-top:4px;}
+.tree-item{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:var(--radius-sm);cursor:grab;user-select:none;border-left:2px solid transparent;transition:background .12s;}
+.tree-item:hover{background:var(--bg3);}
+.tree-item.is-cab{border-left-color:var(--success);}
+.tree-item.dragging{opacity:.4;}
+.ti{font-size:12px;width:14px;text-align:center;color:var(--text3);flex-shrink:0;}
+.tree-item.is-cab .ti{color:var(--success);}
+.item-name{font-size:11px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-badge{font-size:8px;background:var(--success);color:#fff;border-radius:3px;padding:1px 3px;flex-shrink:0;}
+.item-badge.v{background:var(--text3);}
+.drag-hint{padding:8px;text-align:center;font-size:10px;color:var(--text3);line-height:1.5;border-top:1px solid var(--border);flex-shrink:0;}
+
+/* ── Panel B: cabeceras configuradas ── */
+.panel-cabs{width:220px;min-width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.cab-list{flex:1;overflow-y:auto;padding:4px;}
+.cab-row{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--radius-sm);cursor:pointer;border-left:2px solid transparent;transition:background .12s;}
+.cab-row:hover{background:var(--bg3);}
+.cab-row.active{background:var(--accent-dim);border-left-color:var(--accent);}
+.cab-ic{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.cab-info{flex:1;min-width:0;}
+.cab-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cab-meta{font-size:10px;color:var(--text3);margin-top:1px;}
+.cab-del{background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 4px;border-radius:3px;font-size:11px;opacity:0;transition:opacity .15s;}
+.cab-row:hover .cab-del{opacity:1;}
+.cab-del:hover{color:var(--danger);}
+.cab-empty{padding:14px;text-align:center;font-size:11px;color:var(--text3);}
+.new-cab-btn{margin:8px;padding:6px;background:var(--bg3);border:1px dashed var(--border);color:var(--text3);border-radius:var(--radius-sm);cursor:pointer;font-size:11px;text-align:center;transition:all .15s;}
+.new-cab-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── Panel C: config ── */
+.panel-cfg{flex:1;overflow-y:auto;display:flex;flex-direction:column;background:var(--bg);}
+.cfg-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:8px;color:var(--text3);}
+.cfg-empty .big{font-size:40px;opacity:.25;}
+.cfg-body{padding:16px;display:flex;flex-direction:column;gap:14px;}
+
+/* section cards */
+.sec-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.sec-badge{background:var(--bg4);border:1px solid var(--border);border-radius:12px;padding:1px 7px;font-size:10px;color:var(--text2);}
+.sec-badge.ok{color:var(--success);border-color:var(--success);}
+
+/* drop zones */
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:10px;min-height:60px;transition:all .15s;background:var(--bg);}
+.drop-zone.drag-over{border-color:var(--accent);background:var(--accent-dim);}
+.drop-zone-hint{text-align:center;padding:10px 0;color:var(--text3);font-size:11px;pointer-events:none;}
+.drop-zone-hint span{display:block;font-size:18px;margin-bottom:4px;opacity:.4;}
+
+/* cabecera slot */
+.cab-slot{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;}
+.cab-slot-ic{font-size:18px;}
+.cab-slot-name{font-size:13px;font-weight:700;flex:1;}
+.cab-slot-clear{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:2px;}
+.cab-slot-clear:hover{color:var(--danger);}
+
+/* form inputs */
+.form-row{display:flex;flex-direction:column;gap:3px;}
+.form-row label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);}
+.form-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 9px;border-radius:var(--radius-sm);font-size:12px;outline:none;transition:border .15s;}
+.form-input:focus{border-color:var(--accent);}
+.form-input[readonly]{color:var(--text2);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px;}
+.form-full{grid-column:1/-1;}
+
+/* icon picker */
+.icon-wrap{position:relative;}
+.icon-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 9px;border-radius:var(--radius-sm);font-size:16px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:border .15s;}
+.icon-btn:hover{border-color:var(--border2);}
+.icon-btn .lbl{font-size:10px;color:var(--text3);}
+.icon-grid{position:absolute;top:calc(100%+4px);left:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px;display:grid;grid-template-columns:repeat(8,30px);gap:2px;z-index:300;box-shadow:var(--shadow);max-height:160px;overflow-y:auto;}
+.icon-grid button{width:30px;height:30px;background:var(--bg3);border:1px solid transparent;border-radius:3px;font-size:14px;cursor:pointer;transition:all .12s;}
+.icon-grid button:hover{border-color:var(--accent);}
+.icon-grid button.sel{border-color:var(--accent);background:var(--accent-dim);}
+
+/* det items */
+.det-item{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;margin-bottom:5px;}
+.det-name{font-size:12px;font-weight:600;flex:1;}
+.det-fk-row{display:flex;align-items:center;gap:5px;margin-top:2px;}
+.det-fk-lbl{font-size:9px;color:var(--text3);}
+.det-fk-sel{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:2px 5px;border-radius:3px;font-size:10px;font-family:monospace;outline:none;cursor:pointer;max-width:180px;}
+.det-rm{background:none;border:none;color:var(--text3);cursor:pointer;padding:3px;border-radius:3px;font-size:11px;}
+.det-rm:hover{color:var(--danger);}
+
+/* buttons */
+.btn{padding:6px 14px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-danger{background:#ef444418;border:1px solid var(--danger);color:var(--danger);}
+.btn-danger:hover{background:var(--danger);color:#fff;}
+.btn-ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text);}
+.btn-row{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;}
+
+/* toast */
+.toast-wrap{position:fixed;bottom:16px;right:16px;z-index:600;display:flex;flex-direction:column;gap:5px;}
+.toast{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 12px;font-size:11px;color:var(--text);box-shadow:var(--shadow);animation:tin .2s ease;}
+.toast.ok{border-left:3px solid var(--success);}
+.toast.err{border-left:3px solid var(--danger);}
+@keyframes tin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="logo">λ</span>
+  <div class="topbar-sep"></div>
+  <span class="topbar-title">⚙️ Configurar Cabecera-Detalle</span>
+  <select class="sys-sel" id="selSistema" onchange="onSistemaChange()">
+    <option value="">— Seleccionar sistema —</option>
+  </select>
+  <div class="topbar-right">
+    <button class="btn-sm" onclick="goBack()">← Volver al portal</button>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ══ PANEL A: Árbol de tablas ══ -->
+  <div class="panel-tree">
+    <div class="panel-hdr">
+      Tablas / Vistas
+      <span id="treeCount" style="font-size:9px;">—</span>
+    </div>
+    <div class="tree-search">
+      <input id="treeSearch" placeholder="Filtrar…" oninput="filterTree(this.value)">
+    </div>
+    <div class="tree-body" id="treeBody">
+      <div style="padding:16px;text-align:center;color:var(--text3);font-size:11px;">Seleccioná un sistema</div>
+    </div>
+    <div class="drag-hint">
+      ☝ Arrastrá una tabla a<br>
+      <strong style="color:var(--accent);">Cabecera</strong> o
+      <strong style="color:var(--success);">Detalle</strong>
+    </div>
+  </div>
+
+  <!-- ══ PANEL B: Cabeceras configuradas ══ -->
+  <div class="panel-cabs">
+    <div class="panel-hdr">
+      Cabeceras configuradas
+      <span id="cabCount" style="font-size:9px;">0</span>
+    </div>
+    <div class="cab-list" id="cabList">
+      <div class="cab-empty">Seleccioná un sistema</div>
+    </div>
+    <button class="new-cab-btn" onclick="openNewCab()">+ Nueva cabecera</button>
+  </div>
+
+  <!-- ══ PANEL C: Configuración activa ══ -->
+  <div class="panel-cfg" id="panelCfg">
+    <div class="cfg-empty" id="cfgEmpty">
+      <div class="big">🗂</div>
+      <p style="font-size:13px;">Seleccioná una cabecera</p>
+      <small>o hacé clic en "+ Nueva cabecera"</small>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const ICONS=['📦','📋','🧾','🗂','📁','📊','📈','💰','💳','🏷','🛒','📝','✅','🔑','🔒',
+  '⚙️','🔧','🏢','👤','👥','📞','🌐','🚚','🧮','💹','🏦','🪙','💵','📑','🗒',
+  '🔍','⭐','💡','🎯','🎁','🔔','⚡','🔥','📌','📍','🖊','🛠','📐','🏭','🗃'];
+
+let token='', baseUrl='', sistemaId=null, sistemas=[];
+let allTables=[], allViews=[], cabConfigs={};
+let activeCabId=null;        // cabecera en edición
+let activeCabName=null;      // nombre de la tabla cabecera en edición (zona de drop cab)
+let activeDetalles=[];       // detalles del cab activo
+let _icon='📦';
+
+const _p=new URLSearchParams(location.search);
+token  =_p.get('token')||sessionStorage.getItem('pg_token')||'';
+baseUrl=_p.get('base')||'';
+
+function api(path,opts={}){
+  const{headers:xh,...rest}=opts;
+  return fetch(baseUrl+path,{
+    headers:{'Content-Type':'application/json',...(token?{'Authorization':'Bearer '+token}:{}),...(xh||{})},
+    ...rest,
+  }).then(async r=>{
+    if(r.status===401){toast('Sesión expirada','err');throw new Error('401');}
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||r.statusText);}
+    if(r.status===204)return null;
+    return r.json();
+  });
+}
+
+function toast(msg,type='ok'){
+  const w=document.getElementById('toastWrap');
+  const d=document.createElement('div');d.className='toast '+type;
+  d.textContent=(type==='ok'?'✓ ':'✕ ')+msg;
+  w.appendChild(d);setTimeout(()=>d.remove(),3000);
+}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function goBack(){
+  if(document.referrer)history.back();
+  else location.href=(baseUrl||'')+'/portal'+(token?'?token='+token:'');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init(){
+  try{
+    sistemas=await api('/api/v1/sistema/');
+    const sel=document.getElementById('selSistema');
+    sistemas.forEach(s=>{
+      const o=document.createElement('option');o.value=s.id;o.textContent=s.nombre;sel.appendChild(o);
+    });
+    const sid=_p.get('id_sistema');
+    if(sid){sel.value=sid;await onSistemaChange();}
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+async function onSistemaChange(){
+  sistemaId=document.getElementById('selSistema').value||null;
+  activeCabId=null;activeCabName=null;activeDetalles=[];
+  showCfgEmpty();
+  if(!sistemaId){renderCabList();renderTree([],[]);return;}
+  const sys=sistemas.find(s=>String(s.id)===String(sistemaId));
+  document.getElementById('treeBody').innerHTML='<div style="padding:14px;text-align:center;color:var(--text3);font-size:11px;">Cargando…</div>';
+  try{
+    const[tbRes,cabRes]=await Promise.all([
+      api('/api/v1/admin/db-tables?db_slug='+encodeURIComponent(sys?.nombre_bd||'')),
+      api('/api/v1/admin/cabeceras?id_sistema='+sistemaId),
+    ]);
+    allTables=(tbRes.tables||[]).map(t=>t.name);
+    allViews =(tbRes.views ||[]).map(v=>v.name);
+    cabConfigs={};
+    (cabRes||[]).forEach(c=>{cabConfigs[c.nombre]=c;});
+    renderTree(allTables,allViews);
+    renderCabList();
+  }catch(e){
+    document.getElementById('treeBody').innerHTML=`<div style="padding:14px;text-align:center;color:var(--danger);font-size:11px;">${esc(e.message)}</div>`;
+    toast('Error: '+e.message,'err');
+  }
+}
+
+// ── Panel A: árbol ────────────────────────────────────────────────────────────
+function renderTree(tables,views,filter=''){
+  const fl=filter.toLowerCase();
+  const filtT=tables.filter(t=>!fl||t.toLowerCase().includes(fl));
+  const filtV=views.filter(v=>!fl||v.toLowerCase().includes(fl));
+  document.getElementById('treeCount').textContent=`${tables.length}t ${views.length}v`;
+  let html='';
+  if(filtT.length){
+    html+='<div class="tree-sec">Tablas</div>';
+    filtT.forEach(t=>{
+      const isCab=!!cabConfigs[t];
+      html+=`<div class="tree-item${isCab?' is-cab':''}" draggable="true"
+        ondragstart="treeDragStart(event,'${esc(t)}')" ondragend="this.classList.remove('dragging');this.style.opacity=''">
+        <span class="ti">${isCab?'🟢':'📋'}</span>
+        <span class="item-name" title="${esc(t)}">${esc(t)}</span>
+        ${isCab?'<span class="item-badge">CAB</span>':''}
+      </div>`;
+    });
+  }
+  if(filtV.length){
+    html+='<div class="tree-sec">Vistas</div>';
+    filtV.forEach(v=>{
+      const isCab=!!cabConfigs[v];
+      html+=`<div class="tree-item${isCab?' is-cab':''}" draggable="true"
+        ondragstart="treeDragStart(event,'${esc(v)}')" ondragend="this.classList.remove('dragging');this.style.opacity=''">
+        <span class="ti">${isCab?'🟢':'👁'}</span>
+        <span class="item-name" title="${esc(v)}">${esc(v)}</span>
+        ${isCab?'<span class="item-badge v">CAB</span>':''}
+      </div>`;
+    });
+  }
+  if(!filtT.length&&!filtV.length)
+    html='<div style="padding:14px;text-align:center;color:var(--text3);font-size:11px;">Sin resultados</div>';
+  document.getElementById('treeBody').innerHTML=html;
+}
+
+function filterTree(val){renderTree(allTables,allViews,val);}
+
+function treeDragStart(e,name){
+  e.dataTransfer.setData('text/plain',name);
+  e.target.classList.add('dragging');
+  e.target.style.opacity='.4';
+}
+
+// ── Panel B: lista de cabeceras ───────────────────────────────────────────────
+function renderCabList(){
+  const keys=Object.keys(cabConfigs);
+  document.getElementById('cabCount').textContent=keys.length;
+  const el=document.getElementById('cabList');
+  if(!keys.length){el.innerHTML='<div class="cab-empty">Sin cabeceras configuradas</div>';return;}
+  el.innerHTML=keys.map(k=>{
+    const c=cabConfigs[k];
+    const isActive=activeCabId===c.id;
+    const detCount=c._detCount!==undefined?c._detCount:'…';
+    return `<div class="cab-row${isActive?' active':''}" onclick="selectCab('${esc(k)}')" title="${esc(k)}">
+      <span class="cab-ic">${c.icono||'📦'}</span>
+      <div class="cab-info">
+        <div class="cab-name">${esc(k)}</div>
+        <div class="cab-meta">${detCount} detalle(s)</div>
+      </div>
+      <button class="cab-del" onclick="event.stopPropagation();deleteCab(${c.id},'${esc(k)}')" title="Eliminar">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── Panel C: mostrar/ocultar vacío ────────────────────────────────────────────
+function showCfgEmpty(){
+  document.getElementById('panelCfg').innerHTML=`<div class="cfg-empty">
+    <div class="big">🗂</div>
+    <p style="font-size:13px;">Seleccioná una cabecera</p>
+    <small style="color:var(--text3);">o hacé clic en "+ Nueva cabecera"</small>
+  </div>`;
+}
+
+// ── Seleccionar cabecera existente ────────────────────────────────────────────
+async function selectCab(nombre){
+  const cab=cabConfigs[nombre];if(!cab)return;
+  activeCabId=cab.id;activeCabName=nombre;
+  renderCabList();
+  try{
+    activeDetalles=await api('/api/v1/admin/detalles?id_cabecera='+cab.id);
+    cab._detCount=activeDetalles.length;
+    renderCabList();
+  }catch(e){activeDetalles=[];}
+  renderCfgPanel();
+  loadFkForAll();
+}
+
+// ── Nueva cabecera (vacía) ────────────────────────────────────────────────────
+function openNewCab(){
+  activeCabId=null;activeCabName=null;activeDetalles=[];
+  renderCabList();
+  renderCfgPanel();
+}
+
+// ── Panel C: render ───────────────────────────────────────────────────────────
+function renderCfgPanel(){
+  const isEdit=!!activeCabId;
+  const icon=activeCabId?cabConfigs[activeCabName]?.icono||'📦':'📦';
+  _icon=icon;
+  const desc=activeCabId?cabConfigs[activeCabName]?.descripcion||'':'';
+  const otras=[...allTables,...allViews].filter(t=>t!==activeCabName);
+
+  document.getElementById('panelCfg').innerHTML=`
+  <div class="cfg-body">
+
+    <!-- 1. Cabecera -->
+    <div class="sec-card">
+      <div class="sec-hdr">
+        <span class="sec-title">1. Tabla Cabecera</span>
+        ${isEdit?`<span class="sec-badge ok">✓ Configurada · ID ${activeCabId}</span>`:'<span class="sec-badge">Sin configurar</span>'}
+        ${isEdit?`<button class="btn btn-danger" style="margin-left:auto;padding:3px 9px;font-size:10px;" onclick="deleteCab(${activeCabId},'${esc(activeCabName)}')">🗑 Quitar</button>`:''}
+      </div>
+
+      <!-- Drop zone para cabecera -->
+      <div class="drop-zone" id="cabDropZone"
+           ondragover="dzOver(event,'cabDropZone')"
+           ondragleave="dzLeave('cabDropZone')"
+           ondrop="onDropCab(event)">
+        ${activeCabName
+          ? `<div class="cab-slot">
+               <span class="cab-slot-ic">${icon}</span>
+               <span class="cab-slot-name">${esc(activeCabName)}</span>
+               ${!isEdit?`<button class="cab-slot-clear" onclick="clearCabSlot()" title="Quitar">✕</button>`:''}
+             </div>`
+          : `<div class="drop-zone-hint"><span>🗄</span>Arrastrá una tabla desde el árbol izquierdo</div>`
+        }
+      </div>
+
+      <!-- Form cabecera -->
+      <div style="margin-top:10px;" class="form-grid">
+        <div class="form-row">
+          <label>Ícono</label>
+          <div class="icon-wrap">
+            <button type="button" class="icon-btn" onclick="toggleIconGrid()">
+              <span id="iconVal">${icon}</span>
+              <span class="lbl">Cambiar</span>
+            </button>
+            <div class="icon-grid" id="iconGrid" style="display:none;"></div>
+          </div>
+          <input type="hidden" id="iconHidden" value="${icon}">
+        </div>
+        <div class="form-row form-full">
+          <label>Descripción (opcional)</label>
+          <input class="form-input" id="cabDesc" placeholder="Descripción de la cabecera…" value="${esc(desc)}">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        ${isEdit
+          ? `<button class="btn btn-primary" onclick="saveCabUpdate()">💾 Guardar cambios</button>`
+          : `<button class="btn btn-primary" onclick="saveCabNew()" ${!activeCabName?'disabled':''}>✓ Crear Cabecera</button>`
+        }
+      </div>
+    </div>
+
+    <!-- 2. Detalles (solo si ya es cabecera) -->
+    ${isEdit?`
+    <div class="sec-card">
+      <div class="sec-hdr">
+        <span class="sec-title">2. Tablas Detalle</span>
+        <span class="sec-badge" id="detBadge">${activeDetalles.length}</span>
+      </div>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:9px;">
+        Arrastrá tablas del panel izquierdo a la zona de soltar, o usá el selector.
+        FK por defecto: <code style="background:var(--bg3);padding:1px 4px;border-radius:3px;font-size:10px;">id_${esc(activeCabName)}</code>
+      </p>
+
+      <!-- Drop zone para detalles -->
+      <div class="drop-zone" id="detDropZone"
+           ondragover="dzOver(event,'detDropZone')"
+           ondragleave="dzLeave('detDropZone')"
+           ondrop="onDropDet(event)">
+        <div id="detItems">
+          ${activeDetalles.length===0
+            ? '<div class="drop-zone-hint"><span>📋</span>Arrastrá una tabla aquí para agregarla como detalle</div>'
+            : activeDetalles.map(d=>renderDetItem(d)).join('')}
+        </div>
+      </div>
+
+      <!-- Selector manual -->
+      <div style="margin-top:9px;display:flex;gap:7px;align-items:center;">
+        <select class="form-input" id="addDetSel" style="flex:1;font-size:11px;">
+          <option value="">+ Agregar tabla/vista como detalle…</option>
+          ${otras.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')}
+        </select>
+        <button class="btn btn-ghost" onclick="addDetFromSel()">Agregar</button>
+      </div>
+    </div>
+    `:''}
+
+  </div>`;
+
+  buildIconGrid();
+}
+
+function renderDetItem(d){
+  return `<div class="det-item" id="det-${d.id}" data-det-name="${esc(d.nombre)}">
+    <div style="font-size:14px;width:20px;text-align:center;">${d.icono||'📋'}</div>
+    <div style="flex:1;min-width:0;">
+      <div class="det-name">${esc(d.nombre)}</div>
+      <div class="det-fk-row">
+        <span class="det-fk-lbl">FK:</span>
+        <select class="det-fk-sel" data-det="${d.id}">
+          <option value="${esc(d.campo_fk||'')}">cargando…</option>
+        </select>
+      </div>
+    </div>
+    <button class="det-rm" onclick="removeDet(${d.id},'${esc(d.nombre)}')" title="Quitar">✕</button>
+  </div>`;
+}
+
+// ── Drag helpers ──────────────────────────────────────────────────────────────
+function dzOver(e,zoneId){e.preventDefault();document.getElementById(zoneId)?.classList.add('drag-over');}
+function dzLeave(zoneId){document.getElementById(zoneId)?.classList.remove('drag-over');}
+
+async function onDropCab(e){
+  e.preventDefault();
+  document.getElementById('cabDropZone')?.classList.remove('drag-over');
+  const name=e.dataTransfer.getData('text/plain');
+  if(!name||activeCabId) return; // si ya hay cabecera guardada, no se puede cambiar arrastrando
+  activeCabName=name;
+  // re-render drop zone
+  const zone=document.getElementById('cabDropZone');
+  if(zone) zone.innerHTML=`<div class="cab-slot">
+    <span class="cab-slot-ic">${_icon}</span>
+    <span class="cab-slot-name">${esc(name)}</span>
+    <button class="cab-slot-clear" onclick="clearCabSlot()" title="Quitar">✕</button>
+  </div>`;
+  // enable create btn
+  const btn=document.querySelector('.btn-primary[onclick="saveCabNew()"]');
+  if(btn) btn.disabled=false;
+  toast(`"${name}" listo para definir como cabecera`);
+}
+
+function clearCabSlot(){
+  activeCabName=null;
+  const zone=document.getElementById('cabDropZone');
+  if(zone) zone.innerHTML='<div class="drop-zone-hint"><span>🗄</span>Arrastrá una tabla desde el árbol izquierdo</div>';
+  const btn=document.querySelector('.btn-primary[onclick="saveCabNew()"]');
+  if(btn) btn.disabled=true;
+}
+
+async function onDropDet(e){
+  e.preventDefault();
+  document.getElementById('detDropZone')?.classList.remove('drag-over');
+  if(!activeCabId){toast('Primero guardá la cabecera','err');return;}
+  const name=e.dataTransfer.getData('text/plain');
+  if(!name||name===activeCabName) return;
+  await addDetByName(name);
+}
+
+// ── Agregar detalle ───────────────────────────────────────────────────────────
+async function addDetFromSel(){
+  const sel=document.getElementById('addDetSel');
+  const name=sel?.value;if(!name){toast('Seleccioná una tabla','err');return;}
+  sel.value='';
+  await addDetByName(name);
+}
+
+async function addDetByName(nombre){
+  if(!activeCabId){toast('Primero guardá la cabecera','err');return;}
+  const items=document.getElementById('detItems');
+  if(items?.querySelector(`[data-det-name="${nombre}"]`)){toast(`"${nombre}" ya está agregado`,'err');return;}
+  const defaultFk='id_'+activeCabName;
+  try{
+    const det=await api('/api/v1/admin/detalles',{method:'POST',body:JSON.stringify({id_cabecera:activeCabId,nombre,campo_fk:defaultFk,icono:'📋'})});
+    activeDetalles.push(det);
+    if(cabConfigs[activeCabName]) cabConfigs[activeCabName]._detCount=(cabConfigs[activeCabName]._detCount||0)+1;
+    const hint=items?.querySelector('.drop-zone-hint');if(hint)hint.remove();
+    items?.insertAdjacentHTML('beforeend',renderDetItem(det));
+    const badge=document.getElementById('detBadge');if(badge)badge.textContent=items?.querySelectorAll('.det-item').length||0;
+    renderCabList();
+    await loadDetFkOptions(det.id,det.nombre,det.campo_fk);
+    toast(`"${nombre}" agregado`);
+  }catch(e){toast(e.message,'err');}
+}
+
+async function loadDetFkOptions(detId,detNombre,currentFk){
+  const sys=sistemas.find(s=>String(s.id)===String(sistemaId));
+  const sel=document.querySelector(`select[data-det="${detId}"]`);if(!sel)return;
+  const defaultFk='id_'+activeCabName;
+  try{
+    const res=await api(`/api/v1/admin/db-table-schema?table_name=${encodeURIComponent(detNombre)}&db_slug=${encodeURIComponent(sys?.nombre_bd||'')}`);
+    const cols=(res.columns||[]).map(c=>c.name);
+    const fk=currentFk||defaultFk;
+    sel.innerHTML=cols.map(c=>`<option value="${esc(c)}"${fk===c?' selected':''}>${esc(c)}</option>`).join('');
+    if(!sel.value&&cols.length)sel.value=cols.includes(defaultFk)?defaultFk:cols[0];
+    sel.onchange=()=>updateDetFk(detId,sel.value);
+  }catch(e){
+    sel.innerHTML=`<option value="${esc(currentFk||defaultFk)}" selected>${esc(currentFk||defaultFk)}</option>`;
+    sel.onchange=()=>updateDetFk(detId,sel.value);
+  }
+}
+
+async function loadFkForAll(){
+  for(const d of activeDetalles) await loadDetFkOptions(d.id,d.nombre,d.campo_fk);
+}
+
+async function updateDetFk(detId,val){
+  try{await api(`/api/v1/admin/detalles/${detId}`,{method:'PATCH',body:JSON.stringify({campo_fk:val})});}
+  catch(e){toast('Error FK: '+e.message,'err');}
+}
+
+async function removeDet(detId,nombre){
+  if(!confirm(`¿Quitar "${nombre}" de los detalles?`))return;
+  try{
+    await api(`/api/v1/admin/detalles/${detId}`,{method:'DELETE'});
+    document.getElementById(`det-${detId}`)?.remove();
+    activeDetalles=activeDetalles.filter(d=>d.id!==detId);
+    const items=document.getElementById('detItems');
+    if(items&&!items.querySelector('.det-item'))
+      items.innerHTML='<div class="drop-zone-hint"><span>📋</span>Arrastrá una tabla aquí para agregarla como detalle</div>';
+    const badge=document.getElementById('detBadge');if(badge)badge.textContent=activeDetalles.length;
+    if(cabConfigs[activeCabName])cabConfigs[activeCabName]._detCount=Math.max(0,(cabConfigs[activeCabName]._detCount||1)-1);
+    renderCabList();
+    toast(`"${nombre}" eliminado`);
+  }catch(e){toast(e.message,'err');}
+}
+
+// ── Guardar cabecera ──────────────────────────────────────────────────────────
+async function saveCabNew(){
+  if(!activeCabName){toast('Arrastrá una tabla a la zona de cabecera','err');return;}
+  const desc=document.getElementById('cabDesc')?.value||'';
+  const icono=document.getElementById('iconHidden')?.value||'📦';
+  try{
+    const cab=await api('/api/v1/admin/cabeceras',{method:'POST',body:JSON.stringify({id_sistema:parseInt(sistemaId),nombre:activeCabName,descripcion:desc,icono})});
+    cab.detalles=[];cab._detCount=0;
+    cabConfigs[activeCabName]=cab;
+    activeCabId=cab.id;
+    renderTree(allTables,allViews,document.getElementById('treeSearch').value);
+    renderCabList();
+    renderCfgPanel();
+    toast('Cabecera creada');
+  }catch(e){toast(e.message,'err');}
+}
+
+async function saveCabUpdate(){
+  const desc=document.getElementById('cabDesc')?.value||'';
+  const icono=document.getElementById('iconHidden')?.value||'📦';
+  try{
+    const upd=await api(`/api/v1/admin/cabeceras/${activeCabId}`,{method:'PATCH',body:JSON.stringify({descripcion:desc,icono})});
+    if(cabConfigs[activeCabName])Object.assign(cabConfigs[activeCabName],upd);
+    renderTree(allTables,allViews,document.getElementById('treeSearch').value);
+    renderCabList();
+    toast('Guardado');
+  }catch(e){toast(e.message,'err');}
+}
+
+async function deleteCab(cabId,tableName){
+  if(!confirm(`¿Eliminar cabecera "${tableName}" y todos sus detalles?`))return;
+  try{
+    await api(`/api/v1/admin/cabeceras/${cabId}`,{method:'DELETE'});
+    delete cabConfigs[tableName];
+    activeCabId=null;activeCabName=null;activeDetalles=[];
+    renderTree(allTables,allViews,document.getElementById('treeSearch').value);
+    renderCabList();
+    showCfgEmpty();
+    toast('Cabecera eliminada');
+  }catch(e){toast(e.message,'err');}
+}
+
+// ── Icon picker ───────────────────────────────────────────────────────────────
+function buildIconGrid(){
+  const grid=document.getElementById('iconGrid');if(!grid)return;
+  const cur=document.getElementById('iconHidden')?.value;
+  grid.innerHTML='';
+  ICONS.forEach(ic=>{
+    const btn=document.createElement('button');btn.type='button';btn.textContent=ic;
+    if(cur===ic)btn.classList.add('sel');
+    btn.onclick=()=>{
+      _icon=ic;
+      document.getElementById('iconHidden').value=ic;
+      document.getElementById('iconVal').textContent=ic;
+      grid.style.display='none';
+      grid.querySelectorAll('button').forEach(b=>b.classList.toggle('sel',b.textContent===ic));
+    };
+    grid.appendChild(btn);
+  });
+}
+function toggleIconGrid(){
+  const g=document.getElementById('iconGrid');
+  if(g)g.style.display=g.style.display==='none'?'grid':'none';
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.icon-wrap')){
+    const g=document.getElementById('iconGrid');if(g)g.style.display='none';
+  }
+});
+
+init();
+</script>
+</body>
+</html>

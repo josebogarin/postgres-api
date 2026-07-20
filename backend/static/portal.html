@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Portal — LAMBDA Consulting Group</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.29.0/dist/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#181c24;--surface2:#1e2330;--surface3:#252a38;
+  --border:#2a3045;--fg:#e2e8f0;--muted:#64748b;--muted2:#475569;
+  --accent:#E05020;--accent2:#FF6B35;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;
+  --indigo:#6366f1;--purple:#a855f7;--pink:#ec4899;--orange:#f97316;
+  --sidebar-w:220px;--topbar-h:46px;--radius:8px;
+}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;height:100vh;display:flex;overflow:hidden;}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;overflow-x:hidden;}
+.brand{padding:16px 14px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.brand-logo{width:34px;height:34px;flex-shrink:0;}
+.brand-text{flex:1;min-width:0;}
+.brand-name{font-size:.82rem;font-weight:800;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brand-sub{font-size:.65rem;color:var(--muted);white-space:nowrap;}
+.nav{flex:1;padding:10px 0;}
+.nav-section{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:10px 14px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;border-radius:0;color:var(--muted);font-size:.8rem;font-weight:500;transition:all .15s;border:none;background:none;width:100%;text-align:left;white-space:nowrap;}
+.nav-item:hover{background:var(--surface2);color:var(--fg);}
+.nav-item.active{background:rgba(0,188,212,.1);color:var(--accent2);border-right:3px solid var(--accent2);}
+.nav-item i{font-size:1rem;flex-shrink:0;}
+.nav-sub{padding-left:36px;}
+.nav-sub .nav-item{font-size:.77rem;padding:6px 14px 6px 0;}
+.sidebar-footer{padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;}
+.user-info{display:flex;align-items:center;gap:9px;margin-bottom:10px;}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;color:#fff;flex-shrink:0;}
+.user-name{font-size:.77rem;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-size:.65rem;color:var(--muted);}
+.btn-logout{width:100%;padding:7px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5;border-radius:var(--radius);font-size:.77rem;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-logout:hover{background:rgba(239,68,68,.2);}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:var(--topbar-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;}
+.topbar-breadcrumb{font-size:.77rem;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.topbar-breadcrumb .sep{color:var(--border);}
+.topbar-breadcrumb .current{color:var(--fg);font-weight:600;}
+.topbar-flex{flex:1;}
+.sistema-badge{background:rgba(0,188,212,.12);border:1px solid rgba(0,188,212,.25);color:var(--accent2);border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:600;}
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+
+/* ── Views ── */
+.view{display:none;flex:1;overflow-y:auto;padding:22px 24px;}
+.view.active{display:flex;flex-direction:column;}
+
+/* ── Dashboard ── */
+.dash-grid{display:grid;grid-template-columns:1fr 340px;gap:18px;flex:1;}
+.dash-left{display:flex;flex-direction:column;gap:18px;}
+.dash-right{display:flex;flex-direction:column;gap:18px;}
+
+/* KPIs */
+.kpis-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px 12px;position:relative;overflow:hidden;transition:border-color .15s;}
+.kpi-card:hover{border-color:var(--muted2);}
+.kpi-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.kpi-card[data-color="teal"]::before{background:var(--accent);}
+.kpi-card[data-color="cyan"]::before{background:var(--accent2);}
+.kpi-card[data-color="green"]::before{background:var(--green);}
+.kpi-card[data-color="blue"]::before{background:var(--blue);}
+.kpi-card[data-color="indigo"]::before{background:var(--indigo);}
+.kpi-card[data-color="purple"]::before{background:var(--purple);}
+.kpi-card[data-color="pink"]::before{background:var(--pink);}
+.kpi-card[data-color="orange"]::before{background:var(--orange);}
+.kpi-card[data-color="amber"]::before{background:var(--amber);}
+.kpi-card[data-color="red"]::before{background:var(--red);}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.kpi-icon{font-size:1.25rem;}
+.kpi-icon[data-color="teal"]{color:var(--accent);}
+.kpi-icon[data-color="cyan"]{color:var(--accent2);}
+.kpi-icon[data-color="green"]{color:var(--green);}
+.kpi-icon[data-color="blue"]{color:var(--blue);}
+.kpi-icon[data-color="indigo"]{color:var(--indigo);}
+.kpi-icon[data-color="purple"]{color:var(--purple);}
+.kpi-icon[data-color="pink"]{color:var(--pink);}
+.kpi-icon[data-color="orange"]{color:var(--orange);}
+.kpi-icon[data-color="amber"]{color:var(--amber);}
+.kpi-icon[data-color="red"]{color:var(--red);}
+.kpi-edit-btn{opacity:0;background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 4px;border-radius:4px;font-size:.8rem;transition:opacity .15s;}
+.kpi-card:hover .kpi-edit-btn{opacity:1;}
+.kpi-edit-btn:hover{color:var(--fg);background:var(--surface3);}
+.kpi-value{font-size:1.6rem;font-weight:800;color:var(--fg);line-height:1;margin-bottom:4px;}
+.kpi-title{font-size:.72rem;color:var(--muted);font-weight:500;}
+.kpi-add-card{background:none;border:2px dashed var(--border);border-radius:10px;padding:14px 16px 12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:.8rem;font-weight:600;transition:all .15s;min-height:80px;}
+.kpi-add-card:hover{border-color:var(--muted);color:var(--fg);}
+
+/* Panel sección */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.panel-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.panel-title{font-size:.78rem;font-weight:700;color:var(--fg);flex:1;}
+.panel-body{padding:14px 16px;}
+.panel-action{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.78rem;font-weight:600;display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:var(--radius);transition:all .15s;}
+.panel-action:hover{background:var(--surface2);color:var(--fg);}
+
+/* Noticias */
+.news-list{display:flex;flex-direction:column;gap:1px;}
+.news-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;text-decoration:none;color:inherit;}
+.news-item:last-child{border-bottom:none;}
+.news-item:hover .news-title{color:var(--accent2);}
+.news-thumb{width:60px;height:45px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--surface2);}
+.news-thumb-ph{width:60px;height:45px;border-radius:5px;background:var(--surface3);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+.news-text{flex:1;min-width:0;}
+.news-title{font-size:.77rem;font-weight:600;color:var(--fg);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color .15s;margin-bottom:3px;}
+.news-date{font-size:.68rem;color:var(--muted);}
+.news-load{text-align:center;padding:20px;color:var(--muted);font-size:.8rem;}
+
+/* Vínculos */
+.vinculos-grid{display:flex;flex-direction:column;gap:6px;}
+.vinculo-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius);background:var(--surface2);cursor:pointer;text-decoration:none;color:inherit;transition:background .15s;position:relative;}
+.vinculo-item:hover{background:var(--surface3);}
+.vinculo-icon{font-size:1rem;color:var(--accent2);flex-shrink:0;}
+.vinculo-text{flex:1;min-width:0;}
+.vinculo-title{font-size:.8rem;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vinculo-desc{font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vinculo-edit{opacity:0;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:2px 4px;border-radius:4px;transition:opacity .15s;}
+.vinculo-item:hover .vinculo-edit{opacity:1;}
+.vinculo-add{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--radius);border:1px dashed var(--border);color:var(--muted);font-size:.77rem;font-weight:600;cursor:pointer;background:none;transition:all .15s;width:100%;}
+.vinculo-add:hover{border-color:var(--muted);color:var(--fg);}
+
+/* Tablas view */
+.tables-hdr{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.section-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.search-wrap{position:relative;margin-left:auto;}
+.search-wrap input{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);padding:7px 11px 7px 30px;font-size:.82rem;outline:none;width:200px;transition:border-color .15s;}
+.search-wrap input:focus{border-color:var(--accent2);}
+.search-ic{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+.tables-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:11px;}
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 14px 14px;cursor:pointer;transition:border-color .18s,background .18s,transform .12s;display:flex;flex-direction:column;gap:4px;}
+.table-card:hover{border-color:var(--accent2);background:var(--surface2);transform:translateY(-2px);}
+.tc-icon{font-size:1.4rem;margin-bottom:4px;color:var(--accent2);}
+.tc-name{font-size:.82rem;font-weight:700;color:var(--fg);word-break:break-word;}
+.tc-hint{font-size:.68rem;color:var(--muted);}
+
+/* Iframe view */
+.iframe-view{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.iframe-view.active{display:flex;}
+#appFrame{flex:1;border:none;width:100%;background:var(--bg);}
+
+/* Config views */
+.config-table{width:100%;border-collapse:collapse;}
+.config-table th,.config-table td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;font-size:.78rem;}
+.config-table th{font-weight:700;color:var(--muted);text-transform:uppercase;font-size:.67rem;letter-spacing:.06em;}
+.config-table tr:last-child td{border-bottom:none;}
+.config-table tr:hover td{background:var(--surface2);}
+.badge{padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:600;}
+.badge-active{background:rgba(34,197,94,.12);color:var(--green);}
+.badge-inactive{background:rgba(239,68,68,.12);color:var(--red);}
+.config-hdr{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.btn{border:none;border-radius:var(--radius);padding:7px 14px;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{opacity:.85;}
+.btn-ghost{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--fg);border-color:var(--muted);}
+.btn-danger-sm{background:rgba(239,68,68,.1);color:#fca5a5;border:1px solid rgba(239,68,68,.2);padding:4px 9px;font-size:.72rem;}
+.btn-danger-sm:hover{background:rgba(239,68,68,.2);}
+.btn-edit-sm{background:rgba(0,188,212,.1);color:var(--accent2);border:1px solid rgba(0,188,212,.2);padding:4px 9px;font-size:.72rem;}
+.btn-edit-sm:hover{background:rgba(0,188,212,.2);}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:480px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-title{font-size:.9rem;font-weight:700;color:var(--fg);}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:4px;}
+.modal-close:hover{color:var(--fg);}
+.modal-body{padding:18px 20px;overflow-y:auto;flex:1;}
+.form-row{margin-bottom:14px;}
+.form-label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);padding:8px 11px;font-size:.82rem;outline:none;font-family:inherit;transition:border-color .15s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent2);}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%2364748b' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+.form-textarea{resize:vertical;min-height:80px;font-size:.78rem;}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;}
+.color-picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .15s;}
+.color-swatch.selected{border-color:var(--fg);}
+
+/* State messages */
+.state-msg{text-align:center;color:var(--muted);padding:40px;font-size:.85rem;}
+.state-msg i{font-size:2rem;display:block;margin-bottom:10px;opacity:.5;}
+
+/* ── Login overlay ── */
+.login-overlay{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;justify-content:center;}
+.login-overlay.hidden{display:none;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:36px 40px 32px;width:360px;max-width:95vw;display:flex;flex-direction:column;align-items:center;}
+.login-logo{width:54px;height:54px;margin-bottom:16px;}
+.login-appname{font-size:1.05rem;font-weight:800;color:var(--fg);margin-bottom:4px;}
+.login-sub{font-size:.72rem;color:var(--muted);margin-bottom:28px;}
+.login-field{width:100%;margin-bottom:14px;}
+.login-label{display:block;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;}
+.login-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);padding:9px 12px;font-size:.85rem;outline:none;font-family:inherit;transition:border-color .15s;}
+.login-input:focus{border-color:var(--accent2);}
+.login-btn{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:.88rem;font-weight:700;cursor:pointer;transition:opacity .15s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.login-btn:hover:not(:disabled){opacity:.87;}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;}
+.login-error{width:100%;margin-top:14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5;border-radius:var(--radius);padding:8px 12px;font-size:.78rem;text-align:center;display:none;}
+.login-error.show{display:block;}
+.sistema-sel{background:rgba(0,188,212,.08);border:1px solid rgba(0,188,212,.2);color:var(--accent2);border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:600;outline:none;cursor:pointer;font-family:inherit;max-width:180px;}
+.sistema-sel option{background:var(--surface2);color:var(--fg);}
+.news-source{font-size:.63rem;color:var(--accent);font-weight:600;margin-bottom:2px;}
+
+/* ── Logs view ── */
+.logs-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.logs-filter{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);padding:6px 10px;font-size:.78rem;outline:none;font-family:inherit;transition:border-color .15s;}
+.logs-filter:focus{border-color:var(--accent2);}
+.log-table{width:100%;border-collapse:collapse;font-size:.77rem;}
+.log-table th{padding:8px 10px;border-bottom:1px solid var(--border);font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;text-align:left;white-space:nowrap;}
+.log-table td{padding:7px 10px;border-bottom:1px solid rgba(42,48,69,.5);color:var(--fg);vertical-align:top;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.log-table tr:hover td{background:var(--surface2);}
+.log-table .log-ts{font-family:monospace;font-size:.73rem;color:var(--muted);white-space:nowrap;}
+.log-table .log-user{font-weight:600;color:var(--accent2);}
+.log-table .log-path{font-family:monospace;font-size:.72rem;color:var(--muted);max-width:280px;}
+.log-table .log-detail{color:var(--muted);font-size:.72rem;}
+.status-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-weight:700;font-size:.68rem;}
+.status-2xx{background:rgba(34,197,94,.12);color:var(--green);}
+.status-3xx{background:rgba(59,130,246,.12);color:var(--blue);}
+.status-4xx{background:rgba(245,158,11,.12);color:var(--amber);}
+.status-5xx{background:rgba(239,68,68,.12);color:var(--red);}
+.action-badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:.68rem;font-weight:600;white-space:nowrap;}
+.action-GET   {background:rgba(59,130,246,.12);color:#93c5fd;}
+.action-POST  {background:rgba(34,197,94,.12);color:var(--green);}
+.action-PATCH {background:rgba(245,158,11,.12);color:var(--amber);}
+.action-DELETE{background:rgba(239,68,68,.12);color:var(--red);}
+.action-OTHER {background:rgba(100,116,139,.12);color:var(--muted);}
+.logs-pagination{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.78rem;color:var(--muted);}
+.logs-pagination b{color:var(--fg);}
+.logs-pagination .lp-btn{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--muted);padding:4px 10px;font-size:.75rem;cursor:pointer;transition:all .12s;}
+.logs-pagination .lp-btn:hover:not(:disabled){color:var(--fg);border-color:var(--muted);}
+.logs-pagination .lp-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* ── Nav item con badge de rol ── */
+.nav-item .nav-role-badge{font-size:.55rem;background:rgba(99,102,241,.2);color:#a5b4fc;border-radius:8px;padding:1px 5px;margin-left:auto;flex-shrink:0;}
+
+/* ── Role badges en footer ── */
+.user-roles{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;}
+.role-badge{font-size:.58rem;padding:1px 7px;border-radius:8px;font-weight:700;white-space:nowrap;}
+.role-superadmin{background:rgba(239,68,68,.2);color:#fca5a5;}
+.role-admin{background:rgba(99,102,241,.2);color:#a5b4fc;}
+.role-operator{background:rgba(245,158,11,.2);color:#fcd34d;}
+.role-viewer{background:rgba(100,116,139,.2);color:var(--muted);}
+.role-default{background:rgba(100,116,139,.15);color:var(--muted);}
+
+/* ── Tool cards en dashboard ── */
+.tool-cards{display:flex;flex-direction:column;gap:6px;}
+.tool-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all .15s;text-align:left;width:100%;}
+.tool-card:hover{border-color:var(--accent2);background:var(--surface3);}
+.tool-card-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.tool-card-body{flex:1;min-width:0;}
+.tool-card-title{font-size:.8rem;font-weight:700;color:var(--fg);}
+.tool-card-desc{font-size:.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tool-card-arrow{color:var(--muted);font-size:.85rem;flex-shrink:0;}
+
+/* ── Vista Institucional ── */
+.inst-hero{background:linear-gradient(135deg,#1a1e28 0%,#1e2330 60%,rgba(224,80,32,.08) 100%);border:1px solid var(--border);border-radius:12px;padding:32px 36px;display:flex;align-items:flex-start;gap:28px;margin-bottom:20px;position:relative;overflow:hidden;}
+.inst-hero::before{content:'λ';position:absolute;right:32px;top:50%;transform:translateY(-50%);font-size:8rem;font-weight:900;color:rgba(224,80,32,.07);font-family:'Segoe UI',sans-serif;pointer-events:none;line-height:1;}
+.inst-logo-big{width:64px;height:64px;flex-shrink:0;}
+.inst-hero-body{flex:1;min-width:0;}
+.inst-company{font-size:1.4rem;font-weight:900;color:var(--fg);letter-spacing:-.01em;margin-bottom:4px;}
+.inst-company span{color:var(--accent);}
+.inst-tagline{font-size:.82rem;color:var(--muted);margin-bottom:16px;}
+.inst-quote{font-size:.82rem;color:var(--fg);line-height:1.65;border-left:3px solid var(--accent);padding-left:14px;font-style:italic;opacity:.85;}
+.inst-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.inst-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;position:relative;overflow:hidden;}
+.inst-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);}
+.inst-card-icon{font-size:1.3rem;color:var(--accent);margin-bottom:10px;}
+.inst-card-title{font-size:.78rem;font-weight:800;color:var(--fg);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.inst-card-body{font-size:.78rem;color:var(--muted);line-height:1.65;}
+.inst-full{grid-column:1/-1;}
+.inst-services{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+.inst-tag{background:rgba(224,80,32,.1);border:1px solid rgba(224,80,32,.2);color:var(--accent2);border-radius:20px;padding:3px 12px;font-size:.72rem;font-weight:600;}
+.inst-profile{display:flex;gap:22px;align-items:flex-start;}
+.inst-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;color:#fff;flex-shrink:0;}
+.inst-profile-body{flex:1;min-width:0;}
+.inst-profile-name{font-size:.9rem;font-weight:800;color:var(--fg);margin-bottom:2px;}
+.inst-profile-title{font-size:.72rem;color:var(--accent);font-weight:700;margin-bottom:8px;}
+.inst-profile-bio{font-size:.77rem;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+.inst-achieve-list{list-style:none;display:flex;flex-direction:column;gap:4px;}
+.inst-achieve-list li{font-size:.73rem;color:var(--fg);display:flex;gap:7px;align-items:flex-start;opacity:.85;}
+.inst-achieve-list li::before{content:'▸';color:var(--accent);flex-shrink:0;margin-top:1px;}
+.inst-section-title{font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.inst-contact-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.8rem;}
+.inst-contact-row:last-child{border-bottom:none;}
+.inst-contact-row i{color:var(--accent);font-size:1rem;width:20px;flex-shrink:0;}
+.inst-contact-link{color:var(--accent2);text-decoration:none;font-weight:600;}
+.inst-contact-link:hover{text-decoration:underline;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
+</style>
+</head>
+<body>
+<!-- ════════════════════════ LOGIN OVERLAY ════════════════════════ -->
+<div class="login-overlay hidden" id="loginOverlay">
+  <div class="login-card">
+    <svg class="login-logo" viewBox="0 0 54 54" xmlns="http://www.w3.org/2000/svg">
+      <rect width="54" height="54" rx="12" fill="#1a1e28"/>
+      <rect width="54" height="54" rx="12" fill="none" stroke="#E05020" stroke-width="1.5"/>
+      <text x="27" y="40" text-anchor="middle" fill="#E05020"
+            font-family="Georgia,'Times New Roman',serif"
+            font-size="34" font-weight="400">λ</text>
+    </svg>
+    <div class="login-appname">LAMBDA Consulting Group</div>
+    <div class="login-sub">Iniciar sesión en el portal</div>
+    <div class="login-field">
+      <label class="login-label">Usuario</label>
+      <input class="login-input" id="loginUser" type="text" placeholder="usuario" autocomplete="username"
+             onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Contraseña</label>
+      <input class="login-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">
+      <i class="ti ti-login"></i> Entrar
+    </button>
+    <div class="login-error" id="loginError">Usuario o contraseña incorrectos.</div>
+  </div>
+</div>
+
+<!-- ════════════════════════ SIDEBAR ════════════════════════ -->
+<nav class="sidebar">
+  <div class="brand">
+    <svg class="brand-logo" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
+      <rect width="34" height="34" rx="7" fill="#1a1e28"/>
+      <rect width="34" height="34" rx="7" fill="none" stroke="#E05020" stroke-width="1"/>
+      <text x="17" y="25" text-anchor="middle" fill="#E05020"
+            font-family="Georgia,'Times New Roman',serif"
+            font-size="21" font-weight="400">λ</text>
+    </svg>
+    <div class="brand-text">
+      <div class="brand-name">Lambda CG</div>
+      <div class="brand-sub" id="brandSub">Consulting Group</div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <!-- PRINCIPAL -->
+    <div class="nav-section">Principal</div>
+    <button class="nav-item active" onclick="showView('dashboard')" id="nav-dashboard">
+      <i class="ti ti-layout-dashboard"></i> Dashboard
+    </button>
+    <button class="nav-item" onclick="showView('institucional')" id="nav-institucional">
+      <i class="ti ti-building"></i> Institucional
+    </button>
+    <!-- Ítems de menú dinámico (se insertan aquí al cargar sistema) -->
+    <div id="dynamicMenuItems"></div>
+
+    <!-- HERRAMIENTAS (sección siempre visible — todos ven al menos Logs) -->
+    <div class="nav-section" id="navSecHerr" style="margin-top:6px;display:none;">Herramientas</div>
+    <button class="nav-item" onclick="showView('tablas')" id="nav-tablas" style="display:none;">
+      <i class="ti ti-database"></i> Tablas
+    </button>
+    <button class="nav-item" onclick="showView('logs')" id="nav-logs" style="display:none;">
+      <i class="ti ti-activity"></i> Logs de Auditoría
+    </button>
+    <button class="nav-item" onclick="openTool('usuarios')" id="nav-usuarios" style="display:none;">
+      <i class="ti ti-users"></i> Usuarios &amp; Roles
+      <span class="nav-role-badge">admin</span>
+    </button>
+    <button class="nav-item" onclick="openTool('diccionario')" id="nav-dic" style="display:none;">
+      <i class="ti ti-book"></i> Diccionario
+      <span class="nav-role-badge">admin</span>
+    </button>
+    <button class="nav-item" onclick="openTool('tester')" id="nav-tester" style="display:none;">
+      <i class="ti ti-terminal-2"></i> Tester API
+      <span class="nav-role-badge">super</span>
+    </button>
+
+
+    <!-- CONFIGURAR (admin+) -->
+    <div class="nav-section" id="navSecConfig" style="margin-top:6px;display:none;">Configurar</div>
+    <button class="nav-item" onclick="showView('config-kpis')" id="nav-config-kpis" style="display:none;">
+      <i class="ti ti-chart-dots"></i> KPIs
+    </button>
+    <button class="nav-item" onclick="showView('config-vinculos')" id="nav-config-vinculos" style="display:none;">
+      <i class="ti ti-link"></i> Vínculos
+    </button>
+    <button class="nav-item" onclick="showView('config-menu')" id="nav-config-menu" style="display:none;">
+      <i class="ti ti-menu-2"></i> Menú
+    </button>
+    <button class="nav-item" onclick="openConfigCabecera()" id="nav-config-cabecera" style="display:none;">
+      <i class="ti ti-layout-rows"></i> Cab-Detalle
+    </button>
+
+    <!-- DOCUMENTACIÓN (todos los usuarios) -->
+    <div class="nav-section" id="navSecDocs" style="margin-top:6px;">Documentación</div>
+    <button class="nav-item" onclick="openDoc('manual-usuario')">
+      <i class="ti ti-book"></i> Manual de Usuario
+    </button>
+    <button class="nav-item" onclick="openDoc('manual-sistema')" id="nav-manual-sistema" style="display:none;">
+      <i class="ti ti-file-code"></i> Manual del Sistema
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div style="flex:1;min-width:0;">
+        <div class="user-name" id="userName">—</div>
+        <div class="user-roles" id="userRoles">
+          <span class="role-badge role-default">—</span>
+        </div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()"><i class="ti ti-logout"></i> Cerrar sesión</button>
+  </div>
+</nav>
+
+<!-- ════════════════════════ MAIN ════════════════════════ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">
+      <i class="ti ti-home" style="font-size:.85rem;"></i>
+      <span class="sep">/</span>
+      <span class="current" id="breadcrumbCurrent">Dashboard</span>
+    </div>
+    <span id="sysDescLabel" style="font-size:.82rem;font-weight:700;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;display:none;"></span>
+    <div class="topbar-flex"></div>
+    <!-- Badge de preview activo -->
+    <span id="rolePreviewBadge" class="role-badge" style="display:none;"></span>
+    <!-- Vista previa de rol (solo visible para superadmin) -->
+    <select class="sistema-sel" id="rolePreviewSel" title="Vista previa como rol"
+            onchange="onRolePreviewChange(this.value)"
+            style="display:none;font-size:.72rem;background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#a5b4fc;">
+      <option value="">👁 Ver como…</option>
+      <option value="superadmin">superadmin</option>
+      <option value="admin">admin</option>
+      <option value="operator">operator</option>
+      <option value="viewer">viewer</option>
+    </select>
+    <select class="sistema-sel" id="sistemaSel" onchange="onSistemaChange(this.value)" title="Base de datos activa">
+      <option value="">— sistema —</option>
+    </select>
+  </div>
+
+  <div class="content">
+    <!-- ── Dashboard ── -->
+    <div class="view active" id="view-dashboard">
+
+      <!-- Banner corporativo Lambda -->
+      <div style="background:linear-gradient(135deg,#1a1e28 0%,var(--surface2) 55%,rgba(224,80,32,.06) 100%);border:1px solid rgba(224,80,32,.18);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:16px;margin-bottom:16px;cursor:pointer;transition:border-color .15s;" onclick="showView('institucional')" title="Ver presentación institucional">
+        <svg viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg" style="width:38px;height:38px;flex-shrink:0;">
+          <rect width="38" height="38" rx="8" fill="#1a1e28"/>
+          <rect width="38" height="38" rx="8" fill="none" stroke="#E05020" stroke-width="1"/>
+          <text x="19" y="29" text-anchor="middle" fill="#E05020"
+                font-family="Georgia,'Times New Roman',serif"
+                font-size="24" font-weight="400">λ</text>
+        </svg>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:.82rem;font-weight:800;color:var(--fg);letter-spacing:-.01em;"><span style="color:var(--accent);">Λ</span>AMBDA <span style="font-weight:400;color:var(--muted);">Consulting Group</span></div>
+          <div style="font-size:.7rem;color:var(--muted);margin-top:1px;">Consultoría Estratégica · Tecnología · Energías Renovables · Innovación Industrial</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:340px;">
+          <span style="background:rgba(224,80,32,.1);border:1px solid rgba(224,80,32,.2);color:var(--accent2);border-radius:20px;padding:2px 9px;font-size:.65rem;font-weight:600;">IA &amp; Big Data</span>
+          <span style="background:rgba(224,80,32,.1);border:1px solid rgba(224,80,32,.2);color:var(--accent2);border-radius:20px;padding:2px 9px;font-size:.65rem;font-weight:600;">Energías Renovables</span>
+          <span style="background:rgba(224,80,32,.1);border:1px solid rgba(224,80,32,.2);color:var(--accent2);border-radius:20px;padding:2px 9px;font-size:.65rem;font-weight:600;">Ingeniería Industrial</span>
+          <span style="background:rgba(224,80,32,.1);border:1px solid rgba(224,80,32,.2);color:var(--accent2);border-radius:20px;padding:2px 9px;font-size:.65rem;font-weight:600;">Transformación Digital</span>
+        </div>
+        <i class="ti ti-chevron-right" style="color:var(--muted);font-size:.9rem;flex-shrink:0;"></i>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-left">
+          <!-- KPIs -->
+          <div class="panel">
+            <div class="panel-hdr">
+              <i class="ti ti-chart-bar" style="color:var(--accent2)"></i>
+              <span class="panel-title">Indicadores</span>
+              <button class="panel-action" id="btnRefreshKpis" onclick="loadKpis()">
+                <i class="ti ti-refresh"></i> Actualizar
+              </button>
+            </div>
+            <div class="panel-body">
+              <div class="kpis-row" id="kpisRow">
+                <div class="state-msg"><i class="ti ti-loader"></i>Cargando KPIs…</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Noticias -->
+          <div class="panel" style="flex:1;">
+            <div class="panel-hdr">
+              <i class="ti ti-news" style="color:var(--accent2)"></i>
+              <span class="panel-title">Noticias — Paraguay</span>
+              <button class="panel-action" onclick="loadNoticias()">
+                <i class="ti ti-refresh"></i>
+              </button>
+            </div>
+            <div class="panel-body" style="padding:0 16px;">
+              <div class="news-list" id="newsList">
+                <div class="news-load"><i class="ti ti-loader" style="display:block;font-size:1.5rem;margin-bottom:8px;"></i>Cargando noticias…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-right">
+          <!-- Vínculos rápidos -->
+          <div class="panel">
+            <div class="panel-hdr">
+              <i class="ti ti-link" style="color:var(--accent2)"></i>
+              <span class="panel-title">Accesos rápidos</span>
+            </div>
+            <div class="panel-body" style="padding-top:10px;">
+              <div class="vinculos-grid" id="vinculosGrid">
+                <div class="state-msg" style="padding:20px;"><i class="ti ti-loader"></i>Cargando…</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Herramientas rápidas -->
+          <div class="panel">
+            <div class="panel-hdr">
+              <i class="ti ti-apps" style="color:var(--accent2)"></i>
+              <span class="panel-title">Herramientas</span>
+            </div>
+            <div class="panel-body tool-cards" style="padding-top:8px;">
+              <button class="tool-card" onclick="showView('institucional')" style="border-color:rgba(224,80,32,.2);background:linear-gradient(135deg,var(--surface2) 0%,rgba(224,80,32,.04) 100%);">
+                <div class="tool-card-icon" style="background:rgba(224,80,32,.12);color:var(--accent);"><i class="ti ti-building"></i></div>
+                <div class="tool-card-body"><div class="tool-card-title" style="color:var(--accent);">LAMBDA Consulting Group</div><div class="tool-card-desc">Misión, visión, servicios y contacto</div></div>
+                <i class="ti ti-chevron-right tool-card-arrow"></i>
+              </button>
+              <button class="tool-card" onclick="showView('tablas')">
+                <div class="tool-card-icon" style="background:rgba(0,188,212,.12);color:var(--accent2);"><i class="ti ti-database"></i></div>
+                <div class="tool-card-body"><div class="tool-card-title">Explorar Tablas</div><div class="tool-card-desc">Grilla CRUD sobre la base de datos</div></div>
+                <i class="ti ti-chevron-right tool-card-arrow"></i>
+              </button>
+              <button class="tool-card" id="toolLogs" onclick="showView('logs')" style="display:none;">
+                <div class="tool-card-icon" style="background:rgba(99,102,241,.12);color:var(--indigo);"><i class="ti ti-activity"></i></div>
+                <div class="tool-card-body"><div class="tool-card-title">Logs de Auditoría</div><div class="tool-card-desc">Historial de acciones del sistema</div></div>
+                <i class="ti ti-chevron-right tool-card-arrow"></i>
+              </button>
+              <button class="tool-card" id="toolUsers" onclick="openTool('usuarios')" style="display:none;">
+                <div class="tool-card-icon" style="background:rgba(168,85,247,.12);color:var(--purple);"><i class="ti ti-users"></i></div>
+                <div class="tool-card-body"><div class="tool-card-title">Usuarios &amp; Roles</div><div class="tool-card-desc">Gestión de accesos y permisos</div></div>
+                <i class="ti ti-chevron-right tool-card-arrow"></i>
+              </button>
+              <button class="tool-card" id="toolDic" onclick="openTool('diccionario')" style="display:none;">
+                <div class="tool-card-icon" style="background:rgba(34,197,94,.12);color:var(--green);"><i class="ti ti-book"></i></div>
+                <div class="tool-card-body"><div class="tool-card-title">Diccionario de Datos</div><div class="tool-card-desc">Alias, formatos y validaciones</div></div>
+                <i class="ti ti-chevron-right tool-card-arrow"></i>
+              </button>
+
+              <button class="tool-card" id="toolTester" onclick="openTool('tester')" style="display:none;">
+                <div class="tool-card-icon" style="background:rgba(239,68,68,.12);color:var(--red);"><i class="ti ti-terminal-2"></i></div>
+                <div class="tool-card-body"><div class="tool-card-title">Tester API</div><div class="tool-card-desc">Pruebas REST, SQL y accesos</div></div>
+                <i class="ti ti-chevron-right tool-card-arrow"></i>
+              </button>
+              <!-- Documentación -->
+              <button class="tool-card" onclick="openDoc('manual-usuario')">
+                <div class="tool-card-icon" style="background:rgba(59,130,246,.12);color:var(--blue);"><i class="ti ti-book-2"></i></div>
+                <div class="tool-card-body"><div class="tool-card-title">Manual de Usuario</div><div class="tool-card-desc">Guía de uso del portal y tablas</div></div>
+                <i class="ti ti-external-link tool-card-arrow"></i>
+              </button>
+              <button class="tool-card" id="toolManualAdmin" onclick="openDoc('manual-sistema')" style="display:none;">
+                <div class="tool-card-icon" style="background:rgba(99,102,241,.12);color:var(--indigo);"><i class="ti ti-file-code"></i></div>
+                <div class="tool-card-body"><div class="tool-card-title">Manual del Administrador</div><div class="tool-card-desc">Configuración y administración del sistema</div></div>
+                <i class="ti ti-external-link tool-card-arrow"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tablas ── -->
+    <div class="view" id="view-tablas">
+      <div class="tables-hdr">
+        <span class="section-title" id="tablasSectionTitle">Tablas disponibles</span>
+        <div class="search-wrap">
+          <i class="ti ti-search search-ic" style="font-size:.8rem;"></i>
+          <input id="tablasSearch" placeholder="Filtrar…" oninput="filterTables(this.value)">
+        </div>
+      </div>
+      <div id="tablasContainer">
+        <div class="state-msg"><i class="ti ti-loader"></i>Cargando tablas…</div>
+      </div>
+    </div>
+
+    <!-- ── Logs de Auditoría ── -->
+    <div class="view" id="view-logs">
+      <div class="logs-hdr">
+        <span class="section-title">Logs de Auditoría</span>
+        <select class="logs-filter" id="logsFilterMethod" onchange="applyLogsFilter()">
+          <option value="">Todos los métodos</option>
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="PATCH">PATCH</option>
+          <option value="DELETE">DELETE</option>
+        </select>
+        <select class="logs-filter" id="logsFilterStatus" onchange="applyLogsFilter()">
+          <option value="">Todos los status</option>
+          <option value="2">2xx OK</option>
+          <option value="4">4xx Error cliente</option>
+          <option value="5">5xx Error servidor</option>
+        </select>
+        <div class="search-wrap" style="margin-left:0;">
+          <i class="ti ti-search search-ic" style="font-size:.8rem;"></i>
+          <input id="logsSearch" placeholder="Filtrar por usuario o ruta…" style="width:220px;"
+                 oninput="clearTimeout(_logsTimer);_logsTimer=setTimeout(()=>loadLogs(0),400)">
+        </div>
+        <div style="flex:1;"></div>
+        <button class="btn btn-ghost" onclick="loadLogs(0)" style="padding:6px 12px;">
+          <i class="ti ti-refresh"></i>
+        </button>
+      </div>
+      <div class="panel" style="overflow:auto;flex:1;">
+        <table class="log-table" id="logTable">
+          <thead>
+            <tr>
+              <th>Fecha/Hora</th>
+              <th>Usuario</th>
+              <th>Método</th>
+              <th>Ruta</th>
+              <th>Recurso</th>
+              <th>Status</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody">
+            <tr><td colspan="7" class="state-msg" style="padding:30px;">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="logs-pagination" id="logsPagination"></div>
+    </div>
+
+    <!-- ── Institucional ── -->
+    <div class="view" id="view-institucional">
+
+      <!-- Hero -->
+      <div class="inst-hero">
+        <svg class="inst-logo-big" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <rect width="64" height="64" rx="14" fill="#1a1e28"/>
+          <rect width="64" height="64" rx="14" fill="none" stroke="#E05020" stroke-width="1.5"/>
+          <text x="32" y="47" text-anchor="middle" fill="#E05020"
+                font-family="Georgia,'Times New Roman',serif"
+                font-size="40" font-weight="400">λ</text>
+        </svg>
+        <div class="inst-hero-body">
+          <div class="inst-company"><span>Λ</span>AMBDA <span style="color:var(--fg);font-weight:400;font-size:1rem;">Consulting Group</span></div>
+          <div class="inst-tagline">Consultoría Estratégica · Tecnología · Energías Renovables · Innovación Industrial</div>
+          <div class="inst-quote">
+            "El desarrollo de un emprendimiento de gran envergadura requiere la interacción de áreas especializadas. Los desvíos pueden ocurrir en las fases de proyecto, implementación y operación, y es crucial detectarlos a tiempo para evitar retrabajos, retrasos y sobrecostos. En LAMBDA Consulting Group, reunimos a los mejores consultores especializados para garantizar la eficacia y eficiencia en todas las fases, con el objetivo principal de satisfacer al cliente."
+            <br><br>
+            <strong style="color:var(--accent2);font-style:normal;">— Ing. D.Sc. José Bogarin, Director Ejecutivo</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="inst-grid">
+
+        <!-- Misión -->
+        <div class="inst-card">
+          <div class="inst-card-icon"><i class="ti ti-target"></i></div>
+          <div class="inst-card-title">Misión</div>
+          <div class="inst-card-body">
+            Brindar consultoría especializada, multidisciplinar y de alto valor a organizaciones que enfrentan desafíos complejos en tecnología, infraestructura y transición energética. Acompañamos a nuestros clientes desde la concepción estratégica hasta la operación, integrando inteligencia artificial, ingeniería de precisión y asesoría en energías renovables para garantizar resultados concretos, sostenibles y alineados con los mejores estándares internacionales.
+          </div>
+        </div>
+
+        <!-- Visión -->
+        <div class="inst-card">
+          <div class="inst-card-icon"><i class="ti ti-eye"></i></div>
+          <div class="inst-card-title">Visión</div>
+          <div class="inst-card-body">
+            Ser el grupo consultor de referencia en América Latina en la convergencia entre tecnología avanzada y energías renovables, liderando la transformación digital e industrial de los sectores energético, financiero e infraestructural. Aspiramos a que cada proyecto que acompañamos genere un impacto real, duradero y estratégico para nuestros clientes y para la región.
+          </div>
+        </div>
+
+        <!-- Por qué Lambda -->
+        <div class="inst-card inst-full" style="background:linear-gradient(135deg,var(--surface) 0%,rgba(224,80,32,.04) 100%);">
+          <div class="inst-card-icon"><i class="ti ti-shield-check"></i></div>
+          <div class="inst-card-title">¿Por qué LAMBDA Consulting Group?</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:10px;">
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <i class="ti ti-brain" style="color:var(--accent);font-size:1.1rem;flex-shrink:0;margin-top:1px;"></i>
+              <div><div style="font-size:.76rem;font-weight:700;color:var(--fg);margin-bottom:3px;">Conocimiento Profundo</div><div style="font-size:.73rem;color:var(--muted);line-height:1.5;">Más de 35 años de experiencia en proyectos de alta complejidad técnica en América del Sur.</div></div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <i class="ti ti-circuit-board" style="color:var(--accent);font-size:1.1rem;flex-shrink:0;margin-top:1px;"></i>
+              <div><div style="font-size:.76rem;font-weight:700;color:var(--fg);margin-bottom:3px;">Tecnología de Vanguardia</div><div style="font-size:.73rem;color:var(--muted);line-height:1.5;">Aplicamos IA, Big Data, IoT y automatización inteligente como herramientas centrales de cada solución.</div></div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <i class="ti ti-leaf" style="color:var(--accent);font-size:1.1rem;flex-shrink:0;margin-top:1px;"></i>
+              <div><div style="font-size:.76rem;font-weight:700;color:var(--fg);margin-bottom:3px;">Transición Energética</div><div style="font-size:.73rem;color:var(--muted);line-height:1.5;">Asesoría estratégica integral en hidrógeno verde, solar, eólica y eficiencia energética industrial.</div></div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <i class="ti ti-users-group" style="color:var(--accent);font-size:1.1rem;flex-shrink:0;margin-top:1px;"></i>
+              <div><div style="font-size:.76rem;font-weight:700;color:var(--fg);margin-bottom:3px;">Red de Especialistas</div><div style="font-size:.73rem;color:var(--muted);line-height:1.5;">Acceso a un ecosistema de consultores de primer nivel en ingeniería, finanzas y tecnología.</div></div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <i class="ti ti-chart-arrows" style="color:var(--accent);font-size:1.1rem;flex-shrink:0;margin-top:1px;"></i>
+              <div><div style="font-size:.76rem;font-weight:700;color:var(--fg);margin-bottom:3px;">Visión Multidisciplinar</div><div style="font-size:.73rem;color:var(--muted);line-height:1.5;">Integramos ingeniería civil, informática, finanzas y gestión estratégica en soluciones unificadas.</div></div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:flex-start;">
+              <i class="ti ti-award" style="color:var(--accent);font-size:1.1rem;flex-shrink:0;margin-top:1px;"></i>
+              <div><div style="font-size:.76rem;font-weight:700;color:var(--fg);margin-bottom:3px;">Trayectoria Comprobada</div><div style="font-size:.73rem;color:var(--muted);line-height:1.5;">Proyectos exitosos en Itaipu, Petrobras, Banco Central y SEPRELAD avalan nuestra experiencia.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tecnología -->
+        <div class="inst-card">
+          <div class="inst-card-icon"><i class="ti ti-cpu"></i></div>
+          <div class="inst-card-title">Consultoría Tecnológica</div>
+          <div class="inst-card-body" style="margin-bottom:10px;">
+            Diseñamos e implementamos soluciones tecnológicas de alto impacto para la industria, el sector financiero y la gestión pública. Nuestra metodología integra inteligencia artificial, analítica avanzada y automatización para transformar datos en decisiones estratégicas.
+          </div>
+          <div class="inst-services">
+            <span class="inst-tag">Inteligencia Artificial &amp; ML</span>
+            <span class="inst-tag">Big Data &amp; Analytics</span>
+            <span class="inst-tag">Cloud Architecture</span>
+            <span class="inst-tag">Internet of Things</span>
+            <span class="inst-tag">Monitoreo en Tiempo Real</span>
+            <span class="inst-tag">KPI Design &amp; Dashboards</span>
+            <span class="inst-tag">Financial Analytics</span>
+            <span class="inst-tag">Quality Assurance</span>
+            <span class="inst-tag">IT Consulting &amp; Governance</span>
+            <span class="inst-tag">Ciberseguridad</span>
+            <span class="inst-tag">Transformación Digital</span>
+            <span class="inst-tag">Agile &amp; DevOps</span>
+          </div>
+        </div>
+
+        <!-- Energías Renovables -->
+        <div class="inst-card">
+          <div class="inst-card-icon"><i class="ti ti-solar-panel"></i></div>
+          <div class="inst-card-title">Asesoría en Energías Renovables</div>
+          <div class="inst-card-body" style="margin-bottom:10px;">
+            Acompañamos a inversores, gobiernos y empresas en la estructuración, evaluación y ejecución de proyectos de energía limpia. Desde la viabilidad técnico-financiera hasta la integración de tecnologías de monitoreo inteligente, ofrecemos una visión integral de la transición energética.
+          </div>
+          <div class="inst-services">
+            <span class="inst-tag">Hidrógeno Verde</span>
+            <span class="inst-tag">Energía Solar Fotovoltaica</span>
+            <span class="inst-tag">Energía Eólica</span>
+            <span class="inst-tag">Grandes Represas Hidroeléctricas</span>
+            <span class="inst-tag">Eficiencia Energética Industrial</span>
+            <span class="inst-tag">Almacenamiento de Energía</span>
+            <span class="inst-tag">Viabilidad Técnico-Financiera</span>
+            <span class="inst-tag">Regulación y Compliance Energético</span>
+            <span class="inst-tag">SCADA &amp; Monitoreo de Plantas</span>
+            <span class="inst-tag">Huella de Carbono</span>
+          </div>
+        </div>
+
+        <!-- Ingeniería y Proyectos -->
+        <div class="inst-card">
+          <div class="inst-card-icon"><i class="ti ti-building-factory-2"></i></div>
+          <div class="inst-card-title">Ingeniería &amp; Gestión de Proyectos</div>
+          <div class="inst-card-body" style="margin-bottom:10px;">
+            Aplicamos ingeniería disruptiva para resolver los desafíos más complejos de infraestructura industrial. Nuestra capacidad multidisciplinar permite detectar y corregir desvíos en todas las fases críticas de un proyecto, reduciendo riesgos y optimizando inversiones.
+          </div>
+          <div class="inst-services">
+            <span class="inst-tag">Reingeniería de Procesos</span>
+            <span class="inst-tag">Due Diligence Técnico</span>
+            <span class="inst-tag">Gestión de Riesgos</span>
+            <span class="inst-tag">Project Management</span>
+            <span class="inst-tag">Ingeniería de Confiabilidad</span>
+            <span class="inst-tag">Diagnóstico Predictivo</span>
+            <span class="inst-tag">Auditoría Técnica</span>
+            <span class="inst-tag">Ingeniería Offshore</span>
+          </div>
+        </div>
+
+        <!-- Asesoría Estratégica -->
+        <div class="inst-card">
+          <div class="inst-card-icon"><i class="ti ti-chess"></i></div>
+          <div class="inst-card-title">Asesoría Estratégica</div>
+          <div class="inst-card-body" style="margin-bottom:10px;">
+            Ayudamos a directivos e inversores a tomar decisiones de alto impacto con base en datos, modelos analíticos y experiencia sectorial. Integramos perspectivas técnicas, financieras y regulatorias para construir estrategias sólidas y adaptadas a cada contexto.
+          </div>
+          <div class="inst-services">
+            <span class="inst-tag">Estrategia Corporativa</span>
+            <span class="inst-tag">Evaluación de Inversiones</span>
+            <span class="inst-tag">Análisis de Mercado</span>
+            <span class="inst-tag">Gestión Financiera</span>
+            <span class="inst-tag">Modelado de Riesgos</span>
+            <span class="inst-tag">Innovación &amp; I+D</span>
+            <span class="inst-tag">Parques Tecnológicos</span>
+            <span class="inst-tag">Relaciones Institucionales</span>
+          </div>
+        </div>
+
+        <!-- Perfil del Director -->
+        <div class="inst-card inst-full">
+          <div class="inst-card-icon"><i class="ti ti-user-star"></i></div>
+          <div class="inst-card-title">Fundador &amp; Director Ejecutivo</div>
+          <div class="inst-profile">
+            <div class="inst-avatar">JB</div>
+            <div class="inst-profile-body">
+              <div class="inst-profile-name">Ing. D.Sc. José Antonio Bogarin Geymayr</div>
+              <div class="inst-profile-title">Fundador y Director Ejecutivo · LAMBDA Consulting Group</div>
+              <div class="inst-profile-bio">
+                Referente regional en ingeniería, inteligencia artificial y tecnología aplicada a la industria, con más de 35 años de trayectoria en proyectos de gran escala en Paraguay y Brasil. Pionero en la aplicación de IA en la industria petrolera y en el desarrollo de sistemas inteligentes para infraestructura energética crítica. Su visión integradora une la rigor técnico de la ingeniería civil con la potencia analítica de la computación avanzada, posicionando a Lambda como puente entre la tecnología de punta y las necesidades reales del sector productivo y gubernamental.
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px;">
+                <div>
+                  <div class="inst-section-title">Formación Académica</div>
+                  <ul class="inst-achieve-list">
+                    <li>D.Sc. en Ciencia de Computación — Inteligencia Artificial</li>
+                    <li>Maestría en Cálculo de Estructuras</li>
+                    <li>Maestría en Gestión de Finanzas</li>
+                    <li>Ingeniería Civil</li>
+                  </ul>
+                </div>
+                <div>
+                  <div class="inst-section-title">Cargos Ejecutivos</div>
+                  <ul class="inst-achieve-list">
+                    <li>Director Ejecutivo, Parque Tecnológico Itaipu</li>
+                    <li>Superintendente de Informática, Itaipu Binacional</li>
+                    <li>Consultor Senior, Petrobras Brasil</li>
+                    <li>Docente universitario (BR y PY)</li>
+                  </ul>
+                </div>
+                <div>
+                  <div class="inst-section-title">Proyectos Destacados</div>
+                  <ul class="inst-achieve-list">
+                    <li>Sistemas de monitoreo en tiempo real — Itaipu</li>
+                    <li>Central de riesgos crediticios — Banco Central PY</li>
+                    <li>Monitoreo de sujetos obligados — SEPRELAD</li>
+                    <li>IA para ingeniería offshore — Petrobras</li>
+                    <li>Sistemas predictivos bursátiles — Bolsa RJ</li>
+                    <li>40 publicaciones científicas en ingeniería</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contacto -->
+        <div class="inst-card inst-full">
+          <div class="inst-card-icon"><i class="ti ti-address-book"></i></div>
+          <div class="inst-card-title">Consultas y Agendamiento</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+            <div>
+              <div class="inst-contact-row">
+                <i class="ti ti-user"></i>
+                <span>Ing. D.Sc. José Bogarin — Director Ejecutivo</span>
+              </div>
+              <div class="inst-contact-row">
+                <i class="ti ti-brand-whatsapp"></i>
+                <a class="inst-contact-link" href="https://wa.me/595981432384" target="_blank">+595 981 432384 (WhatsApp / Cel)</a>
+              </div>
+            </div>
+            <div>
+              <div class="inst-contact-row">
+                <i class="ti ti-mail"></i>
+                <a class="inst-contact-link" href="mailto:lambdapy@outlook.com">lambdapy@outlook.com</a>
+              </div>
+              <div class="inst-contact-row">
+                <i class="ti ti-mail"></i>
+                <a class="inst-contact-link" href="mailto:Jose.Bogarin@lambdapy.org">Jose.Bogarin@lambdapy.org</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Iframe view ── -->
+    <div class="iframe-view" id="view-iframe">
+      <div style="background:var(--surface);border-bottom:1px solid var(--border);padding:6px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <button onclick="closeIframe()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:var(--radius);padding:4px 12px;font-size:.75rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;" onmouseover="this.style.color='var(--fg)'" onmouseout="this.style.color='var(--muted)'">
+          <i class="ti ti-arrow-left"></i> Volver al portal
+        </button>
+        <span style="font-size:.75rem;color:var(--muted);" id="iframeCtxLabel">—</span>
+      </div>
+      <iframe id="appFrame" src="about:blank"></iframe>
+    </div>
+
+    <!-- ── Config KPIs ── -->
+    <div class="view" id="view-config-kpis">
+      <div class="config-hdr">
+        <span class="section-title">Configuración de KPIs</span>
+        <div style="flex:1;"></div>
+        <button class="btn btn-primary" onclick="openKpiModal()"><i class="ti ti-plus"></i> Nuevo KPI</button>
+      </div>
+      <div class="panel">
+        <table class="config-table">
+          <thead><tr><th>Título</th><th>Ícono</th><th>Color</th><th>Formato</th><th>Estado</th><th>Orden</th><th></th></tr></thead>
+          <tbody id="kpiConfigBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Config Vínculos ── -->
+    <div class="view" id="view-config-vinculos">
+      <div class="config-hdr">
+        <span class="section-title">Configuración de Vínculos</span>
+        <div style="flex:1;"></div>
+        <button class="btn btn-primary" onclick="openVinculoModal()"><i class="ti ti-plus"></i> Nuevo Vínculo</button>
+      </div>
+      <div class="panel">
+        <table class="config-table">
+          <thead><tr><th>Título</th><th>URL</th><th>Ícono</th><th>Estado</th><th>Orden</th><th></th></tr></thead>
+          <tbody id="vinculoConfigBody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Config Menú ── -->
+    <div class="view" id="view-config-menu">
+      <div class="config-hdr">
+        <span class="section-title">Configuración de Menú</span>
+        <div style="flex:1;"></div>
+        <button class="btn btn-primary" onclick="openMenuModal()"><i class="ti ti-plus"></i> Nuevo ítem</button>
+      </div>
+      <div class="panel">
+        <table class="config-table">
+          <thead><tr><th>Orden</th><th>Título</th><th>Ícono</th><th>Tabla / URL</th><th>Descripción</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="menuConfigBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Selecciona un sistema para ver el menú.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL KPI ══════════════ -->
+<div class="overlay" id="kpiOverlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="kpiModalTitle">Nuevo KPI</span>
+      <button class="modal-close" onclick="closeKpiModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="kpiId"/>
+      <div class="form-row">
+        <label class="form-label">Título</label>
+        <input class="form-input" id="kpiTitulo" placeholder="Ej. Total Ventas"/>
+      </div>
+      <div class="form-row-2">
+        <div>
+          <label class="form-label">Ícono (clase Tabler)</label>
+          <select class="form-select" id="kpiIcono">
+            <option value="ti-chart-bar">📊 ti-chart-bar</option>
+            <option value="ti-currency-dollar">💵 ti-currency-dollar</option>
+            <option value="ti-users">👥 ti-users</option>
+            <option value="ti-shopping-cart">🛒 ti-shopping-cart</option>
+            <option value="ti-package">📦 ti-package</option>
+            <option value="ti-truck">🚚 ti-truck</option>
+            <option value="ti-receipt">🧾 ti-receipt</option>
+            <option value="ti-trending-up">📈 ti-trending-up</option>
+            <option value="ti-building-store">🏪 ti-building-store</option>
+            <option value="ti-star">⭐ ti-star</option>
+            <option value="ti-database">🗄 ti-database</option>
+            <option value="ti-clock">🕐 ti-clock</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Formato</label>
+          <select class="form-select" id="kpiFormato">
+            <option value="number">Número</option>
+            <option value="currency">Moneda</option>
+            <option value="percent">Porcentaje</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Color</label>
+        <div class="color-picker" id="kpiColorPicker">
+          <div class="color-swatch selected" data-color="teal"    style="background:var(--accent)"   onclick="selectColor('teal',this)"></div>
+          <div class="color-swatch"          data-color="cyan"    style="background:var(--accent2)"  onclick="selectColor('cyan',this)"></div>
+          <div class="color-swatch"          data-color="green"   style="background:var(--green)"    onclick="selectColor('green',this)"></div>
+          <div class="color-swatch"          data-color="blue"    style="background:var(--blue)"     onclick="selectColor('blue',this)"></div>
+          <div class="color-swatch"          data-color="indigo"  style="background:var(--indigo)"   onclick="selectColor('indigo',this)"></div>
+          <div class="color-swatch"          data-color="purple"  style="background:var(--purple)"   onclick="selectColor('purple',this)"></div>
+          <div class="color-swatch"          data-color="pink"    style="background:var(--pink)"     onclick="selectColor('pink',this)"></div>
+          <div class="color-swatch"          data-color="orange"  style="background:var(--orange)"   onclick="selectColor('orange',this)"></div>
+          <div class="color-swatch"          data-color="amber"   style="background:var(--amber)"    onclick="selectColor('amber',this)"></div>
+          <div class="color-swatch"          data-color="red"     style="background:var(--red)"      onclick="selectColor('red',this)"></div>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div>
+          <label class="form-label">Prefijo</label>
+          <input class="form-input" id="kpiPrefijo" placeholder="Ej. $"/>
+        </div>
+        <div>
+          <label class="form-label">Sufijo</label>
+          <input class="form-input" id="kpiSufijo" placeholder="Ej. USD"/>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div>
+          <label class="form-label">Decimales</label>
+          <input class="form-input" id="kpiDecimales" type="number" min="0" max="6" value="0"/>
+        </div>
+        <div>
+          <label class="form-label">Orden</label>
+          <input class="form-input" id="kpiOrden" type="number" value="0"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Query SQL <span style="color:var(--muted)">(debe retornar un único valor)</span></label>
+        <textarea class="form-textarea" id="kpiQuery" rows="4" placeholder="SELECT COUNT(*) FROM ventas WHERE fecha::date = CURRENT_DATE"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeKpiModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveKpi()"><i class="ti ti-check"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL VÍNCULO ══════════════ -->
+<div class="overlay" id="vinculoOverlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="vinculoModalTitle">Nuevo Vínculo</span>
+      <button class="modal-close" onclick="closeVinculoModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="vinculoId"/>
+      <div class="form-row">
+        <label class="form-label">Título</label>
+        <input class="form-input" id="vinculoTitulo" placeholder="Ej. Sitio web corporativo"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">URL</label>
+        <input class="form-input" id="vinculoUrl" placeholder="https://…"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Ícono (clase Tabler)</label>
+        <select class="form-select" id="vinculoIcono">
+          <option value="ti-external-link">🔗 ti-external-link</option>
+          <option value="ti-world">🌐 ti-world</option>
+          <option value="ti-brand-github">GitHub</option>
+          <option value="ti-file-text">📄 ti-file-text</option>
+          <option value="ti-chart-line">📈 ti-chart-line</option>
+          <option value="ti-mail">✉ ti-mail</option>
+          <option value="ti-phone">📞 ti-phone</option>
+          <option value="ti-brand-whatsapp">WhatsApp</option>
+          <option value="ti-map-pin">📍 ti-map-pin</option>
+          <option value="ti-tool">🔧 ti-tool</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Descripción <span style="color:var(--muted)">(opcional)</span></label>
+        <input class="form-input" id="vinculoDesc" placeholder="Descripción breve"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Orden</label>
+        <input class="form-input" id="vinculoOrden" type="number" value="0"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeVinculoModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveVinculo()"><i class="ti ti-check"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL MENÚ ══════════════ -->
+<div class="overlay" id="menuOverlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="menuModalTitle">Nuevo ítem de Menú</span>
+      <button class="modal-close" onclick="closeMenuModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="menuId"/>
+      <div class="form-row">
+        <label class="form-label">Título</label>
+        <input class="form-input" id="menuTitulo" placeholder="Ej. Ventas del mes"/>
+      </div>
+      <div class="form-row-2">
+        <div>
+          <label class="form-label">Ícono (clase Tabler)</label>
+          <select class="form-select" id="menuIcono">
+            <option value="ti-table">🗃 ti-table</option>
+            <option value="ti-chart-bar">📊 ti-chart-bar</option>
+            <option value="ti-receipt">🧾 ti-receipt</option>
+            <option value="ti-shopping-cart">🛒 ti-shopping-cart</option>
+            <option value="ti-users">👥 ti-users</option>
+            <option value="ti-package">📦 ti-package</option>
+            <option value="ti-truck">🚚 ti-truck</option>
+            <option value="ti-currency-dollar">💵 ti-currency-dollar</option>
+            <option value="ti-file-text">📄 ti-file-text</option>
+            <option value="ti-settings">⚙ ti-settings</option>
+            <option value="ti-layout-rows">☰ ti-layout-rows</option>
+            <option value="ti-external-link">🔗 ti-external-link</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Orden</label>
+          <input class="form-input" id="menuOrden" type="number" value="0" min="0"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Descripción <span style="color:var(--muted)">(opcional)</span></label>
+        <input class="form-input" id="menuDesc" placeholder="Descripción breve del ítem"/>
+      </div>
+      <!-- Tipo: tabla o URL -->
+      <div class="form-row">
+        <label class="form-label">Tipo de destino</label>
+        <div style="display:flex;gap:16px;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="radio" name="menuTipo" value="tabla" id="menuTipoTabla" onchange="toggleMenuTipo()" checked/>
+            Tabla de la BD
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="radio" name="menuTipo" value="url" id="menuTipoUrl" onchange="toggleMenuTipo()"/>
+            Página web / URL
+          </label>
+        </div>
+      </div>
+      <div id="menuTablaRow" class="form-row">
+        <label class="form-label">Tabla</label>
+        <select class="form-select" id="menuTabla">
+          <option value="">— seleccionar tabla —</option>
+        </select>
+      </div>
+      <div id="menuUrlRow" class="form-row" style="display:none;">
+        <label class="form-label">URL</label>
+        <input class="form-input" id="menuUrl" placeholder="https://… o /pagina.html"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMenuModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMenuItem()"><i class="ti ti-check"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+window.name = 'pg_portal';
+const _p = new URLSearchParams(location.search);
+const baseUrl = window.location.origin;
+
+let token         = _p.get('token')      || sessionStorage.getItem('pg_token')      || '';
+let sistemaId     = _p.get('sistema_id') || sessionStorage.getItem('pg_sistema_id') || '';
+let sistemaNombre = sessionStorage.getItem('pg_sistema_nombre') || '';
+let dbSlug        = sessionStorage.getItem('pg_db_slug')        || '';
+let userRoles        = [];
+let isAdmin          = false;
+let allSistemas      = [];
+let _realIsSuperAdmin = false;   // siempre el real, para el selector de preview
+let menuItems        = [];       // ítems del menú dinámico del sistema activo
+let menuDbTables     = [];       // tablas del sistema activo para el dropdown del modal
+
+if (_p.get('token')) {
+  sessionStorage.setItem('pg_token',      token);
+  if (_p.get('sistema_id')) sessionStorage.setItem('pg_sistema_id', sistemaId);
+}
+
+// ── Visibilidad por rol ───────────────────────────────────────────────────────
+const _ROLE_ITEMS_HIDDEN = ['navSecHerr','nav-tablas','nav-logs','toolLogs','nav-dic','toolDic','nav-usuarios','toolUsers','navSecConfig','nav-config-kpis','nav-config-vinculos','nav-config-menu','nav-tester','toolTester','nav-config-cabecera','nav-manual-sistema','toolManualAdmin'];
+
+let _currentIsAdm = false;
+function applyRoleVisibility(isSuperAdmin, isAdm) {
+  _currentIsAdm = isAdm;
+  // Ocultar todo primero
+  _ROLE_ITEMS_HIDDEN.forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
+  // Ocultar manual admin en accesos rápidos
+  const vma=document.getElementById('vinculoManualAdmin'); if(vma) vma.style.display='none';
+
+  const show = id => { const el=document.getElementById(id); if(el) el.style.display=''; };
+  show('navSecHerr'); show('nav-tablas'); show('nav-logs'); show('toolLogs');
+
+  if (isAdm) {
+    show('nav-dic'); show('toolDic');
+    show('nav-usuarios'); show('toolUsers');
+    show('navSecConfig'); show('nav-config-kpis'); show('nav-config-vinculos'); show('nav-config-menu');
+    show('nav-manual-sistema');
+    show('toolManualAdmin');
+    const vma=document.getElementById('vinculoManualAdmin'); if(vma) vma.style.display='';
+  }
+  if (isSuperAdmin) {
+    show('nav-tester'); show('toolTester');
+    show('nav-config-cabecera');
+  }
+
+  // Badge de preview en topbar
+  const previewBadge = document.getElementById('rolePreviewBadge');
+  if (previewBadge) previewBadge.style.display = _realIsSuperAdmin && document.getElementById('rolePreviewSel')?.value ? '' : 'none';
+}
+
+function onRolePreviewChange(val) {
+  const ROLE_CSS = { superadmin:'role-superadmin', admin:'role-admin', operator:'role-operator', viewer:'role-viewer' };
+  const badge = document.getElementById('rolePreviewBadge');
+
+  if (!val) {
+    // Restaurar rol real
+    const sa = _realIsSuperAdmin;
+    isAdmin = userRoles.includes('admin') || userRoles.includes('superadmin');
+    applyRoleVisibility(sa, isAdmin);
+    if (badge) badge.style.display = 'none';
+    return;
+  }
+
+  const isSA  = val === 'superadmin';
+  const isAdm = isSA || val === 'admin';
+  isAdmin = isAdm;
+  applyRoleVisibility(isSA, isAdm);
+
+  // Mostrar badge de preview activo
+  if (badge) {
+    badge.textContent = `👁 ${val}`;
+    badge.className = `role-badge ${ROLE_CSS[val]||'role-default'}`;
+    badge.style.display = '';
+  }
+}
+
+// ── Login overlay ─────────────────────────────────────────────────────────────
+function showLoginOverlay() {
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('loginUser').focus(), 80);
+}
+function hideLoginOverlay() {
+  document.getElementById('loginOverlay').classList.add('hidden');
+}
+
+async function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  const btn   = document.getElementById('loginBtn');
+  errEl.classList.remove('show');
+  if (!user || !pass) { errEl.textContent = 'Ingresá usuario y contraseña.'; errEl.classList.add('show'); return; }
+  btn.disabled = true;
+  try {
+    const res = await fetch(baseUrl + '/api/v1/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:user, password:pass})
+    });
+    if (!res.ok) throw new Error('Credenciales incorrectas');
+    const data = await res.json();
+    token = data.access_token;
+    sessionStorage.setItem('pg_token', token);
+    hideLoginOverlay();
+    await initApp();
+  } catch(e) {
+    errEl.textContent = e.message || 'Error al iniciar sesión';
+    errEl.classList.add('show');
+  } finally { btn.disabled = false; }
+}
+
+// ── API helper ────────────────────────────────────────────────────────────────
+function api(path, opts={}) {
+  const {headers:xh, ...rest} = opts;
+  return fetch(baseUrl+path, {
+    headers:{'Content-Type':'application/json', ...(token?{'Authorization':'Bearer '+token}:{}), ...(xh||{})},
+    ...rest,
+  }).then(async r=>{
+    if(r.status===401){ showLoginOverlay(); throw new Error('401'); }
+    if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.detail||r.statusText); }
+    if(r.status===204) return null;
+    return r.json();
+  });
+}
+
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── View switching ────────────────────────────────────────────────────────────
+const BREADCRUMBS = {
+  'dashboard':'Dashboard','tablas':'Tablas','logs':'Logs de Auditoría',
+  'institucional':'Institucional','config-kpis':'Configurar KPIs',
+  'config-vinculos':'Configurar Vínculos','config-menu':'Configurar Menú'
+};
+
+function showView(id) {
+  document.querySelectorAll('.view,.iframe-view').forEach(v=>v.classList.remove('active'));
+  const v = document.getElementById('view-'+id);
+  if(v) v.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navEl = document.getElementById('nav-'+id) || document.querySelector(`[onclick="showView('${id}')"]`);
+  if(navEl) navEl.classList.add('active');
+  const bc = document.getElementById('breadcrumbCurrent');
+  if(bc) bc.textContent = BREADCRUMBS[id]||id;
+  // Lazy load views
+  if(id==='logs') loadLogs(0);
+  if(id==='config-kpis') loadKpiConfig();
+  if(id==='config-vinculos') loadVinculoConfig();
+  if(id==='config-menu') loadMenu().then(()=>renderMenuConfig());
+  if(id==='tablas' && sistemaId) loadTables();
+}
+
+function closeIframe() { showView('dashboard'); }
+
+// ── Open tools in iframe ──────────────────────────────────────────────────────
+const TOOL_META = {
+  'usuarios':    { label:'Usuarios & Roles',   url: p=>`${baseUrl}/usuarios?${p}` },
+  'diccionario': { label:'Diccionario',         url: p=>`${baseUrl}/diccionario?${p}&id_sistema=${sistemaId}&db_slug=${encodeURIComponent(dbSlug)}` },
+  'tester':      { label:'Tester API',          url: p=>`${baseUrl}/tester?${p}` },
+  'cabecera':    { label:'Cabecera–Detalle',    url: p=>`${baseUrl}/cabecera?${p}&tabla=&sistema_id=${sistemaId}&db_slug=${encodeURIComponent(dbSlug)}` },
+  'config-cabecera': { label:'Config Cab.-Detalle', url: p=>`${baseUrl}/config-cabecera?${p}&id_sistema=${sistemaId}` },
+};
+
+function openTool(key, extra={}) {
+  const meta = TOOL_META[key]; if(!meta) return;
+  const p = new URLSearchParams({token, base:baseUrl, ...extra}).toString();
+  const url = typeof meta.url==='function' ? meta.url(p) : meta.url;
+  document.querySelectorAll('.view,.iframe-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-iframe')?.classList.add('active');
+  const frame = document.getElementById('appFrame');
+  if(frame) frame.src = url;
+  const lbl = document.getElementById('iframeCtxLabel');
+  if(lbl) lbl.textContent = meta.label;
+}
+// alias
+const openApp = openTool;
+
+function openConfigCabecera() {
+  const p = new URLSearchParams({token, base:baseUrl, id_sistema:sistemaId}).toString();
+  document.querySelectorAll('.view,.iframe-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-iframe')?.classList.add('active');
+  const frame = document.getElementById('appFrame');
+  if(frame) frame.src = `${baseUrl}/config-cabecera?${p}`;
+  const lbl = document.getElementById('iframeCtxLabel');
+  if(lbl) lbl.textContent = 'Config Cabecera-Detalle';
+}
+
+function openDoc(key) {
+  const urls = {
+    'manual-usuario': `${baseUrl}/static/docs/Manual_Usuario_Lambda.pdf`,
+    'manual-sistema': `${baseUrl}/static/docs/Manual_Administrador_Lambda.pdf`,
+  };
+  const url = urls[key];
+  if(url) window.open(url, '_blank');
+}
+
+// ── Logout ────────────────────────────────────────────────────────────────────
+function logout() {
+  token=''; sistemaId=''; sistemaNombre=''; dbSlug='';
+  sessionStorage.clear();
+  showLoginOverlay();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  if(!token){ showLoginOverlay(); return; }
+  await initApp();
+}
+
+async function initApp() {
+  try {
+    const me = await api('/api/v1/auth/me');
+    userRoles = (me.roles||[]).map(r=>r.name||r);
+    const isSuperAdmin = userRoles.includes('superadmin');
+    isAdmin = isSuperAdmin || userRoles.includes('admin');
+    _realIsSuperAdmin = isSuperAdmin;
+
+    // Mostrar selector de preview solo para superadmin
+    const previewSel = document.getElementById('rolePreviewSel');
+    if(previewSel) previewSel.style.display = isSuperAdmin ? '' : 'none';
+
+    // Usuario en sidebar
+    const uname = me.username||me.email||'Usuario';
+    const av = document.getElementById('userAvatar');
+    if(av) av.textContent = uname[0].toUpperCase();
+    const un = document.getElementById('userName');
+    if(un) un.textContent = uname;
+    const ur = document.getElementById('userRoles');
+    if(ur) {
+      const ROLE_CSS = {superadmin:'role-superadmin',admin:'role-admin',operator:'role-operator',viewer:'role-viewer'};
+      ur.innerHTML = userRoles.map(r=>`<span class="role-badge ${ROLE_CSS[r]||'role-default'}">${r}</span>`).join(' ');
+    }
+
+    applyRoleVisibility(isSuperAdmin, isAdmin);
+    await loadSistemas();
+    loadNoticias();
+  } catch(e) {
+    if(e.message==='401') return;
+    console.error('initApp error:', e);
+  }
+}
+
+// ── Sistemas ──────────────────────────────────────────────────────────────────
+let cabeceraSet = new Set();
+
+async function loadSistemas() {
+  try {
+    allSistemas = await api('/api/v1/sistema/');
+    const sel = document.getElementById('sistemaSel');
+    if(!sel) return;
+    const prev = sel.value || sistemaId;
+    sel.innerHTML = '<option value="">— sistema —</option>';
+    allSistemas.forEach(s=>{
+      const o=document.createElement('option');
+      o.value=s.id; o.textContent=s.nombre; o.dataset.db=s.nombre_bd||'';
+      sel.appendChild(o);
+    });
+    if(prev) { sel.value=prev; if(sel.value) await onSistemaChange(prev); }
+    else if(allSistemas.length===1) { sel.value=allSistemas[0].id; await onSistemaChange(allSistemas[0].id); }
+  } catch(e){ console.error('loadSistemas',e); }
+}
+
+async function onSistemaChange(id) {
+  sistemaId = id||document.getElementById('sistemaSel')?.value||'';
+  sessionStorage.setItem('pg_sistema_id', sistemaId);
+  const sys = allSistemas.find(s=>String(s.id)===String(sistemaId));
+  sistemaNombre = sys?.nombre||'';
+  dbSlug = sys?.nombre_bd||'';
+  sessionStorage.setItem('pg_db_slug', dbSlug);
+  sessionStorage.setItem('pg_sistema_nombre', sistemaNombre);
+  const badge = document.getElementById('sysDescLabel');
+  if(badge){ badge.textContent=sistemaNombre; badge.style.display=sistemaNombre?'':'none'; }
+  cabeceraSet = new Set();
+  menuDbTables = [];
+  // Load cabecera config for routing
+  if(sistemaId){
+    try{
+      const r = await api(`/api/v1/admin/cabecera-config?id_sistema=${sistemaId}`);
+      (r.cabeceras||[]).forEach(c=>cabeceraSet.add(c));
+    }catch(e){}
+    loadKpis();
+    loadVinculos();
+    loadMenu().then(()=>renderDynamicMenu());
+    loadTables();
+  }
+}
+
+// ── Tablas ────────────────────────────────────────────────────────────────────
+let allTablesData=[];
+async function loadTables() {
+  if(!sistemaId){ document.getElementById('tablasContainer').innerHTML='<div class="state-msg">Seleccioná un sistema primero.</div>'; return; }
+  document.getElementById('tablasContainer').innerHTML='<div class="state-msg"><i class="ti ti-loader"></i>Cargando…</div>';
+  try{
+    const r = await api(`/api/v1/admin/db-tables?db_slug=${encodeURIComponent(dbSlug)}`);
+    allTablesData = [...(r.tables||[]).map(t=>({...t,kind:'table'})), ...(r.views||[]).map(v=>({...v,kind:'view'}))];
+    renderTables(allTablesData);
+    const ttl = document.getElementById('tablasSectionTitle');
+    if(ttl) ttl.textContent = `Tablas de ${sistemaNombre||'sistema'} (${allTablesData.length})`;
+  }catch(e){
+    document.getElementById('tablasContainer').innerHTML=`<div class="state-msg">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function filterTables(q){
+  const fl=q.toLowerCase();
+  renderTables(fl?allTablesData.filter(t=>t.name.toLowerCase().includes(fl)):allTablesData);
+}
+
+function renderTables(list) {
+  const cont = document.getElementById('tablasContainer');
+  if(!list.length){ cont.innerHTML='<div class="state-msg">Sin tablas.</div>'; return; }
+  const p = new URLSearchParams({token, base:baseUrl, sistema_id:sistemaId, db_slug:dbSlug}).toString();
+  cont.innerHTML = `<div class="tables-grid">${list.map(t=>{
+    const isCab = cabeceraSet.has(t.name);
+    return `<div class="table-card" onclick="openTable('${esc(t.name)}')">
+      <div class="table-card-icon">${isCab?'<i class="ti ti-layout-rows" style="color:var(--accent2);"></i>':'<i class="ti ti-table" style="color:var(--muted2);"></i>'}</div>
+      <div class="table-card-name">${esc(t.name)}</div>
+      <div class="table-card-type">${t.kind==='view'?'Vista':'Tabla'}${isCab?' · Cabecera':''}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function openTable(name){
+  const isCab = cabeceraSet.has(name);
+  const p = new URLSearchParams({token, base:baseUrl, tabla:name, sistema_id:sistemaId, db_slug:dbSlug}).toString();
+  const url = isCab ? `${baseUrl}/cabecera?${p}` : `${baseUrl}/tabla?${p}`;
+  document.querySelectorAll('.view,.iframe-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-iframe')?.classList.add('active');
+  if(document.getElementById('appFrame')) document.getElementById('appFrame').src=url;
+  const lbl = document.getElementById('iframeCtxLabel');
+  if(lbl) lbl.textContent = name;
+}
+
+// ── KPIs ──────────────────────────────────────────────────────────────────────
+let kpiList=[];
+const KPI_COLORS = {
+  teal:'var(--accent)',cyan:'var(--accent2)',green:'var(--green)',
+  blue:'var(--blue)',indigo:'var(--indigo)',purple:'var(--purple)',
+  pink:'var(--pink)',orange:'var(--orange)',amber:'var(--amber)',red:'var(--red)'
+};
+
+async function loadKpis(){
+  if(!sistemaId){ document.getElementById('kpisRow').innerHTML='<div class="state-msg">Seleccioná un sistema.</div>'; return; }
+  try{
+    kpiList = await api(`/api/v1/portal/kpis?sistema_id=${sistemaId}`);
+    renderKpis();
+  }catch(e){ document.getElementById('kpisRow').innerHTML=`<div class="state-msg">Error: ${esc(e.message)}</div>`; }
+}
+
+function renderKpis(){
+  const el=document.getElementById('kpisRow');
+  if(!kpiList.length){ el.innerHTML='<div class="state-msg">Sin KPIs configurados.</div>'; return; }
+  el.innerHTML=kpiList.map(k=>`
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:${KPI_COLORS[k.color]||'var(--accent)'}22;color:${KPI_COLORS[k.color]||'var(--accent)'}">
+        <i class="ti ${esc(k.icono||'ti-chart-bar')}"></i>
+      </div>
+      <div class="kpi-body">
+        <div class="kpi-value" id="kpi-val-${k.id}"><span class="kpi-spinner"></span></div>
+        <div class="kpi-label">${esc(k.titulo)}</div>
+      </div>
+    </div>`).join('');
+  kpiList.forEach(k=>fetchKpiValue(k));
+}
+
+async function fetchKpiValue(k){
+  const el=document.getElementById(`kpi-val-${k.id}`);
+  if(!el) return;
+  try{
+    const r=await api('/api/v1/admin/sql-db',{method:'POST',body:JSON.stringify({query:k.query_sql,db_slug:dbSlug})});
+    const rows=r.rows||[]; const row=rows[0]||{}; const raw=Object.values(row)[0]??'—';
+    let val=parseFloat(raw);
+    if(isNaN(val)) val=raw;
+    let txt=String(val);
+    if(typeof val==='number'){
+      if(k.formato==='currency') txt=(k.prefijo||'')+(val.toLocaleString('es-AR',{minimumFractionDigits:k.decimales||0,maximumFractionDigits:k.decimales||0}))+(k.sufijo||'');
+      else if(k.formato==='percent') txt=(val.toFixed(k.decimales||1))+'%';
+      else txt=(k.prefijo||'')+(val.toLocaleString('es-AR',{minimumFractionDigits:k.decimales||0,maximumFractionDigits:k.decimales||0}))+(k.sufijo||'');
+    }
+    el.textContent=txt;
+  }catch(e){ el.textContent='—'; }
+}
+
+// ── Noticias RSS ──────────────────────────────────────────────────────────────
+async function loadNoticias(){
+  const el=document.getElementById('newsList');
+  if(!el) return;
+  el.innerHTML='<div class="news-load"><i class="ti ti-loader" style="display:block;font-size:1.5rem;margin-bottom:8px;"></i>Cargando noticias…</div>';
+  try{
+    const r=await api('/api/v1/portal/noticias');
+    const items=r.items||[];
+    if(!items.length){ el.innerHTML='<div class="news-load">Sin noticias disponibles.</div>'; return; }
+    el.innerHTML=items.slice(0,12).map(n=>`
+      <div class="news-item">
+        <div class="news-source-badge">${esc(n.fuente||'')}</div>
+        <a class="news-title" href="${esc(n.link||'#')}" target="_blank" rel="noopener">${esc(n.titulo||'')}</a>
+        <div class="news-meta">${esc(n.fecha||'')}</div>
+      </div>`).join('');
+  }catch(e){ el.innerHTML=`<div class="news-load">Error al cargar noticias.</div>`; }
+}
+
+// ── Vínculos ──────────────────────────────────────────────────────────────────
+let vinculoList=[];
+async function loadVinculos(){
+  if(!sistemaId) return;
+  try{
+    vinculoList=await api(`/api/v1/portal/vinculos?sistema_id=${sistemaId}`);
+    renderVinculos();
+  }catch(e){}
+}
+
+function renderVinculos(){
+  const el=document.getElementById('vinculosGrid');
+  if(!el) return;
+  const manuales = `
+    <a class="vinculo-card" href="${baseUrl}/static/docs/Manual_Usuario_Lambda.pdf" target="_blank" rel="noopener">
+      <i class="ti ti-book-2 vinculo-icon"></i>
+      <div class="vinculo-title">Manual de Usuario</div>
+      <div class="vinculo-desc">Guía de uso del portal y tablas</div>
+    </a>
+    <a class="vinculo-card" id="vinculoManualAdmin" href="${baseUrl}/static/docs/Manual_Administrador_Lambda.pdf" target="_blank" rel="noopener" style="display:none;">
+      <i class="ti ti-file-code vinculo-icon"></i>
+      <div class="vinculo-title">Manual del Administrador</div>
+      <div class="vinculo-desc">Configuración y administración del sistema</div>
+    </a>`;
+  const dinamicos = vinculoList.map(v=>`
+    <a class="vinculo-card" href="${esc(v.url)}" target="_blank" rel="noopener">
+      <i class="ti ${esc(v.icono||'ti-external-link')} vinculo-icon"></i>
+      <div class="vinculo-title">${esc(v.titulo)}</div>
+      ${v.descripcion?`<div class="vinculo-desc">${esc(v.descripcion)}</div>`:''}
+    </a>`).join('');
+  el.innerHTML = manuales + dinamicos;
+  // sincronizar visibilidad del manual admin con el rol actual
+  if(_currentIsAdm){
+    const ma=document.getElementById('vinculoManualAdmin'); if(ma) ma.style.display='';
+  }
+}
+
+// ── Logs ──────────────────────────────────────────────────────────────────────
+let _logsTimer=null, _logsTotal=0, _logsSkip=0;
+const LOGS_PER_PAGE=50;
+
+async function loadLogs(skip=0){
+  _logsSkip=skip;
+  const method=document.getElementById('logsFilterMethod')?.value||'';
+  const status=document.getElementById('logsFilterStatus')?.value||'';
+  const q=document.getElementById('logsSearch')?.value||'';
+  const params=new URLSearchParams({skip,limit:LOGS_PER_PAGE,sort_by:'id',order:'desc'});
+  if(method) params.set('method',method);
+  if(status) params.set('status_prefix',status);
+  if(q) params.set('q',q);
+  const tbody=document.getElementById('logTableBody');
+  if(tbody) tbody.innerHTML='<tr><td colspan="7" class="state-msg" style="padding:20px;">Cargando…</td></tr>';
+  try{
+    const r=await api(`/api/v1/admin/tables/audit_logs/rows?${params}`);
+    const rows=r.rows||[]; _logsTotal=r.total||0;
+    renderLogs(rows);
+    renderLogsPagination(_logsTotal);
+  }catch(e){ if(tbody) tbody.innerHTML=`<tr><td colspan="7" style="padding:16px;color:var(--red);">${esc(e.message)}</td></tr>`; }
+}
+
+function applyLogsFilter(){ loadLogs(0); }
+
+const METHOD_COLOR={GET:'var(--green)',POST:'var(--blue)',PATCH:'var(--amber)',DELETE:'var(--red)',PUT:'var(--orange)'};
+function statusColor(s){ return s>=500?'var(--red)':s>=400?'var(--amber)':'var(--green)'; }
+
+function renderLogs(rows){
+  const tbody=document.getElementById('logTableBody');
+  if(!tbody) return;
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="7" class="state-msg" style="padding:20px;">Sin registros.</td></tr>'; return; }
+  tbody.innerHTML=rows.map(r=>`<tr>
+    <td style="white-space:nowrap;">${esc(r.created_at?new Date(r.created_at).toLocaleString('es-AR'):'—')}</td>
+    <td>${esc(r.user_email||r.user_id||'—')}</td>
+    <td><span style="font-weight:700;color:${METHOD_COLOR[r.method]||'var(--muted)'};">${esc(r.method)}</span></td>
+    <td style="font-size:.72rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(r.path)}">${esc(r.path)}</td>
+    <td>${esc(r.resource||'—')}</td>
+    <td><span style="font-weight:700;color:${statusColor(r.status_code)};">${r.status_code}</span></td>
+    <td>${esc(r.ip_address||'—')}</td>
+  </tr>`).join('');
+}
+
+function renderLogsPagination(total){
+  const el=document.getElementById('logsPagination');
+  if(!el) return;
+  const pages=Math.ceil(total/LOGS_PER_PAGE); const cur=Math.floor(_logsSkip/LOGS_PER_PAGE);
+  if(pages<=1){ el.innerHTML=''; return; }
+  let html='';
+  for(let i=0;i<Math.min(pages,10);i++){
+    html+=`<button class="pg-btn${i===cur?' active':''}" onclick="loadLogs(${i*LOGS_PER_PAGE})">${i+1}</button>`;
+  }
+  el.innerHTML=html;
+}
+
+// ── Menú dinámico ─────────────────────────────────────────────────────────────
+async function loadMenu(){
+  if(!sistemaId){ menuItems=[]; return; }
+  try{ menuItems=await api(`/api/v1/portal/menu?sistema_id=${sistemaId}`); }
+  catch(e){ menuItems=[]; }
+}
+
+function renderDynamicMenu(){
+  const el=document.getElementById('dynamicMenuItems');
+  if(!el) return;
+  el.innerHTML='';
+  if(!menuItems.length) return;
+  const sect=document.createElement('div');
+  sect.className='nav-section'; sect.textContent=sistemaNombre||'Sistema';
+  el.appendChild(sect);
+  menuItems.filter(m=>m.es_activo).sort((a,b)=>(a.orden||0)-(b.orden||0)).forEach(m=>{
+    const btn=document.createElement('button');
+    btn.className='nav-item';
+    btn.innerHTML=`<i class="ti ${esc(m.icono||'ti-table')}"></i> ${esc(m.titulo)}`;
+    btn.onclick=()=>{ if(m.tipo==='url'&&m.url) window.open(m.url,'_blank'); else openTable(m.tabla||''); };
+    el.appendChild(btn);
+  });
+}
+
+function renderMenuConfig(){
+  const tbody=document.getElementById('menuConfigBody');
+  if(!tbody) return;
+  if(!sistemaId){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Seleccioná un sistema primero.</td></tr>'; return; }
+  if(!menuItems.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Sin ítems de menú. Usá + Nuevo ítem para agregar.</td></tr>'; return; }
+  tbody.innerHTML=menuItems.map(m=>`<tr>
+    <td>${m.orden}</td>
+    <td>${esc(m.titulo)}</td>
+    <td><i class="ti ${esc(m.icono||'')}"></i> ${esc(m.icono||'')}</td>
+    <td>${m.tipo==='url'?'<span style="color:var(--blue)">URL: </span>'+esc(m.url||''):esc(m.tabla||'—')}</td>
+    <td>${esc(m.descripcion||'')}</td>
+    <td><span style="color:${m.es_activo?'var(--green)':'var(--muted)'};">${m.es_activo?'Activo':'Inactivo'}</span></td>
+    <td>
+      <button class="btn btn-ghost btn-sm" onclick="openMenuModal(${m.id})"><i class="ti ti-pencil"></i></button>
+      <button class="btn btn-ghost btn-sm" onclick="deleteMenuItem(${m.id})" style="color:var(--red);"><i class="ti ti-trash"></i></button>
+    </td>
+  </tr>`).join('');
+}
+
+// ── KPI Config CRUD ───────────────────────────────────────────────────────────
+let kpiConfigList=[], _editKpiId=null, _kpiColor='teal';
+
+async function loadKpiConfig(){
+  if(!sistemaId){ document.getElementById('kpiConfigBody').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Seleccioná un sistema.</td></tr>'; return; }
+  try{
+    kpiConfigList=await api(`/api/v1/portal/kpis?sistema_id=${sistemaId}`);
+    renderKpiConfig();
+  }catch(e){}
+}
+
+function renderKpiConfig(){
+  const tbody=document.getElementById('kpiConfigBody');
+  if(!tbody) return;
+  if(!kpiConfigList.length){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">Sin KPIs.</td></tr>'; return; }
+  tbody.innerHTML=kpiConfigList.map(k=>`<tr>
+    <td>${esc(k.titulo)}</td>
+    <td><i class="ti ${esc(k.icono||'')}"></i></td>
+    <td><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:${KPI_COLORS[k.color]||'var(--accent)'}"></span></td>
+    <td>${esc(k.formato||'')}</td>
+    <td><span style="color:${k.es_activo?'var(--green)':'var(--muted)'};">${k.es_activo?'Activo':'Inactivo'}</span></td>
+    <td>${k.orden}</td>
+    <td>
+      <button class="btn btn-ghost btn-sm" onclick="openKpiModal(${k.id})"><i class="ti ti-pencil"></i></button>
+      <button class="btn btn-ghost btn-sm" onclick="deleteKpi(${k.id})" style="color:var(--red);"><i class="ti ti-trash"></i></button>
+    </td>
+  </tr>`).join('');
+}
+
+function openKpiModal(id=null){
+  _editKpiId=id;
+  document.getElementById('kpiModalTitle').textContent=id?'Editar KPI':'Nuevo KPI';
+  if(id){
+    const k=kpiConfigList.find(x=>x.id===id); if(!k) return;
+    document.getElementById('kpiTitulo').value=k.titulo||'';
+    document.getElementById('kpiIcono').value=k.icono||'ti-chart-bar';
+    document.getElementById('kpiFormato').value=k.formato||'number';
+    document.getElementById('kpiPrefijo').value=k.prefijo||'';
+    document.getElementById('kpiSufijo').value=k.sufijo||'';
+    document.getElementById('kpiDecimales').value=k.decimales||0;
+    document.getElementById('kpiOrden').value=k.orden||0;
+    document.getElementById('kpiQuery').value=k.query_sql||'';
+    selectColor(k.color||'teal');
+  } else {
+    ['kpiTitulo','kpiPrefijo','kpiSufijo','kpiQuery'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('kpiDecimales').value=0;
+    document.getElementById('kpiOrden').value=0;
+    selectColor('teal');
+  }
+  document.getElementById('kpiOverlay').style.display='flex';
+}
+
+function closeKpiModal(){ document.getElementById('kpiOverlay').style.display='none'; }
+
+function selectColor(color, el=null){
+  _kpiColor=color;
+  document.querySelectorAll('#kpiColorPicker .color-swatch').forEach(s=>{
+    s.classList.toggle('selected', s.dataset.color===color);
+  });
+}
+
+async function saveKpi(){
+  const body={
+    id_sistema:parseInt(sistemaId), titulo:document.getElementById('kpiTitulo').value.trim(),
+    icono:document.getElementById('kpiIcono').value, color:_kpiColor,
+    formato:document.getElementById('kpiFormato').value,
+    prefijo:document.getElementById('kpiPrefijo').value,
+    sufijo:document.getElementById('kpiSufijo').value,
+    decimales:parseInt(document.getElementById('kpiDecimales').value)||0,
+    orden:parseInt(document.getElementById('kpiOrden').value)||0,
+    query_sql:document.getElementById('kpiQuery').value.trim(),
+    es_activo:true
+  };
+  try{
+    if(_editKpiId) await api(`/api/v1/portal/kpis/${_editKpiId}`,{method:'PATCH',body:JSON.stringify(body)});
+    else await api('/api/v1/portal/kpis',{method:'POST',body:JSON.stringify(body)});
+    closeKpiModal(); await loadKpiConfig(); await loadKpis();
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+async function deleteKpi(id){
+  if(!confirm('¿Eliminar este KPI?')) return;
+  try{ await api(`/api/v1/portal/kpis/${id}`,{method:'DELETE'}); await loadKpiConfig(); await loadKpis(); }
+  catch(e){ alert('Error: '+e.message); }
+}
+
+// ── Vínculo Config CRUD ───────────────────────────────────────────────────────
+let vinculoConfigList=[], _editVinculoId=null;
+
+async function loadVinculoConfig(){
+  if(!sistemaId){ return; }
+  try{
+    vinculoConfigList=await api(`/api/v1/portal/vinculos?sistema_id=${sistemaId}`);
+    renderVinculoConfig();
+  }catch(e){}
+}
+
+function renderVinculoConfig(){
+  const tbody=document.getElementById('vinculoConfigBody');
+  if(!tbody) return;
+  if(!vinculoConfigList.length){ tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px;">Sin vínculos.</td></tr>'; return; }
+  tbody.innerHTML=vinculoConfigList.map(v=>`<tr>
+    <td>${esc(v.titulo)}</td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(v.url)}">${esc(v.url)}</td>
+    <td><i class="ti ${esc(v.icono||'')}"></i></td>
+    <td><span style="color:${v.es_activo?'var(--green)':'var(--muted)'};">${v.es_activo?'Activo':'Inactivo'}</span></td>
+    <td>${v.orden}</td>
+    <td>
+      <button class="btn btn-ghost btn-sm" onclick="openVinculoModal(${v.id})"><i class="ti ti-pencil"></i></button>
+      <button class="btn btn-ghost btn-sm" onclick="deleteVinculo(${v.id})" style="color:var(--red);"><i class="ti ti-trash"></i></button>
+    </td>
+  </tr>`).join('');
+}
+
+function openVinculoModal(id=null){
+  _editVinculoId=id;
+  document.getElementById('vinculoModalTitle').textContent=id?'Editar Vínculo':'Nuevo Vínculo';
+  if(id){
+    const v=vinculoConfigList.find(x=>x.id===id); if(!v) return;
+    document.getElementById('vinculoTitulo').value=v.titulo||'';
+    document.getElementById('vinculoUrl').value=v.url||'';
+    document.getElementById('vinculoIcono').value=v.icono||'ti-external-link';
+    document.getElementById('vinculoDesc').value=v.descripcion||'';
+    document.getElementById('vinculoOrden').value=v.orden||0;
+  } else {
+    ['vinculoTitulo','vinculoUrl','vinculoDesc'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('vinculoOrden').value=0;
+  }
+  document.getElementById('vinculoOverlay').style.display='flex';
+}
+
+function closeVinculoModal(){ document.getElementById('vinculoOverlay').style.display='none'; }
+
+async function saveVinculo(){
+  const body={
+    id_sistema:parseInt(sistemaId), titulo:document.getElementById('vinculoTitulo').value.trim(),
+    url:document.getElementById('vinculoUrl').value.trim(),
+    icono:document.getElementById('vinculoIcono').value,
+    descripcion:document.getElementById('vinculoDesc').value.trim(),
+    orden:parseInt(document.getElementById('vinculoOrden').value)||0, es_activo:true
+  };
+  try{
+    if(_editVinculoId) await api(`/api/v1/portal/vinculos/${_editVinculoId}`,{method:'PATCH',body:JSON.stringify(body)});
+    else await api('/api/v1/portal/vinculos',{method:'POST',body:JSON.stringify(body)});
+    closeVinculoModal(); await loadVinculoConfig(); await loadVinculos();
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+async function deleteVinculo(id){
+  if(!confirm('¿Eliminar este vínculo?')) return;
+  try{ await api(`/api/v1/portal/vinculos/${id}`,{method:'DELETE'}); await loadVinculoConfig(); await loadVinculos(); }
+  catch(e){ alert('Error: '+e.message); }
+}
+
+// ── Menú Config CRUD ──────────────────────────────────────────────────────────
+let _editMenuId=null;
+
+async function loadMenuDbTables(){
+  if(!sistemaId||menuDbTables.length) return;
+  try{
+    const r=await api(`/api/v1/admin/db-tables?db_slug=${encodeURIComponent(dbSlug)}`);
+    menuDbTables=[...(r.tables||[]),...(r.views||[])].map(t=>t.name);
+    const sel=document.getElementById('menuTabla');
+    if(sel){
+      sel.innerHTML='<option value="">— seleccionar tabla —</option>';
+      menuDbTables.forEach(t=>{ const o=document.createElement('option'); o.value=t; o.textContent=t; sel.appendChild(o); });
+    }
+  }catch(e){}
+}
+
+function toggleMenuTipo(){
+  const tipo=document.querySelector('input[name="menuTipo"]:checked')?.value||'tabla';
+  document.getElementById('menuTablaRow').style.display=tipo==='tabla'?'':'none';
+  document.getElementById('menuUrlRow').style.display=tipo==='url'?'':'none';
+}
+
+async function openMenuModal(id=null){
+  _editMenuId=id;
+  document.getElementById('menuModalTitle').textContent=id?'Editar ítem':'Nuevo ítem de Menú';
+  await loadMenuDbTables();
+  if(id){
+    const m=menuItems.find(x=>x.id===id); if(!m) return;
+    document.getElementById('menuTitulo').value=m.titulo||'';
+    document.getElementById('menuIcono').value=m.icono||'ti-table';
+    document.getElementById('menuOrden').value=m.orden||0;
+    document.getElementById('menuDesc').value=m.descripcion||'';
+    if(m.tipo==='url'){
+      document.getElementById('menuTipoUrl').checked=true;
+      document.getElementById('menuUrl').value=m.url||'';
+    } else {
+      document.getElementById('menuTipoTabla').checked=true;
+      document.getElementById('menuTabla').value=m.tabla||'';
+    }
+    toggleMenuTipo();
+  } else {
+    ['menuTitulo','menuDesc','menuUrl'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('menuOrden').value=0;
+    document.getElementById('menuTipoTabla').checked=true;
+    toggleMenuTipo();
+  }
+  document.getElementById('menuOverlay').style.display='flex';
+}
+
+function closeMenuModal(){ document.getElementById('menuOverlay').style.display='none'; }
+
+async function saveMenuItem(){
+  const tipo=document.querySelector('input[name="menuTipo"]:checked')?.value||'tabla';
+  const body={
+    id_sistema:parseInt(sistemaId), titulo:document.getElementById('menuTitulo').value.trim(),
+    icono:document.getElementById('menuIcono').value,
+    orden:parseInt(document.getElementById('menuOrden').value)||0,
+    descripcion:document.getElementById('menuDesc').value.trim(),
+    tipo, tabla:tipo==='tabla'?document.getElementById('menuTabla').value:'',
+    url:tipo==='url'?document.getElementById('menuUrl').value:'', es_activo:true
+  };
+  try{
+    if(_editMenuId) await api(`/api/v1/portal/menu/${_editMenuId}`,{method:'PATCH',body:JSON.stringify(body)});
+    else await api('/api/v1/portal/menu',{method:'POST',body:JSON.stringify(body)});
+    closeMenuModal(); await loadMenu(); renderMenuConfig(); renderDynamicMenu();
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+async function deleteMenuItem(id){
+  if(!confirm('¿Eliminar este ítem?')) return;
+  try{ await api(`/api/v1/portal/menu/${id}`,{method:'DELETE'}); await loadMenu(); renderMenuConfig(); renderDynamicMenu(); }
+  catch(e){ alert('Error: '+e.message); }
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', ()=>init());
+</script>
+</body>
+</html>

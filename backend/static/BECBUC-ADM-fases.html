@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BECBUC — Consola de Fases (Admin)</title>
+<style>
+:root{
+  --bg:#0d1117;--bg2:#131826;--bg3:#1a2130;--bg4:#222b3d;
+  --border:#2a3344;--fg:#e6edf3;--muted:#8b97a8;--muted2:#5b6677;
+  --accent:#2dd4bf;--accent2:#f59e0b;--green:#22c55e;--amber:#f59e0b;
+  --red:#ef4444;--blue:#3b82f6;--purple:#a855f7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px;line-height:1.5}
+.header{display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;flex-wrap:wrap}
+.logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--blue));display:flex;align-items:center;justify-content:center;font-weight:800;color:#04201d}
+h1{font-size:16px;font-weight:700}
+.header .sub{font-size:11px;color:var(--muted)}
+select,.btn{font-family:inherit;font-size:13px}
+.tsel{background:var(--bg3);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:6px 10px;outline:none}
+.btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{color:var(--fg);border-color:var(--muted2)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{border-color:var(--accent);color:var(--accent)}
+.btn.primary:hover{background:var(--accent);color:#04201d}
+.btn.warn{border-color:var(--amber);color:var(--amber)}
+.btn.warn:hover{background:var(--amber);color:#241a02}
+.btn.seq{border-color:var(--purple);color:var(--purple)}
+.btn.seq:hover{background:var(--purple);color:#fff}
+.btn.green{border-color:var(--green);color:var(--green)}
+.btn.green:hover{background:var(--green);color:#04210f}
+.wrap{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;padding:16px;max-width:1300px;margin:0 auto;align-items:start}
+@media(max-width:920px){.wrap{grid-template-columns:1fr}}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.panel-h{padding:11px 15px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.panel-h .spacer{flex:1}
+.panel-b{padding:13px 15px}
+
+/* Stepper de etapas */
+.stage{border:1px solid var(--border);border-radius:10px;margin-bottom:11px;overflow:hidden;background:var(--bg3);transition:opacity .2s}
+.stage.locked{opacity:.5}
+.stage-h{display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer;user-select:none}
+.stage-num{width:26px;height:26px;border-radius:50%;background:var(--bg4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.stage.done .stage-num{background:var(--green);border-color:var(--green);color:#04210f}
+.stage.active .stage-num{background:var(--accent);border-color:var(--accent);color:#04201d}
+.stage-info{flex:1;min-width:0}
+.stage-name{font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:8px}
+.badge{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em}
+.badge.done{background:rgba(34,197,94,.15);color:var(--green)}
+.badge.active{background:rgba(45,212,191,.15);color:var(--accent)}
+.badge.locked{background:rgba(139,151,168,.12);color:var(--muted)}
+.badge.live{background:rgba(245,158,11,.15);color:var(--amber)}
+.stage-prog{font-size:11px;color:var(--muted);margin-top:2px}
+.prog-bar{height:5px;background:var(--bg);border-radius:3px;overflow:hidden;margin-top:5px}
+.prog-fill{height:100%;background:var(--green);transition:width .3s}
+.stage-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chev{color:var(--muted);transition:transform .2s;font-size:12px}
+.stage.open .chev{transform:rotate(90deg)}
+.stage-body{display:none;padding:0 13px 12px;border-top:1px solid var(--border)}
+.stage.open .stage-body{display:block}
+.subfase{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--bg4);font-size:12.5px}
+.subfase:last-child{border-bottom:none}
+.subfase .nm{flex:1}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.done{background:var(--green)}.dot.pend{background:var(--muted2)}
+.mini{font-size:10.5px;padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer}
+.mini:hover{color:var(--fg);border-color:var(--muted2)}
+.mini.sim:hover{border-color:var(--accent);color:var(--accent)}
+.mini.rst:hover{border-color:var(--amber);color:var(--amber)}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:9px}
+.kpi{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 12px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.kpi .v{font-size:1.35rem;font-weight:800}
+.kpi .l{font-size:.66rem;color:var(--muted);margin-top:2px}
+
+/* Ranking */
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--border);font-size:11px}
+td{padding:6px 8px;border-bottom:1px solid var(--bg3)}
+th.c,td.c{text-align:center}
+tbody tr:hover{background:var(--bg3)}
+.rk1{color:#ffd700}.rk2{color:#c0c0c0}.rk3{color:#cd7f32}
+.flash{animation:flash .8s}
+@keyframes flash{0%{background:rgba(45,212,191,.25)}100%{background:transparent}}
+
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--fg);padding:11px 20px;border-radius:9px;font-size:13px;z-index:9999;box-shadow:0 6px 22px rgba(0,0,0,.5);opacity:0;transition:opacity .35s;pointer-events:none;max-width:90vw}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.hint{font-size:11px;color:var(--muted);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-bottom:12px;line-height:1.5}
+.auto{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.auto input{accent-color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">λ</div>
+  <div>
+    <h1>Consola de Fases</h1>
+    <div class="sub">Simulación y control de progresión — solo admin</div>
+  </div>
+  <div style="flex:1"></div>
+  <select id="torneoSel" class="tsel" onchange="onTorneoChange()"></select>
+  <button class="btn" onclick="refrescarTodo()" title="Refrescar">🔄</button>
+  <button class="btn primary" id="btnProbarApi" onclick="probarApi()" title="Probar conexión con API-Football">🛰️ Verificar API</button>
+  <a class="btn" href="/BECBUC-portal" title="Volver al portal">← Portal</a>
+</div>
+
+<div class="wrap">
+  <!-- Columna fases -->
+  <div class="panel">
+    <div class="panel-h">🏁 Progresión del torneo <span class="spacer"></span>
+      <span id="faseActivaLbl" style="font-size:11px;color:var(--muted)"></span>
+    </div>
+    <div class="panel-b">
+      <div class="hint">
+        Cada etapa se desbloquea cuando la anterior está <b>concluida</b> (todos sus partidos finalizados).
+        <b>Simular</b> genera resultados aleatorios, <b>Reset</b> vuelve a "programado".
+        <b>👁 Activar</b> deja visible esa etapa al apostador y oculta las demás.
+        Tras cada acción se recalculan puntajes y se refrescan KPIs y ranking.
+      </div>
+      <div id="stages"><div style="color:var(--muted);padding:20px;text-align:center"><span class="spin"></span> Cargando…</div></div>
+    </div>
+  </div>
+
+  <!-- Columna KPIs + ranking -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="panel">
+      <div class="panel-h">📊 KPIs en vivo <span class="spacer"></span>
+        <label class="auto"><input type="checkbox" id="autoChk" checked> auto</label>
+      </div>
+      <div class="panel-b"><div class="kpis" id="kpis"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-h">🏆 Ranking en vivo</div>
+      <div class="panel-b" style="padding:0">
+        <table>
+          <thead><tr>
+            <th class="c">#</th><th>Apostador</th>
+            <th class="c" title="Plenos (marcador exacto)">📋</th>
+            <th class="c" title="Aciertos (ganador)">✅</th>
+            <th class="c" title="Bonus por partido">⚡</th>
+            <th class="c" title="Bonus terceros">🥉</th>
+            <th class="c">Pts</th>
+          </tr></thead>
+          <tbody id="rankBody"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:18px">—</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Paneles full-width: análisis por fase -->
+<div style="max-width:1300px;margin:0 auto;padding:0 16px 16px">
+  <div class="panel" style="margin-bottom:16px">
+    <div class="panel-h">📊 Puntos por fase y apostador <span class="spacer"></span>
+      <button class="btn" onclick="cargarPuntosFase()">🔄</button>
+      <button class="btn green" onclick="descargarExcelFase()">⬇️ Excel</button>
+    </div>
+    <div class="panel-b" style="padding:0;overflow-x:auto"><div id="puntosFaseBox"><div style="color:var(--muted);padding:14px">—</div></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h">🔍 Auditoría por fase (real vs apostado) <span class="spacer"></span>
+      <select id="audApostador" class="tsel" style="padding:5px 9px"><option value="">Todos</option></select>
+      <button class="btn primary" onclick="cargarAuditoria()">🔎 Ver</button>
+    </div>
+    <div class="panel-b" style="overflow-x:auto"><div id="audBox"><div style="color:var(--muted);padding:14px">Elegí un apostador (o "Todos") y tocá Ver.</div></div></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const BASE='';
+let _token=null, _torneos=[], _torneoId=null, _fases=[], _activaSugerida=null;
+
+/* ── Orden lógico de etapas (los 12 grupos cuentan como una etapa) ── */
+const STAGE_ORDER=['grupo','ronda32','ronda16','cuartos','semis','tercer_puesto','final','otro'];
+const STAGE_LABEL={grupo:'Fase de Grupos',ronda32:'Ronda de 32',ronda16:'Octavos de Final',cuartos:'Cuartos de Final',semis:'Semifinales',tercer_puesto:'Tercer Puesto',final:'Final',otro:'Otras fases'};
+const STAGE_ICON={grupo:'🏟',ronda32:'🎯',ronda16:'⚔️',cuartos:'🔥',semis:'🥈',tercer_puesto:'🥉',final:'🏆',otro:'⚽'};
+
+/* ── Auth ── */
+async function init(){
+  const p=new URLSearchParams(location.search);
+  _token=p.get('token')||localStorage.getItem('tok_fix');
+  if(!_token) await loginSilent();
+  await loadTorneos();
+}
+async function loginSilent(){
+  // Intenta credenciales conocidas de admin/superadmin
+  const creds=[{username:'admin',password:'faute'}];
+  for(const c of creds){
+    try{
+      const r=await fetch(BASE+'/api/v1/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});
+      if(r.ok){const d=await r.json();_token=d.access_token;localStorage.setItem('tok_fix',_token);return;}
+    }catch{}
+  }
+}
+async function api(path,opts={}){
+  const{headers:xh,...rest}=opts;
+  const h={'Content-Type':'application/json','ngrok-skip-browser-warning':'true',...(xh||{})};
+  if(_token) h['Authorization']='Bearer '+_token;
+  let r=await fetch(BASE+'/api/v1'+path,{headers:h,...rest});
+  if(r.status===401){localStorage.removeItem('tok_fix');_token=null;await loginSilent();if(_token){h['Authorization']='Bearer '+_token;r=await fetch(BASE+'/api/v1'+path,{headers:h,...rest});}}
+  if(!r.ok){const e=await r.json().catch(()=>({detail:r.statusText}));throw new Error(e.detail||r.statusText);}
+  return r.json();
+}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function toast(msg){const t=document.getElementById('toast');t.innerHTML=msg;t.style.opacity='1';clearTimeout(t._h);t._h=setTimeout(()=>t.style.opacity='0',3500);}
+
+/* ── Torneos ── */
+async function loadTorneos(){
+  try{
+    _torneos=await api('/torneo/activas');
+  }catch(e){ document.getElementById('stages').innerHTML='<div style="color:var(--red);padding:16px">Error: '+esc(e.message)+'</div>'; return; }
+  const sel=document.getElementById('torneoSel');
+  sel.innerHTML=_torneos.map(t=>`<option value="${t.id}" ${t.datos_cargados?'':'disabled'}>${esc(t.nombre)}${t.datos_cargados?'':' (sin datos)'}</option>`).join('');
+  const auto=_torneos.find(t=>t.datos_cargados)||_torneos[0];
+  if(auto){ _torneoId=auto.id; sel.value=auto.id; await refrescarTodo(); }
+}
+function onTorneoChange(){ _torneoId=parseInt(document.getElementById('torneoSel').value); refrescarTodo(); }
+
+/* ── Probar conexión con API-Football ── */
+async function probarApi(){
+  const btn=document.getElementById('btnProbarApi');
+  if(btn) btn.disabled=true;
+  toast('<span class="spin"></span> Probando conexión con API-Football…');
+  try{
+    const r=await api('/torneo/probar-api');
+    if(r.ok){
+      const cuota=(r.requests_hoy!=null&&r.requests_limite!=null)?` · ${r.requests_hoy}/${r.requests_limite} req hoy`:'';
+      const plan=r.plan?` · plan ${esc(r.plan)}`:'';
+      toast('✅ '+esc(r.mensaje)+plan+cuota);
+    }else{
+      toast('⚠️ '+esc(r.mensaje));
+    }
+  }catch(e){ toast('❌ '+esc(e.message)); }
+  finally{ if(btn) btn.disabled=false; }
+}
+
+async function refrescarTodo(){
+  await Promise.all([cargarFases(), cargarKpis(), cargarRanking(), cargarPuntosFase(), cargarAudApostadores()]);
+}
+
+/* ── Agrupar fases en etapas ── */
+function buildStages(){
+  const byTipo={};
+  _fases.forEach(f=>{ const k=STAGE_ORDER.includes(f.tipo)?f.tipo:'otro'; (byTipo[k]=byTipo[k]||[]).push(f); });
+  const stages=[];
+  STAGE_ORDER.forEach(tipo=>{
+    const fs=byTipo[tipo]; if(!fs||!fs.length) return;
+    const total=fs.reduce((a,f)=>a+f.total,0);
+    const fin=fs.reduce((a,f)=>a+f.finalizados,0);
+    const conPartidos=fs.some(f=>f.total>0);
+    const concluida=conPartidos && fs.every(f=>f.total===0||f.concluida);
+    const visible=fs.some(f=>f.visible_apostador);
+    stages.push({tipo,label:STAGE_LABEL[tipo],icon:STAGE_ICON[tipo],fases:fs,total,fin,concluida,conPartidos,visible});
+  });
+  return stages;
+}
+
+async function cargarFases(){
+  try{
+    const r=await api('/bets/fases-estado/'+_torneoId);
+    _fases=r.fases; _activaSugerida=r.fase_activa_sugerida;
+  }catch(e){ document.getElementById('stages').innerHTML='<div style="color:var(--red);padding:16px">Error: '+esc(e.message)+'</div>'; return; }
+  renderStages();
+}
+
+function renderStages(){
+  const stages=buildStages();
+  // Determinar bloqueo: una etapa está desbloqueada si todas las anteriores (con partidos) están concluidas
+  let prevConcl=true, activaSet=false;
+  const rows=stages.map((s,i)=>{
+    const locked=!prevConcl;
+    let estado='locked',badge='<span class="badge locked">bloqueada</span>';
+    if(!locked){
+      if(s.concluida){estado='done';badge='<span class="badge done">concluida</span>';}
+      else if(s.conPartidos){estado='active';badge='<span class="badge active">en curso</span>';}
+      else {estado='';badge='<span class="badge locked">sin partidos</span>';}
+    }
+    const visBadge=s.visible?' <span class="badge live">visible apostador</span>':'';
+    const pct=s.total?Math.round(s.fin/s.total*100):0;
+    const open = estado==='active' && !activaSet;
+    if(open) activaSet=true;
+    // sub-fases (solo expandir si tiene más de 1 fase, p.ej. grupos)
+    const subs = s.fases.length>1 ? s.fases.map(f=>`
+      <div class="subfase">
+        <span class="dot ${f.concluida?'done':'pend'}"></span>
+        <span class="nm">${esc(f.nombre)}</span>
+        <span style="color:var(--muted);font-size:11px">${f.finalizados}/${f.total}</span>
+        <button class="mini sim" onclick="simularFase(${f.id},'${esc(f.nombre)}')" ${locked?'disabled':''}>🎲</button>
+        <button class="mini rst" onclick="resetFase(${f.id},'${esc(f.nombre)}')">↺</button>
+      </div>`).join('') : '';
+    const simDisabled = locked ? 'disabled' : '';
+    const r = prevConcl;
+    // actualizar prevConcl para la siguiente iteración
+    prevConcl = s.conPartidos ? s.concluida : prevConcl;
+    return `<div class="stage ${estado} ${locked?'locked':''} ${open?'open':''}" id="stage_${s.tipo}">
+      <div class="stage-h" onclick="toggleStage('${s.tipo}')">
+        <div class="stage-num">${s.concluida?'✓':(i+1)}</div>
+        <div class="stage-info">
+          <div class="stage-name">${s.icon} ${esc(s.label)} ${badge}${visBadge}</div>
+          <div class="stage-prog">${s.fin}/${s.total} partidos finalizados${s.fases.length>1?` · ${s.fases.length} grupos`:''}</div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${s.concluida?'var(--green)':'var(--accent)'}"></div></div>
+        </div>
+        ${s.fases.length>1?'<span class="chev">▶</span>':''}
+      </div>
+      <div class="stage-actions" style="padding:0 13px 12px;${s.fases.length>1?'display:none':''}">
+        <button class="btn primary" onclick="event.stopPropagation();simularEtapa('${s.tipo}')" ${simDisabled}>🎲 Simular etapa</button>
+        <button class="btn seq" onclick="event.stopPropagation();simularSecuencial('${s.tipo}')">⏩ Secuencial hasta aquí</button>
+        <button class="btn warn" onclick="event.stopPropagation();resetEtapa('${s.tipo}')">↺ Reset etapa</button>
+        <button class="btn" onclick="event.stopPropagation();activarEtapa('${s.tipo}')">👁 Activar p/ apostador</button>
+      </div>
+      ${subs?`<div class="stage-body">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">
+          <button class="btn primary" onclick="simularEtapa('${s.tipo}')" ${simDisabled}>🎲 Simular todos</button>
+          <button class="btn seq" onclick="simularSecuencial('${s.tipo}')">⏩ Secuencial hasta aquí</button>
+          <button class="btn warn" onclick="resetEtapa('${s.tipo}')">↺ Reset todos</button>
+          <button class="btn" onclick="activarEtapa('${s.tipo}')">👁 Activar p/ apostador</button>
+        </div>
+        ${subs}
+      </div>`:''}
+    </div>`;
+  });
+  document.getElementById('stages').innerHTML=rows.join('');
+  const act=stages.find(s=>!s.concluida&&s.conPartidos);
+  document.getElementById('faseActivaLbl').textContent = act?('Siguiente: '+act.label):'Torneo completo ✓';
+}
+
+function toggleStage(tipo){ const el=document.getElementById('stage_'+tipo); if(el) el.classList.toggle('open'); }
+
+/* ── Acciones ── */
+async function _afterChange(){
+  // Recalcular puntajes y refrescar KPIs + ranking
+  try{ await api('/bets/calcular-puntajes/'+_torneoId,{method:'POST'}); }catch(e){}
+  await Promise.all([cargarFases(), cargarKpis(true), cargarRanking(true), cargarPuntosFase()]);
+}
+async function simularFase(id,nombre){
+  toast('<span class="spin"></span> Simulando '+esc(nombre)+'…');
+  try{ const r=await api('/bets/simular-fase/'+id,{method:'POST'}); await _afterChange(); toast('✅ '+esc(r.fase)+': '+r.partidos_actualizados+' partidos'); }
+  catch(e){ toast('❌ '+esc(e.message)); }
+}
+async function resetFase(id,nombre){
+  if(!confirm('¿Reiniciar "'+nombre+'"? Vuelve a programado (las predicciones se conservan).')) return;
+  toast('<span class="spin"></span> Reiniciando…');
+  try{ const r=await api('/bets/reset-fase/'+id,{method:'POST'}); await _afterChange(); toast('↺ '+esc(r.fase)+': '+r.partidos_reiniciados+' reiniciados'); }
+  catch(e){ toast('❌ '+esc(e.message)); }
+}
+function _fasesDe(tipo){ return _fases.filter(f=>(STAGE_ORDER.includes(f.tipo)?f.tipo:'otro')===tipo && f.total>0); }
+async function simularEtapa(tipo){
+  const fs=_fasesDe(tipo); if(!fs.length){toast('Sin partidos en esta etapa');return;}
+  toast('<span class="spin"></span> Simulando '+STAGE_LABEL[tipo]+' ('+fs.length+' fases)…');
+  try{ for(const f of fs){ await api('/bets/simular-fase/'+f.id,{method:'POST'}); } await _afterChange(); toast('✅ '+STAGE_LABEL[tipo]+' simulada'); }
+  catch(e){ toast('❌ '+esc(e.message)); }
+}
+async function resetEtapa(tipo){
+  const fs=_fasesDe(tipo); if(!fs.length) return;
+  if(!confirm('¿Reiniciar toda la etapa '+STAGE_LABEL[tipo]+' ('+fs.length+' fases)?')) return;
+  toast('<span class="spin"></span> Reiniciando etapa…');
+  try{ for(const f of fs){ await api('/bets/reset-fase/'+f.id,{method:'POST'}); } await _afterChange(); toast('↺ '+STAGE_LABEL[tipo]+' reiniciada'); }
+  catch(e){ toast('❌ '+esc(e.message)); }
+}
+async function activarEtapa(tipo){
+  // visible_apostador=true para fases de esta etapa, false para el resto
+  toast('<span class="spin"></span> Activando '+STAGE_LABEL[tipo]+'…');
+  try{
+    for(const f of _fases){
+      const k=STAGE_ORDER.includes(f.tipo)?f.tipo:'otro';
+      const quiero = k===tipo;
+      if(!!f.visible_apostador !== quiero){
+        await api('/torneo/fases/'+f.id+'?visible_apostador='+(quiero?'true':'false'),{method:'PATCH'});
+      }
+    }
+    await cargarFases();
+    toast('👁 '+STAGE_LABEL[tipo]+' visible para apostadores (resto oculto)');
+  }catch(e){ toast('❌ '+esc(e.message)); }
+}
+
+/* ── KPIs en vivo (usa los KPIs configurados del portal) ── */
+let _kpiDefs=null, _becbucSid=null;
+async function cargarKpis(flash){
+  try{
+    if(_becbucSid===null){
+      const sis=await api('/sistema/?limit=50');
+      const b=sis.find(s=>s.nombre_bd==='becbuc'||(s.nombre||'').toUpperCase()==='BECBUC');
+      _becbucSid=b?b.id:0;
+    }
+    if(!_becbucSid){ document.getElementById('kpis').innerHTML='<div style="color:var(--muted);font-size:12px">Sin sistema BECBUC</div>'; return; }
+    _kpiDefs=await api('/portal/kpis?sistema_id='+_becbucSid);
+    const activos=_kpiDefs.filter(k=>k.es_activo!==false && k.query_sql);
+    const cont=document.getElementById('kpis');
+    cont.innerHTML=activos.map(k=>`<div class="kpi" id="kpi_${k.id}"><div class="v"><span class="spin"></span></div><div class="l">${esc(k.titulo)}</div></div>`).join('');
+    for(const k of activos){
+      try{
+        const r=await api('/admin/sql-db',{method:'POST',body:JSON.stringify({query:k.query_sql,db_slug:'becbuc'})});
+        const row=(r.rows||[])[0]||{}; let raw=Object.values(row)[0]; let v=parseFloat(raw); if(isNaN(v))v=raw??'—';
+        const el=document.querySelector('#kpi_'+k.id+' .v'); if(el){el.textContent=typeof v==='number'?v.toLocaleString('es-AR'):v; if(flash){const c=document.getElementById('kpi_'+k.id);c.classList.remove('flash');void c.offsetWidth;c.classList.add('flash');}}
+      }catch{ const el=document.querySelector('#kpi_'+k.id+' .v'); if(el)el.textContent='—'; }
+    }
+  }catch(e){ document.getElementById('kpis').innerHTML='<div style="color:var(--red);font-size:12px">'+esc(e.message)+'</div>'; }
+}
+
+/* ── Ranking en vivo ── */
+async function cargarRanking(flash){
+  try{
+    const r=await api('/bets/ranking/'+_torneoId);
+    const tb=document.getElementById('rankBody');
+    if(!r.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:18px">Sin datos</td></tr>'; return; }
+    const med=['🥇','🥈','🥉'];
+    tb.innerHTML=r.map((x,i)=>`<tr>
+      <td class="c ${i<3?'rk'+(i+1):''}">${i<3?med[i]:(i+1)}</td>
+      <td>${esc(x.nombre)}</td>
+      <td class="c">${x.plenos||0}</td>
+      <td class="c">${x.aciertos||0}</td>
+      <td class="c">${x.puntos_bonus_partido?'+'+x.puntos_bonus_partido:'—'}</td>
+      <td class="c">${x.bonus_pts?'+'+x.bonus_pts:'—'}</td>
+      <td class="c"><strong>${x.puntos_total||0}</strong></td>
+    </tr>`).join('');
+    if(flash){ tb.classList.remove('flash'); void tb.offsetWidth; tb.classList.add('flash'); }
+  }catch(e){ document.getElementById('rankBody').innerHTML='<tr><td colspan="7" style="color:var(--red);padding:12px">'+esc(e.message)+'</td></tr>'; }
+}
+
+/* ── Simulación secuencial hasta una etapa ── */
+async function simularSecuencial(tipo){
+  const fs=_fases.filter(f=>(STAGE_ORDER.includes(f.tipo)?f.tipo:'otro')===tipo && f.total>0);
+  if(!fs.length){toast('Sin partidos en esta etapa');return;}
+  // fase objetivo = la de mayor orden dentro de la etapa
+  const objetivo=fs.reduce((a,b)=>(b.orden>a.orden?b:a),fs[0]);
+  if(!confirm('¿Simular SECUENCIALMENTE hasta '+STAGE_LABEL[tipo]+'?\n\nCompleta todas las fases previas con resultados y pronósticos aleatorios, avanza el bracket y recalcula puntajes con el doblaje por fase.')) return;
+  toast('<span class="spin"></span> Simulando secuencial hasta '+STAGE_LABEL[tipo]+'…');
+  try{
+    const r=await api('/bets/simular-secuencial/'+_torneoId+'/'+objetivo.id,{method:'POST'});
+    const pasos=(r.pasos||[]).map(p=>p.fase+' ('+p.partidos+'p)').join(' → ');
+    await Promise.all([cargarFases(), cargarKpis(true), cargarRanking(true), cargarPuntosFase()]);
+    toast('✅ '+esc(r.objetivo||STAGE_LABEL[tipo])+' lista. '+esc(pasos));
+  }catch(e){ toast('❌ '+esc(e.message)); }
+}
+
+/* ── Puntos por fase (análisis) ── */
+async function cargarPuntosFase(){
+  const box=document.getElementById('puntosFaseBox');
+  if(!box) return;
+  box.innerHTML='<div style="color:var(--muted);padding:14px"><span class="spin"></span> Cargando…</div>';
+  let d;
+  try{ d=await api('/bets/puntos-por-fase/'+_torneoId); }
+  catch(e){ box.innerHTML='<div style="color:var(--red);padding:14px">'+esc(e.message)+'</div>'; return; }
+  const filas=d.filas||[];
+  if(!filas.length){ box.innerHTML='<div style="color:var(--muted);padding:14px">Sin datos. Simulá o recalculá primero.</div>'; return; }
+  const fasesSet=[],fasesNombre={};
+  filas.forEach(f=>{ if(!fasesSet.includes(f.fase_id)){fasesSet.push(f.fase_id);fasesNombre[f.fase_id]=f.fase_nombre;} });
+  const apos={};
+  filas.forEach(f=>{ const a=apos[f.apostador_id]||(apos[f.apostador_id]={nombre:f.nombre,c:{},total:0}); a.c[f.fase_id]=f.total; a.total+=f.total; });
+  const lista=Object.values(apos).sort((x,y)=>y.total-x.total);
+  let h='<table><thead><tr><th>Apostador</th>';
+  fasesSet.forEach(fid=>h+='<th class="c">'+esc(fasesNombre[fid])+'</th>');
+  h+='<th class="c">Total</th></tr></thead><tbody>';
+  lista.forEach(a=>{
+    h+='<tr><td>'+esc(a.nombre)+'</td>';
+    fasesSet.forEach(fid=>h+='<td class="c">'+(a.c[fid]!=null?a.c[fid]:'<span style="color:var(--muted2)">—</span>')+'</td>');
+    h+='<td class="c"><strong style="color:var(--accent2)">'+a.total+'</strong></td></tr>';
+  });
+  h+='</tbody></table>';
+  box.innerHTML=h;
+}
+
+async function descargarExcelFase(){
+  toast('<span class="spin"></span> Generando Excel…');
+  try{
+    const r=await fetch(BASE+'/api/v1/bets/puntos-por-fase/'+_torneoId+'/excel',
+      {headers:{'Authorization':'Bearer '+_token,'ngrok-skip-browser-warning':'true'}});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const blob=await r.blob(), url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='puntos_por_fase_t'+_torneoId+'.xlsx';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    toast('✅ Excel descargado');
+  }catch(e){ toast('❌ '+esc(e.message)); }
+}
+
+/* ── Auditoría por fase (real vs apostado) ── */
+async function cargarAudApostadores(){
+  const sel=document.getElementById('audApostador'); if(!sel) return;
+  let a=[]; try{ a=await api('/bets/apostadores'); }catch{}
+  sel.innerHTML='<option value="">Todos</option>'+
+    a.map(u=>'<option value="'+u.id+'">'+esc(u.nombre_completo||u.username||('Usuario '+u.id))+'</option>').join('');
+}
+async function cargarAuditoria(){
+  const box=document.getElementById('audBox');
+  const uid=document.getElementById('audApostador').value;
+  box.innerHTML='<div style="color:var(--muted);padding:14px"><span class="spin"></span> Cargando…</div>';
+  let d;
+  try{ d=await api('/bets/auditoria-fase/'+_torneoId+(uid?('?apostador_id='+uid):'')); }
+  catch(e){ box.innerHTML='<div style="color:var(--red);padding:14px">'+esc(e.message)+'</div>'; return; }
+  const fases=d.fases||[];
+  if(!fases.length){ box.innerHTML='<div style="color:var(--muted);padding:14px">Sin datos. Simulá o recalculá primero.</div>'; return; }
+  const it=p=>p>0?'<span style="color:var(--green);font-weight:700">+'+p+'</span>':'<span style="color:var(--muted2)">—</span>';
+  let h='';
+  fases.forEach(f=>{
+    h+='<div style="margin-bottom:14px"><div style="font-weight:700;font-size:12.5px;margin-bottom:6px;color:var(--accent2)">'+esc(f.fase_nombre)+' <span style="color:var(--muted);font-weight:400">×'+f.multiplicador+'</span></div>'+
+      '<table><thead><tr><th>Apostador</th><th class="c">Marcador (ap→real)</th><th class="c">⚽</th><th class="c">⏱</th><th class="c">🟨</th><th class="c">📺</th><th class="c">Total</th></tr></thead><tbody>';
+    f.partidos.forEach(p=>{
+      h+='<tr><td>'+esc(p.apostador)+'</td>'+
+        '<td class="c">'+esc(p.marcador.apostado)+' → <strong>'+esc(p.marcador.real)+'</strong></td>'+
+        '<td class="c">'+it(p.marcador.pts)+'</td>'+
+        '<td class="c">'+it(p.minuto.pts)+'</td>'+
+        '<td class="c">'+it(p.amarillas.pts)+'</td>'+
+        '<td class="c">'+it(p.var.pts)+'</td>'+
+        '<td class="c"><strong>'+p.total+'</strong></td></tr>';
+    });
+    h+='</tbody></table></div>';
+  });
+  box.innerHTML=h;
+}
+
+init();
+</script>
+</body>
+</html>

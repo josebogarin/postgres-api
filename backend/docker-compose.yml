@@ -1,0 +1,38 @@
+services:
+  # Contenedor PostgreSQL principal - mismo setup que el core-postgres en produccion
+  # NOTA: El backend corre con uvicorn directamente, NO como servicio Docker
+  # Arrancar backend: cd backend && .venv\Scripts\Activate.ps1 && uvicorn app.main:app --reload --port 8000
+  core-postgres:
+    image: postgres:16
+    container_name: core-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: superpassword
+      POSTGRES_DB: app_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_user -d app_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: becbuc-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - core-postgres
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:

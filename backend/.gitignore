@@ -1,0 +1,54 @@
+# Entorno (nunca al repo)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Linters / cache
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Testing
+htmlcov/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Archivos comprimidos / backups
+*.zip
+
+# Tuneles / binarios externos
+ngrok.exe
+cloudflared.exe
+
+# Worktrees temporales de agentes
+.claude/worktrees/
+
+# Excels generados (auditorias, exports, verificacion)
+BECBUC_verificacion.xlsx
+static/auditorias/
+static/exports/
+app/static/auditorias/
+
+# Artefactos basura de oficina / editores
+.~lock.*#
+*.tmp
+*.html.js

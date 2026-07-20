@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>API Reference — FastAPI Platform</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#181c24;--surface2:#1e2330;--surface3:#252a38;
+  --border:#2a3045;--fg:#e2e8f0;--muted:#64748b;--muted2:#475569;
+  --accent:#009688;--accent2:#00bcd4;
+  --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;
+  --purple:#8b5cf6;--orange:#f97316;--pink:#ec4899;
+  --radius:7px;
+}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;display:flex;height:100vh;overflow:hidden;}
+
+/* ── Sidebar ── */
+#sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-hdr{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+.sidebar-title{font-size:.95rem;font-weight:700;color:var(--accent2);}
+.sidebar-sub{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.sidebar-search{padding:8px 10px;border-bottom:1px solid var(--border);}
+.sidebar-search input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--fg);border-radius:var(--radius);padding:5px 10px;font-size:.75rem;outline:none;}
+.sidebar-search input:focus{border-color:var(--accent2);}
+.sidebar-nav{flex:1;overflow-y:auto;padding:6px 0;}
+.nav-group{margin-bottom:2px;}
+.nav-group-hdr{padding:5px 16px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:space-between;}
+.nav-group-hdr:hover{color:var(--fg);}
+.nav-group-items{padding-left:0;}
+.nav-item{display:flex;align-items:center;gap:7px;padding:5px 16px 5px 28px;font-size:.75rem;color:var(--muted);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:2px solid transparent;}
+.nav-item:hover{background:var(--surface2);color:var(--fg);}
+.nav-item.active{color:var(--accent2);border-left-color:var(--accent2);background:rgba(0,188,212,.06);}
+.nav-badge{font-size:.6rem;padding:1px 5px;border-radius:10px;font-weight:700;}
+.badge-get{background:rgba(34,197,94,.15);color:var(--green);}
+.badge-post{background:rgba(59,130,246,.15);color:var(--blue);}
+.badge-patch{background:rgba(245,158,11,.15);color:var(--yellow);}
+.badge-delete{background:rgba(239,68,68,.15);color:var(--red);}
+
+/* ── Content ── */
+#content{flex:1;overflow-y:auto;padding:24px 32px;}
+.module-section{margin-bottom:40px;}
+.module-title{font-size:1.1rem;font-weight:700;color:var(--accent2);margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.module-desc{font-size:.78rem;color:var(--muted);margin-bottom:16px;}
+
+/* ── Endpoint card ── */
+.ep-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+.ep-card.open .ep-body{display:block;}
+.ep-header{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background .1s;}
+.ep-header:hover{background:var(--surface2);}
+.method-badge{font-size:.65rem;font-weight:800;text-transform:uppercase;padding:2px 8px;border-radius:4px;min-width:52px;text-align:center;flex-shrink:0;}
+.GET   .method-badge{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3);}
+.POST  .method-badge{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3);}
+.PATCH .method-badge{background:rgba(245,158,11,.15);color:var(--yellow);border:1px solid rgba(245,158,11,.3);}
+.DELETE .method-badge{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+.ep-path{font-family:monospace;font-size:.8rem;color:var(--fg);flex:1;}
+.ep-summary{font-size:.75rem;color:var(--muted);flex:0 0 240px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.auth-badge{font-size:.58rem;padding:2px 7px;border-radius:10px;font-weight:700;flex-shrink:0;}
+.auth-public{background:rgba(34,197,94,.12);color:var(--green);}
+.auth-user{background:rgba(0,188,212,.12);color:var(--accent2);}
+.auth-admin{background:rgba(245,158,11,.12);color:var(--yellow);}
+.auth-super{background:rgba(139,92,246,.12);color:var(--purple);}
+.ep-chevron{color:var(--muted);font-size:.7rem;transition:transform .15s;flex-shrink:0;}
+.ep-card.open .ep-chevron{transform:rotate(90deg);}
+
+.ep-body{display:none;border-top:1px solid var(--border);}
+.ep-body-inner{padding:14px 16px;}
+.ep-desc{font-size:.78rem;color:var(--fg);margin-bottom:12px;line-height:1.6;}
+.section-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;margin-top:12px;}
+.section-label:first-child{margin-top:0;}
+.param-table{width:100%;border-collapse:collapse;font-size:.75rem;margin-bottom:8px;}
+.param-table th{text-align:left;padding:4px 8px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);}
+.param-table td{padding:5px 8px;border-bottom:1px solid rgba(42,48,69,.4);vertical-align:top;}
+.param-name{font-family:monospace;color:var(--accent2);}
+.param-type{font-family:monospace;color:var(--yellow);font-size:.72rem;}
+.param-req{color:var(--red);font-size:.65rem;font-weight:700;}
+.param-opt{color:var(--muted);font-size:.65rem;}
+.code-block{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-family:monospace;font-size:.73rem;white-space:pre;overflow-x:auto;position:relative;line-height:1.6;}
+.copy-btn{position:absolute;top:6px;right:8px;background:var(--surface3);border:1px solid var(--border);color:var(--muted);border-radius:4px;padding:3px 8px;font-size:.65rem;cursor:pointer;transition:all .1s;}
+.copy-btn:hover{color:var(--fg);border-color:var(--muted);}
+.copy-btn.copied{color:var(--green);border-color:var(--green);}
+.response-tabs{display:flex;gap:4px;margin-bottom:6px;}
+.resp-tab{background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:4px;padding:3px 10px;font-size:.68rem;cursor:pointer;font-weight:600;}
+.resp-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.resp-body{display:none;}
+.resp-body.active{display:block;}
+
+/* ── Toc anchors ── */
+.anchor{scroll-margin-top:20px;}
+
+/* ── Auth legend ── */
+.auth-legend{display:flex;gap:12px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:24px;flex-wrap:wrap;}
+.auth-legend-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--muted);}
+
+/* ── Top bar ── */
+#topbar{display:flex;align-items:center;gap:10px;padding:0 16px;height:44px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.tb-title{font-size:.85rem;font-weight:700;color:var(--accent2);}
+.tb-sep{flex:1;}
+.tb-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:var(--radius);padding:5px 12px;font-size:.75rem;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.tb-btn:hover{color:var(--fg);}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="sidebar-hdr">
+    <div class="sidebar-title">API Reference</div>
+    <div class="sidebar-sub">FastAPI Platform v1 — localhost:8000</div>
+  </div>
+  <div class="sidebar-search">
+    <input id="sideSearch" placeholder="Buscar endpoint…" oninput="filterNav(this.value)"/>
+  </div>
+  <div class="sidebar-nav" id="sideNav">
+    <!-- generado por JS -->
+  </div>
+</nav>
+
+<!-- Main -->
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+  <div id="topbar">
+    <span class="tb-title"><i class="ti ti-api"></i> Referencia de API — Superadmin</span>
+    <span class="tb-sep"></span>
+    <button class="tb-btn" onclick="window.open('/api/v1/docs','_blank')"><i class="ti ti-brand-swagger"></i> Swagger UI</button>
+    <button class="tb-btn" onclick="expandAll()"><i class="ti ti-arrows-maximize"></i> Expandir todo</button>
+    <button class="tb-btn" onclick="collapseAll()"><i class="ti ti-arrows-minimize"></i> Colapsar</button>
+  </div>
+  <div id="content">
+
+    <!-- Legend -->
+    <div class="auth-legend">
+      <span class="auth-legend-item"><span class="auth-badge auth-public">público</span> Sin autenticación</span>
+      <span class="auth-legend-item"><span class="auth-badge auth-user">usuario</span> Cualquier usuario activo (JWT)</span>
+      <span class="auth-legend-item"><span class="auth-badge auth-admin">admin</span> Rol admin o superadmin</span>
+      <span class="auth-legend-item"><span class="auth-badge auth-super">superadmin</span> Solo superadmin</span>
+    </div>
+
+    <!-- Sections generadas por JS -->
+    <div id="modules"></div>
+
+  </div>
+</div>
+
+<script>
+// ── Token (si viene en URL o sessionStorage) ──────────────────────
+const _p = new URLSearchParams(window.location.search);
+const TOKEN = _p.get('token') || sessionStorage.getItem('pg_token') || '<tu-jwt-aqui>';
+const BASE  = (_p.get('base') || window.location.origin).replace(/\/$/, '');
+
+// ── Datos de endpoints ────────────────────────────────────────────
+const MODULES = [
+
+  {
+    id: 'auth',
+    title: 'Autenticación',
+    icon: 'ti-lock',
+    desc: 'Login, refresh de token y datos del usuario autenticado.',
+    endpoints: [
+      {
+        method:'POST', path:'/api/v1/auth/token', auth:'public',
+        summary:'Login — obtener JWT',
+        desc:'Retorna access_token y refresh_token. El campo username acepta tanto usuario como email.',
+        params:[
+          {name:'username',type:'string',in:'body',req:true,desc:'Nombre de usuario o email'},
+          {name:'password',type:'string',in:'body',req:true,desc:'Contraseña'},
+        ],
+        curl:`curl -X POST ${BASE}/api/v1/auth/token \\
+  -H "Content-Type: application/x-www-form-urlencoded" \\
+  -d "username=admin&password=faute"`,
+        resp200:`{
+  "access_token": "eyJhbGci...",
+  "refresh_token": "eyJhbGci...",
+  "token_type": "bearer"
+}`,
+      },
+      {
+        method:'POST', path:'/api/v1/auth/refresh', auth:'public',
+        summary:'Renovar access token',
+        desc:'Usa el refresh_token para obtener un nuevo access_token sin re-autenticar.',
+        params:[{name:'refresh_token',type:'string',in:'body',req:true,desc:'Token de refresco'}],
+        curl:`curl -X POST ${BASE}/api/v1/auth/refresh \\
+  -H "Content-Type: application/json" \\
+  -d '{"refresh_token":"eyJhbGci..."}'`,
+        resp200:`{"access_token":"eyJhbGci...","token_type":"bearer"}`,
+      },
+      {
+        method:'GET', path:'/api/v1/auth/me', auth:'user',
+        summary:'Datos del usuario autenticado',
+        desc:'Devuelve id, username, email, roles, permisos directos y sistemas asignados del usuario actual.',
+        curl:`curl ${BASE}/api/v1/auth/me \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{
+  "id": 1,
+  "username": "admin",
+  "email": "admin@example.com",
+  "is_active": true,
+  "roles": [{"id":1,"name":"superadmin"}],
+  "sistemas": [{"id":1,"nombre":"BECBUC"}]
+}`,
+      },
+    ],
+  },
+
+  {
+    id:'users',
+    title:'Usuarios',
+    icon:'ti-users',
+    desc:'Gestión de usuarios: crear, listar, actualizar, eliminar. Asignación de roles y sistemas.',
+    endpoints:[
+      {method:'GET',path:'/api/v1/users/',auth:'super',summary:'Listar usuarios',
+        desc:'Devuelve todos los usuarios con paginación.',
+        params:[
+          {name:'skip',type:'int',in:'query',req:false,desc:'Offset paginación (default 0)'},
+          {name:'limit',type:'int',in:'query',req:false,desc:'Máximo resultados (default 100)'},
+        ],
+        curl:`curl "${BASE}/api/v1/users/?skip=0&limit=20" \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"username":"admin","email":"admin@example.com","is_active":true,"roles":[...]}]`,
+      },
+      {method:'POST',path:'/api/v1/users/',auth:'super',summary:'Crear usuario',
+        desc:'Registra un nuevo usuario. La contraseña se hashea automáticamente.',
+        params:[
+          {name:'username',type:'string',in:'body',req:true,desc:'Nombre de usuario único'},
+          {name:'email',type:'string',in:'body',req:true,desc:'Email único'},
+          {name:'password',type:'string',in:'body',req:true,desc:'Contraseña en texto plano'},
+        ],
+        curl:`curl -X POST ${BASE}/api/v1/users/ \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"username":"juan","email":"juan@ejemplo.com","password":"clave123"}'`,
+        resp200:`{"id":2,"username":"juan","email":"juan@ejemplo.com","is_active":true,"roles":[]}`,
+      },
+      {method:'PATCH',path:'/api/v1/users/{user_id}',auth:'super',summary:'Actualizar usuario',
+        params:[
+          {name:'user_id',type:'int',in:'path',req:true,desc:'ID del usuario'},
+          {name:'is_active',type:'bool',in:'body',req:false,desc:'Activar/desactivar'},
+          {name:'password',type:'string',in:'body',req:false,desc:'Nueva contraseña'},
+        ],
+        curl:`curl -X PATCH ${BASE}/api/v1/users/2 \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"is_active":false}'`,resp200:`{"id":2,...,"is_active":false}`,
+      },
+      {method:'DELETE',path:'/api/v1/users/{user_id}',auth:'super',summary:'Eliminar usuario',
+        params:[{name:'user_id',type:'int',in:'path',req:true,desc:'ID del usuario'}],
+        curl:`curl -X DELETE ${BASE}/api/v1/users/2 \\
+  -H "Authorization: Bearer ${TOKEN}"`,resp200:`(204 No Content)`,
+      },
+      {method:'POST',path:'/api/v1/users/{user_id}/roles/{role_id}',auth:'super',summary:'Asignar rol',
+        desc:'Asigna un rol existente a un usuario.',
+        params:[
+          {name:'user_id',type:'int',in:'path',req:true,desc:'ID del usuario'},
+          {name:'role_id',type:'int',in:'path',req:true,desc:'ID del rol (superadmin=1, admin=2, operator=3, viewer=4)'},
+        ],
+        curl:`curl -X POST ${BASE}/api/v1/users/2/roles/2 \\
+  -H "Authorization: Bearer ${TOKEN}"`,resp200:`{"id":2,...,"roles":[{"id":2,"name":"admin"}]}`,
+      },
+      {method:'POST',path:'/api/v1/users/{user_id}/sistemas/{sistema_id}',auth:'super',summary:'Asignar sistema',
+        desc:'Da acceso a un sistema al usuario. Los usuarios no-superadmin solo ven sus sistemas asignados.',
+        params:[
+          {name:'user_id',type:'int',in:'path',req:true,desc:'ID del usuario'},
+          {name:'sistema_id',type:'int',in:'body/path',req:true,desc:'ID del sistema'},
+        ],
+        curl:`curl -X POST ${BASE}/api/v1/users/2/sistemas \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"sistema_id":1}'`,resp200:`{"id":2,...,"sistemas":[{"id":1,"nombre":"BECBUC"}]}`,
+      },
+    ],
+  },
+
+  {
+    id:'roles',
+    title:'Roles',
+    icon:'ti-shield',
+    desc:'Roles disponibles: superadmin, admin, operator, viewer. Se asignan a usuarios.',
+    endpoints:[
+      {method:'GET',path:'/api/v1/roles/',auth:'super',summary:'Listar roles',
+        curl:`curl ${BASE}/api/v1/roles/ -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"name":"superadmin"},{"id":2,"name":"admin"},{"id":3,"name":"operator"},{"id":4,"name":"viewer"}]`,
+      },
+    ],
+  },
+
+  {
+    id:'sistema',
+    title:'Sistemas',
+    icon:'ti-database',
+    desc:'Gestión de sistemas (bases de datos externas). Cada sistema tiene credenciales de conexión y puede tener tablas editables vía el CRUD genérico.',
+    endpoints:[
+      {method:'GET',path:'/api/v1/sistema/',auth:'user',summary:'Listar sistemas accesibles',
+        desc:'Superadmin ve todos. Otros usuarios ven solo sus sistemas asignados.',
+        curl:`curl "${BASE}/api/v1/sistema/?limit=50" -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"nombre":"BECBUC","nombre_bd":"becbuc","host_bd":"localhost","es_activo":true}]`,
+      },
+      {method:'POST',path:'/api/v1/sistema/',auth:'super',summary:'Crear sistema',
+        desc:'Registra una nueva base de datos externa con sus credenciales de conexión.',
+        params:[
+          {name:'nombre',type:'string',in:'body',req:true,desc:'Nombre del sistema'},
+          {name:'nombre_bd',type:'string',in:'body',req:true,desc:'Nombre de la BD en PostgreSQL'},
+          {name:'host_bd',type:'string',in:'body',req:true,desc:'Host (ej: localhost)'},
+          {name:'puerto_bd',type:'int',in:'body',req:false,desc:'Puerto (default 5432)'},
+          {name:'usuario_bd',type:'string',in:'body',req:true,desc:'Usuario de la BD'},
+          {name:'contraseña_bd',type:'string',in:'body',req:true,desc:'Contraseña de la BD'},
+        ],
+        curl:`curl -X POST ${BASE}/api/v1/sistema/ \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"nombre":"BECBUC","nombre_bd":"becbuc","host_bd":"localhost","puerto_bd":5432,"usuario_bd":"app_user","contraseña_bd":"superpassword"}'`,
+        resp200:`{"id":1,"nombre":"BECBUC","nombre_bd":"becbuc","es_activo":true}`,
+      },
+      {method:'POST',path:'/api/v1/admin/sync-sistemas',auth:'super',summary:'Auto-detectar BDs del servidor',
+        desc:'Detecta automáticamente todas las bases de datos en el servidor PostgreSQL y las registra como sistemas. Hereda host/user/pass del DATABASE_URL.',
+        curl:`curl -X POST ${BASE}/api/v1/admin/sync-sistemas \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{"created":2,"skipped":1,"sistemas":[...]}`,
+      },
+    ],
+  },
+
+  {
+    id:'admin',
+    title:'Admin CRUD Genérico',
+    icon:'ti-table',
+    desc:'CRUD sobre cualquier tabla de cualquier BD registrada. Usa db_slug para apuntar a una BD externa. Las vistas (V_*) son de solo lectura.',
+    endpoints:[
+      {method:'GET',path:'/api/v1/admin/db-tables',auth:'admin',summary:'Listar tablas y vistas de una BD',
+        desc:'Devuelve tablas y vistas del schema public. Sin db_slug = BD principal (app_db).',
+        params:[{name:'db_slug',type:'string',in:'query',req:false,desc:'nombre_bd del sistema (ej: becbuc, ventas_db)'}],
+        curl:`curl "${BASE}/api/v1/admin/db-tables?db_slug=becbuc" \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{"tables":[{"name":"apuesta"},{"name":"partido"}...],"views":[{"name":"v_hechos_apuestas"}...]}`,
+      },
+      {method:'GET',path:'/api/v1/admin/db-table-schema',auth:'admin',summary:'Schema de una tabla/vista',
+        desc:'Columnas, tipos y PK de la tabla o vista indicada.',
+        params:[
+          {name:'table_name',type:'string',in:'query',req:true,desc:'Nombre de la tabla o vista'},
+          {name:'db_slug',type:'string',in:'query',req:false,desc:'BD externa (default: app_db)'},
+        ],
+        curl:`curl "${BASE}/api/v1/admin/db-table-schema?table_name=apuesta&db_slug=becbuc" \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{"columns":[{"name":"id","type":"bigint","pk":true},{"name":"apostador_id","type":"bigint","pk":false}...]}`,
+      },
+      {method:'GET',path:'/api/v1/admin/tables/{table_name}/rows',auth:'admin',summary:'Listar filas',
+        desc:'Lista filas con paginación, búsqueda full-text (ILIKE en columnas TEXT/VARCHAR) y ordenamiento.',
+        params:[
+          {name:'table_name',type:'string',in:'path',req:true,desc:'Nombre de tabla o vista'},
+          {name:'db_slug',type:'string',in:'query',req:false,desc:'BD externa'},
+          {name:'skip',type:'int',in:'query',req:false,desc:'Offset'},
+          {name:'limit',type:'int',in:'query',req:false,desc:'Máximo (default 50, max 5000)'},
+          {name:'q',type:'string',in:'query',req:false,desc:'Búsqueda de texto libre (ILIKE)'},
+          {name:'sort_by',type:'string',in:'query',req:false,desc:'Columna para ordenar'},
+          {name:'order',type:'asc|desc',in:'query',req:false,desc:'Dirección del orden'},
+        ],
+        curl:`curl "${BASE}/api/v1/admin/tables/apuesta/rows?db_slug=becbuc&limit=100&sort_by=apostador_id" \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{"items":[{"id":1,"apostador_id":1,"pred_local":2,"pred_visitante":1,...}],"total":87}`,
+      },
+      {method:'POST',path:'/api/v1/admin/tables/{table_name}/rows',auth:'admin',summary:'Crear fila',
+        desc:'Inserta un registro. El body es el objeto con los campos de la tabla.',
+        curl:`curl -X POST "${BASE}/api/v1/admin/tables/equipo/rows?db_slug=becbuc" \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"nombre":"Paraguay","nombre_es":"Paraguay","pais":"Paraguay","codigo_iso":"py"}'`,
+        resp200:`{"id":33,"nombre":"Paraguay",...}`,
+      },
+      {method:'PATCH',path:'/api/v1/admin/tables/{table_name}/rows/{pk}',auth:'admin',summary:'Actualizar fila',
+        desc:'Actualiza solo los campos enviados en el body.',
+        curl:`curl -X PATCH "${BASE}/api/v1/admin/tables/partido/rows/1?db_slug=becbuc" \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"goles_local":2,"goles_visitante":1,"estado":"terminado"}'`,
+        resp200:`{"id":1,"goles_local":2,"goles_visitante":1,"estado":"terminado",...}`,
+      },
+      {method:'DELETE',path:'/api/v1/admin/tables/{table_name}/rows/{pk}',auth:'admin',summary:'Eliminar fila',
+        curl:`curl -X DELETE "${BASE}/api/v1/admin/tables/mensaje_admin/rows/5?db_slug=becbuc" \\
+  -H "Authorization: Bearer ${TOKEN}"`,resp200:`(204 No Content)`,
+      },
+      {method:'POST',path:'/api/v1/admin/sql',auth:'super',summary:'Ejecutar SQL libre',
+        desc:'Ejecuta cualquier consulta SQL sobre app_db. Solo superadmin.',
+        params:[
+          {name:'query',type:'string',in:'body',req:true,desc:'Consulta SQL'},
+          {name:'limit',type:'int',in:'body',req:false,desc:'Límite de filas (default 500)'},
+        ],
+        curl:`curl -X POST ${BASE}/api/v1/admin/sql \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"query":"SELECT id,username FROM users LIMIT 10"}'`,
+        resp200:`{"columns":["id","username"],"rows":[{"id":"1","username":"admin"}],"count":1,"time_ms":2.3}`,
+      },
+      {method:'POST',path:'/api/v1/admin/sql-db',auth:'admin',summary:'Ejecutar SQL en BD externa',
+        desc:'Ejecuta SQL sobre la BD indicada por db_slug. Usado por KPIs del portal.',
+        params:[
+          {name:'query',type:'string',in:'body',req:true,desc:'Consulta SQL (solo SELECT en producción)'},
+          {name:'db_slug',type:'string',in:'body',req:false,desc:'BD externa (ej: becbuc)'},
+          {name:'limit',type:'int',in:'body',req:false,desc:'Límite de filas (default 500)'},
+        ],
+        curl:`curl -X POST ${BASE}/api/v1/admin/sql-db \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"query":"SELECT COUNT(*) as apostadores FROM apuesta","db_slug":"becbuc"}'`,
+        resp200:`{"columns":["apostadores"],"rows":[{"apostadores":"87"}],"count":1,"time_ms":3.1}`,
+      },
+      {method:'POST',path:'/api/v1/admin/seed-diccionario',auth:'admin',summary:'Poblar diccionario',
+        desc:'Lee information_schema y registra todas las columnas de la BD en el diccionario. Idempotente. Incluye tablas Y vistas.',
+        params:[
+          {name:'id_sistema',type:'int',in:'query',req:true,desc:'ID del sistema'},
+          {name:'db_slug',type:'string',in:'query',req:false,desc:'BD del sistema'},
+          {name:'tablas',type:'string',in:'query',req:false,desc:'Filtrar a tablas específicas (csv)'},
+        ],
+        curl:`curl -X POST "${BASE}/api/v1/admin/seed-diccionario?id_sistema=1&db_slug=becbuc" \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{"inserted":42,"skipped":8,"deleted":0,"total_columns":50,"message":"Sincronización completa..."}`,
+      },
+    ],
+  },
+
+  {
+    id:'diccionario',
+    title:'Diccionario de Campos',
+    icon:'ti-book',
+    desc:'Metadatos de columnas: alias, tipo de visualización, multivalor, orden, validaciones. Controla cómo el CRUD genérico presenta cada campo.',
+    endpoints:[
+      {method:'GET',path:'/api/v1/diccionario/',auth:'user',summary:'Listar entradas del diccionario',
+        params:[
+          {name:'id_sistema',type:'int',in:'query',req:false,desc:'Filtrar por sistema'},
+          {name:'tabla',type:'string',in:'query',req:false,desc:'Filtrar por tabla o vista'},
+          {name:'skip',type:'int',in:'query',req:false,desc:'Offset'},
+          {name:'limit',type:'int',in:'query',req:false,desc:'Máximo (default 100)'},
+        ],
+        curl:`curl "${BASE}/api/v1/diccionario/?id_sistema=1&tabla=apuesta" \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"campo":"apostador_id","alias":"Apostador","tipo":"numero","tabla":"apuesta",...}]`,
+      },
+      {method:'PATCH',path:'/api/v1/diccionario/{id}',auth:'admin',summary:'Actualizar entrada de diccionario',
+        desc:'Modifica alias, tipo, orden, visible, multivalor de un campo.',
+        params:[
+          {name:'alias',type:'string',in:'body',req:false,desc:'Nombre visible del campo'},
+          {name:'tipo',type:'string',in:'body',req:false,desc:'texto|numero|fecha|bool|select|multiselect'},
+          {name:'multivalor',type:'string',in:'body',req:false,desc:'SQL SELECT para opciones del campo'},
+          {name:'orden',type:'int',in:'body',req:false,desc:'Posición de la columna'},
+          {name:'visible',type:'bool',in:'body',req:false,desc:'Mostrar u ocultar columna'},
+        ],
+        curl:`curl -X PATCH ${BASE}/api/v1/diccionario/1 \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"alias":"Apostador ID","tipo":"numero","visible":true}'`,
+        resp200:`{"id":1,"campo":"apostador_id","alias":"Apostador ID","tipo":"numero",...}`,
+      },
+    ],
+  },
+
+  {
+    id:'portal',
+    title:'Portal (KPIs / Menú / Vínculos)',
+    icon:'ti-layout-dashboard',
+    desc:'Contenido dinámico del portal BECBUC: KPIs con SQL, ítems de menú y vínculos. Requiere sistema_id del sistema BECBUC.',
+    endpoints:[
+      {method:'GET',path:'/api/v1/portal/kpis',auth:'user',summary:'Listar KPIs del sistema',
+        params:[{name:'sistema_id',type:'int',in:'query',req:true,desc:'ID del sistema BECBUC'}],
+        curl:`curl "${BASE}/api/v1/portal/kpis?sistema_id=1" -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"titulo":"Apostadores","sql_query":"SELECT COUNT(*) FROM apuesta","icono":"ti-users","valor_formato":"numero"}]`,
+      },
+      {method:'POST',path:'/api/v1/portal/kpis',auth:'admin',summary:'Crear KPI',
+        params:[
+          {name:'sistema_id',type:'int',in:'body',req:true,desc:'ID del sistema'},
+          {name:'titulo',type:'string',in:'body',req:true,desc:'Título del KPI'},
+          {name:'sql_query',type:'string',in:'body',req:true,desc:'SQL que devuelve un valor numérico'},
+          {name:'icono',type:'string',in:'body',req:false,desc:'Clase de ícono Tabler (ej: ti-users)'},
+        ],
+        curl:`curl -X POST ${BASE}/api/v1/portal/kpis \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"sistema_id":1,"titulo":"Partidos jugados","sql_query":"SELECT COUNT(*) FROM partido WHERE estado=\\'terminado\\'","icono":"ti-ball-football"}'`,
+        resp200:`{"id":5,"titulo":"Partidos jugados",...}`,
+      },
+      {method:'GET',path:'/api/v1/portal/menu',auth:'user',summary:'Menú dinámico del portal',
+        params:[{name:'sistema_id',type:'int',in:'query',req:true,desc:'ID del sistema'}],
+        curl:`curl "${BASE}/api/v1/portal/menu?sistema_id=1" -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"titulo":"Fixture","icono":"ti-calendar","tipo":"tabla","tabla":"partido","orden":1}]`,
+      },
+      {method:'GET',path:'/api/v1/portal/vinculos',auth:'user',summary:'Vínculos del dashboard',
+        params:[{name:'sistema_id',type:'int',in:'query',req:true,desc:'ID del sistema'}],
+        curl:`curl "${BASE}/api/v1/portal/vinculos?sistema_id=1" -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"titulo":"Reglamento","url":"https://...","icono":"ti-file-text"}]`,
+      },
+    ],
+  },
+
+  {
+    id:'torneo',
+    title:'Torneo BECBUC',
+    icon:'ti-trophy',
+    desc:'Gestión de torneos del simulador: CRUD torneos activos, carga de fixture desde API-Football, fases y partidos.',
+    endpoints:[
+      {method:'GET',path:'/api/v1/torneo/activas',auth:'user',summary:'Torneos activos',
+        desc:'Lista torneos en estado activo con sus datos básicos.',
+        curl:`curl ${BASE}/api/v1/torneo/activas -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"nombre":"FIFA World Cup 2026","estado":"activo","anio":2026}]`,
+      },
+      {method:'POST',path:'/api/v1/torneo/{torneo_id}/cargar-fixture',auth:'super',summary:'Cargar fixture desde API-Football',
+        desc:'Descarga partidos y equipos desde la API-Football y los inserta en la BD. Requiere APIFOOTBALL_KEY en .env.',
+        params:[{name:'torneo_id',type:'int',in:'path',req:true,desc:'ID del torneo'}],
+        curl:`curl -X POST ${BASE}/api/v1/torneo/1/cargar-fixture \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{"partidos_creados":72,"equipos_actualizados":32}`,
+      },
+    ],
+  },
+
+  {
+    id:'bets',
+    title:'Apuestas BECBUC',
+    icon:'ti-currency-dollar',
+    desc:'Endpoints del simulador de pronósticos: partidos disponibles, mis pronósticos, ranking, período de apuestas, auditoría y mensajes del admin.',
+    endpoints:[
+      {method:'GET',path:'/api/v1/bets/partidos/{torneo_id}',auth:'user',summary:'Partidos disponibles para apostar',
+        desc:'Lista partidos de fase de grupos con estado pendiente.',
+        curl:`curl ${BASE}/api/v1/bets/partidos/1 -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"equipo_local":"Argentina","equipo_visitante":"Australia","fecha":"2026-06-15T20:00:00Z"}]`,
+      },
+      {method:'GET',path:'/api/v1/bets/grupos/{torneo_id}',auth:'user',summary:'Grupos con standings y partidos',
+        desc:'Standings actuales por grupo más lista de partidos para la simulación del bracket.',
+        curl:`curl ${BASE}/api/v1/bets/grupos/1 -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{"A":[{"equipo":"Argentina","pts":6,"pj":3,"gf":7,"gc":2}],...}`,
+      },
+      {method:'GET',path:'/api/v1/bets/mis-apuestas/{torneo_id}',auth:'user',summary:'Mis pronósticos',
+        desc:'Devuelve todos los pronósticos del usuario autenticado para el torneo.',
+        curl:`curl ${BASE}/api/v1/bets/mis-apuestas/1 -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"partido_id":1,"pred_local":2,"pred_visitante":1,"pred_ganador":"local","puntos":3}]`,
+      },
+      {method:'POST',path:'/api/v1/bets/apuestas',auth:'user',summary:'Crear / actualizar pronóstico',
+        desc:'Upsert: si ya existe un pronóstico para ese partido, lo actualiza. Respeta el período de apuestas configurado.',
+        params:[
+          {name:'partido_id',type:'int',in:'body',req:true,desc:'ID del partido'},
+          {name:'pred_local',type:'int',in:'body',req:true,desc:'Goles predichos para el local'},
+          {name:'pred_visitante',type:'int',in:'body',req:true,desc:'Goles predichos para el visitante'},
+        ],
+        curl:`curl -X POST ${BASE}/api/v1/bets/apuestas \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"partido_id":1,"pred_local":2,"pred_visitante":0}'`,
+        resp200:`{"id":42,"partido_id":1,"pred_local":2,"pred_visitante":0,"pred_ganador":"local"}`,
+      },
+      {method:'GET',path:'/api/v1/bets/ranking/{torneo_id}',auth:'user',summary:'Ranking de apostadores',
+        desc:'Tabla de posiciones con puntos totales, aciertos exactos, y nombre del apostador.',
+        curl:`curl ${BASE}/api/v1/bets/ranking/1 -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"posicion":1,"apostador_id":1,"username":"juan","puntos":42,"aciertos_exactos":8}]`,
+      },
+      {method:'GET',path:'/api/v1/bets/periodo/{torneo_id}',auth:'user',summary:'Período de apuestas',
+        desc:'Devuelve ventana de tiempo durante la cual se pueden registrar pronósticos. NULL = sin restricción.',
+        curl:`curl ${BASE}/api/v1/bets/periodo/1 -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{"apuesta_inicio":"2026-06-10T00:00:00Z","apuesta_fin":"2026-06-15T12:00:00Z","abierto":true}`,
+      },
+      {method:'PATCH',path:'/api/v1/bets/periodo/{torneo_id}',auth:'admin',summary:'Configurar período de apuestas',
+        desc:'Establece o limpia la ventana de tiempo para pronósticos. Enviar null para quitar restricción.',
+        params:[
+          {name:'apuesta_inicio',type:'datetime|null',in:'body',req:false,desc:'Inicio del período (ISO 8601)'},
+          {name:'apuesta_fin',type:'datetime|null',in:'body',req:false,desc:'Fin del período (ISO 8601)'},
+        ],
+        curl:`curl -X PATCH ${BASE}/api/v1/bets/periodo/1 \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"apuesta_inicio":"2026-06-10T00:00:00","apuesta_fin":"2026-06-30T23:59:59"}'`,
+        resp200:`{"apuesta_inicio":"2026-06-10T00:00:00Z","apuesta_fin":"2026-06-30T23:59:59Z","abierto":true}`,
+      },
+      {method:'GET',path:'/api/v1/bets/auditoria/{torneo_id}',auth:'admin',summary:'Listar snapshots de auditoría',
+        desc:'Devuelve la lista de archivos Excel de auditoría generados para el torneo.',
+        curl:`curl ${BASE}/api/v1/bets/auditoria/1 -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"archivo_path":"auditorias/auditoria_torneo1_20260605.xlsx","generado_at":"2026-06-05T10:00:00Z"}]`,
+      },
+      {method:'POST',path:'/api/v1/bets/auditoria/{torneo_id}',auth:'admin',summary:'Generar Excel de auditoría',
+        desc:'Genera un archivo Excel con todos los pronósticos, resultados y puntajes del torneo. Guardado en /static/auditorias/.',
+        curl:`curl -X POST ${BASE}/api/v1/bets/auditoria/1 \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{"id":1,"archivo_path":"auditorias/auditoria_torneo1_20260605.xlsx","url":"/static/auditorias/..."}`,
+      },
+      {method:'GET',path:'/api/v1/bets/mensajes/{torneo_id}',auth:'user',summary:'Mensajes del administrador',
+        desc:'Devuelve los mensajes publicados por el admin para el torneo.',
+        curl:`curl ${BASE}/api/v1/bets/mensajes/1 -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"titulo":"Recordatorio","contenido":"El período de apuestas cierra el viernes.","autor_nombre":"admin","created_at":"2026-06-05T09:00:00Z"}]`,
+      },
+      {method:'POST',path:'/api/v1/bets/mensajes/{torneo_id}',auth:'admin',summary:'Publicar mensaje',
+        params:[
+          {name:'titulo',type:'string',in:'body',req:true,desc:'Título del mensaje'},
+          {name:'contenido',type:'string',in:'body',req:true,desc:'Cuerpo del mensaje'},
+        ],
+        curl:`curl -X POST ${BASE}/api/v1/bets/mensajes/1 \\
+  -H "Authorization: Bearer ${TOKEN}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"titulo":"Aviso","contenido":"Los resultados ya están cargados."}'`,
+        resp200:`{"id":2,"titulo":"Aviso","contenido":"Los resultados ya están cargados.","autor_nombre":"admin"}`,
+      },
+      {method:'DELETE',path:'/api/v1/bets/mensajes/{torneo_id}/{mensaje_id}',auth:'admin',summary:'Eliminar mensaje',
+        curl:`curl -X DELETE ${BASE}/api/v1/bets/mensajes/1/2 \\
+  -H "Authorization: Bearer ${TOKEN}"`,resp200:`(204 No Content)`,
+      },
+      {method:'POST',path:'/api/v1/bets/simular-resultados/{torneo_id}',auth:'admin',summary:'Simular resultados y calcular puntajes',
+        desc:'Carga resultados reales y calcula puntos para todos los apostadores.',
+        curl:`curl -X POST ${BASE}/api/v1/bets/simular-resultados/1 \\
+  -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`{"puntajes_actualizados":87,"partidos_procesados":12}`,
+      },
+    ],
+  },
+
+  {
+    id:'audit',
+    title:'Audit Logs',
+    icon:'ti-clipboard-list',
+    desc:'Registro de operaciones: todas las requests mutantes (POST/PATCH/DELETE) quedan registradas con usuario, tabla y timestamp.',
+    endpoints:[
+      {method:'GET',path:'/api/v1/audit-logs/',auth:'super',summary:'Listar audit logs',
+        params:[
+          {name:'skip',type:'int',in:'query',req:false,desc:'Offset'},
+          {name:'limit',type:'int',in:'query',req:false,desc:'Máximo (default 100)'},
+        ],
+        curl:`curl "${BASE}/api/v1/audit-logs/?limit=20" -H "Authorization: Bearer ${TOKEN}"`,
+        resp200:`[{"id":1,"user_id":1,"method":"PATCH","path":"/api/v1/admin/tables/partido/rows/1","status_code":200,"created_at":"2026-06-05T10:00:00Z"}]`,
+      },
+    ],
+  },
+
+];
+
+// ── Render ────────────────────────────────────────────────────────
+function authClass(a){ return {public:'auth-public',user:'auth-user',admin:'auth-admin',super:'auth-super'}[a]||'auth-user'; }
+function authLabel(a){ return {public:'público',user:'usuario',admin:'admin',super:'superadmin'}[a]||a; }
+
+function buildNav() {
+  const nav = document.getElementById('sideNav');
+  nav.innerHTML = MODULES.map(m => `
+    <div class="nav-group" id="ng-${m.id}">
+      <div class="nav-group-hdr" onclick="scrollTo('${m.id}')">
+        <span><i class="ti ${m.icon}" style="margin-right:5px;"></i>${m.title}</span>
+        <span style="font-size:.62rem;color:var(--muted2)">${m.endpoints.length}</span>
+      </div>
+      <div class="nav-group-items">
+        ${m.endpoints.map(e => `
+          <div class="nav-item" onclick="scrollTo('${m.id}')">
+            <span class="nav-badge badge-${e.method.toLowerCase()}">${e.method}</span>
+            <span style="overflow:hidden;text-overflow:ellipsis;">${e.summary||e.path}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function buildContent() {
+  const mods = document.getElementById('modules');
+  mods.innerHTML = MODULES.map(m => `
+    <section class="module-section anchor" id="${m.id}">
+      <div class="module-title"><i class="ti ${m.icon}"></i>${m.title}</div>
+      <div class="module-desc">${m.desc}</div>
+      ${m.endpoints.map((e,i) => buildCard(m.id,i,e)).join('')}
+    </section>
+  `).join('');
+}
+
+function buildCard(mid,idx,e) {
+  const cid = `${mid}-${idx}`;
+  const params = e.params ? `
+    <div class="section-label">Parámetros</div>
+    <table class="param-table">
+      <tr><th>Nombre</th><th>Tipo</th><th>En</th><th>Req</th><th>Descripción</th></tr>
+      ${e.params.map(p=>`<tr>
+        <td class="param-name">${p.name}</td>
+        <td class="param-type">${p.type}</td>
+        <td style="color:var(--muted)">${p.in}</td>
+        <td>${p.req?'<span class="param-req">✓</span>':'<span class="param-opt">—</span>'}</td>
+        <td style="color:var(--muted)">${p.desc||''}</td>
+      </tr>`).join('')}
+    </table>` : '';
+
+  return `
+  <div class="ep-card ${e.method}" id="card-${cid}">
+    <div class="ep-header" onclick="toggleCard('${cid}')">
+      <span class="method-badge">${e.method}</span>
+      <span class="ep-path">${e.path}</span>
+      <span class="ep-summary">${e.summary||''}</span>
+      <span class="auth-badge ${authClass(e.auth)}">${authLabel(e.auth)}</span>
+      <i class="ti ti-chevron-right ep-chevron"></i>
+    </div>
+    <div class="ep-body">
+      <div class="ep-body-inner">
+        ${e.desc?`<div class="ep-desc">${e.desc}</div>`:''}
+        ${params}
+        ${e.curl?`
+        <div class="section-label">Ejemplo cURL</div>
+        <div class="code-block"><button class="copy-btn" onclick="copyCode(this)">Copiar</button>${esc(e.curl)}</div>
+        `:''}
+        ${e.resp200?`
+        <div class="section-label">Respuesta 200</div>
+        <div class="code-block">${esc(e.resp200)}</div>
+        `:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function toggleCard(id){
+  const c = document.getElementById(`card-${id}`);
+  if(c) c.classList.toggle('open');
+}
+
+function expandAll(){ document.querySelectorAll('.ep-card').forEach(c=>c.classList.add('open')); }
+function collapseAll(){ document.querySelectorAll('.ep-card').forEach(c=>c.classList.remove('open')); }
+
+function scrollTo(id){
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+}
+
+function copyCode(btn) {
+  const code = btn.parentElement.textContent.replace('Copiar','').trim();
+  navigator.clipboard.writeText(code).then(()=>{
+    btn.textContent='✓ Copiado'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='Copiar'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+function filterNav(q) {
+  const lq = q.toLowerCase().trim();
+  document.querySelectorAll('.nav-group').forEach(g => {
+    const items = g.querySelectorAll('.nav-item');
+    let any = false;
+    items.forEach(item => {
+      const txt = item.textContent.toLowerCase();
+      const vis = !lq || txt.includes(lq);
+      item.style.display = vis ? '' : 'none';
+      if(vis) any = true;
+    });
+    g.style.display = (!lq || any) ? '' : 'none';
+  });
+  if (!lq) return;
+  // Also filter cards
+  document.querySelectorAll('.ep-card').forEach(c => {
+    const txt = c.textContent.toLowerCase();
+    c.style.display = txt.includes(lq) ? '' : 'none';
+  });
+  document.querySelectorAll('.module-section').forEach(s => {
+    const vis = [...s.querySelectorAll('.ep-card')].some(c=>c.style.display!=='none');
+    s.style.display = vis ? '' : 'none';
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+buildNav();
+buildContent();
+</script>
+</body>
+</html>
