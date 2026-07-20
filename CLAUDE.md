@@ -1,5 +1,5 @@
 # BECBUC.md - Estado del Proyecto BECBUC
-Ultima actualizacion: 2026-07-19 (sesion 70)
+Ultima actualizacion: 2026-07-20 (sesion 71)
 Leer este archivo COMPLETO antes de tocar cualquier archivo.
 
 ## REGLAS GENERALES DEL PROYECTO
@@ -677,6 +677,88 @@ bracket_service.py -> _sort_grupo():
   Usar passlib.CryptContext(schemes=['bcrypt']).hash('...') para generar hashes.
 
 ## HISTORIAL SESIONES
+
+2026-07-20 - Sesion Cowork (sesion 71) - SINCRONIZACION FINAL DESDE EXCEL DE CIERRE + ALINEAR RESULTADOS + VALIDAR ALGORITMO:
+
+  OBJETIVO: verificar que apuestas + resultados de la BD coincidan con el Excel de cierre;
+    copiar del Excel lo que faltara (predicciones y globales); alinear resultados por item;
+    reabrir/recalcular/re-cerrar; y aislar/validar el algoritmo de puntaje.
+
+  FUENTE: "20260720_1600- TBL PARA CARGAR LIVE- JOSE torneo cerrado.xlsx" (raiz del proyecto).
+    OJO: los scripts hacian fallback silencioso al viejo "...con correcciones.xlsx" -> se
+    ENDURECIERON para tomar SOLO el de cierre (tokens 'TORNEO CERRADO'/'FIN DE TORNEO'/'20260720',
+    excluye 'CORRECCIONES'/'SEMIFINAL'). Mover el viejo a _backups/ si esta en el root.
+
+  COLUMNAS DEL EXCEL DE CIERRE (difieren del semifinal!):
+    Hoja '50- TBL MASTER' (1-based):
+      pid=2, alias=10, marcador local=13 / visit=15;
+      predicciones: J=25 K=26 L=27 M=28 N=29 tanda EQ1=30 tanda EQ2=31 clasifica=32;
+      globales pred (fila con pid): A=33..G=39 (no usados, ver abajo);
+      PUNTOS: H=40 I=41 J=42 K=43 L=44 M=45 N=46 tandaEQ1=47 tandaEQ2=48 clasificados=49
+        (col P 'clasificados' se AUTODETECTA por encabezado 'CLASIFICAD'; se corrio de 51 -> 49).
+    Hoja '40- RESULTADOS OFICIALES' (autodetectado por encabezado):
+      pid=1, GOLES local=12 / visit=14, amarillas=30, rojas=31, VAR=32, penales_juego=33, minuto=34,
+      tanda EQ1=35 / EQ2=36.  (NUMERACION DISTINTA a TBL MASTER.)
+    Globales A-G del apostador: filas pid P111..P118 en TBL MASTER, valor en col 11
+      (P111 campeon, P112 finalista2, P113 goleador, P114 peor, P115 etapa PY, P116 goles PY,
+       P117 goleada ganador, P118 goleada perdedor).
+
+  REGLAS CONFIRMADAS POR EL USUARIO ESTA SESION:
+    - null = 0: prediccion en blanco cuenta como 0; si el resultado real es 0, el apostador
+      ACIERTA y suma. Los diffs de K/M "BD lenient null->0" son la BD aplicando bien la regla (BD correcta).
+    - tanda penal = 99 (o 0) en el Excel = null (sin definicion por penales). NO alinear la tanda
+      desde el Excel: son centinelas; la BD con None es lo correcto (O solo puntua KO con tanda real).
+
+  SCRIPTS CREADOS (raiz; .bat en bat\; psycopg2 host=localhost user=app_user pass=superpassword;
+   API jose/catalina :8000):
+    verificar_apuestas_fin_torneo.py [--apply] [--force-all]: compara y sincroniza PREDICCIONES
+      (marcador+bonus) + globales. MODO SEGURO por defecto: copia solo predicciones reales, NUNCA
+      sobrescribe un valor de la BD con vacio, OMITE tanda None->0 de grupos, OMITE inserts centinela
+      P103/P104 (apostadores sin cargar final/3P), y OMITE globales (el Excel viene EN BLANCO ->
+      borraria peor-equipo de 35 + campeon de kikao; ademas su etapa_paraguay solo reformatea labels).
+      --force-all = blanket literal (NO recomendado).
+    sincronizar_resultados_excel.py [--apply] [--incluir-tanda]: alinea partido (goles, amarillas,
+      rojas, VAR, penales_juego, minuto) a '40- RESULTADOS OFICIALES'. Tanda EXCLUIDA por defecto
+      (99=null). Filtro anti-centinela (98/99/999). Autodetecta columnas e imprime el mapeo.
+    reabrir_y_recalcular.py [--no-recerrar]: cerrado=FALSE -> POST /calcular-puntajes/2?force_grupos=true
+      -> cerrado=TRUE -> ranking. NO hace sync (respeta resultados oficiales cargados a mano).
+    comparar_puntajes_fin_torneo.py: auditoria de ORIGEN por item H..P (puntos Excel vs BD), clasifica
+      cada diff (BD lenient null->0 / escala reglamento P / desempate N / quirk tanda O / error Excel).
+    exportar_diffs_fin_torneo.py: exporta becbuc_diferencias_puntaje_<ts>.xlsx (Diferencias+Resumen+Leyenda).
+    diag_tanda_semis.py, diag_var_real.py: diagnosticos read-only (tanda P101-104; VAR real por partido).
+
+  APLICADO (en orden):
+    1) sincronizar_resultados_excel.py --apply: 14 partidos / 16 campos.
+       VAR (14): P63(2->1) P64(1->2) P65(2->0) P67(0->1) P68(2->1) P70(1->0) P71(1->2) P72(2->1)
+                 P76(0->1) P79(1->0) P83(3->2) P92(3->2) P95(3->1) P104(0->2).
+       minuto: P64 21->28.  amarillas: P104 final 6->4 (REVIERTE la correccion manual de sesion 70;
+       el usuario acepto alinear la final al Excel).  Tanda: EXCLUIDA (centinela).
+    2) verificar_apuestas_fin_torneo.py --apply (seguro): 322 apuestas / 338 campos
+       (clasifica=248, minuto=43, rojas=18, penales_juego=17, marcador local=6, var=4, visit=2).
+       Globales NO tocadas (preservadas). 8 inserts centinela P103/P104 omitidos.
+    3) reabrir_y_recalcular.py: force_grupos=true -> re-cerrado. plenos=543, aciertos=2133, globales=44.
+
+  RESULTADO / VALIDACION DEL ALGORITMO (auditoria final, predicciones + resultados IDENTICOS al Excel):
+    Solo 8 diferencias de puntos residuales, TODAS con la BD correcta:
+      7 = "BD lenient null->0" (K octavos: DECANITA P089/P090, EDGAR P090, CHECHO P093/P095;
+          M octavos: COTO P094, CHECHO P096) -> la BD suma el punto por la regla null=0; el Excel no.
+      1 = "escala reglamento P" (EDGAR P084 16avos: BD=2 por acertar el clasificado; Excel=0/plano).
+    VAR 340->0, amarillas 17->0, minuto 7->0, marcador 0, tanda 0.
+    CONCLUSION: el motor de puntaje de la BD esta validado; el Excel diverge SOLO en (a) no aplicar
+    null=0 (K/M) y (b) no escalar el item P por fase. Ambos a favor de la BD.
+
+  RANKING FINAL (post alineacion + recalc, torneo cerrado):
+    checho 1077, fscc 979, seba 978, patito 952, hs 949, lav 939, sanbie 930, coco 904, moro 892,
+    vitra 882, grillito 881, gh1s 871, hakembo 862, oti 854, @bs 850.
+    Globales con puntaje>0: A campeon=21, B finalistas=32, C goleador=29, D peor=1(sanbie/Iraq),
+    E goleada=15, F etapa PY=18, G goles PY=6.  (checho 1080->1077 por el ajuste VAR/amarillas de la final.)
+
+  LIVE (becbuc-live-playoffs.html): lee de la BD en vivo -> refleja ranking recalculado + resultados
+    alineados + banner "TORNEO CERRADO" (cerrado=TRUE). No requiere reiniciar uvicorn (solo datos).
+    Ctrl+F5 si el navegador tenia cache.
+
+  PENDIENTE (opcional): ejecutar backup del nuevo estado (bat\run_backup.bat). Git sigue sin versionar.
+
 
 2026-07-19 - Sesion Cowork (sesion 70) - CIERRE DEFINITIVO DEL TORNEO + PROPUESTA BECBUC 2.0 (DOC):
 
