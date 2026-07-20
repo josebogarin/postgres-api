@@ -14,8 +14,11 @@ O ejecutar directamente para verificar un archivo:
 import ast, re, shutil, subprocess, sys, os
 from datetime import datetime
 
-BASE = r'C:\proyecto FAST API\backend\static'
-BACKUP_DIR = r'C:\proyecto FAST API\_backups'
+# Rutas derivadas de la ubicacion de este archivo -> portable, no depende de C:\proyecto FAST API.
+# (Se puede overridear con las env vars BECBUC_STATIC_DIR / BECBUC_BACKUP_DIR.)
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+BASE = os.environ.get('BECBUC_STATIC_DIR', os.path.join(_ROOT, 'backend', 'static'))
+BACKUP_DIR = os.environ.get('BECBUC_BACKUP_DIR', os.path.join(_ROOT, '_backups'))
 
 def _backup(path: str) -> str:
     """Crea backup antes de modificar. Retorna ruta del backup."""
