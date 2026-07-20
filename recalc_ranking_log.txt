@@ -1,0 +1,33 @@
+>> Reafirmando P104 oficial: amarillas=6, rojas=1, penales=0, minuto_primer_gol=106
+   P104 filas: 1
+>> login + calcular-puntajes force_grupos
+   calcular ok=True plenos=543 aciertos=2133 globales=44
+
+== RANKING FINAL (top 15) ==
+    1. ?                      1080 pts  (part=992, glob=62)
+    2. ?                       983 pts  (part=884, glob=72)
+    3. ?                       966 pts  (part=908, glob=30)
+    4. ?                       945 pts  (part=860, glob=60)
+    5. ?                       941 pts  (part=864, glob=50)
+    6. ?                       939 pts  (part=852, glob=60)
+    7. ?                       930 pts  (part=835, glob=70)
+    8. ?                       901 pts  (part=827, glob=50)
+    9. ?                       890 pts  (part=843, glob=20)
+   10. ?                       886 pts  (part=813, glob=46)
+   11. ?                       877 pts  (part=832, glob=20)
+   12. ?                       874 pts  (part=791, glob=56)
+   13. ?                       866 pts  (part=773, glob=66)
+   14. ?                       846 pts  (part=769, glob=50)
+   15. ?                       844 pts  (part=766, glob=50)
+
+== Globales: apostadores con puntaje>0 ==
+   A campeon       : 21
+   B finalistas    : 32
+   C goleador      : 29
+   D peor equipo   : 1
+   E mayor goleada : 15
+   F etapa PY      : 10
+   G goles PY      : 6
+
+=== LISTO: torneo cerrado y puntajes finales ===
+DONE 

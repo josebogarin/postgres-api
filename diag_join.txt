@@ -1,0 +1,25 @@
+=== Diagnostico join pronosticos_aux vs BD === 
+Total filas pronosticos_aux: 
+ count | apostadores | partidos 
+-------+-------------+----------
+  3168 |          44 |       72
+(1 row)
+
+ 
+Nombres en pronosticos_aux vs app_db (muestra): 
+         paux_nombre         |          db_nombre          
+-----------------------------+-----------------------------
+ SEBASTIAN KALAYDJIAN FABBRI | SEBASTIAN KALAYDJIAN FABBRI
+ ALVARO MARTIN ARIAS AYALA   | Alvaro Martin Arias Ayala
+ SERGIO FIORE                | SERGIO FIORE
+ HUGO MARCELO CENTURION      | HUGO MARCELO CENTURION
+ FABRIZIO SERRATI            | FABRIZIO SERRATI
+(5 rows)
+
+ 
+Filas del join completo (partidos finalizados grupos): 
+ filas_join 
+------------
+       2904
+(1 row)
+

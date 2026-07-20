@@ -1,0 +1,35 @@
+=== Estado partidos (torneo 2) ===
+  Finalizados:  38
+  En juego:     0
+  Programados:  32
+  Total:        104
+  Ultimo:       2026-07-19 15:00:00+00:00
+
+=== puntaje_detalle ===
+  Partidos calculados: 38
+  Apostadores:         44
+
+=== Top 10 ranking actual (BD) ===
+   1. GONZALO RAÚL JIMÉNEZ NIZ: 253 pts
+   2. SEBASTIAN KALAYDJIAN FABBRI: 249 pts
+   3. JORGE LOPEZ BENITEZ: 222 pts
+   4. LUCAS AQUINO: 209 pts
+   5. FABIO FERREIRA: 209 pts
+   6. JAVIER QUIROGA: 208 pts
+   7. FABRIZIO SERRATI: 208 pts
+   8. VICTOR RIVEROS: 207 pts
+   9. DANIEL KOVACS: 206 pts
+  10. AGUSTIN BARRETO: 205 pts
+
+api_sync_log no disponible: column "ok" does not exist
+LINE 2:         SELECT created_at, contexto, ok
+                                             ^
+
+Traceback (most recent call last):
+  File "C:\proyecto FAST API\check_estado.py", line 79, in <module>
+    cur.execute("""
+  File "C:\proyecto FAST API\backend\.venv\Lib\site-packages\psycopg2\extras.py", line 236, in execute
+    return super().execute(query, vars)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.InFailedSqlTransaction: current transaction is aborted, commands ignored until end of transaction block
+

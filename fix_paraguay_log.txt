@@ -1,0 +1,50 @@
+[20:23:05] === DIAGNOSTICO Y FIX PARAGUAY ===
+
+[20:23:05] [1] Buscando equipo Paraguay en BD...
+[20:23:05]   57|Paraguay|Paraguay
+[20:23:05]   -> Paraguay ID=57 (Paraguay)
+[20:23:05] 
+[2] Partidos de Paraguay (id=57) en torneo 2...
+[20:23:05]   No se encontraron partidos de grupo para Paraguay!
+[20:23:05] 
+[3] Participacion actual de Paraguay en grupos...
+[20:23:06]   Grupo D: PJ=3 PG=1 PE=1 PP=1 GF=2 GC=4 Pts=4 Pos=3 FP=0
+[20:23:06] 
+[4] Recalculando standings del grupo de Paraguay desde partidos finalizados...
+[20:23:06]   Grupo de Paraguay: Grupo D (fase_id=21)
+[20:23:06] 
+  Todos los partidos del Grupo D:
+[20:23:06]     P146: USA 4-1 Paraguay [finalizado] confirmado=t
+[20:23:06]     P150: Australia 2-0 Türkiye [finalizado] confirmado=t
+[20:23:06]     P174: Türkiye 0-1 Paraguay [finalizado] confirmado=t
+[20:23:06]     P171: USA 2-0 Australia [finalizado] confirmado=t
+[20:23:06]     P201: Türkiye 3-2 USA [finalizado] confirmado=f
+[20:23:06]     P202: Paraguay 0-0 Australia [finalizado] confirmado=f
+[20:23:06] 
+  Standings calculados desde partidos finalizados:
+[20:23:06]     1. USA: PJ=3 Pts=6 DG=+4 GF=8
+[20:23:06]     2. Australia: PJ=3 Pts=4 DG=+0 GF=2
+[20:23:06]     3. Paraguay: PJ=3 Pts=4 DG=-2 GF=2 <-- PARAGUAY
+[20:23:06]     4. Türkiye: PJ=3 Pts=3 DG=-2 GF=3
+[20:23:06] 
+[5] Actualizando participacion con standings correctos...
+[20:23:06]   ✓ USA: PJ=3 Pts=6 pos=1
+[20:23:07]   ✓ Australia: PJ=3 Pts=4 pos=2
+[20:23:07]   ✓ Paraguay: PJ=3 Pts=4 pos=3
+[20:23:07]   ✓ Türkiye: PJ=3 Pts=3 pos=4
+[20:23:07] 
+[6] Verificando datos_confirmados en partidos de Paraguay...
+[20:23:07]   P4: datos_confirmados=TRUE, estado=finalizado, goles=4-1 OK
+[20:23:07]   P31: datos_confirmados=TRUE, estado=finalizado, goles=0-1 OK
+[20:23:07]   P60: datos_confirmados=FALSE → sync puede actualizar este partido
+[20:23:07] 
+=== RESUMEN ===
+[20:23:07] Paraguay en Grupo D: standings actualizados en participacion
+[20:23:07] Paraguay: PJ=3 Pts=4 DG=-2 GF=2
+[20:23:07] 
+PRÓXIMOS PASOS RECOMENDADOS:
+[20:23:07]   1. Si el 3er partido no aparece como finalizado:
+[20:23:07]      → Finalizar manualmente via portal: Herramientas → Finalizar Partido
+[20:23:07]      → O esperar que sync_auto.py lo capture (si tiene api_fixture_id)
+[20:23:07]   2. Luego recalcular puntajes: POST /calcular-puntajes/2
+[20:23:07]   3. Luego avanzar bracket: POST /avanzar-bracket/2

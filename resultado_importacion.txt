@@ -1,0 +1,4 @@
+Conexion OK
+SQL leido: 245605 chars
+Migracion ejecutada y commiteada OK
+RESULTADO: total=3168, apostadores=44, desde=P001, hasta=P072

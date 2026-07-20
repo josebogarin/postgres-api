@@ -1,0 +1,41 @@
+=== FIX BRACKET SCOTLAND ===
+
+[1] Login...
+  OK
+
+[2] POST /avanzar-bracket/2...
+  OK: Bracket real actualizado desde resultados
+
+[3] GET /bracket-real/2...
+  16 partidos R32:
+    P 73: South Africa vs Canada
+    P 74: ALEMANIA vs Paraguay
+    P 75: Netherlands vs Morocco
+    P 76: Brazil vs Japan
+    P 77: France vs Sweden
+    P 78: COSTA DE MARFIL vs Norway
+    P 79: Mexico vs Ecuador
+    P 80: INGLATERRA vs Senegal
+    P 81: USA vs BOSNIA Y HERZEGOVINA
+    P 82: Egypt vs COREA DEL SUR
+    P 83: Portugal vs Ghana
+    P 84: Spain vs Austria
+    P 85: Switzerland vs Algeria
+    P 86: Argentina vs Cape Verde Islands
+    P 87: Colombia vs Croatia
+    P 88: Australia vs Iran
+
+  ✅ Scotland NO está en el bracket R32!
+
+[4] GET /mejores-terceros-provisorios/2...
+  Top 8 mejores terceros:
+    [1] Grupo F: Sweden pts=4 gd=+0 pend=0
+    [2] Grupo E: Ecuador pts=4 gd=+0 pend=0
+    [3] Grupo B: BOSNIA Y HERZEGOVINA pts=4 gd=-1 pend=0
+    [4] Grupo D: Paraguay pts=4 gd=-2 pend=0
+    [5] Grupo I: Senegal pts=3 gd=+2 pend=0
+    [6] Grupo L: Croatia pts=3 gd=-1 pend=2
+    [7] Grupo A: COREA DEL SUR pts=3 gd=-1 pend=0
+    [8] Grupo J: Algeria pts=3 gd=-2 pend=2
+
+=== FIN ===

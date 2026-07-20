@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o NUL -w \"%{http_code}\" http://localhost:8000/docs --max-time 5)",
+      "PowerShell($conn = Test-NetConnection -ComputerName localhost -Port 8000 -WarningAction SilentlyContinue; \"TcpTestSucceeded: $\\($conn.TcpTestSucceeded\\)\")",
+      "PowerShell($p = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue; if \\($p\\) { $p | ForEach-Object { $proc = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; \"PID $\\($_.OwningProcess\\): $\\($proc.ProcessName\\) - $\\($proc.StartTime\\)\" } } else { \"No listener on 8000\" })",
+      "Bash(backend/.venv/Scripts/python.exe test_integral.py)",
+      "Bash(PYTHONIOENCODING=utf-8 backend/.venv/Scripts/python.exe test_integral.py)",
+      "Bash(docker exec *)",
+      "Bash(powershell -NoProfile -Command \"Get-Content 'C:\\\\Users\\\\JOSEBO~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--proyecto-FAST-API\\\\9bca75a0-a948-4f43-b281-458e232bd223\\\\tasks\\\\be2dma641.output' -Tail 12\")",
+      "Bash(echo \"=== returncode: $? ===\")",
+      "Bash(PYTHONIOENCODING=utf-8 backend/.venv/Scripts/python.exe diag_globales.py)",
+      "Bash(PYTHONIOENCODING=utf-8 backend/.venv/Scripts/python.exe -c ' *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(backend/.venv/Scripts/python.exe -m ruff check --select F401,F811,F841 --no-cache --output-format concise backend/app/api/v1/endpoints/apostador_bets.py backend/app/services/scoring/ test_integral.py generar_excel_becbuc.py)",
+      "PowerShell(Remove-Item -Recurse -Force \"C:\\\\proyecto FAST API\\\\backend\\\\app\\\\models\\\\becbuc\"; if \\(-not \\(Test-Path \"C:\\\\proyecto FAST API\\\\backend\\\\app\\\\models\\\\becbuc\"\\)\\) { \"deleted\" } else { \"still exists\" })",
+      "PowerShell(& \"C:\\\\proyecto FAST API\\\\backend\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import sys; sys.path.insert\\(0, r'C:\\\\proyecto FAST API\\\\backend'\\); from app.main import app; print\\('OK: app imports cleanly'\\)\")",
+      "Bash(echo \"---exit:$?---\")",
+      "Bash(git --version)",
+      "Bash(git config *)",
+      "Bash(echo \"name-exit:$?\")",
+      "Bash(echo \"email-exit:$?\")"
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+==================================================================
+BECBUC - CIERRE FINAL (datos oficiales del usuario)
+==================================================================
+
+== 1) Tarjetas oficiales P104 (final): 6 amarillas, 1 roja ==
+   filas P104 actualizadas: 1
+   P103: 4-6  amarillas=0  rojas=0
+   P104: 1-0  amarillas=6  rojas=1
+
+== 2) Goleador global C -> Mbappe (acreditar a los 29) ==
+   grafías antes: 'KYLIAN MBAPPE'x27, 'MBAPPE'x2
+   predicciones normalizadas a 'KYLIAN MBAPPE': 2
+   torneo.resultado_goleador='KYLIAN MBAPPE'  -> apostadores que matchean: 29
+
+== 3) POST /calcular-puntajes/2?force_grupos=true (sin sync) ==
+   OK  plenos=543  aciertos=2133  globales_procesadas=44
+      [grupo         ] total= 16564 apuestas=3168
+      [ronda16       ] total=  3353 apuestas= 352
+      [ronda32       ] total=  7783 apuestas= 704
+      [cuartos       ] total=  3163 apuestas= 176
+      [semis         ] total=  1105 apuestas=  88
+      [tercer_puesto ] total=   178 apuestas=  40
+      [final         ] total=   845 apuestas=  40
+
+== 4) Marcar torneo cerrado ==
+   torneo.cerrado = TRUE
+
+== 5) RANKING FINAL (top 15) ==
+    1. checho                 1080 pts (part=992, glob=62)
+    2. fscc                    983 pts (part=884, glob=72)
+    3. seba                    966 pts (part=908, glob=30)
+    4. patito                  945 pts (part=860, glob=60)
+    5. hs                      941 pts (part=864, glob=50)
+    6. lav                     939 pts (part=852, glob=60)
+    7. sanbie                  930 pts (part=835, glob=70)
+    8. coco                    901 pts (part=827, glob=50)
+    9. moro                    890 pts (part=843, glob=20)
+   10. grillito                886 pts (part=813, glob=46)
+   11. vitra                   877 pts (part=832, glob=20)
+   12. gh1s                    874 pts (part=791, glob=56)
+   13. hakembo                 866 pts (part=773, glob=66)
+   14. oti                     846 pts (part=769, glob=50)
+   15. @bs                     844 pts (part=766, glob=50)
+
+== Globales: apostadores con puntaje > 0 por item ==
+   A campeon       : 21
+   B finalistas    : 32
+   C goleador      : 29
+   D peor equipo   : 1
+   E mayor goleada : 15
+   F etapa PY      : 10
+   G goles PY      : 6
+
+=== TORNEO CERRADO Y PUNTAJES FINALES CALCULADOS ===
+DONE 

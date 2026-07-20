@@ -1,0 +1,5 @@
+=== VERIFICACION COMPLETA PUNTAJE CHEREM (apostador_id=15) === 
+=== Calculo esperado (SQL) vs puntaje_detalle almacenado === 
+ 
+ 
+=== RESUMEN: diferencias esperado vs almacenado === 

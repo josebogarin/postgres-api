@@ -1,0 +1,11 @@
+
+  Generando Excel para torneo 2...
+  Cargando datos de BD...
+  Competicion: [1] Copa Mundial FIFA
+  OK 43 partidos | 44 apostadores | 3168 apuestas | 1848 filas puntaje_detalle
+  OK Cobertura completa: todos los apostadores tienen apuesta en los 43 partidos
+  Construyendo workbook...
+  Excel guardado: C:\proyecto FAST API\BECBUC_verificacion.xlsx  (426.6 KB)
+    Hojas: ['🏆 Ranking', '📋 Resultados', '👤 seba', '👤 patito', '👤 vitra', '👤 @bs', '👤 fidelyoli', '👤 lav', '👤 moro', '👤 coco', '👤 hakembo', '👤 quiroga', '👤 fscc', '👤 soni', '👤 grillito', '👤 coto', '👤 checho', '👤 pato', '👤 gustav tothelighthouse', '👤 tim payne', '👤 alevo', '👤 alfaorion 99', '👤 hs', '👤 moño', '👤 sajano freddy', '👤 kikao', '👤 luisma', '👤 tony', '👤 decanita', '👤 ludie-z', '👤 sanbie', '👤 cayetano', '👤 pinguero', '👤 gh1s', '👤 cherem', '👤 alejandrolegui', '👤 oti', '👤 pucheta', '👤 aaa', '👤 gbc', '👤 esyl', '👤 juane', '👤 eliasmajul', '👤 edgar', '👤 caficho', '👤 monkey', '🌐 Globales', '📊 Matriz']
+
+Abri el archivo: C:\proyecto FAST API\BECBUC_verificacion.xlsx

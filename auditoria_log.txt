@@ -1,0 +1,18 @@
+Buscando apostador 'patito' en app_db …
+  → GONZALO RAÚL JIMÉNEZ NIZ (id=27)
+  → 104 partidos en BD, 44 apostadores en ranking
+
+Excel guardado en: C:\proyecto FAST API\auditoria_patito.xlsx
+
+RESUMEN — GONZALO RAÚL JIMÉNEZ NIZ
+  A  Gana/Empata/Pierde:   104
+  B  Exacto:                40
+  C  Amarillas:              8
+  D  Rojas:                 33
+  E  VAR:                   26
+  F  Penales:               32
+  G  1er Gol:                0
+  ────────────────────────────
+     TOTAL:                243
+
+Ranking: 44 apostadores incluidos

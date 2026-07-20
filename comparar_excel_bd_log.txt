@@ -1,0 +1,327 @@
+=== COMPARACION EXCEL vs BD - 2026-06-27 19:43:11 ===
+
+Leyendo Excel...
+  Excel: 44 apostadores
+Consultando BD (puntaje_detalle + puntaje_global)...
+  BD:    44 apostadores con puntaje
+Obteniendo usernames...
+
+================================================================================
+Apostador                 ExcelPart  ExcelGlob  ExcelTot  BDPart  BDGlob   BDTot    DIFF
+================================================================================
+* seba                            304          0       304     433       0     433    +129  <-- DIFF
+* patito                          277          0       277     403       0     403    +126  <-- DIFF
+* moro                            257          0       257     400       0     400    +143  <-- DIFF
+* lav                             256          0       256     375       0     375    +119  <-- DIFF
+* hakembo                         252          0       252     356       0     356    +104  <-- DIFF
+* @bs                             247          0       247     381       0     381    +134  <-- DIFF
+* vitra                           246          0       246     384       0     384    +138  <-- DIFF
+* fidelyoli                       245          0       245     370       0     370    +125  <-- DIFF
+* checho                          244          0       244     384       0     384    +140  <-- DIFF
+* coco                            243          0       243     371       0     371    +128  <-- DIFF
+* fscc                            241          0       241     374       0     374    +133  <-- DIFF
+* quiroga                         241          0       241     354       0     354    +113  <-- DIFF
+* grillito                        239          0       239     340       0     340    +101  <-- DIFF
+* soni                            238          0       238     364       0     364    +126  <-- DIFF
+* gustav tothelighthouse          234          0       234     370       0     370    +136  <-- DIFF
+* cherem                          231          0       231     325       0     325     +94  <-- DIFF
+* tim payne                       231          0       231     342       0     342    +111  <-- DIFF
+* coto                            230          0       230     360       0     360    +130  <-- DIFF
+* kikao                           230          0       230     332       0     332    +102  <-- DIFF
+* sanbie                          229          0       229     323       0     323     +94  <-- DIFF
+* hs                              227          0       227     374       0     374    +147  <-- DIFF
+* pato                            227          0       227     353       0     353    +126  <-- DIFF
+* alevo                           225          0       225     352       0     352    +127  <-- DIFF
+* cayetano                        224          0       224     315       0     315     +91  <-- DIFF
+* alfaorion 99                    222          0       222     346       0     346    +124  <-- DIFF
+* moño                            222          0       222     357       0     357    +135  <-- DIFF
+* sajano freddy                   222          0       222     346       0     346    +124  <-- DIFF
+* decanita                        221          0       221     313       0     313     +92  <-- DIFF
+* gh1s                            220          0       220     352       0     352    +132  <-- DIFF
+* ludie-z                         218          0       218     333       0     333    +115  <-- DIFF
+* tony                            218          0       218     349       0     349    +131  <-- DIFF
+* luisma                          217          0       217     312       0     312     +95  <-- DIFF
+* oti                             217          0       217     346       0     346    +129  <-- DIFF
+* pinguero                        215          0       215     315       0     315    +100  <-- DIFF
+* alejandrolegui                  212          0       212     359       0     359    +147  <-- DIFF
+* aaa                             211          0       211     296       0     296     +85  <-- DIFF
+* pucheta                         211          0       211     302       0     302     +91  <-- DIFF
+* esyl                            204          0       204     331       0     331    +127  <-- DIFF
+* gbc                             199          0       199     293       0     293     +94  <-- DIFF
+* juane                           197          0       197     322       0     322    +125  <-- DIFF
+* eliasmajul                      196          0       196     309       0     309    +113  <-- DIFF
+* edgar                           185          0       185     273       0     273     +88  <-- DIFF
+* caficho                         164          0       164     255       0     255     +91  <-- DIFF
+* monkey                          158          0       158     222       0     222     +64  <-- DIFF
+================================================================================
+
+RESUMEN: 0 OK  |  44 DIFFS  |  0 sin match
+
+--- DETALLE DE DIFERENCIAS ---
+  [seba]
+    Excel: partidos=304  globales=0  TOTAL=304
+    BD:    partidos=433  globales=0  TOTAL=433
+    Diff:  partidos=+129  globales=+0  TOTAL=+129
+    BD desglose: H=172 I=104 J=13 K=58 L=32 M=52 N=2 O=0
+
+  [patito]
+    Excel: partidos=277  globales=0  TOTAL=277
+    BD:    partidos=403  globales=0  TOTAL=403
+    Diff:  partidos=+126  globales=+0  TOTAL=+126
+    BD desglose: H=172 I=48 J=20 K=61 L=42 M=60 N=0 O=0
+
+  [moro]
+    Excel: partidos=257  globales=0  TOTAL=257
+    BD:    partidos=400  globales=0  TOTAL=400
+    Diff:  partidos=+143  globales=+0  TOTAL=+143
+    BD desglose: H=164 I=88 J=15 K=51 L=20 M=60 N=2 O=0
+
+  [lav]
+    Excel: partidos=256  globales=0  TOTAL=256
+    BD:    partidos=375  globales=0  TOTAL=375
+    Diff:  partidos=+119  globales=+0  TOTAL=+119
+    BD desglose: H=172 I=48 J=15 K=61 L=16 M=60 N=3 O=0
+
+  [hakembo]
+    Excel: partidos=252  globales=0  TOTAL=252
+    BD:    partidos=356  globales=0  TOTAL=356
+    Diff:  partidos=+104  globales=+0  TOTAL=+104
+    BD desglose: H=164 I=64 J=6 K=57 L=9 M=52 N=4 O=0
+
+  [@bs]
+    Excel: partidos=247  globales=0  TOTAL=247
+    BD:    partidos=381  globales=0  TOTAL=381
+    Diff:  partidos=+134  globales=+0  TOTAL=+134
+    BD desglose: H=172 I=72 J=2 K=55 L=31 M=46 N=3 O=0
+
+  [vitra]
+    Excel: partidos=246  globales=0  TOTAL=246
+    BD:    partidos=384  globales=0  TOTAL=384
+    Diff:  partidos=+138  globales=+0  TOTAL=+138
+    BD desglose: H=148 I=56 J=15 K=61 L=42 M=60 N=2 O=0
+
+  [fidelyoli]
+    Excel: partidos=245  globales=0  TOTAL=245
+    BD:    partidos=370  globales=0  TOTAL=370
+    Diff:  partidos=+125  globales=+0  TOTAL=+125
+    BD desglose: H=132 I=88 J=15 K=61 L=17 M=57 N=0 O=0
+
+  [checho]
+    Excel: partidos=244  globales=0  TOTAL=244
+    BD:    partidos=384  globales=0  TOTAL=384
+    Diff:  partidos=+140  globales=+0  TOTAL=+140
+    BD desglose: H=164 I=64 J=16 K=58 L=19 M=59 N=4 O=0
+
+  [coco]
+    Excel: partidos=243  globales=0  TOTAL=243
+    BD:    partidos=371  globales=0  TOTAL=371
+    Diff:  partidos=+128  globales=+0  TOTAL=+128
+    BD desglose: H=148 I=56 J=20 K=61 L=20 M=60 N=6 O=0
+
+  [fscc]
+    Excel: partidos=241  globales=0  TOTAL=241
+    BD:    partidos=374  globales=0  TOTAL=374
+    Diff:  partidos=+133  globales=+0  TOTAL=+133
+    BD desglose: H=168 I=56 J=9 K=61 L=20 M=60 N=0 O=0
+
+  [quiroga]
+    Excel: partidos=241  globales=0  TOTAL=241
+    BD:    partidos=354  globales=0  TOTAL=354
+    Diff:  partidos=+113  globales=+0  TOTAL=+113
+    BD desglose: H=156 I=48 J=11 K=58 L=22 M=58 N=1 O=0
+
+  [grillito]
+    Excel: partidos=239  globales=0  TOTAL=239
+    BD:    partidos=340  globales=0  TOTAL=340
+    Diff:  partidos=+101  globales=+0  TOTAL=+101
+    BD desglose: H=160 I=56 J=11 K=56 L=6 M=49 N=2 O=0
+
+  [soni]
+    Excel: partidos=238  globales=0  TOTAL=238
+    BD:    partidos=364  globales=0  TOTAL=364
+    Diff:  partidos=+126  globales=+0  TOTAL=+126
+    BD desglose: H=160 I=40 J=12 K=58 L=39 M=52 N=3 O=0
+
+  [gustav tothelighthouse]
+    Excel: partidos=234  globales=0  TOTAL=234
+    BD:    partidos=370  globales=0  TOTAL=370
+    Diff:  partidos=+136  globales=+0  TOTAL=+136
+    BD desglose: H=148 I=48 J=11 K=61 L=42 M=60 N=0 O=0
+
+  [cherem]
+    Excel: partidos=231  globales=0  TOTAL=231
+    BD:    partidos=325  globales=0  TOTAL=325
+    Diff:  partidos=+94  globales=+0  TOTAL=+94
+    BD desglose: H=128 I=40 J=15 K=61 L=20 M=60 N=1 O=0
+
+  [tim payne]
+    Excel: partidos=231  globales=0  TOTAL=231
+    BD:    partidos=342  globales=0  TOTAL=342
+    Diff:  partidos=+111  globales=+0  TOTAL=+111
+    BD desglose: H=152 I=40 J=14 K=49 L=42 M=42 N=3 O=0
+
+  [coto]
+    Excel: partidos=230  globales=0  TOTAL=230
+    BD:    partidos=360  globales=0  TOTAL=360
+    Diff:  partidos=+130  globales=+0  TOTAL=+130
+    BD desglose: H=168 I=48 J=20 K=61 L=2 M=59 N=2 O=0
+
+  [kikao]
+    Excel: partidos=230  globales=0  TOTAL=230
+    BD:    partidos=332  globales=0  TOTAL=332
+    Diff:  partidos=+102  globales=+0  TOTAL=+102
+    BD desglose: H=148 I=40 J=11 K=56 L=18 M=55 N=4 O=0
+
+  [sanbie]
+    Excel: partidos=229  globales=0  TOTAL=229
+    BD:    partidos=323  globales=0  TOTAL=323
+    Diff:  partidos=+94  globales=+0  TOTAL=+94
+    BD desglose: H=152 I=40 J=16 K=58 L=3 M=54 N=0 O=0
+
+  [hs]
+    Excel: partidos=227  globales=0  TOTAL=227
+    BD:    partidos=374  globales=0  TOTAL=374
+    Diff:  partidos=+147  globales=+0  TOTAL=+147
+    BD desglose: H=156 I=56 J=12 K=61 L=32 M=54 N=3 O=0
+
+  [pato]
+    Excel: partidos=227  globales=0  TOTAL=227
+    BD:    partidos=353  globales=0  TOTAL=353
+    Diff:  partidos=+126  globales=+0  TOTAL=+126
+    BD desglose: H=156 I=32 J=10 K=59 L=41 M=52 N=3 O=0
+
+  [alevo]
+    Excel: partidos=225  globales=0  TOTAL=225
+    BD:    partidos=352  globales=0  TOTAL=352
+    Diff:  partidos=+127  globales=+0  TOTAL=+127
+    BD desglose: H=148 I=56 J=17 K=59 L=20 M=51 N=1 O=0
+
+  [cayetano]
+    Excel: partidos=224  globales=0  TOTAL=224
+    BD:    partidos=315  globales=0  TOTAL=315
+    Diff:  partidos=+91  globales=+0  TOTAL=+91
+    BD desglose: H=148 I=64 J=13 K=35 L=0 M=50 N=5 O=0
+
+  [alfaorion 99]
+    Excel: partidos=222  globales=0  TOTAL=222
+    BD:    partidos=346  globales=0  TOTAL=346
+    Diff:  partidos=+124  globales=+0  TOTAL=+124
+    BD desglose: H=156 I=40 J=8 K=57 L=31 M=50 N=4 O=0
+
+  [moño]
+    Excel: partidos=222  globales=0  TOTAL=222
+    BD:    partidos=357  globales=0  TOTAL=357
+    Diff:  partidos=+135  globales=+0  TOTAL=+135
+    BD desglose: H=156 I=48 J=21 K=59 L=12 M=58 N=3 O=0
+
+  [sajano freddy]
+    Excel: partidos=222  globales=0  TOTAL=222
+    BD:    partidos=346  globales=0  TOTAL=346
+    Diff:  partidos=+124  globales=+0  TOTAL=+124
+    BD desglose: H=156 I=40 J=8 K=57 L=31 M=50 N=4 O=0
+
+  [decanita]
+    Excel: partidos=221  globales=0  TOTAL=221
+    BD:    partidos=313  globales=0  TOTAL=313
+    Diff:  partidos=+92  globales=+0  TOTAL=+92
+    BD desglose: H=132 I=64 J=12 K=50 L=11 M=41 N=3 O=0
+
+  [gh1s]
+    Excel: partidos=220  globales=0  TOTAL=220
+    BD:    partidos=352  globales=0  TOTAL=352
+    Diff:  partidos=+132  globales=+0  TOTAL=+132
+    BD desglose: H=160 I=32 J=15 K=61 L=20 M=60 N=4 O=0
+
+  [ludie-z]
+    Excel: partidos=218  globales=0  TOTAL=218
+    BD:    partidos=333  globales=0  TOTAL=333
+    Diff:  partidos=+115  globales=+0  TOTAL=+115
+    BD desglose: H=152 I=48 J=8 K=39 L=32 M=53 N=1 O=0
+
+  [tony]
+    Excel: partidos=218  globales=0  TOTAL=218
+    BD:    partidos=349  globales=0  TOTAL=349
+    Diff:  partidos=+131  globales=+0  TOTAL=+131
+    BD desglose: H=164 I=64 J=15 K=45 L=11 M=47 N=3 O=0
+
+  [luisma]
+    Excel: partidos=217  globales=0  TOTAL=217
+    BD:    partidos=312  globales=0  TOTAL=312
+    Diff:  partidos=+95  globales=+0  TOTAL=+95
+    BD desglose: H=132 I=56 J=16 K=56 L=6 M=46 N=0 O=0
+
+  [oti]
+    Excel: partidos=217  globales=0  TOTAL=217
+    BD:    partidos=346  globales=0  TOTAL=346
+    Diff:  partidos=+129  globales=+0  TOTAL=+129
+    BD desglose: H=156 I=32 J=11 K=61 L=23 M=60 N=3 O=0
+
+  [pinguero]
+    Excel: partidos=215  globales=0  TOTAL=215
+    BD:    partidos=315  globales=0  TOTAL=315
+    Diff:  partidos=+100  globales=+0  TOTAL=+100
+    BD desglose: H=140 I=40 J=18 K=47 L=16 M=51 N=3 O=0
+
+  [alejandrolegui]
+    Excel: partidos=212  globales=0  TOTAL=212
+    BD:    partidos=359  globales=0  TOTAL=359
+    Diff:  partidos=+147  globales=+0  TOTAL=+147
+    BD desglose: H=140 I=72 J=10 K=53 L=34 M=50 N=0 O=0
+
+  [aaa]
+    Excel: partidos=211  globales=0  TOTAL=211
+    BD:    partidos=296  globales=0  TOTAL=296
+    Diff:  partidos=+85  globales=+0  TOTAL=+85
+    BD desglose: H=160 I=64 J=8 K=30 L=3 M=27 N=4 O=0
+
+  [pucheta]
+    Excel: partidos=211  globales=0  TOTAL=211
+    BD:    partidos=302  globales=0  TOTAL=302
+    Diff:  partidos=+91  globales=+0  TOTAL=+91
+    BD desglose: H=160 I=24 J=12 K=51 L=12 M=39 N=4 O=0
+
+  [esyl]
+    Excel: partidos=204  globales=0  TOTAL=204
+    BD:    partidos=331  globales=0  TOTAL=331
+    Diff:  partidos=+127  globales=+0  TOTAL=+127
+    BD desglose: H=156 I=64 J=20 K=61 L=20 M=9 N=1 O=0
+
+  [gbc]
+    Excel: partidos=199  globales=0  TOTAL=199
+    BD:    partidos=293  globales=0  TOTAL=293
+    Diff:  partidos=+94  globales=+0  TOTAL=+94
+    BD desglose: H=156 I=72 J=12 K=18 L=0 M=34 N=1 O=0
+
+  [juane]
+    Excel: partidos=197  globales=0  TOTAL=197
+    BD:    partidos=322  globales=0  TOTAL=322
+    Diff:  partidos=+125  globales=+0  TOTAL=+125
+    BD desglose: H=164 I=56 J=9 K=53 L=6 M=34 N=0 O=0
+
+  [eliasmajul]
+    Excel: partidos=196  globales=0  TOTAL=196
+    BD:    partidos=309  globales=0  TOTAL=309
+    Diff:  partidos=+113  globales=+0  TOTAL=+113
+    BD desglose: H=136 I=16 J=14 K=61 L=23 M=58 N=1 O=0
+
+  [edgar]
+    Excel: partidos=185  globales=0  TOTAL=185
+    BD:    partidos=273  globales=0  TOTAL=273
+    Diff:  partidos=+88  globales=+0  TOTAL=+88
+    BD desglose: H=116 I=48 J=22 K=35 L=27 M=23 N=2 O=0
+
+  [caficho]
+    Excel: partidos=164  globales=0  TOTAL=164
+    BD:    partidos=255  globales=0  TOTAL=255
+    Diff:  partidos=+91  globales=+0  TOTAL=+91
+    BD desglose: H=140 I=24 J=8 K=44 L=11 M=23 N=5 O=0
+
+  [monkey]
+    Excel: partidos=158  globales=0  TOTAL=158
+    BD:    partidos=222  globales=0  TOTAL=222
+    Diff:  partidos=+64  globales=+0  TOTAL=+64
+    BD desglose: H=112 I=64 J=9 K=6 L=20 M=9 N=2 O=0
+
+
+CONCLUSION: El Excel esta DESACTUALIZADO respecto a la BD.
+Ejecutar generar_excel_becbuc.py para regenerar con puntajes actuales.

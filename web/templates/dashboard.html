@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sistema Admin BD{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h1><i class="bi bi-speedometer2"></i> Dashboard</h1>
+    <small class="text-muted">Bienvenido, {{ user.full_name or user.email }}</small>
+</div>
+
+<!-- Estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Aplicaciones</h6>
+                <h2 class="text-primary">{{ stats.total_apps }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Usuarios</h6>
+                <h2 class="text-success">{{ stats.total_users }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Estado</h6>
+                <h2 class="text-info">✓ Activo</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Versión</h6>
+                <h2 class="text-warning">1.0</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acciones Rápidas -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-lightning"></i> Acciones Rápidas</h5>
+    </div>
+    <div class="card-body">
+        <a href="/applications" class="btn btn-primary me-2">
+            <i class="bi bi-plus-circle"></i> Ver Aplicaciones
+        </a>
+        <a href="/users" class="btn btn-info me-2">
+            <i class="bi bi-person-plus"></i> Ver Usuarios
+        </a>
+        <a href="/audit-logs" class="btn btn-outline-secondary">
+            <i class="bi bi-clock-history"></i> Ver Auditoría
+        </a>
+    </div>
+</div>
+
+<!-- Aplicaciones Recientes -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-list"></i> Aplicaciones Recientes</h5>
+    </div>
+    <div class="card-body">
+        {% if stats.apps %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Slug</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in stats.apps %}
+                    <tr>
+                        <td><strong>{{ app.name }}</strong></td>
+                        <td><code>{{ app.slug }}</code></td>
+                        <td>
+                            {% if app.is_active %}
+                            <span class="badge bg-success">Activo</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/applications" class="btn btn-sm btn-outline-primary">Ver</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle"></i> No hay aplicaciones registradas
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

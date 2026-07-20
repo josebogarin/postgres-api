@@ -1,0 +1,5 @@
+pronosticos_aux total filas: 3168
+apuesta torneo 2 total filas: 3168
+Filas con diferencias: 0
+Apuestas sin par en pronosticos_aux: 0
+✅ Contenido identico en ambas tablas

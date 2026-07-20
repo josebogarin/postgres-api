@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Sistema Admin BD{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h2 class="mb-0">
+                        <i class="bi bi-database"></i> Sistema Admin BD
+                    </h2>
+                    <small class="text-white-50">Administración de Bases de Datos</small>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="/login">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="bi bi-envelope"></i> Email
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="admin@example.com" required autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="bi bi-lock"></i> Contraseña
+                            </label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr>
+
+                    <div class="alert alert-info mb-0">
+                        <strong>Credenciales de prueba:</strong>
+                        <p class="mb-1 mt-2">Email: <code>admin@example.com</code></p>
+                        <p class="mb-0">Contraseña: <code>changeme123</code></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4 text-muted small">
+                <p><i class="bi bi-shield-lock"></i> Conexión segura y encriptada</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

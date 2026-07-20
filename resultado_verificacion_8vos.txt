@@ -1,0 +1,14 @@
+8vos en BD: 344 apuestas | 43 apostadores | 8 partidos
+R32: Ronda de 32 -> BLOQUEADA
+
+Detalle por partido:
+  P089: Paraguay vs France -> 43 apuestas
+  P090: Canada vs Morocco -> 43 apuestas
+  P091: Brazil vs Norway -> 43 apuestas
+  P092: Mexico vs England -> 43 apuestas
+  P093: Portugal vs Spain -> 43 apuestas
+  P094: USA vs Belgium -> 43 apuestas
+  P095: Argentina vs Egypt -> 43 apuestas
+  P096: Switzerland vs Colombia -> 43 apuestas
+
+OK

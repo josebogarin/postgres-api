@@ -1,0 +1,44 @@
+=== Inicio migraciones Docker === 
+17/06/2026 15:52:29,14 
+=== migracion_monitor.sql === 
+CREATE TABLE
+NOTICE:  relation "api_sync_log" already exists, skipping
+CREATE INDEX
+CREATE TABLE
+NOTICE:  relation "idx_api_sync_log_created" already exists, skipping
+NOTICE:  relation "monitor_config" already exists, skipping
+INSERT 0 0
+CREATE TABLE
+NOTICE:  relation "monitor_jornada" already exists, skipping
+CREATE TABLE
+NOTICE:  relation "monitor_partido_estado" already exists, skipping
+Exit code monitor: 0 
+=== fix_partido_id_apuestas_v2.sql === 
+BEGIN
+ALTER TABLE
+NOTICE:  column "numero_fifa" of relation "apuesta" already exists, skipping
+SELECT 39
+ partidos_con_discrepancia 
+---------------------------
+                        39
+(1 row)
+
+SELECT 0
+ a_actualizar | a_borrar_duplicada 
+--------------+--------------------
+              |                   
+(1 row)
+
+UPDATE 0
+DELETE 0
+DELETE 0
+UPDATE 0
+UPDATE 0
+ total_apuestas | con_numero_fifa | sin_numero_fifa 
+----------------+-----------------+-----------------
+           1452 |            1452 |               0
+(1 row)
+
+COMMIT
+Exit code fix: 0 
+=== FIN === 

@@ -1,0 +1,17 @@
+COMPARACION EXCEL vs BD BECBUC  —  2026-06-23 15:05
+======================================================================
+Partidos FINALIZADOS en Excel : 44
+Partidos finalizados en BD    : 45
+Partidos iguales              : 44
+Partidos con diferencias      : 0
+Solo en Excel (no en BD)      : 0
+Solo en BD   (no en Excel)    : 1
+
+✅ TODOS LOS PARTIDOS COINCIDEN — No hay diferencias.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PARTIDOS EN BD PERO NO EN EXCEL (no marcados FINALIZADO en Excel):
+  P047  PORTUGAL 3-0 UZBEKISTAN  [en_juego]
+
+======================================================================
+FIN DEL REPORTE

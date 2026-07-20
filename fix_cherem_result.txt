@@ -1,0 +1,27 @@
+Corrigiendo apuestas cherem... 
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+UPDATE 1
+ 
+Verificacion: 
+ numero_fifa | pred_local | pred_visitante 
+-------------+------------+----------------
+          37 |          1 |              0
+          38 |          2 |              0
+          49 |          2 |              2
+          50 |          3 |              1
+          55 |          1 |              2
+          56 |          1 |              1
+          61 |          2 |              3
+          62 |          0 |              2
+          65 |          0 |              3
+          66 |          2 |              3
+(10 rows)
+

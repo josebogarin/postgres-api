@@ -1,0 +1,2 @@
+base=https://cupped-oink-thousand.ngrok-free.dev
+playoffs=https://cupped-oink-thousand.ngrok-free.dev/static/becbuc-live-playoffs.html

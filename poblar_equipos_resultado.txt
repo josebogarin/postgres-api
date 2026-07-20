@@ -1,0 +1,10 @@
+  ID  Nombre BD                           nombre_es                 ISO_act  ISO_new  RK_act  RK_new  Estado
+Traceback (most recent call last):
+  File "C:\proyecto FAST API\poblar_equipos_iso_ranking.py", line 250, in <module>
+    main()
+  File "C:\proyecto FAST API\poblar_equipos_iso_ranking.py", line 195, in main
+    print("\u2500" * 115)
+  File "C:\Users\Jose Bogarin\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-114: character maps to <undefined>

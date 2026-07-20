@@ -1,0 +1,7 @@
+Partidos de Brasil encontrados:
+  PNone | id=992 | Uruguay vs Brazil | estado=finalizado | fecha=2024-07-07 01:00:00+00:00
+  P76 | id=722 | Brazil vs Japan | estado=programado | fecha=2026-06-29 20:00:00+00:00
+
+Cambiando estado a 'en_juego': P76 Brazil vs Japan
+Listo! Partido P76 ahora esta en_juego.
+Codigo: 0 

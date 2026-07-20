@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1><i class="bi bi-clock-history"></i> Logs de Auditoría</h1>
+
+{% if logs %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Recurso</th>
+                <th>Usuario</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td><span class="badge bg-info">{{ log.type or log.action }}</span></td>
+                <td>{% if log.estado == 'exitoso' %}<span class="badge bg-success">Exitoso</span>{% else %}<span class="badge bg-danger">Error</span>{% endif %}</td>
+                <td>{{ log.resource or '-' }}</td>
+                <td>{{ log.user_email or '-' }}</td>
+                <td>{{ log.timestamp[:10] if log.timestamp else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No hay logs registrados</div>
+{% endif %}
+{% endblock %}

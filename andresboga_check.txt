@@ -1,0 +1,17 @@
+ count 
+-------
+     0
+(1 row)
+
+ count 
+-------
+     0
+(1 row)
+
+ 
+=== ANDRES en pronosticos_aux (que NO sea CHEREM) === 
+     nombre     | alias  
+----------------+--------
+ ANDRES BOGARIN | CHEREM
+(1 row)
+

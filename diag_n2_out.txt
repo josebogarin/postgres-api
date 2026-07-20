@@ -1,0 +1,9 @@
+﻿ apostador_id |     nombre_apostador      | numero_fifa | min_real | pred_min | distancia | min_diff | n_esp | n_bd |   chk   
+--------------+---------------------------+-------------+----------+----------+-----------+----------+-------+------+---------
+           34 | JAVIER AUGUSTO OTAZ├Ü VERA |          30 |        2 |        8 |         6 |        2 |     0 |    1 | ***DIFF
+           37 | JORGE LOPEZ BENITEZ       |          30 |        2 |          |         2 |        2 |     1 |    0 | ***DIFF
+           37 | JORGE LOPEZ BENITEZ       |          60 |       99 |       85 |        14 |       14 |     2 |    0 | ***DIFF
+           42 | OCTAVIO JIM├ëNEZ           |          34 |       99 |       75 |        24 |       24 |     1 |    0 | ***DIFF
+           42 | OCTAVIO JIM├ëNEZ           |          39 |       99 |       86 |        13 |       13 |     1 |    0 | ***DIFF
+(5 rows)
+

@@ -1,0 +1,109 @@
+ id |        username        |            nombre             
+----+------------------------+-------------------------------
+  1 | admin                  | admin
+ 10 | @bs                    | Agustin Barreto
+ 11 | alfaorion 99           | ALAN AYMAR AYALA
+ 12 | alejandrolegui         | Alejandro Leguizamón
+ 13 | alevo                  | Alexandro Volpe
+ 14 | aaa                    | Alvaro Martin Arias Ayala
+  9 | andres                 | andres
+ 15 | cherem                 | ANDRES BOGARIN
+ 16 | tony                   | Antonio Dominguez
+ 17 | decanita               | Belen Franco Zaldivar
+ 18 | kikao                  | CHRISTIAN THIELMANN
+ 19 | ludie-z                | Claudio Adan Galeano Sanabria
+ 36 | fidelyoli              | DANIEL KOVACS
+ 41 | hakembo                | DIEGO INSFRAN
+ 20 | edgar                  | Edgar Aranda
+ 21 | eliasmajul             | ELIAS FERREIRA
+ 52 | esyl                   | ENZO SEBASTIAN YODICE LOPEZ
+ 22 | pinguero               | ERNESTO REINA
+ 23 | moro                   | FABIO FERREIRA
+ 24 | grillito               | FABRIZIO SALOMONI
+ 25 | fscc                   | FABRIZIO SERRATI
+ 27 | patito                 | Gonzalo Raúl Jiménez Niz
+  6 | guest                  | guest
+ 28 | gbc                    | GUILLERMO BIEDERMANN
+ 29 | pato                   | Hugo Biedermann
+ 32 | monkey                 | HUGO MARCELO CENTURION
+ 33 | hs                     | HUGO SIMON
+ 34 | pucheta                | JAVIER AUGUSTO OTAZÚ VERA
+ 35 | quiroga                | JAVIER QUIROGA
+ 37 | coco                   | JORGE LOPEZ BENITEZ
+ 31 | moño                   | Jorge Oviedo
+  8 | jose                   | jose
+ 26 | sajano freddy          | JUAN ALFREDO AYALA
+ 50 | juane                  | JUAN ENRIQUE NOGUES
+ 38 | cayetano               | JULIO JOJOT
+ 39 | lav                    | LUCAS AQUINO
+ 40 | luisma                 | LUIS RIVEROS
+ 30 | gh1s                   | Mauricio Jose Bogarin Bordas
+  7 | moderator              | moderator
+ 42 | oti                    | OCTAVIO JIMÉNEZ
+ 53 | caficho                | RAUL SERRATI
+ 49 | coto                   | RODRIGO NOGUES
+ 51 | sanbie                 | SANDRA BIEDERMANN
+ 43 | seba                   | SEBASTIAN KALAYDJIAN FABBRI
+ 44 | checho                 | SERGIO FIORE
+ 45 | soni                   | SONIA BIEDERMANN
+ 46 | gustav tothelighthouse | VICENTE BIEDERMANN
+ 47 | vitra                  | VICTOR RIVEROS
+ 48 | tim payne              | WILSON FERNANDEZ
+(49 rows)
+
+ 
+=== nombre_apostador en tabla apuesta (distintos) === 
+ apostador_id |       nombre_apostador        
+--------------+-------------------------------
+           10 | AGUSTIN BARRETO
+           11 | ALAN AYMAR AYALA
+           12 | ALEJANDRO LEGUIZAMÓN
+           13 | Alexandro Volpe
+           14 | ALVARO MARTIN ARIAS AYALA
+           15 | ANDRES BOGARIN
+           16 | ANTONIO DOMINGUEZ
+           17 | BELEN FRANCO ZALDIVAR
+           18 | CHRISTIAN THIELMANN
+           19 | CLAUDIO ADAN GALEANO SANABRIA
+           36 | DANIEL KOVACS
+           41 | DIEGO INSFRAN
+           20 | EDGAR ARANDA
+           21 | ELIAS FERREIRA
+           52 | ENZO SEBASTIAN YODICE LOPEZ
+           22 | ERNESTO REINA
+           23 | FABIO FERREIRA
+           24 | FABRIZIO SALOMONI
+           25 | FABRIZIO SERRATI
+           27 | GONZALO RAÚL JIMÉNEZ NIZ
+           28 | GUILLERMO BIEDERMANN
+           29 | HUGO BIEDERMANN
+           32 | HUGO MARCELO CENTURION
+           33 | HUGO SIMON
+           34 | JAVIER AUGUSTO OTAZÚ VERA
+           35 | JAVIER QUIROGA
+           37 | JORGE LOPEZ BENITEZ
+           31 | JORGE OVIEDO
+           26 | JUAN ALFREDO AYALA
+           50 | JUAN ENRIQUE NOGUES
+           38 | JULIO JOJOT
+           39 | LUCAS AQUINO
+           40 | LUIS RIVEROS
+           30 | MAURICIO JOSE BOGARIN BORDAS
+           42 | OCTAVIO JIMÉNEZ
+           53 | RAUL SERRATI
+           49 | RODRIGO NOGUES
+           51 | SANDRA BIEDERMANN
+           43 | SEBASTIAN KALAYDJIAN FABBRI
+           44 | SERGIO FIORE
+           45 | SONIA BIEDERMANN
+           46 | VICENTE BIEDERMANN
+           47 | VICTOR RIVEROS
+           48 | WILSON FERNANDEZ
+(44 rows)
+
+ 
+=== apostadores en puntaje_detalle vs usuarios en app_db === 
+ apostador_id | partidos | pts_hi 
+--------------+----------+--------
+(0 rows)
+

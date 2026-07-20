@@ -1,0 +1,54 @@
+=== VERIFICACION P49 Morocco vs Haiti ===
+Partido P49: id=193, eq_local=61, eq_visit=62
+paux P049 eq_local=63 eq_visit=60  <- ESCOCIA/BRASIL (NO es Morocco/Haiti)
+paux P050 eq_local=61 eq_visit=62  <- MOROCCO/HAITI (correcto)
+Keys iguales: 44 de 44
+
+nombre                         p50_l p50_v  bd_l  bd_v  estado
+------------------------------------------------------------------------
+  agustin barreto                  3     0     3     0  OK
+  alan aymar ayala                 2     0     2     0  OK
+  alejandro leguizamon             2     0     2     0  OK
+  alexandro volpe                  2     0     2     0  OK
+  alvaro martin arias ayala        5     0     5     0  OK
+  andres bogarin                   3     1     3     1  OK
+  antonio dominguez                4     0     4     0  OK
+  belen franco zaldivar            1     0     1     0  OK
+  christian thielmann              2     0     2     0  OK
+  claudio adan galeano sanabri     3     0     3     0  OK
+  daniel kovacs                    3     1     3     1  OK
+  diego insfran                    3     0     3     0  OK
+  edgar aranda                     3     0     3     0  OK
+  elias ferreira                   2     0     2     0  OK
+  enzo sebastian yodice lopez      2     0     2     0  OK
+  ernesto reina                    2     0     2     0  OK
+  fabio ferreira                   3     0     3     0  OK
+  fabrizio salomoni                2     0     2     0  OK
+  fabrizio serrati                 2     0     2     0  OK
+  gonzalo raul jimenez niz         2     0     2     0  OK
+  guillermo biedermann             2     0     2     0  OK
+  hugo biedermann                  3     0     3     0  OK
+  hugo marcelo centurion           1     1     1     1  OK
+  hugo simon                       3     0     3     0  OK
+  javier augusto otazu vera        3     0     3     0  OK
+  javier quiroga                   2     1     2     1  OK
+  jorge lopez benitez              2     0     2     0  OK
+  jorge oviedo                     3     0     3     0  OK
+  juan alfredo ayala               2     0     2     0  OK
+  juan enrique nogues              4     0     4     0  OK
+  julio jojot                      3     1     3     1  OK
+  lucas aquino                     2     0     2     0  OK
+  luis riveros                     3     0     3     0  OK
+  mauricio jose bogarin bordas     3     0     3     0  OK
+  octavio jimenez                  3     0     3     0  OK
+  raul serrati                     3     1     3     1  OK
+  rodrigo nogues                   3     0     3     0  OK
+  sandra biedermann                3     0     3     0  OK
+  sebastian kalaydjian fabbri      4     0     4     0  OK
+  sergio fiore                     3     0     3     0  OK
+  sonia biedermann                 3     0     3     0  OK
+  vicente biedermann               4     0     4     0  OK
+  victor riveros                   2     0     2     0  OK
+  wilson fernandez                 3     0     3     0  OK
+
+RESUMEN: OK=44  SWAP=0  DIFF=0  SIN_APO=0

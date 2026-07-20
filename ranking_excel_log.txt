@@ -1,0 +1,11 @@
+Consultando ranking …
+  → 44 apostadores encontrados
+
+Excel guardado en: C:\proyecto FAST API\ranking_auditoria.xlsx
+
+TOP 5:
+  1. GONZALO RAÚL JIMÉNEZ NIZ        251 pts
+  2. SEBASTIAN KALAYDJIAN FABBRI     248 pts
+  3. JORGE LOPEZ BENITEZ             215 pts
+  4. FABIO FERREIRA                  207 pts
+  5. LUCAS AQUINO                    207 pts

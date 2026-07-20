@@ -1,0 +1,5 @@
+Comparando pronosticos_aux vs apuesta (todos los apostadores, grupos)... 
+ 
+=== RESUMEN: diferencias por apostador === 
+ 
+=== TOTAL apostadores con diferencias === 

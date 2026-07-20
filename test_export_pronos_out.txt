@@ -1,0 +1,3 @@
+[completados] 200 total_apostadores=44 fases=[{'fase': 'Semifinales', 'tipo': 'semis', 'total_partidos': 2, 'completados': 0, 'con_alguna': 0, 'total_apostadores': 44}, {'fase': 'Tercer Puesto', 'tipo': 'tercer_puesto', 'total_partidos': 1, 'completados': 1, 'con_alguna': 1, 'total_apostadores': 44}, {'fase': 'Final', 'tipo': 'final', 'total_partidos': 1, 'completados': 1, 'con_alguna': 1, 'total_apostadores': 44}]
+[exportar] 200 ct=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet bytes=5740
+RESULTADO: PASS (comp=True, xlsx=True)

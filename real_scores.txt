@@ -1,0 +1,3 @@
+=== Resultados reales vs predicciones NUEVAS de cherem (10 partidos corregidos) === 
+ 
+=== Puntaje ESPERADO vs ACTUAL (segun resultado real) === 

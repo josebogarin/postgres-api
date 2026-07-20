@@ -1,0 +1,5 @@
+=== Cobertura del join pronosticos_aux vs apuesta === 
+ 
+=== Apostadores en pronosticos_aux SIN match en app_db === 
+ 
+=== Apostadores SIN diferencias (match completo) === 

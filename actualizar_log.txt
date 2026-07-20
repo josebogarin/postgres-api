@@ -1,0 +1,11 @@
+Conectando...
+Login OK
+
+Sincronizando resultados (puede tardar ~30s)...
+  Actualizados: 37
+  Bracket OK:   True
+  Puntajes OK:  True
+  Procesados:   ?, Plenos: 150, Aciertos: 710
+
+Listo.
+Presiona Enter para cerrar...

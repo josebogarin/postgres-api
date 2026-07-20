@@ -1,0 +1,30 @@
+=== sync_francia_iraq.py === 2026-06-22 21:59:59
+
+1. Autenticando...
+   OK
+
+2. Buscando partido Francia vs Iraq en BD...
+   ID=159  France vs Senegal  estado=programado  marcador=None-None  api_fixture_id=1489383
+   ID=160  Iraq vs Norway  estado=finalizado  marcador=1-4  api_fixture_id=1539016
+   ID=184  France vs Iraq  estado=finalizado  marcador=3-0  api_fixture_id=1539017
+   ID=203  Senegal vs Iraq  estado=pendiente  marcador=None-None  api_fixture_id=1539074
+   ID=204  Norway vs France  estado=pendiente  marcador=None-None  api_fixture_id=1489416
+
+3. Sincronizando desde API-Football...
+   actualizados     : 43
+   bracket_ok       : True
+   puntajes_ok      : True
+
+4. Verificacion ESPN para partido ID=159...
+   ERROR ESPN verify: HTTP 500: {"detail":"_espn_verify_and_patch() missing 2 required positional arguments: 'partido_id' and 'espn_cache'","type":"TypeError","trace":"Traceback (most recent call last):\n  File \"C:\\proyecto FAST API\\backend\\.venv\\Lib\\site-packages\\starlette\\middleware\\errors.py\", line 164, in __call__\n 
+
+5. Estado final del partido en BD...
+   France 3 - 1 Senegal
+   estado     : finalizado
+   amarillas  : 0
+   rojas      : 0
+   VAR        : 1
+   min. gol   : 66
+   pen.partido: 0
+
+=== SYNC COMPLETADO ===

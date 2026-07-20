@@ -1,0 +1,68 @@
+[20:34:13] === UPDATE DESDE EXCEL CONSOLIDADA ===
+[20:34:13] Partidos en Excel: 60
+[20:34:13] 
+[1] Leyendo partidos finalizados desde BD...
+[20:34:13]   Partidos finalizados en BD: 62
+[20:34:13] 
+[2] Comparando Excel vs BD...
+[20:34:13]   P001 ✏️  editable | minuto_primer_gol    Excel=9 BD=10
+[20:34:13]   P014 ✏️  editable | minuto_primer_gol    Excel=99 BD=None
+[20:34:13]   P025 ✏️  editable | var                  Excel=1 BD=0
+[20:34:13]   P027 ✏️  editable | var                  Excel=3 BD=2
+[20:34:13]   P034 ✏️  editable | minuto_primer_gol    Excel=99 BD=None
+[20:34:13]   P039 ✏️  editable | var                  Excel=2 BD=1
+[20:34:13]   P039 ✏️  editable | minuto_primer_gol    Excel=99 BD=None
+[20:34:13]   P045 ✏️  editable | minuto_primer_gol    Excel=99 BD=None
+[20:34:13]   P046 ✏️  editable | amarillas            Excel=2 BD=0
+[20:34:13]   P047 ✏️  editable | var                  Excel=0 BD=1
+[20:34:13]   P048 ✏️  editable | minuto_primer_gol    Excel=76 BD=None
+[20:34:13]   P049 ✏️  editable | amarillas            Excel=3 BD=2
+[20:34:13]   P049 ✏️  editable | var                  Excel=0 BD=1
+[20:34:13]   P049 ✏️  editable | minuto_primer_gol    Excel=7 BD=10
+[20:34:13]   P050 ✏️  editable | amarillas            Excel=3 BD=2
+[20:34:13]   P050 ✏️  editable | var                  Excel=1 BD=2
+[20:34:13]   P050 ✏️  editable | minuto_primer_gol    Excel=10 BD=7
+[20:34:13]   P053 ✏️  editable | minuto_primer_gol    Excel=54 BD=55
+[20:34:13]   P055 ✏️  editable | amarillas            Excel=3 BD=4
+[20:34:13]   P055 ✏️  editable | var                  Excel=0 BD=1
+[20:34:13]   P055 ✏️  editable | minuto_primer_gol    Excel=7 BD=2
+[20:34:13]   P056 ✏️  editable | amarillas            Excel=4 BD=3
+[20:34:13]   P056 ✏️  editable | var                  Excel=1 BD=0
+[20:34:13]   P056 ✏️  editable | minuto_primer_gol    Excel=2 BD=7
+[20:34:13]   P059 ✏️  editable | amarillas            Excel=2 BD=1
+[20:34:13]   P059 ✏️  editable | var                  Excel=1 BD=0
+[20:34:13]   P059 ✏️  editable | minuto_primer_gol    Excel=2 BD=3
+[20:34:13]   P060 ✏️  editable | minuto_primer_gol    Excel=99 BD=None
+[20:34:13] 
+  Partidos con diferencias a actualizar (no bloqueados): 17
+[20:34:13]   Partidos con diferencias bloqueados (datos_confirmados=TRUE): 0
+[20:34:13] 
+[3] Aplicando actualizaciones...
+[20:34:13]   ✓ P001 (id=143): minuto_primer_gol=9
+[20:34:14]   ✓ P014 (id=155): minuto_primer_gol=99
+[20:34:14]   ✓ P025 (id=167): decisiones_var=1
+[20:34:14]   ✓ P027 (id=169): decisiones_var=3
+[20:34:14]   ✓ P034 (id=177): minuto_primer_gol=99
+[20:34:14]   ✓ P039 (id=180): decisiones_var=2, minuto_primer_gol=99
+[20:34:15]   ✓ P045 (id=188): minuto_primer_gol=99
+[20:34:15]   ✓ P046 (id=189): amarillas=2
+[20:34:15]   ✓ P047 (id=187): decisiones_var=0
+[20:34:15]   ✓ P048 (id=190): minuto_primer_gol=76
+[20:34:16]   ✓ P049 (id=193): amarillas=3, decisiones_var=0, minuto_primer_gol=7
+[20:34:16]   ✓ P050 (id=194): amarillas=3, decisiones_var=1, minuto_primer_gol=10
+[20:34:16]   ✓ P053 (id=195): minuto_primer_gol=54
+[20:34:16]   ✓ P055 (id=197): amarillas=3, decisiones_var=0, minuto_primer_gol=7
+[20:34:16]   ✓ P056 (id=198): amarillas=4, decisiones_var=1, minuto_primer_gol=2
+[20:34:17]   ✓ P059 (id=201): amarillas=2, decisiones_var=1, minuto_primer_gol=2
+[20:34:17]   ✓ P060 (id=202): minuto_primer_gol=99
+[20:34:17] 
+  Actualizados: 17 | Errores: 0
+[20:34:17] 
+[4] Generando script para recalcular puntajes...
+[20:34:17]   Script guardado: recalc_post_excel.ps1
+[20:34:17] 
+PRÓXIMOS PASOS:
+[20:34:17]   1. Ejecutar recalc_post_excel.ps1 para recalcular puntajes
+[20:34:17]      (doble click o clic derecho → Ejecutar con PowerShell)
+[20:34:17] 
+=== COMPLETADO ===

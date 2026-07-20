@@ -1,0 +1,104 @@
+Autenticando...
+Token OK
+
+Recalculando puntajes torneo 2...
+  plenos=153 aciertos=751 fallos=724
+
+Obteniendo ranking...
+
+POS ALIAS                       BD   XLS   DIF     A   B   C   D   E   F   G  STATUS
+───────────────────────────────────────────────────────────────────────────────────────────────
+     PATITO                     251   242    +9  A+4    C+2D+1E+1F+1      🔴
+     SEBA                       248   235   +13  A+4B+8C-1D+1    F+1      🔴
+     COCO                       215   208    +7  A+4    C+2D+1    F+1G-1  🔴
+     LAV                        207   206    +1  A+4    C-1D+1E-4F+1      🟡
+     QUIROGA                    206   203    +3  A+4    C-1                  🟡
+     MORO                       207   203    +4  A+4    C-1D+1    F+1G-1  🟡
+     FSCC                       206   200    +6  A+4        D+1    F+1      🔴
+     VITRA                      206   200    +6  A+4    C-1D+1E+1F+1      🔴
+     HAKEMBO                    202   200    +2  A+4        D+1E-3          🟡
+     FIDELYOLI                  204   197    +7  A+4    C-1D+1E+2F+1      🔴
+     COTO                       203   194    +9  A+4    C+2D+1E+2F+1G-1  🔴
+     @BS                        204   193   +11  A+4        D+1E+3F+1G+2  🔴
+     LUISMA                     198   193    +5  A+4        D+1E-1F+1      🟡
+     GUSTAV TOTHELIGHTHOUSE     199   192    +7  A+4        D+1E+1F+1      🔴
+     CAYETANO                   195   188    +7  A+4            E+1F+1G+1  🔴
+     MOÑO                       195   188    +7  A+4    C+1D+1    F+1      🔴
+     GRILLITO                   198   187   +11  A+4B+8    D+1E-2          🔴
+     HS                         193   186    +7  A+4    C+1D+1E+1          🔴
+     SANBIE                     191   183    +8  A+4    C+1D+1E+1F+1      🔴
+     SONI                       197   183   +14  A+4B+8C+1D+1E-1F+1      🔴
+     CHECHO                     189   182    +7  A+4        D+1E+1F+1      🔴
+     AleVo                      186   181    +5  A+4    C-1D+1    F+1      🟡
+     PATO                       189   180    +9  A+4    C+1D+1E+1F+1G+1  🔴
+     TONY                       184   180    +4  A+4        D+1E-3F+1G+1  🟡
+     ALEJANDROLEGUI             185   179    +6  A+4        D+1    F+1      🔴
+     DECANITA                   181   177    +4  A+4    C+2D+1E-4F+1      🟡
+     KIKAO                      185   176    +9  A+4        D+1E+3F+1      🔴
+     TIM PAYNE                  178   175    +3  A+4        D+1E-3F+1      🟡
+     OTI                        178   175    +3  A+4    C+1D+1E-4F+1      🟡
+     ALFAORION 99               182   172   +10  A+4        D+1E+3F+1G+1  🔴
+     SAJANO FREDDY              182   172   +10  A+4        D+1E+3F+1G+1  🔴
+     GH1S                       175   170    +5  A+4    C-1D+1    F+1      🟡
+     PUCHETA                    180   170   +10  A+4    C+1D+1E+3F+1      🔴
+     GBC                        174   168    +6  A+4    C+1    E+1          🔴
+     AAA                        175   167    +8  A+4        D+1E+2F+1      🔴
+     CHEREM                     171   166    +5  A+4    C-1D+1    F+1      🟡
+     LUDIE-Z                    171   165    +6  A+4    C-1    E+2F+1      🔴
+     ELIASMAJUL                 168   163    +5  A+4    C-1D+1    F+1      🟡
+     PINGUERO                   170   162    +8  A+4    C+1D+1E+1F+1      🔴
+     EDGAR                      161   157    +4  A+4        D+1E-1          🟡
+     ESYL                       162   155    +7  A+4    C+2D+1              🔴
+     JUANE                      157   151    +6  A+4        D+1E+1          🔴
+     CAFICHO                    138   128   +10  A+4            E+6          🔴
+     MONKEY                     125   120    +5  A+4                    G+1  🟡
+
+────────────────────────────────────────────────────────────
+✅ Exactos: 0/44
+🔴 Con diferencias: 44
+
+=== DIFERENCIAS (ordenadas por magnitud) ===
+  SONI                       +14 pts  (A+4B+8C+1D+1E-1F+1)
+  SEBA                       +13 pts  (A+4B+8C-1D+1F+1)
+  @BS                        +11 pts  (A+4D+1E+3F+1G+2)
+  GRILLITO                   +11 pts  (A+4B+8D+1E-2)
+  ALFAORION 99               +10 pts  (A+4D+1E+3F+1G+1)
+  SAJANO FREDDY              +10 pts  (A+4D+1E+3F+1G+1)
+  PUCHETA                    +10 pts  (A+4C+1D+1E+3F+1)
+  CAFICHO                    +10 pts  (A+4E+6)
+  PATITO                      +9 pts  (A+4C+2D+1E+1F+1)
+  COTO                        +9 pts  (A+4C+2D+1E+2F+1G-1)
+  PATO                        +9 pts  (A+4C+1D+1E+1F+1G+1)
+  KIKAO                       +9 pts  (A+4D+1E+3F+1)
+  SANBIE                      +8 pts  (A+4C+1D+1E+1F+1)
+  AAA                         +8 pts  (A+4D+1E+2F+1)
+  PINGUERO                    +8 pts  (A+4C+1D+1E+1F+1)
+  COCO                        +7 pts  (A+4C+2D+1F+1G-1)
+  FIDELYOLI                   +7 pts  (A+4C-1D+1E+2F+1)
+  GUSTAV TOTHELIGHTHOUSE      +7 pts  (A+4D+1E+1F+1)
+  CAYETANO                    +7 pts  (A+4E+1F+1G+1)
+  MOÑO                        +7 pts  (A+4C+1D+1F+1)
+  HS                          +7 pts  (A+4C+1D+1E+1)
+  CHECHO                      +7 pts  (A+4D+1E+1F+1)
+  ESYL                        +7 pts  (A+4C+2D+1)
+  FSCC                        +6 pts  (A+4D+1F+1)
+  VITRA                       +6 pts  (A+4C-1D+1E+1F+1)
+  ALEJANDROLEGUI              +6 pts  (A+4D+1F+1)
+  GBC                         +6 pts  (A+4C+1E+1)
+  LUDIE-Z                     +6 pts  (A+4C-1E+2F+1)
+  JUANE                       +6 pts  (A+4D+1E+1)
+  LUISMA                      +5 pts  (A+4D+1E-1F+1)
+  AleVo                       +5 pts  (A+4C-1D+1F+1)
+  GH1S                        +5 pts  (A+4C-1D+1F+1)
+  CHEREM                      +5 pts  (A+4C-1D+1F+1)
+  ELIASMAJUL                  +5 pts  (A+4C-1D+1F+1)
+  MONKEY                      +5 pts  (A+4G+1)
+  MORO                        +4 pts  (A+4C-1D+1F+1G-1)
+  TONY                        +4 pts  (A+4D+1E-3F+1G+1)
+  DECANITA                    +4 pts  (A+4C+2D+1E-4F+1)
+  EDGAR                       +4 pts  (A+4D+1E-1)
+  QUIROGA                     +3 pts  (A+4C-1)
+  TIM PAYNE                   +3 pts  (A+4D+1E-3F+1)
+  OTI                         +3 pts  (A+4C+1D+1E-4F+1)
+  HAKEMBO                     +2 pts  (A+4D+1E-3)
+  LAV                         +1 pts  (A+4C-1D+1E-4F+1)

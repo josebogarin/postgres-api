@@ -1,0 +1,65 @@
+PASO 1 numero_partido_fifa: 0 filas pobladas
+Mapa equipos: 56 entradas para 48 equipos
+Nombres crudos en equipo (nombre | nombre_es):
+  id=  53  Czech Republic                  Czech Republic
+  id=  54  Canada                          Canada
+  id=  96  Uzbekistan                      Uzbekistan
+  id=  75  Cape Verde Islands              Cape Verde Islands
+  id=  68  Netherlands                     Netherlands
+  id=  74  Spain                           ESPA??A
+  id=  56  USA                             USA
+  id=  61  Morocco                         Morocco
+  id=  83  Senegal                         Senegal
+  id=  57  Paraguay                        Paraguay
+  id=  82  France                          France
+  id=  90  Portugal                        Portugal
+  id=  85  Norway                          Norway
+  id=  62  Haiti                           Haiti
+  id=  97  Colombia                        Colombia
+  id=  91  Congo DR                        Congo DR
+  id=  93  Croatia                         Croatia
+  id=  60  Brazil                          Brazil
+  id=  63  Scotland                        Scotland
+  id=  59  Switzerland                     Switzerland
+  id=  55  Bosnia & Herzegovina            BOSNIA Y HERZEGOVINA
+  id=  77  Egypt                           Egypt
+  id=  89  Jordan                          Jordan
+  id=  95  Panama                          Panama
+  id=  71  Ecuador                         Ecuador
+  id=  88  Austria                         Austria
+  id=  84  Iraq                            Iraq
+  id=  73  Tunisia                         Tunisia
+  id=  92  England                         INGLATERRA
+  id=  69  Japan                           Japan
+  id=  87  Algeria                         Algeria
+  id=  76  Belgium                         Belgium
+  id=  72  Sweden                          Sweden
+  id=  79  Uruguay                         Uruguay
+  id=  50  Mexico                          Mexico
+  id=  78  Saudi Arabia                    Saudi Arabia
+  id=  80  Iran                            Iran
+  id=  70  Ivory Coast                     COSTA DE MARFIL
+  id=  52  South Korea                     COREA DEL SUR
+  id=  66  Germany                         ALEMANIA
+  id=  86  Argentina                       Argentina
+  id=  64  Australia                       Australia
+  id=  58  Qatar                           Qatar
+  id=  51  South Africa                    South Africa
+  id=  81  New Zealand                     New Zealand
+  id=  65  Türkiye                         Türkiye
+  id=  67  Curaçao                         Curaçao
+  id=  94  Ghana                           Ghana
+PASO 2 local   : 5280 filas con idequipolocal
+PASO 2 visita  : 5280 filas con idequipovisitante
+Apuestas torneo 2: total=3168, con numero_fifa=3168
+Estrategia A: join por numero_fifa
+PASO 4 UPDATE apuesta: 3168 filas actualizadas
+Muestra apuesta actualizada (8 filas):
+  apostador=AGUSTIN BARRETO       num=1  pred=2-0  amar=7
+  apostador=AGUSTIN BARRETO       num=2  pred=2-0  amar=5
+  apostador=AGUSTIN BARRETO       num=3  pred=2-1  amar=7
+  apostador=AGUSTIN BARRETO       num=4  pred=0-1  amar=6
+  apostador=AGUSTIN BARRETO       num=5  pred=1-2  amar=6
+  apostador=AGUSTIN BARRETO       num=6  pred=1-2  amar=7
+  apostador=AGUSTIN BARRETO       num=7  pred=2-1  amar=8
+  apostador=AGUSTIN BARRETO       num=8  pred=0-2  amar=5

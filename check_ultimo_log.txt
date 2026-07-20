@@ -1,0 +1,25 @@
+=== Ultimos 15 partidos finalizados ===
+   # Local                   Res  Visitante              Fase           Pts?
+────────────────────────────────────────────────────────────────────────────────
+P043 Argentina               2-0  Austria                grupo             ✓
+P040 New Zealand             1-3  Egypt                  grupo             ✓
+P037 Uruguay                 2-2  Cape Verde Islands     grupo             ✓
+P039 Belgium                 0-0  Iran                   grupo             ✓
+P038 Spain                   4-0  Saudi Arabia           grupo             ✓
+P036 Tunisia                 0-4  Japan                  grupo             ✓
+P034 Ecuador                 0-0  Curaçao                grupo             ✓
+P033 Germany                 2-1  Ivory Coast            grupo             ✓
+P035 Netherlands             5-1  Sweden                 grupo             ✓
+P031 Türkiye                 0-1  Paraguay               grupo             ✓
+P029 Brazil                  3-0  Haiti                  grupo             ✓
+P030 Scotland                0-1  Morocco                grupo             ✓
+P032 USA                     2-0  Australia              grupo             ✓
+P028 Mexico                  1-0  South Korea            grupo             ✓
+P027 Canada                  6-0  Qatar                  grupo             ✓
+
+=== Búsqueda: Uruguay / Cabo Verde ===
+  P014 Spain 0-0 Cape Verde Islands [finalizado] ✓ puntaje calculado
+  P013 Saudi Arabia 1-1 Uruguay [finalizado] ✓ puntaje calculado
+  P037 Uruguay 2-2 Cape Verde Islands [finalizado] ✓ puntaje calculado
+  P065 Cape Verde Islands ? - ? Saudi Arabia [pendiente] ✗ SIN puntaje
+  P066 Uruguay ? - ? Spain [pendiente] ✗ SIN puntaje

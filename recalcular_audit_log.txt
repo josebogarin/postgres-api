@@ -1,0 +1,67 @@
+Autenticando...
+Token OK (usuario=Jose)
+
+=== RANKING ANTES ===
+   1. patito                           251 pts
+   2. seba                             248 pts
+   3. coco                             215 pts
+   4. lav                              207 pts
+   5. moro                             207 pts
+   6. fscc                             206 pts
+   7. quiroga                          206 pts
+   8. vitra                            206 pts
+   9. @bs                              204 pts
+  10. fidelyoli                        204 pts
+
+Recalculando puntajes torneo 2...
+Resultado calcular-puntajes:
+{
+  "ok": true,
+  "engine": "copa_mundo_2026",
+  "plenos": 153,
+  "aciertos": 751,
+  "fallos": 724,
+  "por_fase": {
+    "grupo": {
+      "marcador": 5008,
+      "bonus": 3263,
+      "total": 8271,
+      "apuestas": 1628
+    }
+  },
+  "globales_procesadas": 0
+}
+
+=== RANKING DESPUES ===
+   1. patito                           251 pts
+   2. seba                             248 pts
+   3. coco                             215 pts
+   4. lav                              207 pts
+   5. moro                             207 pts
+   6. fscc                             206 pts
+   7. quiroga                          206 pts
+   8. vitra                            206 pts
+   9. @bs                              204 pts
+  10. fidelyoli                        204 pts
+
+Quiroga especificamente:
+  quiroga: 206 pts (H=88 I=40 J=6 K=31 L=11 M=30 N=0 O=0)
+Buscando apostador 'patito' en app_db …
+  → GONZALO RAÚL JIMÉNEZ NIZ (id=27)
+  → 104 partidos en BD, 44 apostadores en ranking
+
+Excel guardado en: C:\proyecto FAST API\auditoria_patito.xlsx
+
+RESUMEN — GONZALO RAÚL JIMÉNEZ NIZ
+  A  Gana/Empata/Pierde:   108
+  B  Exacto:                40
+  C  Amarillas:              9
+  D  Rojas:                 34
+  E  VAR:                   27
+  F  Penales:               33
+  G  1er Gol:                0
+  ────────────────────────────
+     TOTAL:                251
+
+Ranking: 44 apostadores incluidos
+        1 archivo(s) copiado(s).

@@ -1,0 +1,4 @@
+id=15 username='cherem' nombre='ANDRES BOGARIN' primer='ANDRES'
+[1] pin=primer_nombre + P097 finalizado -> {'ok': False, 'guardadas': 0, 'total': 1, 'resultados': [{'numero_fifa': 97, 'ok': False, 'msg': 'Partido finalizado: no editable'}], 'apostador': 'cherem'}
+[2] pin=username + P104 programado (debe rechazar) -> {'ok': False, 'error': 'PIN incorrecto. El PIN es tu primer nombre.'}
+RESULTADO: PASS (primer_nombre_acepta=True, username_rechazado=True)

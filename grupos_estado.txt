@@ -1,0 +1,11 @@
+ total | finalizados | confirmados | sincronizados | con_amarillas | con_var 
+-------+-------------+-------------+---------------+---------------+---------
+    72 |          66 |          62 |            72 |            66 |      66
+(1 row)
+
+   estado   | cant 
+------------+------
+ finalizado |   66
+ pendiente  |    6
+(2 rows)
+

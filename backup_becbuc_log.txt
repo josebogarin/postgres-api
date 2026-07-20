@@ -1,0 +1,32 @@
+
+======================================
+  BECBUC - Backup 20260719_1949
+======================================
+
+[1/4] Verificando Docker...
+      OK - contenedor core-postgres activo
+
+[2/4] Dump base de datos 'becbuc'...
+      OK - becbuc_20260719_1949.sql (13.149 KB)
+
+[3/4] Dump base de datos 'app_db'...
+      OK - app_db_20260719_1949.sql (19.916 KB)
+
+[4/4] Copiando codigo fuente...
+      OK - codigo copiado
+
+Comprimiendo en ZIP...
+      OK
+
+Copiando a OneDrive...
+      OK - copiado a OneDrive
+      Eliminados 1 backup(s) antiguos de OneDrive
+
+======================================
+  Backup completado!
+  Local:    C:\backup_becbuc\BECBUC_backup_20260719_1949.zip
+  OneDrive: C:\Users\Jose Bogarin\OneDrive - lambda consulting\consultorias JB\BECBUC\BECBUC_backup_20260719_1949.zip
+  Tamanio:  277,2 MB
+======================================
+
+DONE 

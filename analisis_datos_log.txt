@@ -1,0 +1,89 @@
+=== RANKING COMPLETO (todos) ===
+pos;alias;total;partidos;globales
+1;?;1080;992;62
+2;?;983;884;72
+3;?;966;908;30
+4;?;945;860;60
+5;?;941;864;50
+6;?;939;852;60
+7;?;930;835;70
+8;?;901;827;50
+9;?;890;843;20
+10;?;886;813;46
+11;?;877;832;20
+12;?;874;791;56
+13;?;866;773;66
+14;?;846;769;50
+15;?;844;766;50
+16;?;843;817;0
+17;?;833;802;6
+18;?;828;786;16
+19;?;827;750;50
+20;?;806;718;60
+21;?;806;718;60
+22;?;805;708;70
+23;?;799;725;50
+24;?;792;746;20
+25;?;787;744;16
+26;?;783;717;40
+27;?;782;731;26
+28;?;782;708;50
+29;?;781;743;10
+30;?;779;747;6
+31;?;777;730;20
+32;?;769;676;66
+33;?;767;691;50
+34;?;761;704;30
+35;?;752;686;40
+36;?;740;698;16
+37;?;723;690;6
+38;?;716;669;20
+39;?;707;682;0
+40;?;683;637;20
+41;?;680;643;10
+42;?;672;609;40
+43;?;663;587;50
+44;?;589;520;46
+
+=== SPREAD ===
+N=44  1ro=1080  ultimo=589  promedio=814  mediana=799
+gap 1ro-ultimo=491  gap 1ro-2do=97  gap 1ro-mediana=281
+top1=1080 top5=941 top10=886 p25=761 p50=799
+
+=== PUNTOS TOTALES POR ITEM DE PARTIDO (suma de los 44) ===
+  h_resultado: 14156
+  i_marcador: 5964
+  j_amarillas: 877
+  k_rojas: 3623
+  l_var: 1367
+  m_pen_juego: 3189
+  n_minuto: 173
+  o_tanda: 220
+  p_clasifica: 3422
+
+=== PUNTOS POR FASE (suma de todos) ===
+  grupo            partidos=72   total=16564
+  ronda32          partidos=16   total=7783
+  ronda16          partidos=8    total=3353
+  cuartos          partidos=4    total=3163
+  semis            partidos=2    total=1105
+  final            partidos=1    total=845
+  tercer_puesto    partidos=1    total=178
+
+=== GLOBALES: suma total por item + cuantos sumaron ===
+  a: 420
+  b: 360
+  c: 580
+  d: 20
+  e: 180
+  f: 60
+  g: 36
+
+=== DISTRIBUCION PLENOS (marcador exacto) por apostador ===
+  (referencia lider)  {'plenos': 20, 'aciertos': 52}
+
+=== VALOR DE 1 ACIERTO/PLENO POR FASE (tabla oficial H/I) ===
+  grupos H=4 I=8 | 16avos 6/12 | octavos 8/16 | cuartos 10/20 | semis 12/24 | 3P 14/28 | final 20/40
+
+=== FIN ANALISIS DATOS ===
+DONE 

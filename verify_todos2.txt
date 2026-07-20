@@ -1,0 +1,48 @@
+﻿ apostador_id |            nombre             | h_diffs | i_diffs | j_diffs | k_diffs | l_diffs | m_diffs | n_diffs | total_diffs | pts_esp | pts_bd |  estado  
+--------------+-------------------------------+---------+---------+---------+---------+---------+---------+---------+-------------+---------+--------+----------
+           34 | JAVIER AUGUSTO OTAZ├Ü VERA     |       0 |       0 |       0 |       0 |       0 |       0 |       1 |           1 |     301 |    302 | ***DIFFS
+           37 | JORGE LOPEZ BENITEZ           |       0 |       0 |       0 |       0 |       0 |       0 |       1 |           1 |     372 |    371 | ***DIFFS
+           10 | AGUSTIN BARRETO               |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     381 |    381 | OK
+           11 | ALAN AYMAR AYALA              |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     346 |    346 | OK
+           12 | ALEJANDRO LEGUIZAM├ôN          |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     359 |    359 | OK
+           13 | Alexandro Volpe               |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     352 |    352 | OK
+           14 | ALVARO MARTIN ARIAS AYALA     |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     296 |    296 | OK
+           15 | ANDRES BOGARIN                |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     325 |    325 | OK
+           16 | ANTONIO DOMINGUEZ             |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     349 |    349 | OK
+           17 | BELEN FRANCO ZALDIVAR         |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     313 |    313 | OK
+           18 | CHRISTIAN THIELMANN           |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     332 |    332 | OK
+           19 | CLAUDIO ADAN GALEANO SANABRIA |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     333 |    333 | OK
+           20 | EDGAR ARANDA                  |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     273 |    273 | OK
+           21 | ELIAS FERREIRA                |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     309 |    309 | OK
+           22 | ERNESTO REINA                 |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     315 |    315 | OK
+           23 | FABIO FERREIRA                |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     400 |    400 | OK
+           24 | FABRIZIO SALOMONI             |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     340 |    340 | OK
+           25 | FABRIZIO SERRATI              |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     374 |    374 | OK
+           26 | JUAN ALFREDO AYALA            |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     346 |    346 | OK
+           27 | GONZALO RA├ÜL JIM├ëNEZ NIZ      |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     403 |    403 | OK
+           28 | GUILLERMO BIEDERMANN          |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     293 |    293 | OK
+           29 | HUGO BIEDERMANN               |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     353 |    353 | OK
+           30 | MAURICIO JOSE BOGARIN BORDAS  |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     352 |    352 | OK
+           31 | JORGE OVIEDO                  |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     357 |    357 | OK
+           32 | HUGO MARCELO CENTURION        |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     222 |    222 | OK
+           33 | HUGO SIMON                    |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     374 |    374 | OK
+           35 | JAVIER QUIROGA                |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     354 |    354 | OK
+           36 | DANIEL KOVACS                 |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     370 |    370 | OK
+           38 | JULIO JOJOT                   |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     315 |    315 | OK
+           39 | LUCAS AQUINO                  |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     375 |    375 | OK
+           40 | LUIS RIVEROS                  |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     312 |    312 | OK
+           41 | DIEGO INSFRAN                 |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     356 |    356 | OK
+           42 | OCTAVIO JIM├ëNEZ               |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     346 |    346 | OK
+           43 | SEBASTIAN KALAYDJIAN FABBRI   |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     433 |    433 | OK
+           44 | SERGIO FIORE                  |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     384 |    384 | OK
+           45 | SONIA BIEDERMANN              |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     364 |    364 | OK
+           46 | VICENTE BIEDERMANN            |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     370 |    370 | OK
+           47 | VICTOR RIVEROS                |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     384 |    384 | OK
+           48 | WILSON FERNANDEZ              |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     342 |    342 | OK
+           49 | RODRIGO NOGUES                |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     360 |    360 | OK
+           50 | JUAN ENRIQUE NOGUES           |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     322 |    322 | OK
+           51 | SANDRA BIEDERMANN             |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     323 |    323 | OK
+           52 | ENZO SEBASTIAN YODICE LOPEZ   |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     331 |    331 | OK
+           53 | RAUL SERRATI                  |       0 |       0 |       0 |       0 |       0 |       0 |       0 |           0 |     255 |    255 | OK
+(44 rows)
+

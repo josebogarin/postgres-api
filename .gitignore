@@ -1,0 +1,43 @@
+# ── Python ───────────────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# ── Secretos / configuración local ────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Logs ───────────────────────────────────────────────────────────────────────
+*.log
+
+# ── Node / Next.js (frontend) ───────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+.turbo/
+
+# ── Backups y archivos generados ────────────────────────────────────────────────
+*.zip
+BECBUC_verificacion.xlsx
+backup_becbuc/
+/backup_*/
+
+# ── Binarios / herramientas descargadas ─────────────────────────────────────────
+*.exe
+
+# ── Datos de sesión locales de Claude Code ──────────────────────────────────────
+.claude/worktrees/
+
+# ── Sistema operativo / editores ────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

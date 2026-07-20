@@ -1,0 +1,2 @@
+UPDATE users SET password_hash='$2b$12$BS6gtGRQfKme0b1Nh6ieVuoVvgfneM9mS7.qOAvfdtAHFyASJmieK' WHERE username='admin';
+SELECT username, LEFT(password_hash,20) AS hash_preview FROM users WHERE username='admin';

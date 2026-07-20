@@ -1,0 +1,6 @@
+UPDATE 1
+ id |  username  | nombre 
+----+------------+--------
+  9 | andresboga | andres
+(1 row)
+

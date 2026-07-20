@@ -1,0 +1,7 @@
+﻿ numero_fifa | goles_local | goles_visitante | minuto_primer_gol |   estado   |  local   | visitante 
+-------------+-------------+-----------------+-------------------+------------+----------+-----------
+          34 |           0 |               0 |                99 | finalizado | Ecuador  | Cura├ºao
+          39 |           0 |               0 |                99 | finalizado | Belgium  | Iran
+          60 |           0 |               0 |                99 | finalizado | Paraguay | Australia
+(3 rows)
+

@@ -1,0 +1,50 @@
+=== Todos los apostadores (id, username, nombre) ===
+  id=  1  username=admin                 nombre=admin
+  id=  6  username=guest                 nombre=guest
+  id=  7  username=moderator             nombre=moderator
+  id=  8  username=jose                  nombre=jose
+  id=  9  username=andres                nombre=andres
+  id= 10  username=@bs                   nombre=Agustin Barreto
+  id= 11  username=alfaorion 99          nombre=ALAN AYMAR AYALA
+  id= 12  username=alejandrolegui        nombre=Alejandro Leguizamón
+  id= 13  username=alevo                 nombre=Alexandro Volpe
+  id= 14  username=aaa                   nombre=Alvaro Martin Arias Ayala
+  id= 15  username=cherem                nombre=ANDRES BOGARIN
+  id= 16  username=tony                  nombre=Antonio Dominguez
+  id= 17  username=decanita              nombre=Belen Franco Zaldivar
+  id= 18  username=kikao                 nombre=CHRISTIAN THIELMANN
+  id= 19  username=ludie-z               nombre=Claudio Adan Galeano Sanabria
+  id= 20  username=edgar                 nombre=Edgar Aranda
+  id= 21  username=eliasmajul            nombre=ELIAS FERREIRA
+  id= 22  username=pinguero              nombre=ERNESTO REINA
+  id= 23  username=moro                  nombre=FABIO FERREIRA
+  id= 24  username=grillito              nombre=FABRIZIO SALOMONI
+  id= 25  username=fscc                  nombre=FABRIZIO SERRATI
+  id= 26  username=sajano freddy         nombre=JUAN ALFREDO AYALA
+  id= 27  username=patito                nombre=Gonzalo Raúl Jiménez Niz
+  id= 28  username=gbc                   nombre=GUILLERMO BIEDERMANN
+  id= 29  username=pato                  nombre=Hugo Biedermann
+  id= 30  username=gh1s                  nombre=Mauricio Jose Bogarin Bordas
+  id= 31  username=moño                  nombre=Jorge Oviedo
+  id= 32  username=monkey                nombre=HUGO MARCELO CENTURION
+  id= 33  username=hs                    nombre=HUGO SIMON
+  id= 34  username=pucheta               nombre=JAVIER AUGUSTO OTAZÚ VERA
+  id= 35  username=quiroga               nombre=JAVIER QUIROGA
+  id= 36  username=fidelyoli             nombre=DANIEL KOVACS
+  id= 37  username=coco                  nombre=JORGE LOPEZ BENITEZ
+  id= 38  username=cayetano              nombre=JULIO JOJOT
+  id= 39  username=lav                   nombre=LUCAS AQUINO
+  id= 40  username=luisma                nombre=LUIS RIVEROS
+  id= 41  username=hakembo               nombre=DIEGO INSFRAN
+  id= 42  username=oti                   nombre=OCTAVIO JIMÉNEZ
+  id= 43  username=seba                  nombre=SEBASTIAN KALAYDJIAN FABBRI
+  id= 44  username=checho                nombre=SERGIO FIORE
+  id= 45  username=soni                  nombre=SONIA BIEDERMANN
+  id= 46  username=gustav tothelighthouse  nombre=VICENTE BIEDERMANN
+  id= 47  username=vitra                 nombre=VICTOR RIVEROS
+  id= 48  username=tim payne             nombre=WILSON FERNANDEZ
+  id= 49  username=coto                  nombre=RODRIGO NOGUES
+  id= 50  username=juane                 nombre=JUAN ENRIQUE NOGUES
+  id= 51  username=sanbie                nombre=SANDRA BIEDERMANN
+  id= 52  username=esyl                  nombre=ENZO SEBASTIAN YODICE LOPEZ
+  id= 53  username=caficho               nombre=RAUL SERRATI

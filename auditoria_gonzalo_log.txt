@@ -1,0 +1,2 @@
+Buscando apostador 'gonzalo gimenez' en app_db â€¦
+ERROR: No se encontró ningún usuario con nombre 'gonzalo gimenez'.

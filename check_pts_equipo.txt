@@ -1,0 +1,9 @@
+R32 pts_equipo: total=1136 | filas_con_pts=554 | total_filas=704
+apostador_clasificados (grupos): n=44 | aciertos_total=1153
+apostador_clasificados ronda32: n=44
+Top 5 apostadores pts_equipo R32:
+  id=44: 34 pts
+  id=47: 32 pts
+  id=40: 32 pts
+  id=33: 30 pts
+  id=14: 30 pts

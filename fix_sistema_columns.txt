@@ -1,0 +1,26 @@
+Aplicando ALTER TABLE sistema ADD COLUMN IF NOT EXISTS ...
+  OK  host_bd
+  OK  puerto_bd
+  OK  nombre_bd
+  OK  usuario_bd
+  OK  "contraseña_bd"
+  OK  es_activo
+  OK  created_at
+  OK  updated_at
+
+Columnas actuales de sistema:
+  id                           integer            null=NO
+  nombre                       character varying  null=NO
+  descripcion                  text               null=YES
+  tipo                         character varying  null=YES
+  logo_url                     character varying  null=YES
+  config_json                  jsonb              null=YES
+  activo                       boolean            null=YES
+  created_at                   timestamp without time zone null=YES
+  updated_at                   timestamp without time zone null=YES
+  host_bd                      character varying  null=NO
+  puerto_bd                    integer            null=NO
+  nombre_bd                    character varying  null=NO
+  usuario_bd                   character varying  null=NO
+  contraseña_bd                character varying  null=NO
+  es_activo                    boolean            null=NO

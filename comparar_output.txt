@@ -1,0 +1,156 @@
+======================================================================
+COMPARACION PUNTAJES BECBUC vs TABLA REFERENCIA
+======================================================================
+
+Consultando BD...
+BD: 44 apostadores con puntaje.
+Referencia: 20 apostadores en tabla imagen.
+
+--- DATOS BD (orden por total) ---
+Username           Nombre                           H     I     J     K     L     M     N     O   PART  GLOB  TOTAL
+seba               SEBASTIAN KALAYDJIAN FABBRI    160   104    13    55    33    49     2     0    416     0    416
+patito             Gonzalo Raúl Jiménez Niz     164    48    19    58    42    57     0     0    388     0    388
+moro               FABIO FERREIRA                 152    80    15    47    17    57     1     0    369     0    369
+vitra              VICTOR RIVEROS                 136    56    15    58    42    57     2     0    366     0    366
+@bs                Agustin Barreto                160    72     2    53    30    44     3     0    364     0    364
+lav                LUCAS AQUINO                   164    48    15    58    14    57     3     0    359     0    359
+coco               JORGE LOPEZ BENITEZ            136    56    19    58    17    57     6     0    349     0    349
+checho             SERGIO FIORE                   148    56    13    55    16    56     4     0    348     0    348
+fscc               FABRIZIO SERRATI               160    48     7    58    17    57     0     0    347     0    347
+fidelyoli          DANIEL KOVACS                  124    80    15    58    14    54     0     0    345     0    345
+hs                 HUGO SIMON                     144    48    11    57    29    51     3     0    343     0    343
+soni               SONIA BIEDERMANN               152    32    12    55    40    49     3     0    343     0    343
+coto               RODRIGO NOGUES                 156    48    19    58     2    56     2     0    341     0    341
+hakembo            DIEGO INSFRAN                  152    64     6    53     9    50     3     0    337     0    337
+gustav tothelighthouse VICENTE BIEDERMANN             136    32     9    58    42    57     0     0    334     0    334
+alejandrolegui     Alejandro Leguizamón          132    64     9    49    32    48     0     0    334     0    334
+pato               Hugo Biedermann                148    24    10    56    42    49     3     0    332     0    332
+quiroga            JAVIER QUIROGA                 144    48    11    55    19    55     0     0    332     0    332
+tim payne          WILSON FERNANDEZ               148    40    14    46    40    39     3     0    330     0    330
+gh1s               Mauricio Jose Bogarin Borda    152    24    15    58    17    57     4     0    327     0    327
+moño              Jorge Oviedo                   144    40    19    56    10    55     3     0    327     0    327
+sajano freddy      JUAN ALFREDO AYALA             144    40     7    55    28    49     4     0    327     0    327
+alfaorion 99       ALAN AYMAR AYALA               144    40     7    55    28    49     4     0    327     0    327
+tony               Antonio Dominguez              156    56    13    43     9    45     3     0    325     0    325
+grillito           FABRIZIO SALOMONI              152    56    11    52     5    46     2     0    324     0    324
+oti                OCTAVIO JIMÉNEZ               140    32    10    58    21    57     2     0    320     0    320
+alevo              Alexandro Volpe                132    48    17    56    17    48     1     0    319     0    319
+kikao              CHRISTIAN THIELMANN            144    40    10    54    15    51     4     0    318     0    318
+cherem             ANDRES BOGARIN                 128    40    15    58    17    57     1     0    316     0    316
+ludie-z            Claudio Adan Galeano Sanabr    144    40     8    37    32    51     1     0    313     0    313
+juane              JUAN ENRIQUE NOGUES            160    56     8    50     5    32     0     0    311     0    311
+sanbie             SANDRA BIEDERMANN              144    40    16    55     3    51     0     0    309     0    309
+esyl               ENZO SEBASTIAN YODICE LOPEZ    144    56    19    58    17     8     1     0    303     0    303
+cayetano           JULIO JOJOT                    140    64    13    33     0    46     5     0    301     0    301
+decanita           Belen Franco Zaldivar          124    64    11    49     9    40     3     0    300     0    300
+pinguero           ERNESTO REINA                  132    40    17    43    16    49     3     0    300     0    300
+luisma             LUIS RIVEROS                   124    56    15    53     5    44     0     0    297     0    297
+pucheta            JAVIER AUGUSTO OTAZÚ VERA     152    24    12    48    10    37     4     0    287     0    287
+aaa                Alvaro Martin Arias Ayala      152    64     8    30     2    26     3     0    285     0    285
+eliasmajul         ELIAS FERREIRA                 128     8    14    58    20    55     1     0    284     0    284
+gbc                GUILLERMO BIEDERMANN           148    72    11    16     0    33     1     0    281     0    281
+edgar              Edgar Aranda                   116    48    21    35    24    22     2     0    268     0    268
+caficho            RAUL SERRATI                   128    16     7    41    10    21     5     0    228     0    228
+monkey             HUGO MARCELO CENTURION         100    56     9     5    17     8     2     0    197     0    197
+
+--- DIFERENCIAS vs TABLA REFERENCIA ---
+Nota: A=H(resultado) B=I(marcador) C=J(amar) D=K(rojas) E=L(VAR) F=M+O(penales) G=N(minuto)
+
+[SEBA] (BD user: seba / SEBASTIAN KALAYDJIAN FABBRI)
+  Imagen total=400  BD partidos=416  BD total(+glob)=416
+  A(H): imagen=152 BD=160 (diff=+8)
+  C(J): imagen=14 BD=13 (diff=-1)
+  D(K): imagen=53 BD=55 (diff=+2)
+  E(L): imagen=27 BD=33 (diff=+6)
+  F(M+O): imagen=48 BD=49 [M=49 O=0] (diff=+1)
+
+[PATITO] (BD user: patito / Gonzalo Raúl Jiménez Niz)
+  Imagen total=376  BD partidos=388  BD total(+glob)=388
+  A(H): imagen=156 BD=164 (diff=+8)
+  C(J): imagen=17 BD=19 (diff=+2)
+  D(K): imagen=57 BD=58 (diff=+1)
+  F(M+O): imagen=56 BD=57 [M=57 O=0] (diff=+1)
+
+[MORO] (BD user: moro / FABIO FERREIRA)
+  Imagen total=357  BD partidos=369  BD total(+glob)=369
+  A(H): imagen=144 BD=152 (diff=+8)
+  D(K): imagen=45 BD=47 (diff=+2)
+  E(L): imagen=16 BD=17 (diff=+1)
+  F(M+O): imagen=56 BD=57 [M=57 O=0] (diff=+1)
+
+[VITRA] (BD user: vitra / VICTOR RIVEROS)
+  Imagen total=356  BD partidos=366  BD total(+glob)=366
+  A(H): imagen=128 BD=136 (diff=+8)
+  D(K): imagen=57 BD=58 (diff=+1)
+  F(M+O): imagen=56 BD=57 [M=57 O=0] (diff=+1)
+
+[LAV] (BD user: lav / LUCAS AQUINO)
+  Imagen total=352  BD partidos=359  BD total(+glob)=359
+  A(H): imagen=156 BD=164 (diff=+8)
+  B(I): imagen=56 BD=48 (diff=-8)
+  D(K): imagen=57 BD=58 (diff=+1)
+  E(L): imagen=12 BD=14 (diff=+2)
+  G(N): imagen=0 BD=3 (diff=+3)
+  F(M+O): imagen=56 BD=57 [M=57 O=0] (diff=+1)
+
+[@BS] (BD user: @bs / Agustin Barreto)
+  Imagen total=346  BD partidos=364  BD total(+glob)=364
+  A(H): imagen=152 BD=160 (diff=+8)
+  D(K): imagen=52 BD=53 (diff=+1)
+  E(L): imagen=24 BD=30 (diff=+6)
+  G(N): imagen=1 BD=3 (diff=+2)
+  F(M+O): imagen=43 BD=44 [M=44 O=0] (diff=+1)
+
+[CHEREM] (BD user: cherem / ANDRES BOGARIN)
+  Imagen total=343  BD partidos=316  BD total(+glob)=316
+  A(H): imagen=136 BD=128 (diff=-8)
+  B(I): imagen=80 BD=40 (diff=-40)
+  C(J): imagen=12 BD=15 (diff=+3)
+  D(K): imagen=45 BD=58 (diff=+13)
+  E(L): imagen=12 BD=17 (diff=+5)
+  G(N): imagen=2 BD=1 (diff=-1)
+  F(M+O): imagen=56 BD=57 [M=57 O=0] (diff=+1)
+
+[ANDRES] (BD user: cherem / ANDRES BOGARIN)
+  Imagen total=334  BD partidos=316  BD total(+glob)=316
+  A(H): imagen=140 BD=128 (diff=-12)
+  B(I): imagen=64 BD=40 (diff=-24)
+  D(K): imagen=42 BD=58 (diff=+16)
+  E(L): imagen=16 BD=17 (diff=+1)
+  F(M+O): imagen=56 BD=57 [M=57 O=0] (diff=+1)
+
+[TITO] (BD user: patito / Gonzalo Raúl Jiménez Niz)
+  Imagen total=312  BD partidos=388  BD total(+glob)=388
+  A(H): imagen=144 BD=164 (diff=+20)
+  B(I): imagen=40 BD=48 (diff=+8)
+  C(J): imagen=14 BD=19 (diff=+5)
+  D(K): imagen=45 BD=58 (diff=+13)
+  E(L): imagen=12 BD=42 (diff=+30)
+  G(N): imagen=1 BD=0 (diff=-1)
+  F(M+O): imagen=56 BD=57 [M=57 O=0] (diff=+1)
+
+[CHECHO] (BD user: checho / SERGIO FIORE)
+  Imagen total=255  BD partidos=348  BD total(+glob)=348
+  A(H): imagen=128 BD=148 (diff=+20)
+  B(I): imagen=40 BD=56 (diff=+16)
+  C(J): imagen=9 BD=13 (diff=+4)
+  D(K): imagen=33 BD=55 (diff=+22)
+  E(L): imagen=6 BD=16 (diff=+10)
+  G(N): imagen=1 BD=4 (diff=+3)
+  F(M+O): imagen=38 BD=56 [M=56 O=0] (diff=+18)
+
+[DIEGO] (BD user: hakembo / DIEGO INSFRAN)
+  Imagen total=219  BD partidos=337  BD total(+glob)=337
+  A(H): imagen=120 BD=152 (diff=+32)
+  B(I): imagen=32 BD=64 (diff=+32)
+  C(J): imagen=7 BD=6 (diff=-1)
+  D(K): imagen=26 BD=53 (diff=+27)
+  E(L): imagen=6 BD=9 (diff=+3)
+  G(N): imagen=0 BD=3 (diff=+3)
+  F(M+O): imagen=28 BD=50 [M=50 O=0] (diff=+22)
+
+
+Sin match en BD: EZEQUIEL, AERO, JUANCHO, RODO, VALE, OSCAR, FATI, GERMAN, CUERVO
+Verificar nombres en REFERENCIA dict o en BD.
+
+CSV guardado: C:\proyecto FAST API\becbuc_scores.csv

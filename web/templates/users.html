@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1><i class="bi bi-people"></i> Usuarios</h1>
+
+{% if users %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Nombre</th>
+                <th>Activo</th>
+                <th>Superusuario</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.email }}</td>
+                <td>{{ user.full_name or '-' }}</td>
+                <td>{% if user.is_active %}<span class="badge bg-success">Sí</span>{% else %}<span class="badge bg-danger">No</span>{% endif %}</td>
+                <td>{% if user.is_superuser %}<span class="badge bg-info">Sí</span>{% else %}-{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No hay usuarios registrados</div>
+{% endif %}
+{% endblock %}

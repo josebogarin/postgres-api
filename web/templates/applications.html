@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Aplicaciones - Sistema Admin BD{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h1><i class="bi bi-servers"></i> Aplicaciones</h1>
+</div>
+
+{% if applications %}
+<div class="row">
+    {% for app in applications %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="d-flex justify-content-between">
+                    <h5 class="mb-0">{{ app.name }}</h5>
+                    {% if app.is_active %}
+                    <span class="badge bg-success">Activo</span>
+                    {% else %}
+                    <span class="badge bg-danger">Inactivo</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text text-muted">{{ app.description or 'Sin descripción' }}</p>
+                <p class="mb-2"><strong>Slug:</strong> <code>{{ app.slug }}</code></p>
+                {% if app.db_url %}
+                <p class="mb-2"><strong>BD URL:</strong> <code class="text-truncate d-block">{{ app.db_url }}</code></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> No hay aplicaciones registradas
+</div>
+{% endif %}
+{% endblock %}

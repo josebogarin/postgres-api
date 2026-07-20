@@ -1,0 +1,12 @@
+=== DIAGNÓSTICO BRACKET TERCEROS ===
+
+[1] Mejores terceros provisorios:
+  ERROR 0: {'error': '<urlopen error [Errno 111] Connection refused>'}
+
+[2] Bracket-real R32 (P73-P88):
+  ERROR 0: {'error': '<urlopen error [Errno 111] Connection refused>'}
+
+[4] Verificar TERCEROS_COMBINACIONES para el frozenset actual:
+  Error importando bracket_service: No module named 'app'
+
+=== FIN ===

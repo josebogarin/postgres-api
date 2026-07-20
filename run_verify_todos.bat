@@ -1,0 +1,2 @@
+@echo off
+powershell -ExecutionPolicy Bypass -Command "Get-Content 'C:\proyecto FAST API\verify_todos.sql' | docker exec -i core-postgres psql -U app_user -d becbuc | Tee-Object 'C:\proyecto FAST API\verify_todos_out.txt'; Write-Host ''; Write-Host 'Apostadores con DIFFS:'; $c = Select-String -Path 'C:\proyecto FAST API\verify_todos_out.txt' -Pattern 'DIFFS'; if ($c) { $c | ForEach-Object { $_.Line } } else { Write-Host 'NINGUNO - todos OK!' }"

@@ -1,0 +1,64 @@
+Columnas apuesta:
+  id                                  bigint
+  apostador_id                        bigint
+  partido_id                          bigint
+  pred_local                          integer
+  pred_visitante                      integer
+  pred_ganador                        character varying
+  puntos                              integer
+  created_at                          timestamp with time zone
+  updated_at                          timestamp with time zone
+  pred_minuto_gol                     smallint
+  pred_amarillas                      smallint
+  pred_var                            smallint
+  puntos_bonus                        smallint
+  pred_penales                        boolean
+  pred_rojas                          integer
+  pred_penales_local_tanda            integer
+  pred_penales_visitante_tanda        integer
+  pred_equipo_clasifica               integer
+  pred_penales_partido                smallint
+  id_partido_ok                       integer
+  equipo_local_excel                  text
+  equipo_visitante_excel              text
+  nombre_apostador                    character varying
+  numero_fifa                         integer
+
+Primeros 10 partidos torneo_id=2:
+  id=143  Mexico vs South Africa  fase=Grupo A
+  id=144  COREA DEL SUR vs Czech Republic  fase=Grupo A
+  id=145  Canada vs BOSNIA Y HERZEGOVINA  fase=Grupo B
+  id=146  USA vs Paraguay  fase=Grupo D
+  id=147  Qatar vs Switzerland  fase=Grupo B
+  id=148  Brazil vs Morocco  fase=Grupo C
+  id=149  Haiti vs Scotland  fase=Grupo C
+  id=150  Australia vs Türkiye  fase=Grupo D
+  id=151  ALEMANIA vs Curaçao  fase=Grupo E
+  id=152  Netherlands vs Japan  fase=Grupo F
+Total partidos torneo 2: 104
+
+Campos reales de apuesta: ['id', 'apostador_id', 'partido_id', 'pred_local', 'pred_visitante', 'pred_ganador', 'puntos', 'created_at', 'updated_at', 'pred_minuto_gol', 'pred_amarillas', 'pred_var', 'puntos_bonus', 'pred_penales', 'pred_rojas', 'pred_penales_local_tanda', 'pred_penales_visitante_tanda', 'pred_equipo_clasifica', 'pred_penales_partido', 'id_partido_ok', 'equipo_local_excel', 'equipo_visitante_excel', 'nombre_apostador', 'numero_fifa']
+
+Nombres en apuesta.nombre_apostador:
+  OCTAVIO JIMÉNEZ
+  JUAN ENRIQUE NOGUES
+  JUAN ALFREDO AYALA
+  JORGE OVIEDO
+  HUGO BIEDERMANN
+  FABRIZIO SALOMONI
+  MAURICIO JOSE BOGARIN BORDAS
+  HUGO MARCELO CENTURION
+  FABRIZIO SERRATI
+  ANTONIO DOMINGUEZ
+
+Nombres en pronosticos_aux.nombre:
+  AGUSTIN BARRETO
+  ALAN AYMAR AYALA
+  ALEJANDRO LEGUIZAMÓN
+  Alexandro Volpe
+  ALVARO MARTIN ARIAS AYALA
+  ANDRES BOGARIN
+  ANTONIO DOMINGUEZ
+  BELEN FRANCO ZALDIVAR
+  CHRISTIAN THIELMANN
+  CLAUDIO ADAN GALEANO SANABRIA
