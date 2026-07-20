@@ -1,0 +1,10 @@
+15	ronda16
+18	ronda16
+41	ronda16
+30	ronda16
+24	ronda16
+25	ronda16
+44	ronda16
+46	ronda16
+29	ronda16
+35	ronda16

@@ -36,6 +36,10 @@ backup_becbuc/
 # ── Datos de sesión locales de Claude Code ──────────────────────────────────────
 .claude/worktrees/
 
+# ── Backups de safe_write y salidas de scripts de diagnóstico ───────────────────
+_backups/
+*_out.txt
+
 # ── Sistema operativo / editores ────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

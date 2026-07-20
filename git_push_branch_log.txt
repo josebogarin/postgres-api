@@ -1,0 +1,14 @@
+=== CREAR RAMA ===
+=== PUSH RAMA ===
+remote: 
+remote: Create a pull request for 'becbuc-sesion70' on GitHub by visiting:        
+remote:      https://github.com/josebogarin/postgres-api/pull/new/becbuc-sesion70        
+remote: 
+To https://github.com/josebogarin/postgres-api.git
+ * [new branch]      becbuc-sesion70 -> becbuc-sesion70
+branch 'becbuc-sesion70' set up to track 'origin/becbuc-sesion70'.
+=== EXITCODE 0 ===
+=== RAMAS ===
+  becbuc-sesion70
+* main
+DONE 

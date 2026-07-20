@@ -1,1 +1,1725 @@
 === GIT ADD ===
+warning: in the working copy of '.claude/settings.local.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ABRIR_EN_VIVO.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ABRIR_INPRIVATE.vbs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ABRIR_LIVE_EDGE.vbs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ABRIR_LIVE_HOY.vbs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ARRANCAR_SERVIDOR.vbs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'BECBUC.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'BECBUC.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CLAUDE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CORRER_BAT.vbs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CRUD_SYSTEM_DESIGN.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'DATABASE_EXPLORER_API.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'EJECUTAR_AHORA.vbs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'EJECUTAR_PENDIENTES.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'INICIAR.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'INICIAR_UVICORN.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'RECARGAR_LIVE.vbs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'SKILL.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'VER_URL_NGROK.vbs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'actualizar_puntajes.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'actualizar_puntajes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'alter_paux_numero_fifa.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'analizar_fuentes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'aplicar_correcciones_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'auditoria_gonzalo.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'auditoria_jugador.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'auditoria_jugador.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'auditoria_puntajes.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'avanzar_bracket.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'avanzar_bracket.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'avanzar_bracket_y_sync.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backup_becbuc.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'becbuc_config.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'blindar_y_corregir.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'blindar_y_corregir.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'buscar_patito.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'buscar_patito.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'buscar_usuario.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'buscar_usuario.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'buscar_y_sync_partido1.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'calcular_terceros.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_andresboga.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_cherem.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_cobertura.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_estado.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_estado.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_estado2.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_minuto99.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_no_match.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_penales.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_r32.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_r32.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_real_scores.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_todos_apostadores.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_ultimo.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_ultimo.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'cherem_bd.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_control.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_control_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_excel_bd.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_excel_bd.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_excel_vs_bd_full.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_live_vs_bd.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_pronosticos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_puntajes.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_puntajes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_puntajes_control.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_quiroga.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_resultados.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_scores.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_scores.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'crear_fases_ko.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'cruzar_fuentes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'debug_import_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_apuesta.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_bd_estado.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_bracket.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_bracket.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_bracket_log.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_bracket_r32.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_bracket_terceros.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_bracket_terceros.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_join.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_n_diffs.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_n_simple.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_puntajes.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_puntajes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_quiroga.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_quiroga_pts.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_sofascore.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_sync_estado.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_var_espn.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_var_france.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diagnostico_bracket.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diagnostico_cherem.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diagnostico_import.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/CONTINUACION_2026-06-02.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/DOCUMENTACION_COMPLETA.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/Manual_Administrador_BECBUC.pdf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/Manual_Apostador_BECBUC.pdf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/Manual_Operacion_BECBUC.pdf', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/arquitectura_scoring_engine.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/comentarios_app_db.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/contexto_inicio_sesion.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/debug_penales.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/depuracion_vistas_becbuc.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/diag_partido143.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/diagnostico_fases.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/drop_tablas_obsoletas_becbuc.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_fases_copa_mundo.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_jose_rol.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_kpi_titulos.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_nombres_equipos_en.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_p73_en_juego.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_partido_id_apuestas.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_partido_id_apuestas_v2.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_partido_stats_from_excel.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_pts_penales_partido.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_quiroga_rojas.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_r32_equipos.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_torneo_activo.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_var_p27_p39.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/genera_comentarios_sistemas.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/limpiar_apuestas_prueba.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/limpiar_resultados_excepto_p1.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_api_log_contexto.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_apostador.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_apostador_clasificados.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_becbuc_db.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_bonus_partido.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_cabecera_detalle.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_catalogo_objeto.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_competicion_emoji.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_datos_confirmados.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_equipo_competicion.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_eventos_api.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_fair_play_partido.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_fase_bloqueada.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_fase_visible_apostador.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_grupo_calculo.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_icono_cabecera_detalle.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_mensajes_admin.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_monitor.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_nombre_apostador.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_paux_numero_fifa.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_periodo_apuestas.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_portal.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_portal_menu.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_pred_penales.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_pronosticos_aux.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_puntaje_item.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_scoring_v2.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_stats_fuentes.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_tiebreakers_becbuc.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_torneos.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_unificacion_app_db.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_user_sistemas.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_vistas_alias.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migrar_datos_becbuc.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/patch_torneos_v2.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/quiroga_check.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/quiroga_debug.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/quiroga_rojas_detalle.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/repair_fixture_grupos.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/reset_admin_pw.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/reset_grupos_torneo2.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/reset_ko_resultados.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/restaurar_partido143.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/revert_r32_fix_incorrecto.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/seed_appdb_cabecera.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/seed_becbuc_kpis.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/seed_becbuc_sistema.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/seed_becbuc_sistema.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/seed_becbuc_sistema_v2.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/seed_menu_ventas.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/seed_playoff_mundial.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/seed_ventas_cab.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/sim_partido_live.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/sim_partido_live_revert.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/test_apifootball.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/update_fifa_ranking.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/update_nombre_es.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/v_copamundial_puntajes.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/v_copamundial_puntajes_det.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/vistas_auditoria_becbuc.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ejecutar_comparar.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ejecutar_fair_play.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ejecutar_sesion39.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ejecutar_sesion39.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ejecutar_todo.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ejecutar_todo.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'escribir_becbuc_md.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'exportar_puntajes_vista.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'exportar_scores_becbuc.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_apuestas_faltantes.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_bracket_completo.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_bracket_sin_provisorios.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_bracket_sin_provisorios.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_cherem2.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_cherem_apuestas.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_grupo_g.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_minuto.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_minuto2.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_nombres_en.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_nombres_equipos_en.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_nulls_apuesta.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_numero_fifa_ko.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_p030.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_p030_y_recalcular.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_paraguay.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_paraguay.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_partido_suspension.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_partido_suspension.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_penales_partido.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_r32_equipos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_r32_oficial.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_r32_oficial.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_scotland_bracket.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_scotland_bracket.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_standings_grupo_g.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_stats_excel_y_recalcular.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_stats_excel_y_recalcular.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_var_canada_qatar.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_var_canada_qatar.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_var_p27_p39.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_var_y_recalcular.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_y_recalcular.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_y_recalcular_full.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_y_recalcular_full.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'generar_excel_becbuc.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'generar_excel_grupos_auditoria.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'get_cloudflared_url.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'get_ngrok_url.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'git_commit_sesion33.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'git_push.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'git_push2.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'grupos_estado.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_fechas_ko.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_globales_api.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_globales_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_partidos_api.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_pronosticos_aux.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_r32_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'iniciar-todo-simple.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'iniciar-todo.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'iniciar-todo.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'iniciar_cloudflared.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'iniciar_ngrok.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'listar_usuarios.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'nuevo-proyecto.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/app.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/app/(auth)/login.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/app/(tabs)/_layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/app/(tabs)/index.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/app/(tabs)/perfil.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/app/_layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/context/AuthContext.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/services/api.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/expo-react-native/tsconfig.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/app/(auth)/login/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/app/(dashboard)/layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/app/(dashboard)/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/app/api/login/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/app/api/logout/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/app/globals.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/app/layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/components/layout/Sidebar.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/components/ui/Badge.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/components/ui/Button.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/lib/api.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/lib/auth.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/middleware.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/next.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/postcss.config.mjs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/services/auth.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/services/users.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/tsconfig.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/nextjs-postgres-api/types/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/python-api-client/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/python-api-client/api_client.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/python-api-client/main.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'plantillas/python-api-client/requirements.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'post_fix_paraguay.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'query_grupos_estado.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ranking_excel.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ranking_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ranking_top10.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'real_scores2.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_api.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_cherem.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_directo.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_directo.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_fairplay.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_mejores_terceros.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_participacion.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_participacion.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_post_update.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_puntajes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalcular_puntajes.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalcular_puntajes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalcular_todo.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalcular_y_audit.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'reconciliar_partido_id.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'regenerar_excel.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'regenerar_excel.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'registrar_sync_auto.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'reiniciar_ngrok.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'reiniciar_servidor.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'reiniciar_y_testear.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'rename_andres.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'rename_result.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'restart_server.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'resync_grupo_g.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_all.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_all.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_alter_paux.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_analisis_fuentes.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_auto_mapeo.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_check99.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_comparar_excel.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_n.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_n2.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_sofascore.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_docker_migrations.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_excel_grupos_auditoria.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_excel_log.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix2_recalc.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix2_recalc.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_p73.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_stats.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_git_y_backup.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_fechas_ko.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_r32.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_r32_IMPORT.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_migracion_vistas_alias.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_migrate_and_populate.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_migration_aux.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_migration_aux.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_paux_numero_fifa.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_pendientes.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_populate_y_analisis.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_recalc_fairplay.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_reset_ko.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_reset_ko.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_sim_live.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_sim_live_revert.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_sync_paux.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_test_auto.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_test_bracket.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_test_grupos_p.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_todo.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_todo.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verificar_p49.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verify_cherem.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verify_cherem.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verify_final.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verify_final.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verify_todos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'set_peor_equipo_irak.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sincronizar_final_grupos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sincronizar_final_grupos.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'skills/becbuc-ui-sync/SKILL.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'soporte_microsoft_nameservers.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'start_server.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_ahora.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_auto.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_ayer.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_ayer.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_francia_iraq.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_francia_iraq.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_partido1.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_paux_a_apuesta.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_paux_faltantes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_puntajes_grupos_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_sofascore_directo.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_sofascore_directo.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_api_football.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_bracket_live.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_bracket_live.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_grupos_p.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_integral.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_propagacion_bracket.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_tabla.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'update_fifa_ranking.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'update_from_excel.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'update_from_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'validar_bracket_oficial.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'validar_bracket_oficial.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_fechas_ko.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_mejores_terceros.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_ngrok.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_ngrok_url.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_patito.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_patito.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_quiroga.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_standings.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_standings.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_excel.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_grupos_y_bracket.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_p49.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_sync.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verify_cherem.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verify_cherem_full.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verify_todos.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'watchdog_becbuc.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/app.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/requirements.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/templates/404.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/templates/500.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/templates/applications.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/templates/audit-logs.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/templates/base.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/templates/dashboard.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/templates/login.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'web/templates/users.html', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CERRAR_TORNEO_LIVE.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CLAUDE.md.20260709_225247.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-movil.html.20260629_185357.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-movil.html.20260629_190400.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-movil.html.20260702_003941.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-movil.html.20260704_183341.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-movil.html.20260704_190137.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-movil.html.20260704_233348.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260629_185348.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260629_190400.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260702_003920.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260702_010841.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260702_132457.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_180528.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_180612.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_180613.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_180744.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_180745.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_180846.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_180847.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_180859.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_183328.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_190136.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/BECBUC-portal.html.20260704_233334.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/CLAUDE.md.20260630_222528.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260629_213646.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260629_215215.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260630_205800.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260630_222200.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260701_173226.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260701_174957.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260701_193431.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260701_194150.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260704_180441.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260704_181105.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260704_181620.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260704_183304.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260704_183310.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260704_233316.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260705_000622.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260705_001933.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260705_002556.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260705_002752.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/apostador_bets.py.20260708_220622.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260629_185340.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260629_190400.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260629_191437.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260629_211051.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260629_213631.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260629_213658.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260629_213709.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260629_215040.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260629_215310.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260630_164438.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260630_210101.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260630_222217.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260630_222239.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260630_222320.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_173433.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_173657.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_174128.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_174155.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_174550.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_174612.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_174757.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_175020.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_182318.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_182709.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_183429.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_193450.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_194230.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_194903.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260701_195530.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260702_010908.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260702_132530.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260704_181105.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260704_181621.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260704_181905.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260704_182304.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260704_182552.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live-playoffs.html.20260704_182553.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live.html.20260629_180703.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live.html.20260629_182111.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live.html.20260629_185331.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live.html.20260629_190400.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/becbuc-live.html.20260629_191437.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/calculator.py.20260629_214034.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/calculator.py.20260629_215538.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/calculator.py.20260701_023732.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/calculator.py.20260701_024313.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/calculator.py.20260702_003927.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/calculator.py.20260705_003033.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/calculator.py.20260705_182929.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/copa_mundo_2026.py.20260704_185740.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/sync_api_football.py.20260629_191457.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/sync_api_football.py.20260629_212554.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/sync_api_football.py.20260629_212807.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/sync_api_football.py.20260705_001312.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'Cproyecto FAST API_backups/table_crud.py.20260630_163138.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/BECBUC-movil.html.20260715_231027.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/BECBUC-portal.html.20260703_193751.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/BECBUC-portal.html.20260715_231026.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/CLAUDE.md.20260715_234320.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/apostador_bets.py.20260715_222445.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/apostador_bets.py.20260715_223620.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/apostador_bets.py.20260715_224513.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/apostador_bets.py.20260715_230306.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/apostador_bets.py.20260715_231026.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/apostador_bets.py.20260719_023343.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/becbuc-live-playoffs.html.20260715_222445.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/becbuc-live-playoffs.html.20260715_223620.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/becbuc-live-playoffs.html.20260715_223731.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/becbuc-live-playoffs.html.20260715_224024.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/becbuc-live-playoffs.html.20260715_224513.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/becbuc-live-playoffs.html.20260715_230306.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/becbuc-live-playoffs.html.20260718_223240.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_backups/becbuc-live-playoffs.html.20260719_023439.bak', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_patch_claudemd_s68.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_patch_export_pronos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_patch_lock_4h.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_patch_miprono_editor.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_patch_pin_primer_nombre.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_patch_recibo_pdf.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_patch_recibo_v2.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '_patch_solo_pendientes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'actualizar_hora_partido.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'actualizar_r32_desde_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'actualizar_resultados_desde_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'actualizar_resultados_fase.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'analisis_datos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'analizar_numeros_partido.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'arrancar_despacho.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'arrancar_y_recalcular.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backup_becbuc_log.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'backup_y_git.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'bloquear_final_3p.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build_doc.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build_doc2.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'cargar_goleadores.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'cerrar_cuartos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'cerrar_live.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'cerrar_semis.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'cerrar_torneo_custom.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'cerrar_torneo_final.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'check_pts_equipo.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'commit_sesion52p6.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_excel_vs_bd.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_items_resultados.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_items_semis.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_octavos_excel_bd.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_puntajes_items.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_puntajes_r32.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_resultados_todos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'comparar_tbl_check.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_cierre.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_clasificados.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_clasificados2.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_fechas.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_fechas.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_octavos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_p_clasificados.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_penales_tanda.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_sistema_schema.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_var_L.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_y_fix_octavos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diag_y_sync_p90.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diagnosticar_penales_partido.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diagnostico_paraguay_goles.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'diagnostico_tarjetas_api.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/ejecutar_migracion_cuse.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_penales_partido_tanda.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_pts_equipo_grupos.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_swap_numero_fifa.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_swap_predicciones.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_tarjetas_r32.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/fix_var_discrepancias.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/migracion_sync_log_partido.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentacion/verificar_y_fix_minuto_gol.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ejecutar_todo.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'estado_fases.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'estado_semis_bracket.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'excel_grupos_por_item.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'exportar_diffs_puntajes.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fill_clasifica_null.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'finalizar_p097_y_calcular.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'finalizar_p90.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'finalizar_partido_ko.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_clasificado_faltante.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_estado_partido.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_fechas_r32.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_fechas_r32.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_hora_mexico_england.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_p79_fecha_estado.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_passwords_appdb.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_penales_partido.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_penales_tanda_ko.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_sistema_columns.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_tarjetas_r32.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_tarjetas_r32.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_var_L.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'fix_y_recalcular_penales.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gestionar_fases_cuartos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'get_ngrok.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'git_commit_sesion52.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'goleada_off_y_excel_grupos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_8vos_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_apuestas_fase.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_bonus_r32_desde_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_cuartos_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_pucheta_octavos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_pucheta_octavos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'importar_semis_excel.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'iniciar_brasil.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'iniciar_brasil.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'iniciar_hoy.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'iniciar_paraguay_usa.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ngrok_tmp.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'poblar_equipos_iso_ranking.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'preview_ranking_postfix.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'query_tarjetas.sql', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ranking_actual.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 're_registrar_task.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_force_grupos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_hasta_semis.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_octavos_bloquear_cuartos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalc_ranking.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'recalcular_sin_goleada.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'reforma_scores_tab.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'reimportar_predicciones_bonus.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'restart_ngrok.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'resubir_octavos_sanbie_pato.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_actualizar_hora.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_actualizar_r32.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_actualizar_resultados.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_actualizar_resultados_octavos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_actualizar_resultados_octavos_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_actualizar_resultados_semis.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_actualizar_resultados_semis_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_actualizar_resultados_todas.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_actualizar_resultados_todas_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_analisis_datos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_backup.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_backup_becbuc.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_bloquear_final_3p.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_bloquear_final_3p_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_cargar_goleadores.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_cerrar_cuartos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_cerrar_semis.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_cerrar_torneo_custom.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_cerrar_torneo_final.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_check_pts_equipo.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_comparar.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_comparar_items_octavos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_comparar_items_semis.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_comparar_items_todas.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_comparar_octavos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_comparar_puntajes_items.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_comparar_resultados_todos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_comparar_tbl_check.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_cierre.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_clasificados.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_clasificados2.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_fix_octavos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_octavos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_p_clasificados.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_sistema.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_sync_p90.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diag_var_L.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diagnostico_paraguay.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_diagnostico_tarjetas.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_estado_fases.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_estado_semis.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_excel_grupos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_exportar_diffs.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fill_clasifica_null.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fill_clasifica_null_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_finalizar_p097_y_calcular.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_clasificado_faltante.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_clasificado_faltante_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_estado_p79.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_hora.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_passwords.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_pts_equipo_grupos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_pts_equipo_grupos.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_sistema.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_swap_numero_fifa.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_swap_numero_fifa.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_swap_predicciones.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_var_L.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_var_L_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_fix_var_discrepancias.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_gestionar_fases_cuartos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_get_ngrok.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_git_commit.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_goleada_off_y_excel.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_8vos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_8vos_IMPORT.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_cuartos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_cuartos_IMPORT.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_final3p.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_final3p_IMPORT.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_semis.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_importar_semis_IMPORT.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_migrar_tanda_split.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_poblar_equipos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_preview_ranking_postfix.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_ranking_actual.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_recalc_force_grupos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_recalc_hasta_semis.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_recalc_octavos_bloquear_cuartos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_recalc_ranking.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_reimportar_predicciones_bonus.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_reimportar_predicciones_bonus_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_resubir_sanbie_pato.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_resubir_sanbie_pato_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_sin_apuesta_semis.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_swap_san_pato_octavos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_swap_san_pato_octavos_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_sync_auto.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_sync_p103.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_sync_semis.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_test_export_pronos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_test_live_guardar.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_todo_becbuc.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_ver_p92.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_ver_p92_file.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verificar_amarillas.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verificar_amarillas_APPLY.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verificar_item_p.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verificar_minuto_gol.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verificar_semis.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verificar_usuarios.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'run_verify_final_tarjetas.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'safe_write.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sin_apuesta_semis.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'start_ngrok.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'start_servidor.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'swap_apuestas.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_partido.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'sync_semis.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_bash_write.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_export_pronos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_live_guardar.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'test_write_check.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_equipos_bd.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_equipos_bd.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_p92.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_p92_file.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_tarjetas3.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_tarjetas3.ps1', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_tarjetas_api.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'ver_tarjetas_api2.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_8vos.bat', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_8vos.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_amarillas_playoffs.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_item_p.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_semis_excel_vs_bd.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verificar_usuario_sandra.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'verify_final_tarjetas.py', LF will be replaced by CRLF the next time Git touches it
+=== STAGED COUNT ===
+929
+=== COMMIT ===
+[main (root-commit) 1798e68] sesion 70: cierre definitivo del torneo (Espana campeon) + propuesta BECBUC 2.0 + scripts cierre/analisis + CLAUDE.md
+ 929 files changed, 787566 insertions(+)
+ create mode 100644 .claude/settings.local.json
+ create mode 100644 .gitignore
+ create mode 100644 0
+ create mode 100644 20260611_2000- TBL CONSOLIDADA PRONOSTICOS ok.xlsx
+ create mode 100644 20260628_1600- BEC BUC PRONOSTICOS CONSOLIDADOS 16AVOS.xlsx
+ create mode 100644 20260702- TBL CHECK PARA JOSE.xlsx
+ create mode 100644 20260704- BEC BUC PRONOSTICOS CONSOLIDADOS 8vos.xlsx
+ create mode 100644 20260705_2016- TBL PARA SUBIR AL LIVE.xlsx
+ create mode 100644 20260709_1500- PRONOSTICOS CONSOLIDADOS 4TOS.xlsx
+ create mode 100644 20260718_2214- TBL PARA CARGAR LIVE- JOSE con correcciones.xlsx
+ create mode 100644 ABRIR_EN_VIVO.bat
+ create mode 100644 ABRIR_INPRIVATE.vbs
+ create mode 100644 ABRIR_LIVE_EDGE.vbs
+ create mode 100644 ABRIR_LIVE_HOY.vbs
+ create mode 100644 ARRANCAR_SERVIDOR.vbs
+ create mode 100644 BECBUC.bat
+ create mode 100644 BECBUC.md
+ create mode 100644 BECBUC_Guia_Recuperacion.docx
+ create mode 100644 BECBUC_Propuesta_Rediseno_Puntajes.docx
+ create mode 100644 BECBUC_verificacion_backup.xlsx
+ create mode 100644 CERRAR_TORNEO_LIVE.ps1
+ create mode 100644 CLAUDE.md
+ create mode 100644 CLAUDE.md.20260709_225247.bak
+ create mode 100644 CORRER_BAT.vbs
+ create mode 100644 CRUD_SYSTEM_DESIGN.md
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-movil.html.20260629_185357.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-movil.html.20260629_190400.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-movil.html.20260702_003941.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-movil.html.20260704_183341.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-movil.html.20260704_190137.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-movil.html.20260704_233348.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260629_185348.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260629_190400.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260702_003920.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260702_010841.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260702_132457.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_180528.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_180612.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_180613.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_180744.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_180745.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_180846.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_180847.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_180859.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_183328.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_190136.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/BECBUC-portal.html.20260704_233334.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/CLAUDE.md.20260630_222528.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260629_213646.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260629_215215.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260630_205800.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260630_222200.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260701_173226.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260701_174957.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260701_193431.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260701_194150.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260704_180441.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260704_181105.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260704_181620.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260704_183304.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260704_183310.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260704_233316.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260705_000622.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260705_001933.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260705_002556.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260705_002752.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/apostador_bets.py.20260708_220622.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260629_185340.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260629_190400.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260629_191437.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260629_211051.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260629_213631.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260629_213658.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260629_213709.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260629_215040.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260629_215310.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260630_164438.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260630_210101.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260630_222217.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260630_222239.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260630_222320.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_173433.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_173657.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_174128.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_174155.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_174550.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_174612.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_174757.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_175020.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_182318.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_182709.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_183429.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_193450.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_194230.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_194903.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260701_195530.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260702_010908.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260702_132530.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260704_181105.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260704_181621.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260704_181905.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260704_182304.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260704_182552.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live-playoffs.html.20260704_182553.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live.html.20260629_180703.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live.html.20260629_182111.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live.html.20260629_185331.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live.html.20260629_190400.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/becbuc-live.html.20260629_191437.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/calculator.py.20260629_214034.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/calculator.py.20260629_215538.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/calculator.py.20260701_023732.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/calculator.py.20260701_024313.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/calculator.py.20260702_003927.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/calculator.py.20260705_003033.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/calculator.py.20260705_182929.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/copa_mundo_2026.py.20260704_185740.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/sync_api_football.py.20260629_191457.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/sync_api_football.py.20260629_212554.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/sync_api_football.py.20260629_212807.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/sync_api_football.py.20260705_001312.bak"
+ create mode 100644 "C\357\200\272\357\201\234proyecto FAST API\357\201\234_backups/table_crud.py.20260630_163138.bak"
+ create mode 100644 DATABASE_EXPLORER_API.md
+ create mode 100644 EJECUTAR_AHORA.vbs
+ create mode 100644 EJECUTAR_PENDIENTES.bat
+ create mode 100644 FastAPI_Postgres_Platform_Documentacion.docx
+ create mode 100644 INICIAR.md
+ create mode 100644 INICIAR_UVICORN.bat
+ create mode 100644 Ingles)
+ create mode 100644 RECARGAR_LIVE.vbs
+ create mode 100644 SKILL.md
+ create mode 100644 VER_URL_NGROK.vbs
+ create mode 100644 _backups/20260718_1622- TBL PARA CARGAR LIVE- JOSE semifinal.xlsx
+ create mode 100644 _backups/BECBUC-movil.html.20260715_231027.bak
+ create mode 100644 _backups/BECBUC-portal.html.20260703_193751.bak
+ create mode 100644 _backups/BECBUC-portal.html.20260715_231026.bak
+ create mode 100644 _backups/CLAUDE.md.20260715_234320.bak
+ create mode 100644 _backups/apostador_bets.py.20260715_222445.bak
+ create mode 100644 _backups/apostador_bets.py.20260715_223620.bak
+ create mode 100644 _backups/apostador_bets.py.20260715_224513.bak
+ create mode 100644 _backups/apostador_bets.py.20260715_230306.bak
+ create mode 100644 _backups/apostador_bets.py.20260715_231026.bak
+ create mode 100644 _backups/apostador_bets.py.20260719_023343.bak
+ create mode 100644 _backups/becbuc-live-playoffs.html.20260715_222445.bak
+ create mode 100644 _backups/becbuc-live-playoffs.html.20260715_223620.bak
+ create mode 100644 _backups/becbuc-live-playoffs.html.20260715_223731.bak
+ create mode 100644 _backups/becbuc-live-playoffs.html.20260715_224024.bak
+ create mode 100644 _backups/becbuc-live-playoffs.html.20260715_224513.bak
+ create mode 100644 _backups/becbuc-live-playoffs.html.20260715_230306.bak
+ create mode 100644 _backups/becbuc-live-playoffs.html.20260718_223240.bak
+ create mode 100644 _backups/becbuc-live-playoffs.html.20260719_023439.bak
+ create mode 100644 _patch_claudemd_s68.py
+ create mode 100644 _patch_export_pronos.py
+ create mode 100644 _patch_lock_4h.py
+ create mode 100644 _patch_miprono_editor.py
+ create mode 100644 _patch_pin_primer_nombre.py
+ create mode 100644 _patch_recibo_pdf.py
+ create mode 100644 _patch_recibo_v2.py
+ create mode 100644 _patch_solo_pendientes.py
+ create mode 100644 actualizar_hora_partido.py
+ create mode 100644 actualizar_log.txt
+ create mode 100644 actualizar_puntajes.bat
+ create mode 100644 actualizar_puntajes.py
+ create mode 100644 actualizar_r32_desde_excel.py
+ create mode 100644 actualizar_resultados_desde_excel.py
+ create mode 100644 actualizar_resultados_fase.py
+ create mode 100644 alter_paux_numero_fifa.py
+ create mode 100644 analisis_datos.py
+ create mode 100644 analisis_datos_log.txt
+ create mode 100644 analizar_fuentes.py
+ create mode 100644 analizar_numeros_partido.bat
+ create mode 100644 andresboga_check.txt
+ create mode 100644 aplicar_correcciones_excel.py
+ create mode 100644 arrancar_despacho.bat
+ create mode 100644 arrancar_y_recalcular.bat
+ create mode 100644 auditoria_gonzalo.bat
+ create mode 100644 auditoria_gonzalo_log.txt
+ create mode 100644 auditoria_jugador.bat
+ create mode 100644 auditoria_jugador.py
+ create mode 100644 auditoria_log.txt
+ create mode 100644 auditoria_patito.xlsx
+ create mode 100644 auditoria_puntajes.bat
+ create mode 100644 avanzar_bracket.bat
+ create mode 100644 avanzar_bracket.py
+ create mode 100644 avanzar_bracket_y_sync.ps1
+ create mode 160000 backend
+ create mode 100644 backup_becbuc.ps1
+ create mode 100644 backup_becbuc_log.txt
+ create mode 100644 backup_y_git.bat
+ create mode 100644 becbuc-flags.skill
+ create mode 100644 becbuc-tbl-check.skill
+ create mode 100644 becbuc-verificar-bracket.skill
+ create mode 100644 becbuc_analisis_numeros_partido_20260702_1804.xlsx
+ create mode 100644 becbuc_comparacion_tbl_20260704_0200.xlsx
+ create mode 100644 becbuc_config.py
+ create mode 100644 becbuc_diffs_puntajes_20260718_2248.xlsx
+ create mode 100644 becbuc_diffs_puntajes_20260718_2256.xlsx
+ create mode 100644 becbuc_diffs_puntajes_20260718_2303.xlsx
+ create mode 100644 becbuc_items_comparacion_20260702_1823.xlsx
+ create mode 100644 becbuc_live_A_mobile.jpg
+ create mode 100644 becbuc_live_B_mobile.jpg
+ create mode 100644 becbuc_live_C_mobile.jpg
+ create mode 100644 becbuc_playoffs_bracket.png
+ create mode 100644 becbuc_playoffs_envivo.png
+ create mode 100644 becbuc_playoffs_puntajes.png
+ create mode 100644 becbuc_scores.csv
+ create mode 100644 becbuc_tbl_check_comparacion_20260702_1834.xlsx
+ create mode 100644 blindar_y_corregir.bat
+ create mode 100644 blindar_y_corregir.py
+ create mode 100644 bloquear_final_3p.py
+ create mode 100644 build_doc.js
+ create mode 100644 build_doc2.js
+ create mode 100644 buscar_log.txt
+ create mode 100644 buscar_patito.bat
+ create mode 100644 buscar_patito.py
+ create mode 100644 buscar_usuario.bat
+ create mode 100644 buscar_usuario.py
+ create mode 100644 buscar_y_sync_partido1.ps1
+ create mode 100644 calcular_terceros.py
+ create mode 100644 cargar_goleadores.py
+ create mode 100644 cerrar_cuartos.py
+ create mode 100644 cerrar_live.py
+ create mode 100644 cerrar_semis.py
+ create mode 100644 cerrar_torneo_custom.py
+ create mode 100644 cerrar_torneo_custom_log.txt
+ create mode 100644 cerrar_torneo_final.py
+ create mode 100644 check99_out.txt
+ create mode 100644 check_andresboga.bat
+ create mode 100644 check_cherem.bat
+ create mode 100644 check_cobertura.bat
+ create mode 100644 check_estado.bat
+ create mode 100644 check_estado.py
+ create mode 100644 check_estado2.bat
+ create mode 100644 check_estado_log.txt
+ create mode 100644 check_minuto99.sql
+ create mode 100644 check_no_match.bat
+ create mode 100644 check_penales.py
+ create mode 100644 check_pts_equipo.py
+ create mode 100644 check_pts_equipo.txt
+ create mode 100644 check_r32.bat
+ create mode 100644 check_r32.ps1
+ create mode 100644 check_real_scores.bat
+ create mode 100644 check_todos_apostadores.bat
+ create mode 100644 check_ultimo.bat
+ create mode 100644 check_ultimo.py
+ create mode 100644 check_ultimo_log.txt
+ create mode 100644 cherem_bd.txt
+ create mode 100644 cobertura.txt
+ create mode 100644 commit_sesion52p6.bat
+ create mode 100644 comparacion_resultados.txt
+ create mode 100644 comparar_control.bat
+ create mode 100644 comparar_control_excel.py
+ create mode 100644 comparar_excel_bd.bat
+ create mode 100644 comparar_excel_bd.py
+ create mode 100644 comparar_excel_bd_log.txt
+ create mode 100644 comparar_excel_vs_bd.py
+ create mode 100644 comparar_excel_vs_bd_full.py
+ create mode 100644 comparar_items_resultados.py
+ create mode 100644 comparar_items_semis.py
+ create mode 100644 comparar_live_vs_bd.py
+ create mode 100644 comparar_octavos_excel_bd.py
+ create mode 100644 comparar_output.txt
+ create mode 100644 comparar_pronosticos.py
+ create mode 100644 comparar_puntajes.ps1
+ create mode 100644 comparar_puntajes.py
+ create mode 100644 comparar_puntajes_control.py
+ create mode 100644 comparar_puntajes_items.py
+ create mode 100644 comparar_puntajes_r32.py
+ create mode 100644 comparar_quiroga.py
+ create mode 100644 comparar_resultados.py
+ create mode 100644 comparar_resultados_todos.py
+ create mode 100644 comparar_scores.bat
+ create mode 100644 comparar_scores.py
+ create mode 100644 comparar_tbl_check.py
+ create mode 100644 crear_fases_ko.py
+ create mode 100644 cruzar_fuentes.py
+ create mode 100644 debug_import_excel.py
+ create mode 100644 diag_apuesta.py
+ create mode 100644 diag_bd_estado.py
+ create mode 100644 diag_bracket.bat
+ create mode 100644 diag_bracket.py
+ create mode 100644 diag_bracket_log.txt
+ create mode 100644 diag_bracket_r32.py
+ create mode 100644 diag_bracket_terceros.bat
+ create mode 100644 diag_bracket_terceros.py
+ create mode 100644 diag_cierre.py
+ create mode 100644 diag_cierre_log.txt
+ create mode 100644 diag_clasificados.py
+ create mode 100644 diag_clasificados2.py
+ create mode 100644 diag_espn_760432.json
+ create mode 100644 diag_fechas.bat
+ create mode 100644 diag_fechas.py
+ create mode 100644 diag_join.bat
+ create mode 100644 diag_join.txt
+ create mode 100644 diag_n2_out.txt
+ create mode 100644 diag_n_diffs.sql
+ create mode 100644 diag_n_out.txt
+ create mode 100644 diag_n_simple.sql
+ create mode 100644 diag_octavos.py
+ create mode 100644 diag_p_clasificados.py
+ create mode 100644 diag_penales_tanda.py
+ create mode 100644 diag_puntajes.bat
+ create mode 100644 diag_puntajes.py
+ create mode 100644 diag_quiroga.py
+ create mode 100644 diag_quiroga_pts.py
+ create mode 100644 diag_sistema_schema.py
+ create mode 100644 diag_sofascore.py
+ create mode 100644 diag_sync_estado.py
+ create mode 100644 diag_var_L.py
+ create mode 100644 diag_var_espn.py
+ create mode 100644 diag_var_france.py
+ create mode 100644 diag_var_france_response.json
+ create mode 100644 diag_y_fix_octavos.py
+ create mode 100644 diag_y_sync_p90.py
+ create mode 100644 diagnosticar_penales_partido.py
+ create mode 100644 diagnostico_bracket.bat
+ create mode 100644 diagnostico_cherem.ps1
+ create mode 100644 diagnostico_import.sql
+ create mode 100644 diagnostico_paraguay_goles.py
+ create mode 100644 diagnostico_tarjetas_api.py
+ create mode 100644 documentacion/20260608_0240- Reglamento_BEC_BUC_2026.pdf
+ create mode 100644 documentacion/20260608_0240-Reglamento_BEC_BUC_2026.pdf
+ create mode 100644 documentacion/20260611_2000- TBL CONSOLIDADA PRONOSTICOS ok.xlsx
+ create mode 100644 documentacion/ANEXO_C_SIMULADOR_CUSE_2026.xlsx
+ create mode 100644 documentacion/CONFIGURADOR DEL SERVIDOR BEELINK CON DOCKER.docx
+ create mode 100644 documentacion/CONTINUACION_2026-06-02.md
+ create mode 100644 documentacion/DOCUMENTACION_COMPLETA.md
+ create mode 100644 documentacion/Manual_Administrador_BECBUC.pdf
+ create mode 100644 documentacion/Manual_Administrador_Lambda.docx
+ create mode 100644 documentacion/Manual_Apostador_BECBUC.pdf
+ create mode 100644 documentacion/Manual_Operacion_BECBUC.pdf
+ create mode 100644 documentacion/Manual_Usuario_Lambda.docx
+ create mode 100644 documentacion/arquitectura_scoring_engine.md
+ create mode 100644 documentacion/comentarios_app_db.sql
+ create mode 100644 documentacion/comentarios_sistema_ventas_db.sql
+ create mode 100644 documentacion/contexto_inicio_sesion.md
+ create mode 100644 documentacion/debug_penales.sql
+ create mode 100644 documentacion/depuracion_vistas_becbuc.sql
+ create mode 100644 documentacion/diag_partido143.sql
+ create mode 100644 documentacion/diagnostico_fases.sql
+ create mode 100644 documentacion/documentacion del sistema.pdf
+ create mode 100644 documentacion/drop_tablas_obsoletas_becbuc.sql
+ create mode 100644 documentacion/ejecutar_migracion_cuse.bat
+ create mode 100644 documentacion/fifa_numeracion_partidos.xlsx
+ create mode 100644 documentacion/fix_fases_copa_mundo.sql
+ create mode 100644 documentacion/fix_jose_rol.sql
+ create mode 100644 documentacion/fix_kpi_titulos.sql
+ create mode 100644 documentacion/fix_nombres_equipos_en.sql
+ create mode 100644 documentacion/fix_p73_en_juego.sql
+ create mode 100644 documentacion/fix_partido_id_apuestas.sql
+ create mode 100644 documentacion/fix_partido_id_apuestas_v2.sql
+ create mode 100644 documentacion/fix_partido_stats_from_excel.sql
+ create mode 100644 documentacion/fix_penales_partido_tanda.sql
+ create mode 100644 documentacion/fix_pts_equipo_grupos.sql
+ create mode 100644 documentacion/fix_pts_penales_partido.sql
+ create mode 100644 documentacion/fix_quiroga_rojas.sql
+ create mode 100644 documentacion/fix_r32_equipos.sql
+ create mode 100644 documentacion/fix_swap_numero_fifa.sql
+ create mode 100644 documentacion/fix_swap_predicciones.sql
+ create mode 100644 documentacion/fix_tarjetas_r32.sql
+ create mode 100644 documentacion/fix_torneo_activo.sql
+ create mode 100644 documentacion/fix_var_discrepancias.sql
+ create mode 100644 documentacion/fix_var_p27_p39.sql
+ create mode 100644 documentacion/genera_comentarios_sistemas.py
+ create mode 100644 documentacion/limpiar_apuestas_prueba.sql
+ create mode 100644 documentacion/limpiar_resultados_excepto_p1.sql
+ create mode 100644 documentacion/migracion_api_log_contexto.sql
+ create mode 100644 documentacion/migracion_apostador.sql
+ create mode 100644 documentacion/migracion_apostador_clasificados.sql
+ create mode 100644 documentacion/migracion_becbuc_db.sql
+ create mode 100644 documentacion/migracion_bonus_partido.sql
+ create mode 100644 documentacion/migracion_cabecera_detalle.sql
+ create mode 100644 documentacion/migracion_catalogo_objeto.sql
+ create mode 100644 documentacion/migracion_competicion_emoji.sql
+ create mode 100644 documentacion/migracion_datos_confirmados.sql
+ create mode 100644 documentacion/migracion_equipo_competicion.sql
+ create mode 100644 documentacion/migracion_eventos_api.sql
+ create mode 100644 documentacion/migracion_fair_play_partido.sql
+ create mode 100644 documentacion/migracion_fase_bloqueada.sql
+ create mode 100644 documentacion/migracion_fase_visible_apostador.sql
+ create mode 100644 documentacion/migracion_grupo_calculo.sql
+ create mode 100644 documentacion/migracion_icono_cabecera_detalle.sql
+ create mode 100644 documentacion/migracion_mensajes_admin.sql
+ create mode 100644 documentacion/migracion_monitor.sql
+ create mode 100644 documentacion/migracion_nombre_apostador.sql
+ create mode 100644 documentacion/migracion_paux_numero_fifa.sql
+ create mode 100644 documentacion/migracion_periodo_apuestas.sql
+ create mode 100644 documentacion/migracion_portal.sql
+ create mode 100644 documentacion/migracion_portal_menu.sql
+ create mode 100644 documentacion/migracion_pred_penales.sql
+ create mode 100644 documentacion/migracion_pronosticos_aux.sql
+ create mode 100644 documentacion/migracion_puntaje_item.sql
+ create mode 100644 documentacion/migracion_scoring_v2.sql
+ create mode 100644 documentacion/migracion_stats_fuentes.sql
+ create mode 100644 documentacion/migracion_sync_log_partido.sql
+ create mode 100644 documentacion/migracion_tiebreakers_becbuc.sql
+ create mode 100644 documentacion/migracion_torneos.sql
+ create mode 100644 documentacion/migracion_unificacion_app_db.sql
+ create mode 100644 documentacion/migracion_user_sistemas.sql
+ create mode 100644 documentacion/migracion_vistas_alias.sql
+ create mode 100644 documentacion/migrar_datos_becbuc.sql
+ create mode 100644 documentacion/patch_torneos_v2.sql
+ create mode 100644 documentacion/proyecto_resumen.docx
+ create mode 100644 documentacion/quiroga_check.sql
+ create mode 100644 documentacion/quiroga_debug.sql
+ create mode 100644 documentacion/quiroga_rojas_detalle.sql
+ create mode 100644 documentacion/repair_fixture_grupos.sql
+ create mode 100644 documentacion/reset_admin_pw.sql
+ create mode 100644 documentacion/reset_grupos_torneo2.sql
+ create mode 100644 documentacion/reset_ko_resultados.sql
+ create mode 100644 documentacion/restaurar_partido143.sql
+ create mode 100644 documentacion/revert_r32_fix_incorrecto.sql
+ create mode 100644 documentacion/seed_appdb_cabecera.sql
+ create mode 100644 documentacion/seed_becbuc_kpis.sql
+ create mode 100644 documentacion/seed_becbuc_sistema.py
+ create mode 100644 documentacion/seed_becbuc_sistema.sql
+ create mode 100644 documentacion/seed_becbuc_sistema_v2.sql
+ create mode 100644 documentacion/seed_menu_ventas.sql
+ create mode 100644 documentacion/seed_playoff_mundial.sql
+ create mode 100644 documentacion/seed_ventas_cab.sql
+ create mode 100644 documentacion/sim_partido_live.sql
+ create mode 100644 documentacion/sim_partido_live_revert.sql
+ create mode 100644 documentacion/test_apifootball.py
+ create mode 100644 documentacion/update_fifa_ranking.sql
+ create mode 100644 documentacion/update_nombre_es.sql
+ create mode 100644 documentacion/v_copamundial_puntajes.sql
+ create mode 100644 documentacion/v_copamundial_puntajes_det.sql
+ create mode 100644 documentacion/verificacion_pronosticos.json
+ create mode 100644 documentacion/verificar_y_fix_minuto_gol.sql
+ create mode 100644 documentacion/vistas_auditoria_becbuc.sql
+ create mode 100644 documentacion/wc-2026-regulations.pdf
+ create mode 100644 ejecutar_comparar.bat
+ create mode 100644 ejecutar_fair_play.ps1
+ create mode 100644 ejecutar_sesion39.bat
+ create mode 100644 ejecutar_sesion39.ps1
+ create mode 100644 ejecutar_todo.bat
+ create mode 100644 ejecutar_todo.ps1
+ create mode 100644 ejecutar_todo.py
+ create mode 100644 escribir_becbuc_md.ps1
+ create mode 100644 estado_fases.py
+ create mode 100644 estado_semis_bracket.py
+ create mode 100644 excel_gen_log.txt
+ create mode 100644 excel_grupos_por_item.py
+ create mode 100644 excel_tbl_check.json
+ create mode 100644 exportar_diffs_puntajes.py
+ create mode 100644 exportar_puntajes_vista.py
+ create mode 100644 exportar_scores_becbuc.bat
+ create mode 100644 fill_clasifica_null.py
+ create mode 100644 finalizar_p097_y_calcular.py
+ create mode 100644 finalizar_p90.bat
+ create mode 100644 finalizar_partido_ko.py
+ create mode 100644 fix_apuestas_faltantes.bat
+ create mode 100644 fix_bracket_completo.bat
+ create mode 100644 fix_bracket_sin_provisorios.bat
+ create mode 100644 fix_bracket_sin_provisorios.py
+ create mode 100644 fix_cherem2.bat
+ create mode 100644 fix_cherem_apuestas.bat
+ create mode 100644 fix_cherem_result.txt
+ create mode 100644 fix_clasificado_faltante.py
+ create mode 100644 fix_estado_partido.py
+ create mode 100644 fix_fechas_r32.bat
+ create mode 100644 fix_fechas_r32.py
+ create mode 100644 fix_grupo_g.bat
+ create mode 100644 fix_hora_mexico_england.py
+ create mode 100644 fix_minuto.sql
+ create mode 100644 fix_minuto2.sql
+ create mode 100644 fix_nombres_en.bat
+ create mode 100644 fix_nombres_equipos_en.py
+ create mode 100644 fix_nulls_apuesta.py
+ create mode 100644 fix_numero_fifa_ko.py
+ create mode 100644 fix_p030.py
+ create mode 100644 fix_p030_log.txt
+ create mode 100644 fix_p030_y_recalcular.bat
+ create mode 100644 fix_p79_fecha_estado.bat
+ create mode 100644 fix_paraguay.bat
+ create mode 100644 fix_paraguay.py
+ create mode 100644 fix_paraguay_log.txt
+ create mode 100644 fix_partido_suspension.bat
+ create mode 100644 fix_partido_suspension.py
+ create mode 100644 fix_passwords_appdb.py
+ create mode 100644 fix_penales_partido.bat
+ create mode 100644 fix_penales_partido.py
+ create mode 100644 fix_penales_tanda_ko.bat
+ create mode 100644 fix_r32_equipos.bat
+ create mode 100644 fix_r32_oficial.bat
+ create mode 100644 fix_r32_oficial.py
+ create mode 100644 fix_scotland_bracket.bat
+ create mode 100644 fix_scotland_bracket.py
+ create mode 100644 fix_scotland_log.txt
+ create mode 100644 fix_sistema_columns.py
+ create mode 100644 fix_sistema_columns.txt
+ create mode 100644 fix_standings_grupo_g.py
+ create mode 100644 fix_stats_excel_y_recalcular.bat
+ create mode 100644 fix_stats_excel_y_recalcular.ps1
+ create mode 100644 fix_suspension_log.txt
+ create mode 100644 fix_tarjetas_r32.bat
+ create mode 100644 fix_tarjetas_r32.ps1
+ create mode 100644 fix_var_L.py
+ create mode 100644 fix_var_canada_qatar.bat
+ create mode 100644 fix_var_canada_qatar.py
+ create mode 100644 fix_var_p27_p39.py
+ create mode 100644 fix_var_y_recalcular.bat
+ create mode 100644 fix_y_recalcular.bat
+ create mode 100644 fix_y_recalcular_full.bat
+ create mode 100644 fix_y_recalcular_full.ps1
+ create mode 100644 fix_y_recalcular_penales.bat
+ create mode 100644 fp-7.jpg
+ create mode 100644 fp-8.jpg
+ create mode 160000 frontend
+ create mode 100644 generar_excel.bat
+ create mode 100644 generar_excel_becbuc.py
+ create mode 100644 generar_excel_grupos_auditoria.py
+ create mode 100644 gestionar_fases_cuartos.py
+ create mode 100644 get_cloudflared_url.ps1
+ create mode 100644 get_ngrok.py
+ create mode 100644 get_ngrok_url.bat
+ create mode 100644 git_commit_log.txt
+ create mode 100644 git_commit_sesion33.ps1
+ create mode 100644 git_commit_sesion52.bat
+ create mode 100644 git_push.bat
+ create mode 100644 git_push2.bat
+ create mode 100644 goleada_log.txt
+ create mode 100644 goleada_off_y_excel_grupos.py
+ create mode 100644 grupos_estado.txt
+ create mode 100644 importar_8vos_excel.py
+ create mode 100644 importar_apuestas_fase.py
+ create mode 100644 importar_bonus_r32_desde_excel.py
+ create mode 100644 importar_cuartos_excel.py
+ create mode 100644 importar_fechas_ko.py
+ create mode 100644 importar_globales_api.py
+ create mode 100644 importar_globales_excel.py
+ create mode 100644 importar_partidos_api.py
+ create mode 100644 importar_pronosticos_aux.py
+ create mode 100644 importar_pucheta_octavos.bat
+ create mode 100644 importar_pucheta_octavos.py
+ create mode 100644 importar_r32_excel.py
+ create mode 100644 importar_semis_excel.py
+ create mode 100644 iniciar-todo-simple.ps1
+ create mode 100644 iniciar-todo.bat
+ create mode 100644 iniciar-todo.ps1
+ create mode 100644 iniciar_brasil.bat
+ create mode 100644 iniciar_brasil.py
+ create mode 100644 iniciar_brasil_log.txt
+ create mode 100644 iniciar_cloudflared.bat
+ create mode 100644 iniciar_hoy.bat
+ create mode 100644 iniciar_ngrok.bat
+ create mode 100644 iniciar_paraguay_usa.py
+ create mode 100644 listar_usuarios.bat
+ create mode 100644 llave del mundial.jpg
+ create mode 100644 migration_log.txt
+ create mode 100644 ngrok_tmp.yml
+ create mode 100644 ngrok_url.txt
+ create mode 100644 no_match.txt
+ create mode 100644 nuevo-proyecto.ps1
+ create mode 100644 p.goles_visitante)
+ create mode 100644 page-1.jpg
+ create mode 100644 page-3.jpg
+ create mode 100644 page-8.jpg
+ create mode 100644 plantillas/expo-react-native/.env.example
+ create mode 100644 plantillas/expo-react-native/app.json
+ create mode 100644 plantillas/expo-react-native/app/(auth)/login.tsx
+ create mode 100644 plantillas/expo-react-native/app/(tabs)/_layout.tsx
+ create mode 100644 plantillas/expo-react-native/app/(tabs)/index.tsx
+ create mode 100644 plantillas/expo-react-native/app/(tabs)/perfil.tsx
+ create mode 100644 plantillas/expo-react-native/app/_layout.tsx
+ create mode 100644 plantillas/expo-react-native/context/AuthContext.tsx
+ create mode 100644 plantillas/expo-react-native/package.json
+ create mode 100644 plantillas/expo-react-native/services/api.ts
+ create mode 100644 plantillas/expo-react-native/tsconfig.json
+ create mode 100644 plantillas/nextjs-postgres-api/.gitignore
+ create mode 100644 plantillas/nextjs-postgres-api/app/(auth)/login/page.tsx
+ create mode 100644 plantillas/nextjs-postgres-api/app/(dashboard)/layout.tsx
+ create mode 100644 plantillas/nextjs-postgres-api/app/(dashboard)/page.tsx
+ create mode 100644 plantillas/nextjs-postgres-api/app/api/login/route.ts
+ create mode 100644 plantillas/nextjs-postgres-api/app/api/logout/route.ts
+ create mode 100644 plantillas/nextjs-postgres-api/app/globals.css
+ create mode 100644 plantillas/nextjs-postgres-api/app/layout.tsx
+ create mode 100644 plantillas/nextjs-postgres-api/app/page.tsx
+ create mode 100644 plantillas/nextjs-postgres-api/components/layout/Sidebar.tsx
+ create mode 100644 plantillas/nextjs-postgres-api/components/ui/Badge.tsx
+ create mode 100644 plantillas/nextjs-postgres-api/components/ui/Button.tsx
+ create mode 100644 plantillas/nextjs-postgres-api/lib/api.ts
+ create mode 100644 plantillas/nextjs-postgres-api/lib/auth.ts
+ create mode 100644 plantillas/nextjs-postgres-api/middleware.ts
+ create mode 100644 plantillas/nextjs-postgres-api/next.config.ts
+ create mode 100644 plantillas/nextjs-postgres-api/package.json
+ create mode 100644 plantillas/nextjs-postgres-api/postcss.config.mjs
+ create mode 100644 plantillas/nextjs-postgres-api/services/auth.ts
+ create mode 100644 plantillas/nextjs-postgres-api/services/users.ts
+ create mode 100644 plantillas/nextjs-postgres-api/tsconfig.json
+ create mode 100644 plantillas/nextjs-postgres-api/types/index.ts
+ create mode 100644 plantillas/python-api-client/.env.example
+ create mode 100644 plantillas/python-api-client/api_client.py
+ create mode 100644 plantillas/python-api-client/main.py
+ create mode 100644 plantillas/python-api-client/requirements.txt
+ create mode 100644 poblar_equipos_iso_ranking.py
+ create mode 100644 poblar_equipos_resultado.txt
+ create mode 100644 post_fix_paraguay.ps1
+ create mode 100644 preview_ranking_postfix.py
+ create mode 100644 proyectos/.gitkeep
+ create mode 100644 puntaje_grupos_20260629_1333.xlsx
+ create mode 100644 puntajes_copa_mundial.xlsx
+ create mode 100644 query_grupos_estado.bat
+ create mode 100644 query_tarjetas.sql
+ create mode 100644 ranking_actual.py
+ create mode 100644 ranking_auditoria.xlsx
+ create mode 100644 ranking_excel.bat
+ create mode 100644 ranking_excel.py
+ create mode 100644 ranking_excel_log.txt
+ create mode 100644 ranking_resultado.txt
+ create mode 100644 ranking_top10.bat
+ create mode 100644 ranking_top10.py
+ create mode 100644 ranking_top10_log.txt
+ create mode 100644 re_registrar_task.bat
+ create mode 100644 real2.txt
+ create mode 100644 real_scores.txt
+ create mode 100644 real_scores2.bat
+ create mode 100644 recalc_api.ps1
+ create mode 100644 recalc_cherem.bat
+ create mode 100644 recalc_directo.bat
+ create mode 100644 recalc_directo.py
+ create mode 100644 recalc_fairplay.py
+ create mode 100644 recalc_force_grupos.py
+ create mode 100644 recalc_hasta_semis.py
+ create mode 100644 recalc_mejores_terceros.ps1
+ create mode 100644 recalc_octavos_bloquear_cuartos.py
+ create mode 100644 recalc_participacion.bat
+ create mode 100644 recalc_participacion.py
+ create mode 100644 recalc_post_excel.ps1
+ create mode 100644 recalc_post_update.bat
+ create mode 100644 recalc_puntajes.py
+ create mode 100644 recalc_ranking.py
+ create mode 100644 recalc_ranking_log.txt
+ create mode 100644 recalc_result.txt
+ create mode 100644 recalcular_audit_log.txt
+ create mode 100644 recalcular_log.txt
+ create mode 100644 recalcular_puntajes.bat
+ create mode 100644 recalcular_puntajes.py
+ create mode 100644 recalcular_sin_goleada.bat
+ create mode 100644 recalcular_todo.py
+ create mode 100644 recalcular_y_audit.bat
+ create mode 100644 reconciliar_partido_id.py
+ create mode 100644 reforma_scores_tab.py
+ create mode 100644 regenerar_excel.bat
+ create mode 100644 regenerar_excel.ps1
+ create mode 100644 registrar_sync_auto.ps1
+ create mode 100644 reimportar_predicciones_bonus.py
+ create mode 100644 reiniciar_ngrok.bat
+ create mode 100644 reiniciar_servidor.bat
+ create mode 100644 reiniciar_y_testear.bat
+ create mode 100644 rename_andres.bat
+ create mode 100644 rename_result.txt
+ create mode 100644 restart_ngrok.bat
+ create mode 100644 restart_server.bat
+ create mode 100644 resubir_octavos_sanbie_pato.py
+ create mode 100644 resultado_diag_apuesta.txt
+ create mode 100644 resultado_importacion.txt
+ create mode 100644 resultado_quiroga.txt
+ create mode 100644 resultado_sync_paux.txt
+ create mode 100644 resultado_verificacion_8vos.txt
+ create mode 100644 resultado_verificar_sync.txt
+ create mode 100644 resultados_partidos.json
+ create mode 100644 resync_grupo_g.py
+ create mode 100644 run_actualizar_hora.bat
+ create mode 100644 run_actualizar_r32.bat
+ create mode 100644 run_actualizar_resultados.bat
+ create mode 100644 run_actualizar_resultados_octavos.bat
+ create mode 100644 run_actualizar_resultados_octavos_APPLY.bat
+ create mode 100644 run_actualizar_resultados_semis.bat
+ create mode 100644 run_actualizar_resultados_semis_APPLY.bat
+ create mode 100644 run_actualizar_resultados_todas.bat
+ create mode 100644 run_actualizar_resultados_todas_APPLY.bat
+ create mode 100644 run_all.bat
+ create mode 100644 run_all.ps1
+ create mode 100644 run_all_log.txt
+ create mode 100644 run_alter_paux.bat
+ create mode 100644 run_analisis_datos.bat
+ create mode 100644 run_analisis_fuentes.ps1
+ create mode 100644 run_auto_mapeo.ps1
+ create mode 100644 run_backup.bat
+ create mode 100644 run_backup_becbuc.bat
+ create mode 100644 run_bloquear_final_3p.bat
+ create mode 100644 run_bloquear_final_3p_APPLY.bat
+ create mode 100644 run_cargar_goleadores.bat
+ create mode 100644 run_cerrar_cuartos.bat
+ create mode 100644 run_cerrar_semis.bat
+ create mode 100644 run_cerrar_torneo_custom.bat
+ create mode 100644 run_cerrar_torneo_final.bat
+ create mode 100644 run_check99.bat
+ create mode 100644 run_check_pts_equipo.bat
+ create mode 100644 run_comparar.bat
+ create mode 100644 run_comparar_excel.bat
+ create mode 100644 run_comparar_items_octavos.bat
+ create mode 100644 run_comparar_items_semis.bat
+ create mode 100644 run_comparar_items_todas.bat
+ create mode 100644 run_comparar_octavos.bat
+ create mode 100644 run_comparar_puntajes_items.bat
+ create mode 100644 run_comparar_resultados_todos.bat
+ create mode 100644 run_comparar_tbl_check.bat
+ create mode 100644 run_diag.bat
+ create mode 100644 run_diag_cierre.bat
+ create mode 100644 run_diag_clasificados.bat
+ create mode 100644 run_diag_clasificados2.bat
+ create mode 100644 run_diag_fix_octavos.bat
+ create mode 100644 run_diag_n.bat
+ create mode 100644 run_diag_n2.bat
+ create mode 100644 run_diag_octavos.bat
+ create mode 100644 run_diag_p_clasificados.bat
+ create mode 100644 run_diag_sistema.bat
+ create mode 100644 run_diag_sofascore.ps1
+ create mode 100644 run_diag_sync_p90.bat
+ create mode 100644 run_diag_var_L.bat
+ create mode 100644 run_diagnostico_paraguay.bat
+ create mode 100644 run_diagnostico_tarjetas.bat
+ create mode 100644 run_docker_migrations.bat
+ create mode 100644 run_estado_fases.bat
+ create mode 100644 run_estado_semis.bat
+ create mode 100644 run_excel_grupos.bat
+ create mode 100644 run_excel_grupos_auditoria.bat
+ create mode 100644 run_excel_log.bat
+ create mode 100644 run_exportar_diffs.bat
+ create mode 100644 run_fill_clasifica_null.bat
+ create mode 100644 run_fill_clasifica_null_APPLY.bat
+ create mode 100644 run_finalizar_p097_y_calcular.bat
+ create mode 100644 run_fix2_recalc.bat
+ create mode 100644 run_fix2_recalc.ps1
+ create mode 100644 run_fix_clasificado_faltante.bat
+ create mode 100644 run_fix_clasificado_faltante_APPLY.bat
+ create mode 100644 run_fix_estado_p79.bat
+ create mode 100644 run_fix_hora.bat
+ create mode 100644 run_fix_p73.bat
+ create mode 100644 run_fix_passwords.bat
+ create mode 100644 run_fix_pts_equipo_grupos.bat
+ create mode 100644 run_fix_pts_equipo_grupos.ps1
+ create mode 100644 run_fix_sistema.bat
+ create mode 100644 run_fix_stats.bat
+ create mode 100644 run_fix_swap_numero_fifa.bat
+ create mode 100644 run_fix_swap_numero_fifa.ps1
+ create mode 100644 run_fix_swap_predicciones.bat
+ create mode 100644 run_fix_var_L.bat
+ create mode 100644 run_fix_var_L_APPLY.bat
+ create mode 100644 run_fix_var_discrepancias.ps1
+ create mode 100644 run_gestionar_fases_cuartos.bat
+ create mode 100644 run_get_ngrok.bat
+ create mode 100644 run_git_commit.bat
+ create mode 100644 run_git_y_backup.ps1
+ create mode 100644 run_goleada_off_y_excel.bat
+ create mode 100644 run_importar.bat
+ create mode 100644 run_importar_8vos.bat
+ create mode 100644 run_importar_8vos_IMPORT.bat
+ create mode 100644 run_importar_cuartos.bat
+ create mode 100644 run_importar_cuartos_IMPORT.bat
+ create mode 100644 run_importar_fechas_ko.bat
+ create mode 100644 run_importar_final3p.bat
+ create mode 100644 run_importar_final3p_IMPORT.bat
+ create mode 100644 run_importar_r32.bat
+ create mode 100644 run_importar_r32_IMPORT.bat
+ create mode 100644 run_importar_semis.bat
+ create mode 100644 run_importar_semis_IMPORT.bat
+ create mode 100644 run_migracion_vistas_alias.bat
+ create mode 100644 run_migrar_tanda_split.bat
+ create mode 100644 run_migrate_and_populate.ps1
+ create mode 100644 run_migration_aux.bat
+ create mode 100644 run_migration_aux.ps1
+ create mode 100644 run_paux_numero_fifa.bat
+ create mode 100644 run_pendientes.ps1
+ create mode 100644 run_poblar_equipos.bat
+ create mode 100644 run_populate_y_analisis.ps1
+ create mode 100644 run_preview_ranking_postfix.bat
+ create mode 100644 run_ranking_actual.bat
+ create mode 100644 run_recalc_fairplay.bat
+ create mode 100644 run_recalc_force_grupos.bat
+ create mode 100644 run_recalc_hasta_semis.bat
+ create mode 100644 run_recalc_octavos_bloquear_cuartos.bat
+ create mode 100644 run_recalc_ranking.bat
+ create mode 100644 run_reimportar_predicciones_bonus.bat
+ create mode 100644 run_reimportar_predicciones_bonus_APPLY.bat
+ create mode 100644 run_reset_ko.bat
+ create mode 100644 run_reset_ko.ps1
+ create mode 100644 run_resubir_sanbie_pato.bat
+ create mode 100644 run_resubir_sanbie_pato_APPLY.bat
+ create mode 100644 run_sim_live.bat
+ create mode 100644 run_sim_live_revert.bat
+ create mode 100644 run_sin_apuesta_semis.bat
+ create mode 100644 run_swap_san_pato_octavos.bat
+ create mode 100644 run_swap_san_pato_octavos_APPLY.bat
+ create mode 100644 run_sync_auto.bat
+ create mode 100644 run_sync_p103.bat
+ create mode 100644 run_sync_paux.bat
+ create mode 100644 run_sync_semis.bat
+ create mode 100644 run_test_auto.bat
+ create mode 100644 run_test_bracket.bat
+ create mode 100644 run_test_export_pronos.bat
+ create mode 100644 run_test_grupos_p.bat
+ create mode 100644 run_test_live_guardar.bat
+ create mode 100644 run_todo.bat
+ create mode 100644 run_todo.ps1
+ create mode 100644 run_todo_becbuc.bat
+ create mode 100644 run_ver_p92.bat
+ create mode 100644 run_ver_p92_file.bat
+ create mode 100644 run_verificar_amarillas.bat
+ create mode 100644 run_verificar_amarillas_APPLY.bat
+ create mode 100644 run_verificar_item_p.bat
+ create mode 100644 run_verificar_minuto_gol.bat
+ create mode 100644 run_verificar_p49.bat
+ create mode 100644 run_verificar_semis.bat
+ create mode 100644 run_verificar_usuarios.bat
+ create mode 100644 run_verify_cherem.bat
+ create mode 100644 run_verify_cherem.ps1
+ create mode 100644 run_verify_final.bat
+ create mode 100644 run_verify_final.ps1
+ create mode 100644 run_verify_final_tarjetas.bat
+ create mode 100644 run_verify_todos.bat
+ create mode 100644 safe_write.py
+ create mode 100644 scores_apostador.json
+ create mode 100644 set_peor_equipo_irak.bat
+ create mode 100644 sin_apuesta_semis.py
+ create mode 100644 sincronizar_final_grupos.bat
+ create mode 100644 sincronizar_final_grupos.ps1
+ create mode 100644 skills/becbuc-ui-sync/SKILL.md
+ create mode 100644 soporte_microsoft_nameservers.md
+ create mode 100644 start_ngrok.bat
+ create mode 100644 start_server.bat
+ create mode 100644 start_servidor.bat
+ create mode 100644 swap_apuestas.py
+ create mode 100644 sync_ahora.py
+ create mode 100644 sync_auto.py
+ create mode 100644 sync_ayer.bat
+ create mode 100644 sync_ayer.py
+ create mode 100644 sync_francia_iraq.bat
+ create mode 100644 sync_francia_iraq.py
+ create mode 100644 sync_francia_iraq_log.txt
+ create mode 100644 sync_partido.py
+ create mode 100644 sync_partido1.ps1
+ create mode 100644 sync_paux_a_apuesta.py
+ create mode 100644 sync_paux_faltantes.py
+ create mode 100644 sync_puntajes_grupos_excel.py
+ create mode 100644 sync_semis.py
+ create mode 100644 sync_sofascore_directo.bat
+ create mode 100644 sync_sofascore_directo.py
+ create mode 100644 sync_state.json
+ create mode 100644 test2.bat
+ create mode 100644 test2.py
+ create mode 100644 test2_log.txt
+ create mode 100644 test3.bat
+ create mode 100644 test3.py
+ create mode 100644 test_api_football.py
+ create mode 100644 test_bash_write.txt
+ create mode 100644 test_bracket_live.bat
+ create mode 100644 test_bracket_live.ps1
+ create mode 100644 test_bracket_output.txt
+ create mode 100644 test_export_pronos.py
+ create mode 100644 test_export_pronos_out.txt
+ create mode 100644 test_grupos_p.py
+ create mode 100644 test_integral.py
+ create mode 100644 test_integral_report.md
+ create mode 100644 test_live_guardar.py
+ create mode 100644 test_live_guardar_out.txt
+ create mode 100644 test_propagacion_bracket.py
+ create mode 100644 test_simple.bat
+ create mode 100644 test_simple.py
+ create mode 100644 test_tabla.py
+ create mode 100644 test_write_check.txt
+ create mode 100644 todos_diffs.txt
+ create mode 100644 update_fifa_ranking.py
+ create mode 100644 update_from_excel.bat
+ create mode 100644 update_from_excel.py
+ create mode 100644 update_from_excel_log.txt
+ create mode 100644 v2p-08.jpg
+ create mode 100644 v3p-3.jpg
+ create mode 100644 v3p-4.jpg
+ create mode 100644 v3p-5.jpg
+ create mode 100644 v3p-6.jpg
+ create mode 100644 validar_bracket_oficial.bat
+ create mode 100644 validar_bracket_oficial.py
+ create mode 100644 ver_equipos_bd.bat
+ create mode 100644 ver_equipos_bd.py
+ create mode 100644 ver_fechas_ko.bat
+ create mode 100644 ver_mejores_terceros.py
+ create mode 100644 ver_ngrok.bat
+ create mode 100644 ver_ngrok_url.py
+ create mode 100644 ver_p92.py
+ create mode 100644 ver_p92_file.py
+ create mode 100644 ver_patito.bat
+ create mode 100644 ver_patito.py
+ create mode 100644 ver_patito_log.txt
+ create mode 100644 ver_quiroga.py
+ create mode 100644 ver_standings.bat
+ create mode 100644 ver_standings.py
+ create mode 100644 ver_tarjetas3.bat
+ create mode 100644 ver_tarjetas3.ps1
+ create mode 100644 ver_tarjetas_api.bat
+ create mode 100644 ver_tarjetas_api2.bat
+ create mode 100644 verificar_8vos.bat
+ create mode 100644 verificar_8vos.py
+ create mode 100644 verificar_amarillas_playoffs.py
+ create mode 100644 verificar_excel.bat
+ create mode 100644 verificar_excel.py
+ create mode 100644 verificar_excel_log.txt
+ create mode 100644 verificar_grupos_y_bracket.ps1
+ create mode 100644 verificar_item_p.py
+ create mode 100644 verificar_p49.py
+ create mode 100644 verificar_p49_output.txt
+ create mode 100644 verificar_semis_excel_vs_bd.py
+ create mode 100644 verificar_sync.py
+ create mode 100644 verificar_usuario_sandra.py
+ create mode 100644 verify_cherem.sql
+ create mode 100644 verify_cherem.txt
+ create mode 100644 verify_cherem_full.bat
+ create mode 100644 verify_cherem_out.txt
+ create mode 100644 verify_final.txt
+ create mode 100644 verify_final3.txt
+ create mode 100644 verify_final_tarjetas.py
+ create mode 100644 verify_final_tarjetas_log.txt
+ create mode 100644 verify_todos.sql
+ create mode 100644 verify_todos2.txt
+ create mode 100644 verify_todos_out.txt
+ create mode 100644 watchdog_becbuc.py
+ create mode 100644 web/README.md
+ create mode 100644 web/app.py
+ create mode 100644 web/requirements.txt
+ create mode 100644 web/templates/404.html
+ create mode 100644 web/templates/500.html
+ create mode 100644 web/templates/applications.html
+ create mode 100644 web/templates/audit-logs.html
+ create mode 100644 web/templates/base.html
+ create mode 100644 web/templates/dashboard.html
+ create mode 100644 web/templates/login.html
+ create mode 100644 web/templates/users.html
+=== LOG ===
+1798e68 sesion 70: cierre definitivo del torneo (Espana campeon) + propuesta BECBUC 2.0 + scripts cierre/analisis + CLAUDE.md
+=== REMOTE ===
+=== STATUS ===
+3
+DONE 
