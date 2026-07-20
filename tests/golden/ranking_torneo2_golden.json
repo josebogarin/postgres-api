@@ -1,0 +1,1245 @@
+{
+  "torneo_id": 2,
+  "generado": "2026-07-20T18:29:47Z",
+  "descripcion": "Golden master del torneo cerrado (post-fix item F). Referencia de no-regresion.",
+  "totales": {
+    "apostadores": 44,
+    "plenos": 543,
+    "aciertos": 2133,
+    "cobrando_item_F": 18
+  },
+  "apostadores": {
+    "@bs": {
+      "apostador_id": 10,
+      "items": {
+        "H": 336,
+        "I": 136,
+        "J": 10,
+        "K": 90,
+        "L": 37,
+        "M": 73,
+        "N": 4,
+        "O": 0,
+        "P": 80
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 766,
+      "globales_total": 50,
+      "total": 816,
+      "plenos": 14,
+      "aciertos": 50
+    },
+    "aaa": {
+      "apostador_id": 14,
+      "items": {
+        "H": 340,
+        "I": 136,
+        "J": 13,
+        "K": 50,
+        "L": 8,
+        "M": 51,
+        "N": 6,
+        "O": 2,
+        "P": 80
+      },
+      "globales": {
+        "A": 0,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 10,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 686,
+      "globales_total": 40,
+      "total": 726,
+      "plenos": 12,
+      "aciertos": 52
+    },
+    "alejandrolegui": {
+      "apostador_id": 12,
+      "items": {
+        "H": 260,
+        "I": 112,
+        "J": 22,
+        "K": 84,
+        "L": 50,
+        "M": 75,
+        "N": 3,
+        "O": 10,
+        "P": 66
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 682,
+      "globales_total": 0,
+      "total": 682,
+      "plenos": 11,
+      "aciertos": 39
+    },
+    "alevo": {
+      "apostador_id": 13,
+      "items": {
+        "H": 314,
+        "I": 136,
+        "J": 25,
+        "K": 96,
+        "L": 35,
+        "M": 75,
+        "N": 1,
+        "O": 2,
+        "P": 62
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 746,
+      "globales_total": 20,
+      "total": 766,
+      "plenos": 13,
+      "aciertos": 49
+    },
+    "alfaorion 99": {
+      "apostador_id": 11,
+      "items": {
+        "H": 322,
+        "I": 96,
+        "J": 13,
+        "K": 81,
+        "L": 44,
+        "M": 70,
+        "N": 8,
+        "O": 0,
+        "P": 84
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 10,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 718,
+      "globales_total": 66,
+      "total": 784,
+      "plenos": 10,
+      "aciertos": 54
+    },
+    "caficho": {
+      "apostador_id": 53,
+      "items": {
+        "H": 282,
+        "I": 68,
+        "J": 18,
+        "K": 75,
+        "L": 14,
+        "M": 44,
+        "N": 6,
+        "O": 14,
+        "P": 66
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 587,
+      "globales_total": 56,
+      "total": 643,
+      "plenos": 7,
+      "aciertos": 47
+    },
+    "cayetano": {
+      "apostador_id": 38,
+      "items": {
+        "H": 282,
+        "I": 136,
+        "J": 24,
+        "K": 61,
+        "L": 8,
+        "M": 73,
+        "N": 5,
+        "O": 4,
+        "P": 50
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 10,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 643,
+      "globales_total": 10,
+      "total": 653,
+      "plenos": 13,
+      "aciertos": 43
+    },
+    "checho": {
+      "apostador_id": 44,
+      "items": {
+        "H": 402,
+        "I": 244,
+        "J": 24,
+        "K": 89,
+        "L": 28,
+        "M": 86,
+        "N": 5,
+        "O": 10,
+        "P": 104
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 6
+      },
+      "partidos_total": 992,
+      "globales_total": 56,
+      "total": 1048,
+      "plenos": 20,
+      "aciertos": 52
+    },
+    "cherem": {
+      "apostador_id": 15,
+      "items": {
+        "H": 278,
+        "I": 152,
+        "J": 23,
+        "K": 92,
+        "L": 27,
+        "M": 85,
+        "N": 2,
+        "O": 8,
+        "P": 64
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 20,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 731,
+      "globales_total": 20,
+      "total": 751,
+      "plenos": 13,
+      "aciertos": 41
+    },
+    "coco": {
+      "apostador_id": 37,
+      "items": {
+        "H": 344,
+        "I": 152,
+        "J": 26,
+        "K": 96,
+        "L": 23,
+        "M": 85,
+        "N": 7,
+        "O": 4,
+        "P": 90
+      },
+      "globales": {
+        "A": 20,
+        "B": 20,
+        "C": 0,
+        "D": 0,
+        "E": 10,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 827,
+      "globales_total": 50,
+      "total": 877,
+      "plenos": 14,
+      "aciertos": 48
+    },
+    "coto": {
+      "apostador_id": 49,
+      "items": {
+        "H": 294,
+        "I": 108,
+        "J": 25,
+        "K": 84,
+        "L": 12,
+        "M": 86,
+        "N": 3,
+        "O": 0,
+        "P": 64
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 10,
+        "F": 6,
+        "G": 6
+      },
+      "partidos_total": 676,
+      "globales_total": 72,
+      "total": 748,
+      "plenos": 10,
+      "aciertos": 49
+    },
+    "decanita": {
+      "apostador_id": 17,
+      "items": {
+        "H": 294,
+        "I": 156,
+        "J": 18,
+        "K": 81,
+        "L": 12,
+        "M": 60,
+        "N": 3,
+        "O": 8,
+        "P": 76
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 708,
+      "globales_total": 56,
+      "total": 764,
+      "plenos": 15,
+      "aciertos": 40
+    },
+    "edgar": {
+      "apostador_id": 20,
+      "items": {
+        "H": 226,
+        "I": 92,
+        "J": 29,
+        "K": 51,
+        "L": 37,
+        "M": 38,
+        "N": 3,
+        "O": 6,
+        "P": 38
+      },
+      "globales": {
+        "A": 0,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 10,
+        "F": 6,
+        "G": 6
+      },
+      "partidos_total": 520,
+      "globales_total": 52,
+      "total": 572,
+      "plenos": 9,
+      "aciertos": 38
+    },
+    "eliasmajul": {
+      "apostador_id": 21,
+      "items": {
+        "H": 280,
+        "I": 68,
+        "J": 22,
+        "K": 89,
+        "L": 34,
+        "M": 85,
+        "N": 1,
+        "O": 6,
+        "P": 52
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 637,
+      "globales_total": 20,
+      "total": 657,
+      "plenos": 7,
+      "aciertos": 47
+    },
+    "esyl": {
+      "apostador_id": 52,
+      "items": {
+        "H": 314,
+        "I": 140,
+        "J": 25,
+        "K": 82,
+        "L": 26,
+        "M": 28,
+        "N": 4,
+        "O": 6,
+        "P": 66
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 691,
+      "globales_total": 56,
+      "total": 747,
+      "plenos": 14,
+      "aciertos": 48
+    },
+    "fidelyoli": {
+      "apostador_id": 36,
+      "items": {
+        "H": 318,
+        "I": 168,
+        "J": 23,
+        "K": 96,
+        "L": 32,
+        "M": 82,
+        "N": 0,
+        "O": 14,
+        "P": 84
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 817,
+      "globales_total": 0,
+      "total": 817,
+      "plenos": 16,
+      "aciertos": 41
+    },
+    "fscc": {
+      "apostador_id": 25,
+      "items": {
+        "H": 368,
+        "I": 200,
+        "J": 17,
+        "K": 92,
+        "L": 34,
+        "M": 86,
+        "N": 1,
+        "O": 2,
+        "P": 84
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 10,
+        "F": 0,
+        "G": 6
+      },
+      "partidos_total": 884,
+      "globales_total": 66,
+      "total": 950,
+      "plenos": 17,
+      "aciertos": 51
+    },
+    "gbc": {
+      "apostador_id": 28,
+      "items": {
+        "H": 346,
+        "I": 160,
+        "J": 20,
+        "K": 33,
+        "L": 3,
+        "M": 49,
+        "N": 1,
+        "O": 2,
+        "P": 90
+      },
+      "globales": {
+        "A": 0,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 704,
+      "globales_total": 30,
+      "total": 734,
+      "plenos": 14,
+      "aciertos": 50
+    },
+    "gh1s": {
+      "apostador_id": 30,
+      "items": {
+        "H": 342,
+        "I": 128,
+        "J": 24,
+        "K": 95,
+        "L": 31,
+        "M": 87,
+        "N": 6,
+        "O": 8,
+        "P": 70
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 791,
+      "globales_total": 50,
+      "total": 841,
+      "plenos": 10,
+      "aciertos": 54
+    },
+    "grillito": {
+      "apostador_id": 24,
+      "items": {
+        "H": 354,
+        "I": 164,
+        "J": 16,
+        "K": 89,
+        "L": 11,
+        "M": 70,
+        "N": 5,
+        "O": 10,
+        "P": 94
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 0,
+        "D": 0,
+        "E": 10,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 813,
+      "globales_total": 40,
+      "total": 853,
+      "plenos": 15,
+      "aciertos": 48
+    },
+    "gustav tothelighthouse": {
+      "apostador_id": 46,
+      "items": {
+        "H": 338,
+        "I": 100,
+        "J": 17,
+        "K": 96,
+        "L": 62,
+        "M": 86,
+        "N": 1,
+        "O": 12,
+        "P": 90
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 802,
+      "globales_total": 0,
+      "total": 802,
+      "plenos": 10,
+      "aciertos": 52
+    },
+    "hakembo": {
+      "apostador_id": 41,
+      "items": {
+        "H": 350,
+        "I": 128,
+        "J": 15,
+        "K": 90,
+        "L": 20,
+        "M": 77,
+        "N": 5,
+        "O": 0,
+        "P": 88
+      },
+      "globales": {
+        "A": 20,
+        "B": 20,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 773,
+      "globales_total": 60,
+      "total": 833,
+      "plenos": 13,
+      "aciertos": 51
+    },
+    "hs": {
+      "apostador_id": 33,
+      "items": {
+        "H": 346,
+        "I": 192,
+        "J": 17,
+        "K": 96,
+        "L": 47,
+        "M": 79,
+        "N": 3,
+        "O": 0,
+        "P": 84
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 864,
+      "globales_total": 56,
+      "total": 920,
+      "plenos": 14,
+      "aciertos": 51
+    },
+    "juane": {
+      "apostador_id": 50,
+      "items": {
+        "H": 326,
+        "I": 156,
+        "J": 19,
+        "K": 86,
+        "L": 16,
+        "M": 57,
+        "N": 5,
+        "O": 0,
+        "P": 78
+      },
+      "globales": {
+        "A": 0,
+        "B": 10,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 743,
+      "globales_total": 16,
+      "total": 759,
+      "plenos": 14,
+      "aciertos": 49
+    },
+    "kikao": {
+      "apostador_id": 18,
+      "items": {
+        "H": 338,
+        "I": 108,
+        "J": 17,
+        "K": 83,
+        "L": 28,
+        "M": 79,
+        "N": 6,
+        "O": 2,
+        "P": 86
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 747,
+      "globales_total": 0,
+      "total": 747,
+      "plenos": 10,
+      "aciertos": 51
+    },
+    "lav": {
+      "apostador_id": 39,
+      "items": {
+        "H": 348,
+        "I": 168,
+        "J": 21,
+        "K": 96,
+        "L": 26,
+        "M": 87,
+        "N": 4,
+        "O": 12,
+        "P": 90
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 10,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 852,
+      "globales_total": 60,
+      "total": 912,
+      "plenos": 15,
+      "aciertos": 50
+    },
+    "ludie-z": {
+      "apostador_id": 19,
+      "items": {
+        "H": 306,
+        "I": 120,
+        "J": 10,
+        "K": 69,
+        "L": 44,
+        "M": 74,
+        "N": 3,
+        "O": 8,
+        "P": 74
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 20,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 708,
+      "globales_total": 76,
+      "total": 784,
+      "plenos": 11,
+      "aciertos": 48
+    },
+    "luisma": {
+      "apostador_id": 40,
+      "items": {
+        "H": 294,
+        "I": 144,
+        "J": 23,
+        "K": 88,
+        "L": 19,
+        "M": 73,
+        "N": 2,
+        "O": 4,
+        "P": 78
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 725,
+      "globales_total": 50,
+      "total": 775,
+      "plenos": 13,
+      "aciertos": 43
+    },
+    "monkey": {
+      "apostador_id": 32,
+      "items": {
+        "H": 270,
+        "I": 152,
+        "J": 16,
+        "K": 28,
+        "L": 34,
+        "M": 25,
+        "N": 4,
+        "O": 4,
+        "P": 76
+      },
+      "globales": {
+        "A": 0,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 10,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 609,
+      "globales_total": 46,
+      "total": 655,
+      "plenos": 14,
+      "aciertos": 34
+    },
+    "moro": {
+      "apostador_id": 23,
+      "items": {
+        "H": 340,
+        "I": 196,
+        "J": 21,
+        "K": 86,
+        "L": 29,
+        "M": 87,
+        "N": 4,
+        "O": 0,
+        "P": 80
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 843,
+      "globales_total": 20,
+      "total": 863,
+      "plenos": 17,
+      "aciertos": 48
+    },
+    "moño": {
+      "apostador_id": 31,
+      "items": {
+        "H": 288,
+        "I": 80,
+        "J": 28,
+        "K": 90,
+        "L": 22,
+        "M": 85,
+        "N": 6,
+        "O": 4,
+        "P": 66
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 669,
+      "globales_total": 20,
+      "total": 689,
+      "plenos": 8,
+      "aciertos": 50
+    },
+    "oti": {
+      "apostador_id": 42,
+      "items": {
+        "H": 332,
+        "I": 112,
+        "J": 20,
+        "K": 96,
+        "L": 34,
+        "M": 84,
+        "N": 3,
+        "O": 2,
+        "P": 86
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 769,
+      "globales_total": 56,
+      "total": 825,
+      "plenos": 11,
+      "aciertos": 53
+    },
+    "patito": {
+      "apostador_id": 27,
+      "items": {
+        "H": 376,
+        "I": 120,
+        "J": 28,
+        "K": 96,
+        "L": 59,
+        "M": 87,
+        "N": 0,
+        "O": 4,
+        "P": 90
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 10,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 860,
+      "globales_total": 66,
+      "total": 926,
+      "plenos": 12,
+      "aciertos": 56
+    },
+    "pato": {
+      "apostador_id": 29,
+      "items": {
+        "H": 322,
+        "I": 140,
+        "J": 18,
+        "K": 90,
+        "L": 56,
+        "M": 77,
+        "N": 7,
+        "O": 4,
+        "P": 72
+      },
+      "globales": {
+        "A": 0,
+        "B": 10,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 786,
+      "globales_total": 10,
+      "total": 796,
+      "plenos": 11,
+      "aciertos": 52
+    },
+    "pinguero": {
+      "apostador_id": 22,
+      "items": {
+        "H": 316,
+        "I": 116,
+        "J": 21,
+        "K": 74,
+        "L": 23,
+        "M": 74,
+        "N": 4,
+        "O": 0,
+        "P": 70
+      },
+      "globales": {
+        "A": 0,
+        "B": 10,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 6
+      },
+      "partidos_total": 698,
+      "globales_total": 16,
+      "total": 714,
+      "plenos": 11,
+      "aciertos": 47
+    },
+    "pucheta": {
+      "apostador_id": 34,
+      "items": {
+        "H": 326,
+        "I": 124,
+        "J": 17,
+        "K": 75,
+        "L": 18,
+        "M": 60,
+        "N": 5,
+        "O": 4,
+        "P": 88
+      },
+      "globales": {
+        "A": 0,
+        "B": 20,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 717,
+      "globales_total": 46,
+      "total": 763,
+      "plenos": 10,
+      "aciertos": 52
+    },
+    "quiroga": {
+      "apostador_id": 35,
+      "items": {
+        "H": 328,
+        "I": 92,
+        "J": 18,
+        "K": 93,
+        "L": 38,
+        "M": 85,
+        "N": 2,
+        "O": 8,
+        "P": 80
+      },
+      "globales": {
+        "A": 0,
+        "B": 10,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 744,
+      "globales_total": 10,
+      "total": 754,
+      "plenos": 8,
+      "aciertos": 52
+    },
+    "sajano freddy": {
+      "apostador_id": 26,
+      "items": {
+        "H": 322,
+        "I": 96,
+        "J": 13,
+        "K": 81,
+        "L": 44,
+        "M": 70,
+        "N": 8,
+        "O": 0,
+        "P": 84
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 10,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 718,
+      "globales_total": 66,
+      "total": 784,
+      "plenos": 10,
+      "aciertos": 54
+    },
+    "sanbie": {
+      "apostador_id": 51,
+      "items": {
+        "H": 338,
+        "I": 188,
+        "J": 21,
+        "K": 93,
+        "L": 9,
+        "M": 83,
+        "N": 7,
+        "O": 10,
+        "P": 86
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 20,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 835,
+      "globales_total": 70,
+      "total": 905,
+      "plenos": 12,
+      "aciertos": 49
+    },
+    "seba": {
+      "apostador_id": 43,
+      "items": {
+        "H": 372,
+        "I": 212,
+        "J": 20,
+        "K": 91,
+        "L": 44,
+        "M": 75,
+        "N": 2,
+        "O": 2,
+        "P": 90
+      },
+      "globales": {
+        "A": 0,
+        "B": 10,
+        "C": 0,
+        "D": 0,
+        "E": 20,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 908,
+      "globales_total": 36,
+      "total": 944,
+      "plenos": 20,
+      "aciertos": 47
+    },
+    "soni": {
+      "apostador_id": 45,
+      "items": {
+        "H": 324,
+        "I": 96,
+        "J": 15,
+        "K": 90,
+        "L": 52,
+        "M": 77,
+        "N": 6,
+        "O": 4,
+        "P": 86
+      },
+      "globales": {
+        "A": 20,
+        "B": 10,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 750,
+      "globales_total": 56,
+      "total": 806,
+      "plenos": 10,
+      "aciertos": 54
+    },
+    "tim payne": {
+      "apostador_id": 48,
+      "items": {
+        "H": 336,
+        "I": 96,
+        "J": 20,
+        "K": 69,
+        "L": 53,
+        "M": 64,
+        "N": 6,
+        "O": 2,
+        "P": 84
+      },
+      "globales": {
+        "A": 0,
+        "B": 20,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0,
+        "G": 0
+      },
+      "partidos_total": 730,
+      "globales_total": 20,
+      "total": 750,
+      "plenos": 8,
+      "aciertos": 54
+    },
+    "tony": {
+      "apostador_id": 16,
+      "items": {
+        "H": 300,
+        "I": 132,
+        "J": 24,
+        "K": 65,
+        "L": 24,
+        "M": 69,
+        "N": 4,
+        "O": 4,
+        "P": 68
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 6,
+        "G": 6
+      },
+      "partidos_total": 690,
+      "globales_total": 12,
+      "total": 702,
+      "plenos": 13,
+      "aciertos": 48
+    },
+    "vitra": {
+      "apostador_id": 47,
+      "items": {
+        "H": 324,
+        "I": 144,
+        "J": 21,
+        "K": 96,
+        "L": 60,
+        "M": 87,
+        "N": 2,
+        "O": 14,
+        "P": 84
+      },
+      "globales": {
+        "A": 0,
+        "B": 0,
+        "C": 20,
+        "D": 0,
+        "E": 0,
+        "F": 6,
+        "G": 0
+      },
+      "partidos_total": 832,
+      "globales_total": 26,
+      "total": 858,
+      "plenos": 14,
+      "aciertos": 47
+    }
+  }
+}
