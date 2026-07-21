@@ -1,0 +1,21 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Copa America">
+  <defs>
+    <linearGradient id="goldA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe9a8"/>
+      <stop offset="0.5" stop-color="#dcae3c"/>
+      <stop offset="1" stop-color="#9a6c16"/>
+    </linearGradient>
+    <linearGradient id="silverA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4f6fa"/>
+      <stop offset="1" stop-color="#9aa3b0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#0a2a4a"/>
+  <rect x="170" y="420" width="172" height="30" rx="10" fill="url(#goldA)"/>
+  <rect x="198" y="388" width="116" height="34" rx="8" fill="url(#goldA)"/>
+  <rect x="240" y="308" width="32" height="82" fill="url(#silverA)"/>
+  <ellipse cx="256" cy="196" rx="88" ry="96" fill="url(#silverA)"/>
+  <path d="M168 196c-34 0-46 24-28 50 12 18 34 26 56 26M344 196c34 0 46 24 28 50-12 18-34 26-56 26" fill="none" stroke="url(#goldA)" stroke-width="18" stroke-linecap="round"/>
+  <ellipse cx="256" cy="150" rx="72" ry="26" fill="url(#goldA)"/>
+  <path d="M256 168l12 26 28 3-21 19 6 28-25-15-25 15 6-28-21-19 28-3z" fill="#0a2a4a" opacity="0.8"/>
+</svg>

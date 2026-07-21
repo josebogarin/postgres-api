@@ -1,0 +1,19 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Eurocopa">
+  <defs>
+    <linearGradient id="silverE" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.5" stop-color="#cdd4de"/>
+      <stop offset="1" stop-color="#89929f"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#0d3b66"/>
+  <rect x="184" y="418" width="144" height="28" rx="9" fill="url(#silverE)"/>
+  <rect x="206" y="356" width="100" height="62" rx="8" fill="url(#silverE)"/>
+  <path d="M214 108h84c26 0 40 16 40 44 0 78-38 150-82 190-44-40-82-112-82-190 0-28 14-44 40-44z" fill="url(#silverE)"/>
+  <path d="M338 132c30 4 42 30 30 58-9 20-30 30-52 30" fill="none" stroke="url(#silverE)" stroke-width="16" stroke-linecap="round"/>
+  <g fill="#0d3b66">
+    <circle cx="256" cy="150" r="7"/><circle cx="226" cy="160" r="7"/><circle cx="286" cy="160" r="7"/>
+    <circle cx="212" cy="188" r="7"/><circle cx="300" cy="188" r="7"/><circle cx="226" cy="216" r="7"/>
+    <circle cx="286" cy="216" r="7"/><circle cx="256" cy="228" r="7"/>
+  </g>
+</svg>

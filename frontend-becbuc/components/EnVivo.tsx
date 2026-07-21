@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import {
-  TORNEO_ID,
   type BracketMatch,
   type BracketResponse,
   type LivePanelResponse,
@@ -12,7 +11,7 @@ import {
 } from "@/lib/types";
 import { faseLabel, fmtFecha } from "@/lib/format";
 
-export default function EnVivo() {
+export default function EnVivo({ torneoId }: { torneoId: number }) {
   const [matches, setMatches] = useState<BracketMatch[] | null>(null);
   const [idx, setIdx] = useState(0);
   const [detail, setDetail] = useState<LivePartido | null>(null);
@@ -21,13 +20,13 @@ export default function EnVivo() {
   // Lista de partidos de playoff (bracket) para navegar.
   useEffect(() => {
     api
-      .get<BracketResponse>(`/bets/bracket-real/${TORNEO_ID}`)
+      .get<BracketResponse>(`/bets/bracket-real/${torneoId}`)
       .then((b) => {
         const list = (b?.partidos ?? []).slice().sort((a, z) => a.num - z.num);
         setMatches(list);
       })
       .catch(() => setMatches([]));
-  }, []);
+  }, [torneoId]);
 
   // Índice inicial: en vivo > próximo programado > último.
   useEffect(() => {
@@ -43,12 +42,12 @@ export default function EnVivo() {
   // Detalle (stats + timeline) del partido actual, con refresco si está en vivo.
   const loadDetail = useCallback(async (num: number) => {
     try {
-      const d = await api.get<LivePanelResponse>(`/bets/live-panel/${TORNEO_ID}?numero_fifa=${num}`);
+      const d = await api.get<LivePanelResponse>(`/bets/live-panel/${torneoId}?numero_fifa=${num}`);
       setDetail(d?.partido ?? null);
     } catch {
       setDetail(null);
     }
-  }, []);
+  }, [torneoId]);
 
   useEffect(() => {
     if (!cur) return;

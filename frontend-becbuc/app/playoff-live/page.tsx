@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import {
-  TORNEO_ID,
   type BracketMatch,
   type BracketResponse,
   type RankingRow,
@@ -12,15 +12,39 @@ import { ITEMS, alias } from "@/lib/format";
 import BracketTree from "@/components/BracketTree";
 import MiProno from "@/components/MiProno";
 import EnVivo from "@/components/EnVivo";
+import GruposView from "@/components/GruposView";
 
-type Tab = "bracket" | "envivo" | "ranking" | "miprono";
+type Tab = "bracket" | "grupos" | "envivo" | "ranking" | "miprono";
 
 export default function PlayoffLive() {
+  const router = useRouter();
+  const [torneoId, setTorneoId] = useState<number | null>(null);
+  const [torneoNombre, setTorneoNombre] = useState<string>("");
+  const [readOnly, setReadOnly] = useState<boolean>(false);
   const [tab, setTab] = useState<Tab>("bracket");
   const [bracket, setBracket] = useState<BracketMatch[] | null>(null);
   const [ranking, setRanking] = useState<RankingRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [sel, setSel] = useState<number | null>(null);
+
+  // El torneo se elige en el login (root). Si no hay, volver a elegir.
+  useEffect(() => {
+    const id = Number(localStorage.getItem("becbuc_torneo"));
+    if (!id) {
+      router.replace("/");
+      return;
+    }
+    setTorneoId(id);
+    setTorneoNombre(localStorage.getItem("becbuc_torneo_nombre") || "BECBUC Live");
+    setReadOnly(localStorage.getItem("becbuc_torneo_ro") === "1");
+  }, [router]);
+
+  const salir = () => {
+    localStorage.removeItem("becbuc_torneo");
+    localStorage.removeItem("becbuc_torneo_nombre");
+    localStorage.removeItem("becbuc_torneo_ro");
+    router.replace("/");
+  };
 
   const selectMatch = (num: number) => {
     setSel(num);
@@ -28,10 +52,11 @@ export default function PlayoffLive() {
   };
 
   const load = useCallback(async () => {
+    if (!torneoId) return;
     try {
       const [b, r] = await Promise.all([
-        api.get<BracketResponse>(`/bets/bracket-real/${TORNEO_ID}`),
-        api.get<RankingRow[]>(`/bets/ranking/${TORNEO_ID}`),
+        api.get<BracketResponse>(`/bets/bracket-real/${torneoId}`),
+        api.get<RankingRow[]>(`/bets/ranking/${torneoId}`),
       ]);
       setBracket(b?.partidos ?? []);
       setRanking(Array.isArray(r) ? r : []);
@@ -39,17 +64,20 @@ export default function PlayoffLive() {
     } catch (e) {
       setErr(String(e));
     }
-  }, []);
+  }, [torneoId]);
 
   useEffect(() => {
+    if (!torneoId) return;
     load();
     const t = setInterval(load, 30000);
     return () => clearInterval(t);
-  }, [load]);
+  }, [load, torneoId]);
+
+  if (!torneoId) return null; // redirigiendo al login
 
   return (
     <main className="mx-auto w-full max-w-md pb-10">
-      <TopBar />
+      <TopBar nombre={torneoNombre} readOnly={readOnly} onExit={salir} />
       <TabBar tab={tab} setTab={setTab} />
 
       {err && (
@@ -59,47 +87,71 @@ export default function PlayoffLive() {
       )}
 
       <div className="px-3 pt-3">
-        {tab === "bracket" && (
-          <BracketView partidos={bracket} onSelect={selectMatch} />
-        )}
-        {tab === "envivo" && <EnVivo />}
+        {tab === "bracket" && <BracketView partidos={bracket} onSelect={selectMatch} />}
+        {tab === "grupos" && <GruposView torneoId={torneoId} onSelect={selectMatch} />}
+        {tab === "envivo" && <EnVivo torneoId={torneoId} />}
         {tab === "ranking" && <RankingView rows={ranking} />}
-        {tab === "miprono" && <MiProno focusNum={sel} />}
+        {tab === "miprono" && (
+          <MiProno torneoId={torneoId} readOnly={readOnly} focusNum={sel} />
+        )}
       </div>
     </main>
   );
 }
 
-function TopBar() {
+function TopBar({
+  nombre,
+  readOnly,
+  onExit,
+}: {
+  nombre: string;
+  readOnly: boolean;
+  onExit: () => void;
+}) {
   return (
-    <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-bg/95 px-4 py-3 backdrop-blur">
-      <a href="/" className="text-muted">
-        ‹
-      </a>
-      <span className="text-2xl">🏆</span>
-      <h1 className="font-bold">Playoff Live</h1>
+    <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-bg/95 px-3 py-2.5 backdrop-blur">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/static/becbuc-logo.jpeg"
+        alt="BECBUC"
+        className="h-8 w-8 rounded-lg object-contain"
+      />
+      <div className="min-w-0 flex-1">
+        <h1 className="truncate text-sm font-bold leading-tight">{nombre}</h1>
+        {readOnly && (
+          <span className="text-[10px] text-orange">Finalizado · solo lectura</span>
+        )}
+      </div>
+      <button
+        onClick={onExit}
+        className="shrink-0 rounded-lg border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-muted active:bg-surface-2"
+      >
+        Salir
+      </button>
     </header>
   );
 }
 
 function TabBar({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "bracket", label: "Playoff" },
-    { id: "envivo", label: "En Vivo" },
-    { id: "miprono", label: "Pronósticos" },
-    { id: "ranking", label: "Puntaje" },
+  const tabs: { id: Tab; icon: string; label: string }[] = [
+    { id: "bracket", icon: "🏆", label: "Playoff" },
+    { id: "grupos", icon: "⚽", label: "Grupos" },
+    { id: "envivo", icon: "🔴", label: "En Vivo" },
+    { id: "miprono", icon: "🎯", label: "Pronós." },
+    { id: "ranking", icon: "🏅", label: "Puntaje" },
   ];
   return (
-    <div className="flex gap-1 border-b border-border px-3 pt-2">
+    <div className="flex gap-1 border-b border-border px-2 pt-2">
       {tabs.map((t) => (
         <button
           key={t.id}
           onClick={() => setTab(t.id)}
-          className={`flex-1 rounded-t-lg px-1.5 py-2 text-xs font-semibold transition ${
+          className={`flex flex-1 flex-col items-center gap-0.5 rounded-t-lg px-1 py-1.5 transition ${
             tab === t.id ? "bg-surface text-brand" : "text-muted active:bg-surface/60"
           }`}
         >
-          {t.label}
+          <span className="text-base leading-none">{t.icon}</span>
+          <span className="text-[9px] font-semibold">{t.label}</span>
         </button>
       ))}
     </div>

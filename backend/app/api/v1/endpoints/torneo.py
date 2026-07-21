@@ -10,6 +10,8 @@ GET  /torneo/torneos/{id}/grupos        → fase de grupos con standings
 GET  /torneo/partidos/{id}/estadisticas → estadísticas + eventos de un partido
 """
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -27,6 +29,15 @@ class TorneoCreate(BaseModel):
     competicion_id: int
     anio: int
     sede: str | None = None
+
+
+class ImportarLigaIn(BaseModel):
+    api_league_id: int
+    nombre: str
+    tipo: str = "clubes"            # 'clubes' | 'paises' (define si hay 3er puesto)
+    formato_playoff: str = "ida_vuelta"
+    emoji: str = "🏆"
+    temporada: int | None = None    # None -> temporada current de la API
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
@@ -83,12 +94,68 @@ async def list_competiciones(db: DBSession) -> list[dict]:
     return [dict(row) for row in r.mappings()]
 
 
+@router.get("/buscar-liga", summary="Buscar copas/ligas en API-Football")
+async def buscar_liga(q: str, _: CurrentAdmin) -> list[dict]:
+    """Buscador de copas: consulta API-Football /leagues?search=... y devuelve
+    resultados para que el admin elija cual importar. 'tipo_sugerido' infiere
+    clubes vs paises (los torneos de selecciones tienen country='World')."""
+    from app.services.torneo_service import _get
+    if not q or len(q.strip()) < 3:
+        raise HTTPException(400, "La búsqueda requiere al menos 3 caracteres")
+    try:
+        data = await _get("/leagues", {"search": q.strip()})
+    except Exception as e:
+        raise HTTPException(502, f"Error consultando API-Football: {e}")
+    out = []
+    for item in data.get("response", []) or []:
+        lg = item.get("league", {}) or {}
+        co = item.get("country", {}) or {}
+        seasons = item.get("seasons", []) or []
+        cur = next((s for s in seasons if s.get("current")), seasons[-1] if seasons else {})
+        es_seleccion = (co.get("name") or "").lower() == "world"
+        out.append({
+            "api_league_id": lg.get("id"),
+            "nombre": lg.get("name"),
+            "logo": lg.get("logo"),
+            "tipo_api": lg.get("type"),          # 'Cup' | 'League'
+            "pais": co.get("name"),
+            "bandera": co.get("flag"),
+            "temporada": cur.get("year"),
+            "temporada_actual": bool(cur.get("current")),
+            "inicio": cur.get("start"),
+            "fin": cur.get("end"),
+            "tipo_sugerido": "paises" if es_seleccion else "clubes",
+        })
+    return out
+
+
+@router.post("/importar-liga", summary="Importar una copa/liga y crear su torneo")
+async def importar_liga(body: ImportarLigaIn, _: CurrentAdmin) -> dict:
+    """Registra la competición (competicion) y crea/actualiza el torneo de la
+    temporada indicada (o la current). Luego se puede cargar el fixture con
+    POST /torneo/torneos/{id}/cargar."""
+    try:
+        res = await torneo_service.importar_liga(
+            engine,
+            api_league_id=body.api_league_id,
+            nombre=body.nombre,
+            tipo=body.tipo,
+            formato=body.formato_playoff,
+            emoji=body.emoji,
+            temporada=body.temporada,
+        )
+    except Exception as e:
+        raise HTTPException(500, str(e))
+    return {"ok": True, **res}
+
+
 @router.get("/activas", summary="Torneos con temporada activa")
 async def list_activas(db: DBSession) -> list[dict]:
     """Devuelve torneos en_curso o finalizados recientemente, con datos de competicion y resumen de fases."""
     r = await db.execute(
         text("""
             SELECT t.id, t.anio, t.nombre, t.estado, t.datos_cargados, t.api_season,
+                   COALESCE(t.cerrado, FALSE) AS cerrado,
                    c.id AS competicion_id, c.nombre AS competicion,
                    c.nombre_corto, c.emoji, c.tipo, c.api_league_id, c.formato_playoff,
                    (SELECT COUNT(*) FROM fase f WHERE f.torneo_id = t.id AND f.tipo = 'grupo')::int AS num_grupos,
@@ -98,6 +165,22 @@ async def list_activas(db: DBSession) -> list[dict]:
                    (SELECT COUNT(*) FROM partido p
                       JOIN fase f ON f.id = p.fase_id
                     WHERE f.torneo_id = t.id AND f.tipo <> 'grupo')::int AS partidos_ko,
+                   (SELECT COUNT(*) FROM partido p
+                      JOIN fase f ON f.id = p.fase_id
+                    WHERE f.torneo_id = t.id)::int AS total_partidos,
+                   (SELECT COUNT(*) FROM partido p
+                      JOIN fase f ON f.id = p.fase_id
+                    WHERE f.torneo_id = t.id AND p.estado = 'finalizado')::int AS partidos_fin,
+                   (SELECT COUNT(*) FROM partido p
+                      JOIN fase f ON f.id = p.fase_id
+                    WHERE f.torneo_id = t.id AND f.tipo <> 'grupo'
+                      AND p.estado IN ('finalizado','en_juego'))::int AS ko_iniciados,
+                   (SELECT MIN(p.fecha) FROM partido p
+                      JOIN fase f ON f.id = p.fase_id
+                    WHERE f.torneo_id = t.id) AS fecha_inicio,
+                   (SELECT MAX(p.fecha) FROM partido p
+                      JOIN fase f ON f.id = p.fase_id
+                    WHERE f.torneo_id = t.id) AS fecha_fin,
                    (SELECT COALESCE(json_agg(f2.nombre ORDER BY f2.orden), '[]'::json)
                       FROM fase f2 WHERE f2.torneo_id = t.id AND f2.tipo <> 'grupo') AS fases_ko
             FROM torneo t
@@ -108,10 +191,40 @@ async def list_activas(db: DBSession) -> list[dict]:
                 t.anio DESC, c.id
         """)
     )
+    anio_vigente = datetime.now(timezone.utc).year
     rows = []
     for row in r.mappings():
         d = dict(row)
         d["nombre"] = d["nombre"] or f"{d['competicion']} {d['anio']}"
+        # Estado de ejecucion inferido de los partidos del torneo (año vigente):
+        #   pendiente -> sin partidos jugados aun / sin fixtures
+        #   grupos    -> fase de grupos en juego (hay finalizados, KO sin arrancar)
+        #   playoffs  -> algun partido KO iniciado/finalizado
+        #   terminada -> torneo cerrado o todos los partidos finalizados
+        total = d.get("total_partidos") or 0
+        fin = d.get("partidos_fin") or 0
+        ko_ini = d.get("ko_iniciados") or 0
+        cerrado = bool(d.get("cerrado"))
+        if cerrado or (total > 0 and fin >= total):
+            d["estado_juego"] = "terminada"
+        elif ko_ini > 0:
+            d["estado_juego"] = "playoffs"
+        elif fin > 0:
+            d["estado_juego"] = "grupos"
+        else:
+            d["estado_juego"] = "pendiente"
+
+        # Label de la ficha (color en el front):
+        #   en_ejecucion (verde)  -> jugandose (grupos o playoffs)
+        #   pendiente    (amarillo)-> del año vigente, aun sin arrancar
+        #   concluido    (gris)   -> cerrado por sistema o año anterior al vigente o todo finalizado
+        anio = d.get("anio") or anio_vigente
+        if cerrado or anio < anio_vigente or d["estado_juego"] == "terminada":
+            d["estado_label"] = "concluido"
+        elif d["estado_juego"] in ("grupos", "playoffs"):
+            d["estado_label"] = "en_ejecucion"
+        else:
+            d["estado_label"] = "pendiente"
         rows.append(d)
     return rows
 

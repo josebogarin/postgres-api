@@ -1,0 +1,16 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Copa Libertadores">
+  <defs>
+    <linearGradient id="goldL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe9a8"/>
+      <stop offset="0.5" stop-color="#e0b13e"/>
+      <stop offset="1" stop-color="#9c6e16"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#2a1206"/>
+  <rect x="168" y="416" width="176" height="30" rx="10" fill="url(#goldL)"/>
+  <rect x="196" y="384" width="120" height="34" rx="8" fill="url(#goldL)"/>
+  <rect x="240" y="300" width="32" height="86" fill="url(#goldL)"/>
+  <path d="M186 110h140l-14 120c-6 52-30 78-56 90-26-12-50-38-56-90z" fill="url(#goldL)"/>
+  <path d="M186 110c-40 6-54 34-40 66 10 22 32 34 58 36M326 110c40 6 54 34 40 66-10 22-32 34-58 36" fill="none" stroke="url(#goldL)" stroke-width="18" stroke-linecap="round"/>
+  <path d="M256 150l14 30 32 4-24 22 7 32-29-17-29 17 7-32-24-22 32-4z" fill="#2a1206" opacity="0.85"/>
+</svg>

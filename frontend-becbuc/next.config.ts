@@ -19,6 +19,9 @@ const nextConfig: NextConfig = isExport
       async rewrites() {
         return [
           { source: "/api/:path*", destination: "http://localhost:8000/api/:path*" },
+          // /static -> uvicorn: en dev sirve el logo real (/static/becbuc-logo.jpeg)
+          // y demas assets del backend desde el mismo origen que la API.
+          { source: "/static/:path*", destination: "http://localhost:8000/static/:path*" },
         ];
       },
     };

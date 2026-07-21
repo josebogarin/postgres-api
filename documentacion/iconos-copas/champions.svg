@@ -1,0 +1,19 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="UEFA Champions League">
+  <defs>
+    <linearGradient id="silverC" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.5" stop-color="#c7cdd6"/>
+      <stop offset="1" stop-color="#8a94a3"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#05132b"/>
+  <rect x="180" y="410" width="152" height="32" rx="10" fill="url(#silverC)"/>
+  <rect x="238" y="330" width="36" height="82" fill="url(#silverC)"/>
+  <path d="M256 118c-70 0-118 26-118 78 0 66 60 128 118 138 58-10 118-72 118-138 0-52-48-78-118-78z" fill="url(#silverC)"/>
+  <path d="M138 196c-34 0-46 22-30 48 12 20 34 30 58 30M374 196c34 0 46 22 30 48-12 20-34 30-58 30" fill="none" stroke="url(#silverC)" stroke-width="20" stroke-linecap="round"/>
+  <g fill="#05132b">
+    <circle cx="256" cy="184" r="9"/><circle cx="212" cy="196" r="9"/><circle cx="300" cy="196" r="9"/>
+    <circle cx="186" cy="230" r="9"/><circle cx="326" cy="230" r="9"/><circle cx="200" cy="272" r="9"/>
+    <circle cx="312" cy="272" r="9"/><circle cx="256" cy="290" r="9"/>
+  </g>
+</svg>

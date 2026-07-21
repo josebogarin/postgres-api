@@ -1,0 +1,16 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Copa Sudamericana">
+  <defs>
+    <linearGradient id="silverS" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2f5f9"/>
+      <stop offset="0.5" stop-color="#b9c1cc"/>
+      <stop offset="1" stop-color="#7c8593"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#2a0d0a"/>
+  <rect x="172" y="416" width="168" height="30" rx="10" fill="url(#silverS)"/>
+  <rect x="200" y="384" width="112" height="34" rx="8" fill="url(#silverS)"/>
+  <rect x="240" y="304" width="32" height="82" fill="url(#silverS)"/>
+  <path d="M190 112h132l-10 116c-5 50-28 76-56 90-28-14-51-40-56-90z" fill="url(#silverS)"/>
+  <path d="M190 112c-38 6-50 34-36 64 10 20 30 32 54 34M322 112c38 6 50 34 36 64-10 20-30 32-54 34" fill="none" stroke="url(#silverS)" stroke-width="18" stroke-linecap="round"/>
+  <rect x="196" y="150" width="120" height="34" rx="6" fill="#b5341f"/>
+</svg>

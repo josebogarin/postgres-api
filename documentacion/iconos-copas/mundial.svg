@@ -1,0 +1,15 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Copa del Mundo">
+  <defs>
+    <linearGradient id="goldM" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7e08a"/>
+      <stop offset="0.5" stop-color="#d9a938"/>
+      <stop offset="1" stop-color="#a9781e"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#0b1e3f"/>
+  <rect x="176" y="404" width="160" height="34" rx="10" fill="url(#goldM)"/>
+  <rect x="196" y="378" width="120" height="30" rx="8" fill="url(#goldM)"/>
+  <path d="M256 96c-46 34-58 96-40 168 12 48 26 78 40 116 14-38 28-68 40-116 18-72 6-134-40-168z" fill="url(#goldM)"/>
+  <circle cx="256" cy="150" r="42" fill="#173a6b" stroke="url(#goldM)" stroke-width="10"/>
+  <path d="M214 150h84M256 108v84M228 120c22 18 22 42 0 60M284 120c-22 18-22 42 0 60" fill="none" stroke="#f7e08a" stroke-width="5" opacity="0.85"/>
+</svg>

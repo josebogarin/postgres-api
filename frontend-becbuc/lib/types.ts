@@ -1,9 +1,33 @@
 // Tipos de dominio BECBUC (contra las respuestas reales de la API).
 
-export const TORNEO_ID = 2;
+export const TORNEO_ID = 2; // fallback por defecto (multi-torneo usa el selector)
 
 export interface TorneoCerrado {
   cerrado: boolean;
+}
+
+// ---- Torneos activos (GET /api/v1/torneo/activas) ----
+// El portal (admin) carga/activa el torneo; el Live lista los activos en un selector
+// y el apostador elige cual visualizar. NO hardcodear TORNEO_ID en multi-torneo.
+export interface TorneoActivo {
+  id: number;
+  nombre: string;
+  anio?: number;
+  estado?: string | null; // 'en_curso' | 'finalizado'
+  cerrado?: boolean; // torneo.cerrado (encerrado -> solo lectura)
+  tipo?: string | null; // competicion.tipo (clubes/paises)
+  emoji?: string | null;
+  categoria?: string | null; // 'clubes' | 'selecciones'
+  tiene_tercer_puesto?: boolean; // clubes = false (de semis directo a la final)
+  datos_cargados?: boolean;
+  // Ficha (calculado en /torneo/activas):
+  total_partidos?: number;
+  partidos_grupos?: number;
+  partidos_ko?: number;
+  fecha_inicio?: string | null; // ISO
+  fecha_fin?: string | null; // ISO
+  estado_juego?: string; // pendiente | grupos | playoffs | terminada
+  estado_label?: string; // en_ejecucion | pendiente | concluido
 }
 
 // ---- Bracket real (GET /bets/bracket-real/{tid}) ----
@@ -131,6 +155,44 @@ export interface LivePartido {
 export interface LivePanelResponse {
   partido: LivePartido | null;
   numeros_fifa?: number[];
+}
+
+// ---- Grupos (GET /bets/grupos/{tid}) -> Group[] ----
+export interface GroupStanding {
+  equipo_id: number;
+  nombre: string;
+  logo_url: string | null;
+  pj: number;
+  pg: number;
+  pe: number;
+  pp: number;
+  gf: number;
+  gc: number;
+  gd: number;
+  pts: number;
+  clasifica: boolean;
+  posicion: number;
+}
+export interface GroupMatch {
+  id: number;
+  estado: string;
+  jornada: number | null;
+  fecha: string | null;
+  numero_fifa: number;
+  goles_local: number | null;
+  goles_visitante: number | null;
+  local_nombre: string;
+  local_nombre_es: string | null;
+  local_logo: string | null;
+  visit_nombre: string;
+  visit_nombre_es: string | null;
+  visit_logo: string | null;
+}
+export interface Group {
+  fase_id: number;
+  fase_nombre: string;
+  standings: GroupStanding[];
+  partidos: GroupMatch[];
 }
 
 export interface RankingRow {

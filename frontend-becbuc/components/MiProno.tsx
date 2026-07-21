@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import {
-  TORNEO_ID,
   type Apostador,
   type MisPartidoRow,
 } from "@/lib/types";
@@ -21,11 +20,42 @@ type ItemRow = {
   section?: string;
 };
 
-export default function MiProno({ focusNum }: { focusNum: number | null }) {
+export default function MiProno({
+  torneoId,
+  readOnly,
+  focusNum,
+}: {
+  torneoId: number;
+  readOnly: boolean;
+  focusNum: number | null;
+}) {
   const [apostadores, setApostadores] = useState<Apostador[] | null>(null);
   const [sel, setSel] = useState<number | null>(null);
   const [rows, setRows] = useState<MisPartidoRow[] | null>(null);
   const [loading, setLoading] = useState(false);
+  // Editor
+  const [edits, setEdits] = useState<Record<number, Record<string, number | null>>>({});
+  const [pin, setPin] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"todos" | "pendientes">("todos");
+
+  // Precargar el formulario con las predicciones actuales de cada partido.
+  useEffect(() => {
+    const e: Record<number, Record<string, number | null>> = {};
+    for (const m of rows ?? []) {
+      e[m.numero_fifa] = {
+        pred_local: m.pred_local, pred_visitante: m.pred_visitante,
+        pred_amarillas: m.pred_amarillas, pred_rojas: m.pred_rojas, pred_var: m.pred_var,
+        pred_penales_partido: m.pred_penales_partido, pred_minuto_gol: m.pred_minuto_gol,
+        pred_penales_local_tanda: m.pred_penales_local_tanda,
+        pred_penales_visitante_tanda: m.pred_penales_visitante_tanda,
+        pred_equipo_clasifica: m.pred_equipo_clasifica,
+      };
+    }
+    setEdits(e);
+    setSaveMsg(null);
+  }, [rows]);
 
   // Cargar lista de apostadores + apostador guardado.
   useEffect(() => {
@@ -41,7 +71,7 @@ export default function MiProno({ focusNum }: { focusNum: number | null }) {
     setLoading(true);
     try {
       const r = await api.get<MisPartidoRow[]>(
-        `/bets/mis-partidos/${TORNEO_ID}?for_apostador_id=${uid}`
+        `/bets/mis-partidos/${torneoId}?for_apostador_id=${uid}`
       );
       setRows(Array.isArray(r) ? r : []);
     } catch {
@@ -49,7 +79,7 @@ export default function MiProno({ focusNum }: { focusNum: number | null }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [torneoId]);
 
   useEffect(() => {
     if (sel != null) loadRows(sel);
@@ -67,28 +97,31 @@ export default function MiProno({ focusNum }: { focusNum: number | null }) {
     if (typeof window !== "undefined") window.localStorage.setItem(LS_KEY, String(uid));
   };
 
-  // Solo KO (sin grupos).
-  const ko = (rows ?? []).filter((m) => !(m.fase_tipo || "").startsWith("grupo"));
+  // Todos los partidos (grupos + KO). Clave de fase: en grupos cada grupo es su
+  // propia fase (por fase_nombre); en KO la clave es fase_tipo.
+  const all = rows ?? [];
+  const phaseKey = (m: MisPartidoRow) =>
+    (m.fase_tipo || "").startsWith("grupo") ? m.fase_nombre : m.fase_tipo;
   const byNum: Record<number, MisPartidoRow> = {};
-  for (const m of ko) byNum[m.numero_fifa] = m;
+  for (const m of all) byNum[m.numero_fifa] = m;
 
-  // Fase activa = la que tiene un partido en juego; si no, la más próxima con programado.
-  const enJuego = ko.find((m) => m.estado === "en_juego");
-  const prog = ko
+  // Fase abierta = la que tiene un partido en juego; si no, la más próxima programada.
+  const enJuego = all.find((m) => m.estado === "en_juego");
+  const prog = all
     .filter((m) => m.estado === "programado")
     .sort((a, b) => a.fase_orden - b.fase_orden)[0];
-  const activePhase = enJuego?.fase_tipo ?? prog?.fase_tipo ?? null;
+  const activeKey = enJuego ? phaseKey(enJuego) : prog ? phaseKey(prog) : null;
 
-  // Fase a mostrar: la del partido tocado en el bracket, o la fase activa.
-  const focusPhase =
-    focusNum != null ? byNum[focusNum]?.fase_tipo ?? null : activePhase;
-  const show = focusPhase
-    ? ko
-        .filter((m) => m.fase_tipo === focusPhase)
-        .sort((a, b) => a.numero_fifa - b.numero_fifa)
+  // Fase a mostrar: la del partido tocado; sino la abierta; si TODO cerrado, la FINAL (P104).
+  const closedKey = byNum[104] ? phaseKey(byNum[104]) : all.length ? phaseKey(all[all.length - 1]) : null;
+  const focusKey =
+    focusNum != null ? (byNum[focusNum] ? phaseKey(byNum[focusNum]) : null) : activeKey ?? closedKey;
+  const show = focusKey
+    ? all.filter((m) => phaseKey(m) === focusKey).sort((a, b) => a.numero_fifa - b.numero_fifa)
     : [];
-  const title = focusPhase
-    ? `${faseLabel(focusPhase)} · ${show.length} partido${show.length === 1 ? "" : "s"}`
+  const first = show[0];
+  const title = first
+    ? `${(first.fase_tipo || "").startsWith("grupo") ? first.fase_nombre : faseLabel(first.fase_tipo)} · ${show.length} partido${show.length === 1 ? "" : "s"}`
     : "";
 
   return (
@@ -265,12 +298,14 @@ function buildItems(m: MisPartidoRow): ItemRow[] {
   opt(m.pred_penales_partido != null || m.penales_partido != null, "🥅", "Penales (juego)", m.penales_partido, m.pred_penales_partido, m.pts_penales_partido);
   opt(m.pred_minuto_gol != null || m.minuto_primer_gol != null, "⏱", "Minuto gol", m.minuto_primer_gol, m.pred_minuto_gol, m.pts_minuto);
 
+  // En fase de grupos NO hay tanda de penales ni país que clasifica: se ocultan.
+  const isGroup = (m.fase_tipo || "").startsWith("grupo");
   const PENAL_SECTION = "⚡ Definición por penales";
   const tandaReal = m.penales_local != null || m.penales_visitante != null;
   const tandaPred =
     m.pred_penales_local_tanda != null || m.pred_penales_visitante_tanda != null;
   const shootout = tandaReal || tandaPred;
-  if (shootout) {
+  if (!isGroup && shootout) {
     out.push({
       icon: "⚡",
       label: "Tanda penales",
@@ -300,7 +335,7 @@ function buildItems(m: MisPartidoRow): ItemRow[] {
     predClasifId = pl > pv ? m.local_id : m.visit_id;
   }
   const predClasif = teamName(predClasifId);
-  if (realClasif != null || predClasif != null) {
+  if (!isGroup && (realClasif != null || predClasif != null)) {
     out.push({
       icon: "🏳️",
       label: "País que clasifica",

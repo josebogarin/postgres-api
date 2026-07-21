@@ -32,6 +32,7 @@ LIGAS_SOPORTADAS: dict[int, tuple] = {
     2:  ("UEFA Champions League",    "clubes", "ida_vuelta",    "⭐"),
     4:  ("UEFA Eurocopa",            "paises", "partido_unico", "🏆"),
     9:  ("Copa América",             "paises", "partido_unico", "🏆"),
+    11: ("Copa Sudamericana",        "clubes", "ida_vuelta",    "🥈"),  # CONMEBOL clubes (sin 3er puesto)
     13: ("Copa Libertadores",        "clubes", "ida_vuelta",    "🦅"),
 }
 
@@ -247,6 +248,81 @@ async def sincronizar_competiciones(engine: AsyncEngine) -> dict:
                 counts["torneos"] += 1
 
     return counts
+
+
+async def importar_liga(
+    engine: AsyncEngine,
+    *,
+    api_league_id: int,
+    nombre: str,
+    tipo: str = "clubes",
+    formato: str = "ida_vuelta",
+    emoji: str = "🏆",
+    temporada: int | None = None,
+) -> dict:
+    """
+    Importa UNA copa/liga elegida en el buscador: upsert de competicion + creacion
+    del torneo de la temporada indicada (o la current). No carga fixtures todavia
+    (eso lo hace cargar_torneo). Devuelve competicion_id, torneo_id y la temporada.
+    """
+    data = await _get("/leagues", {"id": api_league_id})
+    resp = data.get("response", [])
+    if not resp:
+        raise ValueError(f"Liga {api_league_id} no encontrada en API-Football")
+    seasons = resp[0].get("seasons", []) or []
+    if temporada is not None:
+        season = next((s for s in seasons if s.get("year") == temporada), None)
+        if not season:
+            raise ValueError(f"Temporada {temporada} no disponible para la liga {api_league_id}")
+    else:
+        season = next((s for s in seasons if s.get("current")), seasons[-1] if seasons else None)
+        if not season:
+            raise ValueError(f"Sin temporadas para la liga {api_league_id}")
+
+    anio = season["year"]
+    nombre_torneo = f"{nombre} {anio}"
+
+    async with engine.begin() as conn:
+        r = await conn.execute(
+            text("""
+                INSERT INTO competicion (nombre, nombre_corto, tipo, formato_playoff, api_league_id, emoji)
+                VALUES (:nombre, :corto, :tipo, :fmt, :lid, :emoji)
+                ON CONFLICT (api_league_id) DO UPDATE SET
+                    nombre          = EXCLUDED.nombre,
+                    nombre_corto    = EXCLUDED.nombre_corto,
+                    tipo            = EXCLUDED.tipo,
+                    formato_playoff = EXCLUDED.formato_playoff,
+                    emoji           = EXCLUDED.emoji,
+                    es_activo       = TRUE
+                RETURNING id
+            """),
+            {"nombre": nombre, "corto": nombre.split()[-1], "tipo": tipo,
+             "fmt": formato, "lid": api_league_id, "emoji": emoji},
+        )
+        competicion_id = r.scalar_one()
+
+        r2 = await conn.execute(
+            text("""
+                INSERT INTO torneo (competicion_id, anio, nombre, api_season, estado)
+                VALUES (:cid, :anio, :nombre, :api_season, 'en_curso')
+                ON CONFLICT (competicion_id, anio) DO UPDATE SET
+                    api_season = EXCLUDED.api_season,
+                    nombre     = EXCLUDED.nombre
+                RETURNING id
+            """),
+            {"cid": competicion_id, "anio": anio, "nombre": nombre_torneo,
+             "api_season": anio},
+        )
+        torneo_id = r2.scalar_one()
+
+    return {
+        "competicion_id": competicion_id,
+        "torneo_id": torneo_id,
+        "anio": anio,
+        "api_season": anio,
+        "tiene_tercer_puesto": tipo != "clubes",
+        "reglamento_pendiente": True,  # AVISO ADMIN: subir el reglamento del torneo
+    }
 
 
 async def cargar_torneo(engine: AsyncEngine, torneo_id: int) -> dict:

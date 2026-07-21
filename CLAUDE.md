@@ -23,6 +23,63 @@ Leer este archivo COMPLETO antes de tocar cualquier archivo.
   ```
   El Edit tool SOLO es seguro para archivos <50KB. Para todo lo demas, usar safe_patch_*.
 
+## REGLAS DE TORNEOS (multi-torneo) - anotadas sesion 71b
+
+- **MULTI-TORNEO / SELECTOR EN EL LIVE**: la interfaz Live (playoff/grupos) DEBE permitir
+  cambiar de torneo. Funcionalidad nueva: apostar en SIMULTANEO a mas de un torneo a la vez.
+  La Copa del Mundo fue el UNICO evento que se jugo sin otros torneos en paralelo (y ya termino).
+  En adelante habra varios torneos ACTIVOS al mismo tiempo -> el front necesita un selector de
+  torneo (NO hardcodear TORNEO_ID=2). El backend ya expone GET /api/v1/torneo/activas.
+
+- **TIPOS DE TORNEO (define si hay partido por el 3er puesto)**:
+  - Torneos de CLUBES: Sudamericana, Libertadores, Champions League.
+    NO tienen partido por el 3er puesto -> de SEMIFINALES se pasa DIRECTO a la FINAL.
+    (No existe P103 / tercer_puesto en el bracket de estos torneos.)
+  - Torneos de SELECCIONES / PAISES: Eurocopa, Copa America, Copa del Mundo.
+    SI tienen partido por el 3er puesto (3er/4to lugar), ademas de la final.
+
+- **IMPLICANCIA TECNICA**: el flag "tiene tercer puesto" depende de la CATEGORIA de la
+  competencia (clubes vs selecciones). bracket_service / scoring engine / UI del bracket
+  (BracketTree, EnVivo, MiProno) deben OMITIR el partido por el 3er puesto en torneos de clubes.
+  CLUBES (sin 3er puesto): Sudamericana, Libertadores, UEFA Champions League.
+  SELECCIONES (con 3er puesto): Eurocopa, Copa America, Copa del Mundo.
+  Sugerencia: agregar competicion.categoria ('clubes'|'selecciones') o competicion.tiene_tercer_puesto BOOL.
+
+- **REGLAMENTO POR DEFECTO**: un torneo SIN reglamento propio aplica POR DEFECTO el
+  reglamento de la Copa del Mundo (engine copa_mundo_2026). Implementado en
+  scoring/registry.py: get_engine() cae a CopasMundoScoringEngine (ya NO al legacy 3/1/0)
+  y emite un logger.warning "AVISO ADMIN: subir el reglamento del torneo en el portal".
+  PENDIENTE UI: el portal debe SURFACEAR ese aviso al admin (banner/notificacion) cuando un
+  torneo activo no tenga reglamento propio, para que lo cargue.
+
+- **TORNEO CERRADO = SOLO LECTURA en el Live**: el selector de torneo (login del front nuevo)
+  marca "Solo lectura" cuando torneo.cerrado=TRUE (o estado='finalizado'). GET /torneo/activas
+  ahora devuelve COALESCE(t.cerrado, FALSE) AS cerrado (agregado sesion 71b) para que el front
+  lo detecte. En modo solo-lectura, MiProno no permite editar apuestas.
+
+## DECISION DE ALCANCE FRONTEND (sesion 71b) - SOLO 2 SUPERFICIES
+
+- El FRONTEND queda en DOS superficies: (1) PORTAL WEB ACTUAL (BECBUC-portal.html, se
+  MANTIENE como está, NO se reescribe) y (2) LIVE NUEVO (frontend-becbuc/, React unificado
+  Playoff+Grupos+EnVivo+Pronosticos+Puntaje). Con esto se da por CONCLUIDO el rediseño de front.
+  La becbuc-live.html legacy queda para retiro (la fase de grupos ahora es un tab del Live nuevo).
+
+- **BUSCADOR DE COPAS + REGLAMENTOS PDF**: se cargan desde el PORTAL actual -> seccion
+  Competiciones (NO en el Live). Backend ya listo: GET /torneo/buscar-liga (API-Football
+  /leagues?search) + POST /torneo/importar-liga (upsert competicion + torneo). Falta SOLO la UI
+  en BECBUC-portal.html (buscar -> importar eligiendo tipo clubes/paises; subir PDF reglamento
+  validando año >= 2026, ver documentacion/reglamentos/README.md).
+
+- **FICHA DE COMPETICION**: GET /torneo/activas ahora devuelve total_partidos, partidos_grupos,
+  partidos_ko, fecha_inicio, fecha_fin, estado_juego (pendiente|grupos|playoffs|terminada) y
+  estado_label (en_ejecucion=verde | pendiente=amarillo | concluido=gris; concluido si cerrado,
+  año < año vigente, o todo finalizado). El selector del Live ya lo muestra; falta reflejarlo
+  también en Portal -> Competiciones.
+
+- **VAR en timeline**: se deja como está (sin integrar SofaScore por ahora).
+- **EDITOR DE PRONOSTICOS en el Live**: BAJA PRIORIDAD (no ahora). Estado ya en MiProno.tsx.
+- **PRUEBA EN TELEFONO (export /static/v2)**: DIFERIDA hasta unificar todo el concepto nuevo.
+
 ## REGLAMENTO OFICIAL - PREVALECE SOBRE TODA LOGICA ANTERIOR
 
 Archivo: documentacion/20260608_0240-Reglamento_BEC_BUC_2026.pdf
