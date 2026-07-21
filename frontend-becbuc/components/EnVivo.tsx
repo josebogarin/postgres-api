@@ -110,6 +110,20 @@ export default function EnVivo({ torneoId }: { torneoId: number }) {
         </div>
       </div>
 
+      <select
+        value={Math.min(idx, matches.length - 1)}
+        onChange={(e) => setIdx(Number(e.target.value))}
+        className="w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-xs"
+        aria-label="Elegir partido"
+      >
+        {matches.map((m, i) => (
+          <option key={i} value={i} className="bg-surface">
+            {(m.en_vivo ? "\u{1F534} " : m.finalizado ? "\u2713 " : "") +
+              (m.local?.nombre ?? "?") + " vs " + (m.visitante?.nombre ?? "?")}
+          </option>
+        ))}
+      </select>
+
       <div className="rounded-xl border border-border bg-surface p-3">
         {live && (
           <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-orange/20 px-2 py-0.5 text-[11px] font-bold text-orange">

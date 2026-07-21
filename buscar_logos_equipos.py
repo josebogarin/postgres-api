@@ -74,8 +74,9 @@ for db_name, search, pais in MAP:
     print(f"[{'match' if cands else '??? '}] {db_name} -> {t['name']} ({t.get('country')}) id={t['id']}{aviso}")
     print(f"           logo: {t.get('logo')}")
     if APPLY:
-        cur.execute("UPDATE equipo SET logo_url=%s, api_team_id=COALESCE(api_team_id,%s) WHERE id=%s",
-                    (t.get("logo"), t.get("id"), eid))
+        # Solo logo_url (no tocar api_team_id: puede chocar con un equipo duplicado ya existente).
+        cur.execute("UPDATE equipo SET logo_url=%s WHERE id=%s", (t.get("logo"), eid))
+        conn.commit()  # commit por equipo: un error no aborta el resto
     time.sleep(0.3)
 
 if APPLY:

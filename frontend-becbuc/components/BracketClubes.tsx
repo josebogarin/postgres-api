@@ -94,6 +94,21 @@ export default function BracketClubes({
   const contentW = nCols * COLW + (nCols + 1) * GAP;
   const focusX = GAP + leftCols.length * (COLW + GAP) + COLW / 2;
 
+  // Badges simultaneos (clubes: varios partidos a la misma hora):
+  //  live -> TODAS las llaves en juego ; next -> TODAS las del proximo horario mas cercano.
+  const _flat = rounds.flatMap((r) => r.llaves).filter((x): x is ClubLlave => !!x);
+  const _nextLeg = (ll: ClubLlave): string | null => {
+    if (ll.ida && ll.ida.estado !== "finalizado" && ll.ida.fecha) return ll.ida.fecha;
+    if (ll.vuelta && ll.vuelta.estado !== "finalizado" && ll.vuelta.fecha) return ll.vuelta.fecha;
+    return null;
+  };
+  let nextTs = Infinity;
+  for (const ll of _flat) {
+    if (ll.estado === "en_juego" || ll.estado === "finalizado") continue;
+    const f = _nextLeg(ll);
+    if (f) { const ts = Date.parse(f); if (!isNaN(ts) && ts < nextTs) nextTs = ts; }
+  }
+
   return (
     <div>
       <p className="mb-2 text-center text-[11px] text-muted">
@@ -102,7 +117,7 @@ export default function BracketClubes({
       <PanZoom contentW={contentW} contentH={contentH} focusX={focusX} height="76vh">
         <div className="flex items-start" style={{ width: contentW, height: contentH, gap: GAP, padding: GAP }}>
           {orderedCols.map((c, i) => (
-            <Column key={i} col={c} bodyH={bodyH} onSelect={onSelect} />
+            <Column key={i} col={c} bodyH={bodyH} onSelect={onSelect} nextTs={nextTs} />
           ))}
         </div>
       </PanZoom>
@@ -114,10 +129,12 @@ function Column({
   col,
   bodyH,
   onSelect,
+  nextTs,
 }: {
   col: Col;
   bodyH: number;
   onSelect?: (partidoId: number) => void;
+  nextTs: number;
 }) {
   return (
     <div className="flex shrink-0 flex-col" style={{ width: COLW }}>
@@ -132,7 +149,7 @@ function Column({
         style={{ height: bodyH }}
       >
         {col.llaves.map((ll, i) => (
-          <LlaveCard key={i} ll={ll} onSelect={onSelect} />
+          <LlaveCard key={i} ll={ll} onSelect={onSelect} nextTs={nextTs} />
         ))}
       </div>
     </div>
@@ -142,9 +159,11 @@ function Column({
 function LlaveCard({
   ll,
   onSelect,
+  nextTs,
 }: {
   ll: ClubLlave | null;
   onSelect?: (partidoId: number) => void;
+  nextTs: number;
 }) {
   if (!ll) {
     return (
@@ -167,6 +186,21 @@ function LlaveCard({
     if (ll.penales) footer = footer + " (pen " + ll.penales + ")";
   }
 
+  const badge: "live" | "next" | null =
+    ll.estado === "en_juego"
+      ? "live"
+      : ll.estado === "finalizado"
+      ? null
+      : (() => {
+          const f =
+            ll.ida && ll.ida.estado !== "finalizado" && ll.ida.fecha
+              ? ll.ida.fecha
+              : ll.vuelta && ll.vuelta.estado !== "finalizado" && ll.vuelta.fecha
+              ? ll.vuelta.fecha
+              : null;
+          return f && Date.parse(f) === nextTs ? "next" : null;
+        })();
+
   const pid = ll.vuelta?.partido_id ?? ll.ida?.partido_id ?? null;
   const clickable = onSelect != null && pid != null;
   function handleClick() {
@@ -179,6 +213,14 @@ function LlaveCard({
       onClick={clickable ? handleClick : undefined}
       style={{ cursor: clickable ? "pointer" : "default" }}
     >
+      {badge ? (
+        <div
+          className="mb-0.5 rounded px-1.5 py-0.5 text-center text-[8px] font-bold text-white"
+          style={{ background: badge === "live" ? "#ef4444" : "#3b82f6" }}
+        >
+          {badge === "live" ? "\u{1F534} EN VIVO" : "\u23ED PROXIMO"}
+        </div>
+      ) : null}
       <div
         style={{ background: "#0f1225", border: "1px solid " + border, borderRadius: 8 }}
         className="overflow-hidden"

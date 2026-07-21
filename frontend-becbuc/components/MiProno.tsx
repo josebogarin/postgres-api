@@ -116,8 +116,14 @@ export default function MiProno({
   const closedKey = byNum[104] ? phaseKey(byNum[104]) : all.length ? phaseKey(all[all.length - 1]) : null;
   const focusKey =
     focusNum != null ? (byNum[focusNum] ? phaseKey(byNum[focusNum]) : null) : activeKey ?? closedKey;
+  // Solo partidos con equipos DEFINIDOS (excluye placeholders "Por Definir", "TBD",
+  // "Gan. X/Y" de los cruces aun no jugados). Se puede pronosticar solo esos.
+  const _TBD = /^(por definir|tbd|gan\.)/i;
+  const _def = (n?: string | null) => !!n && !_TBD.test(String(n).trim());
   const show = focusKey
-    ? all.filter((m) => phaseKey(m) === focusKey).sort((a, b) => a.numero_fifa - b.numero_fifa)
+    ? all
+        .filter((m) => phaseKey(m) === focusKey && _def(m.local_nombre) && _def(m.visit_nombre))
+        .sort((a, b) => a.numero_fifa - b.numero_fifa)
     : [];
   const first = show[0];
   const title = first
