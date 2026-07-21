@@ -46,6 +46,13 @@ FASE_MAP: dict[str, tuple[str, int]] = {
     "3rd Qualifying Round":        ("clasificatoria",  5),
     "Play-offs":                   ("playoff_prev",    6),
     "Playoff Round":               ("playoff_prev",    6),
+    "Knockout Round Play-offs":    ("playoff_prev",    7),
+    "Qualification Round 1":       ("clasificatoria",  3),
+    "Qualification Round 2":       ("clasificatoria",  4),
+    "Qualification Round 3":       ("clasificatoria",  5),
+    "1st Phase":                   ("clasificatoria",  3),
+    "2nd Phase":                   ("clasificatoria",  4),
+    "3rd Phase":                   ("clasificatoria",  5),
     # Fase de grupos  (orden 10)
     "Group Stage":                 ("grupo",          10),
     "Group Stage - 1":             ("grupo",          10),
@@ -102,6 +109,34 @@ ESTADO_MAP: dict[str, str] = {
     "AET": "finalizado",
     "PEN": "finalizado",
 }
+
+
+def _map_fase(round_str: str) -> tuple[str, int]:
+    """Resuelve (tipo, orden) desde el nombre de ronda de la API.
+    Match exacto primero; luego por prefijo/keyword para tolerar variantes
+    (ej. 'Group Stage - 3', '8th Finals', 'Qualification Round 1' de Conmebol)."""
+    if round_str in FASE_MAP:
+        return FASE_MAP[round_str]
+    r = (round_str or "").lower()
+    if "group stage" in r or "league stage" in r:
+        return ("grupo", 10)
+    if "qualif" in r or "preliminary" in r or "phase" in r:
+        return ("clasificatoria", 5)
+    if "play-off" in r or "playoff" in r or "play off" in r:
+        return ("playoff_prev", 7)
+    if "round of 32" in r or "1st round" in r:
+        return ("ronda32", 15)
+    if "round of 16" in r or "last 16" in r or "8th finals" in r or "eighth" in r:
+        return ("ronda16", 20)
+    if "quarter" in r:
+        return ("cuartos", 30)
+    if "semi" in r:
+        return ("semis", 40)
+    if "3rd place" in r or "third place" in r:
+        return ("tercer_puesto", 45)
+    if r == "final" or r.endswith(" final"):
+        return ("final", 50)
+    return ("otro", 99)
 
 
 # ── Cliente HTTP ───────────────────────────────────────────────────────────────
@@ -466,7 +501,7 @@ async def cargar_torneo(engine: AsyncEngine, torneo_id: int) -> dict:
             ciudad     = fix.get("venue", {}).get("city", "")
 
             # Determinar tipo/orden de fase
-            tipo_fase, orden_fase = FASE_MAP.get(round_str, ("otro", 99))
+            tipo_fase, orden_fase = _map_fase(round_str)
 
             # Nombre legible de la fase en español
             if tipo_fase == "grupo":
@@ -526,6 +561,11 @@ async def cargar_torneo(engine: AsyncEngine, torneo_id: int) -> dict:
                     equipo_grupo_runtime[home_api] = nombre_fase
                 if nombre_fase and not nombre_fase.startswith("Grupo ") and away_api not in equipo_grupo_runtime:
                     equipo_grupo_runtime[away_api] = nombre_fase
+
+            # Evitar fases de grupo espurias ("Group Stage - 3"): si no se resolvio a
+            # "Grupo X", agrupar bajo un bucket canonico (read-only en el Live).
+            if tipo_fase == "grupo" and not (nombre_fase or "").startswith("Grupo "):
+                nombre_fase = "Fase de grupos"
 
             if nombre_fase not in fases_cache:
                 fid = await _get_or_create_fase(conn, torneo_id, nombre_fase, tipo_fase, orden_fase)

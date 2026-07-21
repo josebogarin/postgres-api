@@ -126,8 +126,9 @@ export default function PanZoom({
         onPointerUp={onUp}
         onPointerCancel={onUp}
         onClickCapture={onClickCapture}
-        className="overflow-hidden rounded-xl border border-border"
-        style={{ height, background: "#0b0e1f", touchAction: "none", cursor: "grab" }}
+        onDragStart={(e) => e.preventDefault()}
+        className="overflow-hidden rounded-xl border border-border select-none"
+        style={{ height, background: "#0b0e1f", touchAction: "none", cursor: "grab", userSelect: "none", WebkitUserSelect: "none" }}
       >
         <div
           style={{

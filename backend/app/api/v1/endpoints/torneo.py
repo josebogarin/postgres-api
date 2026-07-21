@@ -150,12 +150,15 @@ async def importar_liga(body: ImportarLigaIn, _: CurrentAdmin) -> dict:
 
 
 @router.get("/activas", summary="Torneos con temporada activa")
-async def list_activas(db: DBSession) -> list[dict]:
-    """Devuelve torneos en_curso o finalizados recientemente, con datos de competicion y resumen de fases."""
+async def list_activas(db: DBSession, solo_live: bool = Query(False)) -> list[dict]:
+    """Devuelve torneos en_curso o finalizados recientemente, con datos de competicion y resumen de fases.
+    solo_live=True -> solo los que el admin marco visibles en el Live (torneo.mostrar_live)."""
+    live_clause = "AND COALESCE(t.mostrar_live, TRUE) = TRUE" if solo_live else ""
     r = await db.execute(
-        text("""
+        text(f"""
             SELECT t.id, t.anio, t.nombre, t.estado, t.datos_cargados, t.api_season,
                    COALESCE(t.cerrado, FALSE) AS cerrado,
+                   COALESCE(t.mostrar_live, TRUE) AS mostrar_live,
                    c.id AS competicion_id, c.nombre AS competicion,
                    c.nombre_corto, c.emoji, c.tipo, c.api_league_id, c.formato_playoff,
                    (SELECT COUNT(*) FROM fase f WHERE f.torneo_id = t.id AND f.tipo = 'grupo')::int AS num_grupos,
@@ -185,7 +188,7 @@ async def list_activas(db: DBSession) -> list[dict]:
                       FROM fase f2 WHERE f2.torneo_id = t.id AND f2.tipo <> 'grupo') AS fases_ko
             FROM torneo t
             JOIN competicion c ON c.id = t.competicion_id
-            WHERE c.es_activo = TRUE
+            WHERE c.es_activo = TRUE {live_clause}
             ORDER BY
                 CASE t.estado WHEN 'en_curso' THEN 0 WHEN 'finalizado' THEN 1 ELSE 2 END,
                 t.anio DESC, c.id
@@ -227,6 +230,25 @@ async def list_activas(db: DBSession) -> list[dict]:
             d["estado_label"] = "pendiente"
         rows.append(d)
     return rows
+
+
+class MostrarLiveIn(BaseModel):
+    mostrar_live: bool
+
+
+@router.patch("/{torneo_id}/mostrar-live", summary="Mostrar/ocultar un torneo en el selector del Live")
+async def set_mostrar_live(torneo_id: int, body: MostrarLiveIn, _: CurrentAdmin, db: DBSession) -> dict:
+    """Marca si un torneo aparece en el selector del Live (frontend nuevo). Admin."""
+    # Idempotente: crea la columna si la migracion aun no se corrio.
+    await db.execute(text("ALTER TABLE torneo ADD COLUMN IF NOT EXISTS mostrar_live BOOLEAN DEFAULT TRUE"))
+    r = await db.execute(
+        text("UPDATE torneo SET mostrar_live = :v WHERE id = :tid RETURNING id"),
+        {"v": body.mostrar_live, "tid": torneo_id},
+    )
+    if r.first() is None:
+        raise HTTPException(404, "Torneo no encontrado")
+    await db.commit()
+    return {"ok": True, "torneo_id": torneo_id, "mostrar_live": body.mostrar_live}
 
 
 @router.get("/torneos", summary="Listar ediciones de torneo")

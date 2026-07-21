@@ -1075,6 +1075,173 @@ async def bracket_real(torneo_id: int, db: DBSession) -> dict:
     return {"partidos": out}
 
 
+@router.get("/bracket-clubes/{torneo_id}", summary="Bracket de clubes (ida/vuelta) por rondas KO")
+async def bracket_clubes(torneo_id: int, db: DBSession) -> dict:
+    """Bracket para torneos de CLUBES (Libertadores/Sudamericana): agrupa las dos
+    piernas (ida/vuelta) de cada eliminatoria en una llave, calcula el global
+    (goles agregados; si empatan -> penales de la vuelta) y quien clasifica.
+    Topologia por posicion (opcion A). No incluye 3er puesto. Lectura publica.
+
+    Estructura: {tipo:'clubes', rondas:[{tipo,nombre,llaves:[{
+        teamA,teamB, ida, vuelta, globalA, globalB, ganador, penales, estado}]}]}.
+    Cada pierna: {partido_id, local, visitante, gl, gv, pen_l, pen_v, estado, fecha, sintetico}.
+    TBD = None (nunca se expone como equipo)."""
+    rf = await db.execute(text("""
+        SELECT id, nombre, tipo, orden
+        FROM fase
+        WHERE torneo_id = :tid
+          AND tipo IN ('ronda32','ronda16','cuartos','semis','final')
+        ORDER BY orden, id
+    """), {"tid": torneo_id})
+    fases = [dict(x) for x in rf.mappings()]
+    if not fases:
+        return {"tipo": "clubes", "rondas": []}
+
+    def _team(row, side):
+        tid = row[side + "_id"]
+        nombre = row[side + "_nombre_es"] or row[side + "_nombre"]
+        if not tid or not nombre or str(nombre).strip().lower() in ("tbd", "por definir"):
+            return None
+        return {"id": tid, "nombre": nombre,
+                "logo_url": row[side + "_logo"], "iso": row[side + "_iso"] or ""}
+
+    def _iso(dt):
+        return dt.strftime("%Y-%m-%dT%H:%M:%SZ") if dt else None
+
+    rondas = []
+    for f in fases:
+        rp = await db.execute(text("""
+            SELECT p.id, p.estado, p.fecha,
+                   p.goles_local, p.goles_visitante,
+                   p.penales_local, p.penales_visitante,
+                   p.equipo_local_id     AS local_id,
+                   p.equipo_visitante_id AS visit_id,
+                   el.nombre AS local_nombre, el.nombre_es AS local_nombre_es,
+                   el.logo_url AS local_logo, COALESCE(el.codigo_iso,'') AS local_iso,
+                   ev.nombre AS visit_nombre, ev.nombre_es AS visit_nombre_es,
+                   ev.logo_url AS visit_logo, COALESCE(ev.codigo_iso,'') AS visit_iso
+            FROM partido p
+            LEFT JOIN equipo el ON el.id = p.equipo_local_id
+            LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
+            WHERE p.fase_id = :fid
+            ORDER BY p.fecha NULLS LAST, p.id
+        """), {"fid": f["id"]})
+        rows = [dict(x) for x in rp.mappings()]
+        # Emparejar ida+vuelta por PAR DE EQUIPOS (octavos/cuartos/semis son a doble
+        # partido; la final es a partido unico). Robusto ante el orden del fixture.
+        def _real_side(row, side):
+            tid = row[side + "_id"]
+            nom = row[side + "_nombre_es"] or row[side + "_nombre"]
+            return bool(tid) and bool(nom) and str(nom).strip().lower() not in ("tbd", "por definir")
+        def _key(r):
+            ids = []
+            if _real_side(r, "local"): ids.append(r["local_id"])
+            if _real_side(r, "visit"): ids.append(r["visit_id"])
+            return frozenset(ids) if ids else None
+        def _sk(x):
+            f = x["fecha"]
+            return (f.timestamp() if f is not None else float("inf"), x["id"])
+        grupos: dict = {}
+        orden_keys = []
+        sin_key = []
+        for r in rows:
+            k = _key(r)
+            if k is None:
+                sin_key.append(r); continue
+            if k not in grupos:
+                grupos[k] = []
+                orden_keys.append(k)
+            grupos[k].append(r)
+        pares = []
+        for k in orden_keys:
+            legs = sorted(grupos[k], key=_sk)
+            if len(legs) >= 2:
+                pares.append((legs[0], legs[1]))
+            else:
+                pares.append((legs[0], None))
+        if sin_key:
+            h = len(sin_key) // 2
+            if h and len(sin_key) % 2 == 0:
+                pares += list(zip(sin_key[:h], sin_key[h:]))
+            else:
+                pares += [(None, r) for r in sin_key]
+
+        llaves = []
+        for ida_r, vue_r in pares:
+            def _leg(row):
+                if not row:
+                    return None
+                return {
+                    "partido_id": row["id"],
+                    "local": _team(row, "local"),
+                    "visitante": _team(row, "visit"),
+                    "gl": row["goles_local"], "gv": row["goles_visitante"],
+                    "pen_l": row["penales_local"], "pen_v": row["penales_visitante"],
+                    "estado": row["estado"], "fecha": _iso(row["fecha"]),
+                    "sintetico": False,
+                }
+            ida = _leg(ida_r)
+            vue = _leg(vue_r)
+
+            # Identidad de la llave: de la pierna que tenga equipos reales (prioridad vuelta).
+            teamA = teamB = None
+            for lg in (vue, ida):
+                if lg and lg["local"] and lg["visitante"]:
+                    teamA, teamB = lg["local"], lg["visitante"]
+                    break
+            # Completar la otra pierna (TBD) invirtiendo local/visitante (mismo cruce al reves).
+            if teamA and teamB:
+                for lg in (ida, vue):
+                    if lg and not (lg["local"] and lg["visitante"]):
+                        lg["local"], lg["visitante"] = teamB, teamA
+                        lg["sintetico"] = True
+
+            # Global: puntaje de teamA/teamB sumando ambas piernas (solo piernas finalizadas).
+            gA = gB = 0
+            jugados = 0
+            for lg in (ida, vue):
+                if not lg or lg["estado"] != "finalizado" or lg["gl"] is None or lg["gv"] is None:
+                    continue
+                jugados += 1
+                if lg["local"] and teamA and lg["local"]["id"] == teamA["id"]:
+                    gA += lg["gl"]; gB += lg["gv"]
+                else:
+                    gA += lg["gv"]; gB += lg["gl"]
+            n_legs = sum(1 for lg in (ida, vue) if lg)
+            completa = jugados == n_legs and n_legs > 0
+
+            ganador = None
+            pen_txt = None
+            if completa and teamA and teamB:
+                if gA > gB:
+                    ganador = "A"
+                elif gB > gA:
+                    ganador = "B"
+                else:
+                    # empate global -> penales de la vuelta
+                    pv = vue if vue else ida
+                    if pv and pv["pen_l"] is not None and pv["pen_v"] is not None and pv["pen_l"] != pv["pen_v"]:
+                        # en la vuelta, local puede ser teamA o teamB
+                        loc_es_A = pv["local"] and teamA and pv["local"]["id"] == teamA["id"]
+                        gana_local = pv["pen_l"] > pv["pen_v"]
+                        ganador = "A" if (gana_local == bool(loc_es_A)) else "B"
+                        pen_txt = f"{pv['pen_l']}-{pv['pen_v']}"
+
+            llaves.append({
+                "teamA": teamA, "teamB": teamB,
+                "ida": ida, "vuelta": vue,
+                "globalA": gA if completa else None,
+                "globalB": gB if completa else None,
+                "ganador": ganador, "penales": pen_txt,
+                "estado": "finalizado" if completa else (
+                    "en_juego" if any(lg and lg["estado"] == "en_juego" for lg in (ida, vue))
+                    else "programado"),
+            })
+        rondas.append({"tipo": f["tipo"], "nombre": f["nombre"], "llaves": llaves})
+
+    return {"tipo": "clubes", "rondas": rondas}
+
+
 @router.get("/mi-bracket/{torneo_id}", summary="Bracket personal simulado del apostador (R32 → Final)")
 async def mi_bracket(
     torneo_id: int,

@@ -138,7 +138,7 @@ export default function MiProno({
         <>
           <div className="px-1 text-xs font-semibold text-muted">{title}</div>
           {show.map((m, i) => (
-            <MatchCotejo key={m.numero_fifa} m={m} idx={i + 1} total={show.length} />
+            <MatchCotejo key={m.numero_fifa ?? `idx-${i}`} m={m} idx={i + 1} total={show.length} />
           ))}
         </>
       )}
@@ -194,12 +194,20 @@ function MatchCotejo({ m, idx, total }: { m: MisPartidoRow; idx: number; total: 
         Partido {idx} de {total}
       </div>
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-          {m.local_nombre}
+        <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-semibold">
+          {m.local_logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={m.local_logo} alt="" className="h-4 w-4 shrink-0 object-contain" />
+          ) : null}
+          <span className="truncate">{m.local_nombre}</span>
         </span>
         <span className="px-2 text-sm font-bold text-brand">{real}</span>
-        <span className="min-w-0 flex-1 truncate text-right text-sm font-semibold">
-          {m.visit_nombre}
+        <span className="flex min-w-0 flex-1 items-center justify-end gap-1.5 text-sm font-semibold">
+          <span className="truncate">{m.visit_nombre}</span>
+          {m.visit_logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={m.visit_logo} alt="" className="h-4 w-4 shrink-0 object-contain" />
+          ) : null}
         </span>
       </div>
       <div className="flex items-center justify-between px-3 py-1 text-[11px] text-muted">

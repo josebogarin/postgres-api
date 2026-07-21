@@ -13,6 +13,7 @@ export interface TorneoActivo {
   id: number;
   nombre: string;
   anio?: number;
+  api_league_id?: number | null; // liga en API-Football (mapea el logo)
   estado?: string | null; // 'en_curso' | 'finalizado'
   cerrado?: boolean; // torneo.cerrado (encerrado -> solo lectura)
   tipo?: string | null; // competicion.tipo (clubes/paises)
@@ -218,4 +219,39 @@ export interface RankingRow {
   cat_penales_tanda?: number;
   cat_equipo?: number;
   fases?: { tipo: string; nombre: string; pts: number }[];
+}
+
+// ---- Bracket de clubes (GET /bets/bracket-clubes/{tid}) ----
+// Cada llave = eliminatoria ida/vuelta. TBD = null (nunca se expone como equipo).
+export interface ClubLeg {
+  partido_id: number;
+  local: Team | null;
+  visitante: Team | null;
+  gl: number | null;
+  gv: number | null;
+  pen_l: number | null;
+  pen_v: number | null;
+  estado: string;
+  fecha: string | null; // ISO con Z
+  sintetico: boolean; // pierna completada por swap (la otra tenia los equipos)
+}
+export interface ClubLlave {
+  teamA: Team | null;
+  teamB: Team | null;
+  ida: ClubLeg | null;
+  vuelta: ClubLeg | null;
+  globalA: number | null;
+  globalB: number | null;
+  ganador: "A" | "B" | null;
+  penales: string | null; // "4-2" si se definio por penales
+  estado: string; // programado | en_juego | finalizado
+}
+export interface ClubRonda {
+  tipo: string;
+  nombre: string;
+  llaves: ClubLlave[];
+}
+export interface BracketClubesResponse {
+  tipo: string;
+  rondas: ClubRonda[];
 }

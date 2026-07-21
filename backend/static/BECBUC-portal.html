@@ -2367,9 +2367,16 @@ function _renderCompView() {
     return;
   }
   el.innerHTML = _compViewData.map(t => {
-    const badge = t.estado === 'en_curso'
-      ? `<span style="background:rgba(34,197,94,.18);color:#22c55e;border-radius:5px;padding:1px 7px;font-size:.68rem;font-weight:700;">En curso</span>`
-      : `<span style="background:rgba(148,163,184,.14);color:var(--muted);border-radius:5px;padding:1px 7px;font-size:.68rem;">Finalizado</span>`;
+    // Estado real: Vigente (año en curso, jugándose o por empezar) vs Concluido.
+    const _elbl = t.estado_label || (t.cerrado ? 'concluido' : (t.estado==='en_curso' ? 'en_ejecucion' : 'pendiente'));
+    const _anio = t.anio || '';
+    const _badgeMap = {
+      en_ejecucion: ['rgba(34,197,94,.18)', '#22c55e', 'En juego ' + _anio],
+      pendiente:    ['rgba(234,179,8,.18)', '#eab308', 'Vigente ' + _anio],
+      concluido:    ['rgba(148,163,184,.14)', 'var(--muted)', 'Concluido ' + _anio]
+    };
+    const _bd = _badgeMap[_elbl] || _badgeMap.pendiente;
+    const badge = `<span style="background:${_bd[0]};color:${_bd[1]};border-radius:5px;padding:1px 7px;font-size:.68rem;font-weight:700;">${_bd[2]}</span>`;
     const loaded = t.datos_cargados
       ? `<span style="background:rgba(14,165,233,.15);color:var(--accent2);border-radius:5px;padding:1px 7px;font-size:.68rem;">✓ Datos</span>` : '';
     const btnLabel = t.datos_cargados ? '🔄 Actualizar' : '📥 Cargar datos';
@@ -2402,6 +2409,11 @@ function _renderCompView() {
         <div style="font-size:.75rem;color:var(--muted);flex-shrink:0;">${t.anio||''}</div>
       </div>
       ${resumen}
+      <label style="display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--fg);cursor:pointer;user-select:none;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:7px 10px;">
+        <input type="checkbox" ${t.mostrar_live !== false ? 'checked' : ''} onchange="_toggleMostrarLive(${t.id}, this.checked, this)" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;">
+        <span>📺 Mostrar en el Live</span>
+        <span id="comp-live-msg-${t.id}" style="margin-left:auto;font-size:.68rem;color:var(--muted);"></span>
+      </label>
       <div style="display:flex;flex-direction:column;gap:6px;">
         <button id="comp-btn-cargar-${t.id}" onclick="_compCargar(event,${t.id})"
           style="background:var(--accent2);color:#fff;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:.78rem;font-weight:600;width:100%;">${btnLabel}</button>
@@ -2411,6 +2423,22 @@ function _renderCompView() {
       ${regLink ? `<div style="border-top:1px solid var(--border);padding-top:8px;">${regLink}</div>` : ''}
     </div>`;
   }).join('');
+}
+
+async function _toggleMostrarLive(torneoId, visible, el) {
+  const msg = document.getElementById('comp-live-msg-' + torneoId);
+  el.disabled = true;
+  if (msg) { msg.textContent = 'Guardando…'; msg.style.color = 'var(--muted)'; }
+  try {
+    await api('/api/v1/torneo/' + torneoId + '/mostrar-live', { method: 'PATCH', body: JSON.stringify({ mostrar_live: visible }) });
+    const t = _compViewData.find(x => x.id === torneoId); if (t) t.mostrar_live = visible;
+    if (msg) { msg.textContent = visible ? '✓ Visible' : '✓ Oculto'; msg.style.color = visible ? '#22c55e' : 'var(--muted)'; }
+  } catch (e) {
+    el.checked = !visible;
+    if (msg) { msg.textContent = '✗ ' + (e.message || 'error'); msg.style.color = '#f87171'; }
+  } finally {
+    el.disabled = false;
+  }
 }
 
 // Mapa estático de reglamentos por api_league_id

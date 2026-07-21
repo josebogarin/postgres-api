@@ -30,7 +30,9 @@ export function fmtFecha(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "";
+  // Siempre hora de Paraguay (America/Asuncion), sin importar el dispositivo.
   return d.toLocaleString("es", {
+    timeZone: "America/Asuncion",
     weekday: "short",
     day: "numeric",
     month: "short",

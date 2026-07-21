@@ -6,10 +6,13 @@ import { api } from "@/lib/api";
 import {
   type BracketMatch,
   type BracketResponse,
+  type BracketClubesResponse,
+  type ClubRonda,
   type RankingRow,
 } from "@/lib/types";
 import { ITEMS, alias } from "@/lib/format";
 import BracketTree from "@/components/BracketTree";
+import BracketClubes from "@/components/BracketClubes";
 import MiProno from "@/components/MiProno";
 import EnVivo from "@/components/EnVivo";
 import GruposView from "@/components/GruposView";
@@ -23,6 +26,8 @@ export default function PlayoffLive() {
   const [readOnly, setReadOnly] = useState<boolean>(false);
   const [tab, setTab] = useState<Tab>("bracket");
   const [bracket, setBracket] = useState<BracketMatch[] | null>(null);
+  const [bracketClubes, setBracketClubes] = useState<ClubRonda[] | null>(null);
+  const [esClubes, setEsClubes] = useState(false);
   const [ranking, setRanking] = useState<RankingRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [sel, setSel] = useState<number | null>(null);
@@ -37,6 +42,7 @@ export default function PlayoffLive() {
     setTorneoId(id);
     setTorneoNombre(localStorage.getItem("becbuc_torneo_nombre") || "BECBUC Live");
     setReadOnly(localStorage.getItem("becbuc_torneo_ro") === "1");
+    setEsClubes(localStorage.getItem("becbuc_torneo_tercero") === "0");
   }, [router]);
 
   const salir = () => {
@@ -54,17 +60,20 @@ export default function PlayoffLive() {
   const load = useCallback(async () => {
     if (!torneoId) return;
     try {
-      const [b, r] = await Promise.all([
-        api.get<BracketResponse>(`/bets/bracket-real/${torneoId}`),
-        api.get<RankingRow[]>(`/bets/ranking/${torneoId}`),
-      ]);
-      setBracket(b?.partidos ?? []);
+      const r = await api.get<RankingRow[]>(`/bets/ranking/${torneoId}`);
       setRanking(Array.isArray(r) ? r : []);
+      if (esClubes) {
+        const bc = await api.get<BracketClubesResponse>(`/bets/bracket-clubes/${torneoId}`);
+        setBracketClubes(bc?.rondas ?? []);
+      } else {
+        const b = await api.get<BracketResponse>(`/bets/bracket-real/${torneoId}`);
+        setBracket(b?.partidos ?? []);
+      }
       setErr(null);
     } catch (e) {
       setErr(String(e));
     }
-  }, [torneoId]);
+  }, [torneoId, esClubes]);
 
   useEffect(() => {
     if (!torneoId) return;
@@ -76,7 +85,7 @@ export default function PlayoffLive() {
   if (!torneoId) return null; // redirigiendo al login
 
   return (
-    <main className="mx-auto w-full max-w-md pb-10">
+    <main className="mx-auto w-full max-w-md md:max-w-3xl lg:max-w-none lg:px-6 pb-10">
       <TopBar nombre={torneoNombre} readOnly={readOnly} onExit={salir} />
       <TabBar tab={tab} setTab={setTab} />
 
@@ -87,7 +96,12 @@ export default function PlayoffLive() {
       )}
 
       <div className="px-3 pt-3">
-        {tab === "bracket" && <BracketView partidos={bracket} onSelect={selectMatch} />}
+        {tab === "bracket" &&
+          (esClubes ? (
+            <ClubesView rondas={bracketClubes} onGoPronos={() => setTab("miprono")} />
+          ) : (
+            <BracketView partidos={bracket} onSelect={selectMatch} />
+          ))}
         {tab === "grupos" && <GruposView torneoId={torneoId} onSelect={selectMatch} />}
         {tab === "envivo" && <EnVivo torneoId={torneoId} />}
         {tab === "ranking" && <RankingView rows={ranking} />}
@@ -171,6 +185,18 @@ function BracketView({
   if (partidos.length === 0)
     return <Empty msg="Todavía no hay partidos de playoff." />;
   return <BracketTree partidos={partidos} onSelectMatch={onSelect} />;
+}
+
+function ClubesView({
+  rondas,
+  onGoPronos,
+}: {
+  rondas: ClubRonda[] | null;
+  onGoPronos: () => void;
+}) {
+  if (rondas === null) return <Loading />;
+  if (rondas.length === 0) return <Empty msg="Todavía no hay partidos de playoff." />;
+  return <BracketClubes rondas={rondas} onSelect={() => onGoPronos()} />;
 }
 
 /* ---------------- Ranking ---------------- */

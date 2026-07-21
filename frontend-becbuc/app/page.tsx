@@ -24,6 +24,7 @@ function normalizeTorneos(raw: unknown): TorneoActivo[] {
         id: Number(t.id ?? t.torneo_id),
         nombre: String(t.nombre ?? t.titulo ?? t.competicion ?? `Torneo ${t.id ?? ""}`),
         anio: t.anio != null ? Number(t.anio) : undefined,
+        api_league_id: t.api_league_id != null ? Number(t.api_league_id) : undefined,
         estado,
         cerrado,
         tipo: (t.tipo as string) ?? null,
@@ -47,7 +48,22 @@ function normalizeTorneos(raw: unknown): TorneoActivo[] {
 // Selecciones/paises = CON 3er puesto.
 // competicion.tipo es 'clubes' | 'paises' (valor real de la BD). Fallback: nombre.
 const RE_SELECCIONES = /mundial|world\s*cup|copa\s*del\s*mundo|eurocopa|\beuro\b|copa\s*am[eé]rica|naciones|nations/i;
-const RE_CLUBES = /champions|libertadores|sudamericana|club/i;
+const RE_CLUBES = /champions|libertadores|sudamericana|europa\s*league|club/i;
+
+// Logo oficial por api_league_id -> nombre base (archivo en backend/static/logos/,
+// servido en /static/logos/). El componente prueba .png y .svg.
+const LOGO_BY_LEAGUE: Record<number, string> = {
+  1: "mundial", // Copa Mundial FIFA
+  2: "champions", // UEFA Champions League
+  3: "europa-league", // UEFA Europa League (clubes)
+  4: "eurocopa", // UEFA Eurocopa (selecciones)
+  9: "copa-america", // Copa América
+  11: "sudamericana", // Copa Sudamericana
+  13: "libertadores", // Copa Libertadores
+};
+const LOGO_EXTS = ["png", "svg", "webp", "jpg"];
+// Overrides de ícono para competiciones sin logo propio (por ahora ninguna).
+const EMOJI_BY_LEAGUE: Record<number, string> = {};
 function esTorneoClubes(t: TorneoActivo): boolean {
   const tipo = (t.tipo ?? t.categoria ?? "").toLowerCase();
   if (tipo === "clubes" || tipo === "club") return true;
@@ -70,7 +86,7 @@ export default function Home() {
   useEffect(() => {
     let vivo = true;
     api
-      .get<unknown>(`/torneo/activas`)
+      .get<unknown>(`/torneo/activas?solo_live=true`)
       .then((raw) => vivo && setEstado({ fase: "ok", torneos: normalizeTorneos(raw) }))
       .catch((e) => vivo && setEstado({ fase: "error", msg: String(e) }));
     return () => {
@@ -154,9 +170,26 @@ function fdmy(iso?: string | null): string | null {
   return d.toLocaleDateString("es", { day: "2-digit", month: "2-digit", year: "2-digit" });
 }
 
+function CompLogo({ t, esClubes }: { t: TorneoActivo; esClubes: boolean }) {
+  const [extIdx, setExtIdx] = useState(0);
+  const lid = t.api_league_id ?? -1;
+  const base = LOGO_BY_LEAGUE[lid];
+  const emoji = EMOJI_BY_LEAGUE[lid] || t.emoji || (esClubes ? "🏟️" : "🏆");
+  if (!base || extIdx >= LOGO_EXTS.length)
+    return <span className="grid h-10 w-10 place-items-center text-2xl">{emoji}</span>;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/static/logos/${base}.${LOGO_EXTS[extIdx]}`}
+      alt=""
+      className="h-10 w-10 shrink-0 rounded-md object-contain"
+      onError={() => setExtIdx((i) => i + 1)}
+    />
+  );
+}
+
 function TorneoCard({ t, onEnter }: { t: TorneoActivo; onEnter: () => void }) {
   const esClubes = esTorneoClubes(t);
-  const icono = t.emoji || (esClubes ? "🏟️" : "🏆");
   const label = ESTADO_LABEL[t.estado_label ?? ""] ?? ESTADO_LABEL.pendiente;
   const ini = fdmy(t.fecha_inicio);
   const fin = fdmy(t.fecha_fin);
@@ -166,7 +199,7 @@ function TorneoCard({ t, onEnter }: { t: TorneoActivo; onEnter: () => void }) {
       onClick={onEnter}
       className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 text-left transition active:scale-[0.99]"
     >
-      <span className="text-2xl">{icono}</span>
+      <CompLogo t={t} esClubes={esClubes} />
       <span className="min-w-0 flex-1">
         <span className="block truncate font-semibold">{t.nombre}</span>
         <span className="block truncate text-xs text-muted">

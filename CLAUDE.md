@@ -1,5 +1,5 @@
 # BECBUC.md - Estado del Proyecto BECBUC
-Ultima actualizacion: 2026-07-20 (sesion 71)
+Ultima actualizacion: 2026-07-21 (sesion 72 - BRACKET DE CLUBES + MULTI-TORNEO FIXTURES)
 Leer este archivo COMPLETO antes de tocar cualquier archivo.
 
 ## REGLAS GENERALES DEL PROYECTO
@@ -734,6 +734,200 @@ bracket_service.py -> _sort_grupo():
   Usar passlib.CryptContext(schemes=['bcrypt']).hash('...') para generar hashes.
 
 ## HISTORIAL SESIONES
+
+2026-07-21 - Sesion Cowork (sesion 72) - MULTI-TORNEO EN EL LIVE + BRACKET DE CLUBES (Libertadores/Sudamericana) + FIXTURES:
+
+  ============================================================================
+  APRENDIZAJES CRITICOS (leer antes de tocar archivos):
+  ============================================================================
+  - TRUNCACION EN EL MOUNT: las herramientas de escritura (Write/Edit y hasta el
+    safe_write via Python en algunos casos) TRUNCAN archivos grandes al escribir en el
+    mount de Windows. Sintoma: el archivo queda cortado a la mitad y "tsc/ast" tira
+    errores de sintaxis fantasma en lineas que se ven validas. SOLUCION: escribir el
+    contenido en /tmp del sandbox y copiar con `cp` (coreutils no trunca), verificando
+    wc -c / tail. safe_patch_py/safe_write funcionaron bien para los .py del backend,
+    pero para los .tsx grandes se uso `cp`.
+  - partido.torneo_id es NOT NULL (no se deriva de la fase). Todo INSERT en partido
+    debe incluir torneo_id.
+  - HORA PARAGUAY = UTC-3 FIJO. Paraguay elimino el horario de verano en 2024 y quedo
+    permanente en UTC-3. El front usa Intl con timeZone America/Asuncion (correcto).
+  - psycopg2 externo: host=localhost port=5432 user=app_user password=superpassword db=becbuc.
+  - Torneos: Libertadores torneo_id=1 (empieza en OCTAVOS/ronda16), Sudamericana torneo_id=14
+    (empieza en 16avos/ronda32). Ambas SIN 3er puesto (clubes).
+
+  ============================================================================
+  1) MULTI-TORNEO: checkbox "Mostrar en el Live" + badge estado (Portal Competiciones)
+  ============================================================================
+  - Migracion: documentacion/migraciones/migracion_mostrar_live.sql (torneo.mostrar_live BOOL DEFAULT TRUE). EJECUTADA.
+  - backend/app/api/v1/endpoints/torneo.py:
+      /activas ahora acepta ?solo_live=true (filtra COALESCE(mostrar_live,TRUE)) y devuelve mostrar_live.
+      NUEVO PATCH /torneo/{id}/mostrar-live (admin) - crea la columna idempotente + UPDATE.
+  - BECBUC-portal.html (via safe_patch_html): en Competiciones, checkbox "Mostrar en el Live"
+      por torneo (_toggleMostrarLive) + badge Vigente {anio}/En juego/Concluido (usa estado_label).
+  - frontend-becbuc/app/page.tsx: el selector del Live pide /torneo/activas?solo_live=true.
+  - Movil no tiene vista Competiciones -> config solo en Portal (no aplica REGLA UI paralela).
+
+  ============================================================================
+  2) FIX MULTI-TORNEO PARA CLUBES en torneo_service.py (mapeo de fases)
+  ============================================================================
+  - FASE_MAP + helper _map_fase(round_str): tolera "Group Stage - N", "8th Finals",
+    "Qualification Round N", "Knockout Round Play-offs", "Phase", por prefijo/keyword.
+  - Coercion: fixtures de grupo no resueltos a "Grupo X" -> bucket "Fase de grupos"
+    (evita fases duplicadas tipo "Group Stage - 3").
+  - Antes las cargas dejaban fases 'otro'/duplicadas. Con esto Libertadores/Sudamericana
+    mapean limpio: Clasificatoria, Grupo A..H, Octavos/16avos, etc.
+
+  ============================================================================
+  3) DATA SANEADA (reset + recarga limpia + grupos read-only)
+  ============================================================================
+  - documentacion/migraciones/reset_fixture_torneo.sql (borra fases/partidos de un torneo,
+    -v TID=N). Usado en Libertadores(1) y Sudamericana(14).
+  - Grupos + clasificatoria BLOQUEADOS (fase.bloqueada=TRUE) en ambos -> solo lectura;
+    apostable desde playoffs (Octavos en Liberta, Ronda de 32 en Sudamericana).
+  - reset_sudamericana_ko.py: resetea SOLO la ronda32 a "Por Definir" (los octavos ya bien).
+    Motivo: la API-Football habia cargado equipos reales viejos en la ronda32 y se mezclaron
+    con el fixture manual. Se resetea y se recarga el fixture del usuario.
+
+  ============================================================================
+  4) BRACKET DE CLUBES (nuevo, backend + frontend) - el WC queda intacto
+  ============================================================================
+  - Backend: GET /api/v1/bets/bracket-clubes/{torneo_id} (apostador_bets.py). Agrupa ida+vuelta
+    por PAR DE EQUIPOS reales (frozenset de ids reales; sirve para octavos/cuartos/semis a
+    doble partido; final a partido unico). Calcula global (goles agregados; empate -> penales
+    de la vuelta) y quien pasa. Sintetiza la pierna TBD invirtiendo el cruce. _team() trata
+    "TBD"/"Por Definir" como None. Devuelve teamA/teamB, ida/vuelta{local,visitante,gl,gv,
+    pen,estado,fecha,partido_id}, globalA/B, ganador A/B, penales, estado.
+  - Frontend NUEVO: components/BracketClubes.tsx (dos lados convergentes, sin 3er puesto).
+      * Cada llave = 1 tarjeta con 2 filas (ida/vuelta), fecha corta dd/mm HHhs por pierna,
+        escudos (logo_url, draggable=false), global + "pasa X".
+      * PanZoom (arrastre dedo/mouse + zoom); tocar una llave -> pestana Pronosticos.
+      * Progresion SIEMPRE hasta la Final: rondas no cargadas = placeholders "Por definir".
+        De 16avos (ronda32) a Octavos (ronda16) NO se reduce (entran cabezas de serie);
+        de Octavos en adelante, la mitad.
+      * fechaCorta usa America/Asuncion (hora Paraguay siempre).
+  - lib/types.ts: ClubLeg/ClubLlave/ClubRonda/BracketClubesResponse.
+  - app/playoff-live/page.tsx: si becbuc_torneo_tercero==="0" (clubes) usa BracketClubes
+    (fetch /bracket-clubes); si no, el BracketTree del Mundial. En web usa todo el ancho
+    (main max-w-md md:max-w-3xl lg:max-w-none).
+  - lib/format.ts fmtFecha: tambien fuerza America/Asuncion (Mundial, En Vivo).
+  - MiProno.tsx: agregado escudo (local_logo/visit_logo) + fix key null (key={m.numero_fifa ?? `idx-${i}`}).
+
+  ============================================================================
+  5) FIXTURES CARGADOS (scripts en la raiz, .bat en bat/, dry-run + --apply)
+  ============================================================================
+  - cargar_fixture_libertadores_octavos.py: 8 llaves de octavos con equipos ida (invirtiendo
+    la vuelta), fechas UTC (de hora local de cada sede) y sedes. LISTO/aplicado.
+  - cargar_fixture_sudamericana_16avos.py: CREA los 16 equipos y los ASIGNA a los 16 partidos
+    TBD de la ronda32 (la API no trajo el sorteo). 8 ties + fechas UTC + sedes.
+  - poblar_octavos_sudamericana.py: crea/actualiza la fase Octavos (ronda16) con 8 sembrados
+    (Recoleta, Atletico Mineiro, Botafogo, Olimpia, River, City Torque, Macara, San Pablo) y
+    su RIVAL YA DEFINIDO = placeholder "Gan. <llave 16avos>" (ej. Olimpia vs "Gan. I.Medellin/Vasco").
+  - buscar_logos_equipos.py: busca en API-Football el logo de los equipos creados a mano
+    DESAMBIGUANDO POR PAIS (Nacional->Paraguay, Recoleta->Paraguay, etc.). PENDIENTE de correr.
+  - Emparejamiento del endpoint: agrupa por equipos REALES presentes (1 o 2), asi el octavo
+    "sembrado vs Gan.X/Y" agrupa bien sus 2 piernas.
+
+  ============================================================================
+  PENDIENTES (proximos pasos):
+  ============================================================================
+  - Correr buscar_logos_equipos.py (logos de los equipos creados) - dry-run y verificar.
+  - ENCADENAR/PROPAGAR el bracket hasta la final (Liberta + Sudamericana): crear fases
+    Cuartos/Semis/Final con placeholders "Gan.[llave]" encadenados + motor de propagacion
+    (al finalizar una llave, meter al ganador global/penales en la siguiente) + simulacion
+    de prueba. FALTA el dato de los cruces de Cuartos+ (no vinieron en los fixtures) -> asumir
+    seeding estandar del cuadro y ajustar si el sorteo define otro orden.
+  - Escudos: los equipos creados a mano estan sin logo hasta correr buscar_logos_equipos.py.
+
+  ARCHIVOS CLAVE TOCADOS:
+    backend/app/api/v1/endpoints/torneo.py, apostador_bets.py
+    backend/app/services/torneo_service.py
+    backend/static/BECBUC-portal.html
+    frontend-becbuc/: app/page.tsx, app/playoff-live/page.tsx, lib/types.ts, lib/format.ts,
+      components/BracketClubes.tsx (NUEVO), components/MiProno.tsx, components/PanZoom.tsx
+    scripts raiz: cargar_fixture_libertadores_octavos.py, cargar_fixture_sudamericana_16avos.py,
+      poblar_octavos_sudamericana.py, reset_sudamericana_ko.py, buscar_logos_equipos.py
+    documentacion/migraciones/: migracion_mostrar_live.sql, reset_fixture_torneo.sql
+
+2026-07-20 - Sesion Cowork (71b) - MULTI-TORNEO + SELECTOR/LOGIN + LOGOS + BUSCADOR DE COPAS + FICHA + FASE 0:
+
+  RESUMEN: se cerro alcance de front a 2 superficies (Portal actual + Live nuevo), se hizo el
+  selector de torneo como LOGIN del Live, se cablearon los logos oficiales de cada copa, se
+  agrego el backend del buscador de copas + ficha de competicion, y se preparo la Fase 0
+  (unificar repos + commit). VER tambien secciones nuevas arriba: "REGLAS DE TORNEOS",
+  "DECISION DE ALCANCE FRONTEND". OJO: NADA probado en runtime (bash/workspace caido toda la
+  sesion) -> todo por revision de codigo; reiniciar servicios y probar.
+
+  FRONTEND NUEVO (frontend-becbuc/):
+    - LOGIN = SELECTOR DE TORNEO (app/page.tsx reescrito): lista GET /api/v1/torneo/activas.
+      Cada torneo: LOGO real (por api_league_id), label estado (En ejecucion=verde | Pendiente=
+      amarillo | Concluido=gris), tipo (Clubes/Selecciones), N partidos + fechas inicio-fin,
+      icono/emoji fallback. Al elegir guarda localStorage: becbuc_torneo, _nombre, _ro (solo
+      lectura si cerrado o concluido), _tercero (0 clubes /1 selecciones) y entra a /playoff-live.
+      Logo del header = /static/becbuc-logo.jpeg (el real; es el unico logo del proyecto).
+    - app/playoff-live/page.tsx: lee torneoId de localStorage (redirect a / si falta). TopBar con
+      logo real + nombre torneo + badge "solo lectura" + boton SALIR (vuelve al login). torneoId
+      DINAMICO pasado a GruposView/EnVivo/MiProno (se ELIMINO TORNEO_ID hardcodeado de todos).
+    - LOGOS DE COMPETICION: LOGO_BY_LEAGUE por api_league_id {1 mundial,2 champions,3 europa-league,
+      4 eurocopa,9 copa-america,11 sudamericana,13 libertadores} (todas con logo oficial real).
+      CompLogo prueba ext .png/.svg/.webp/.jpg y cae al emoji. Sirve de /static/logos/<base>.<ext>.
+    - next.config.ts: + proxy /static -> localhost:8000 en DEV (para ver el logo real y assets del
+      backend con npm run dev; en export /static/v2 ya resolvia contra uvicorn).
+    - lib/types.ts: TorneoActivo + api_league_id, anio, estado, cerrado, tipo, emoji, total_partidos,
+      partidos_grupos/ko, fecha_inicio/fin, estado_juego, estado_label.
+    - MiProno.tsx: agregado estado del editor (edits/pin/saving/filter) + props torneoId/readOnly.
+      Render editable + guardado con PIN = PENDIENTE (baja prioridad, decision del usuario).
+
+  BACKEND:
+    - api/v1/endpoints/torneo.py /activas: + COALESCE(t.cerrado,FALSE) AS cerrado, total_partidos,
+      partidos_fin, ko_iniciados, fecha_inicio, fecha_fin. Calcula estado_juego (pendiente|grupos|
+      playoffs|terminada) y estado_label (en_ejecucion|pendiente|concluido; concluido si cerrado,
+      anio < anio vigente UTC, o todo finalizado).
+    - torneo.py BUSCADOR DE COPAS (NUEVO): GET /buscar-liga?q= (API-Football /leagues?search;
+      tipo_sugerido clubes/paises segun country=World) + POST /importar-liga (schema ImportarLigaIn).
+    - services/torneo_service.py: LIGAS_SOPORTADAS + 11 Copa Sudamericana (clubes, ida_vuelta).
+      NUEVA importar_liga(engine, api_league_id, nombre, tipo, formato, emoji, temporada) -> upsert
+      competicion + torneo de la temporada current (o la indicada). RETURNING ids.
+    - services/scoring/registry.py: fallback por defecto = CopasMundoScoringEngine (reglamento
+      Mundial) + logger.warning "AVISO ADMIN subir reglamento". legacy_3_1_0 solo si se pide explicito.
+
+  ASSETS / DATOS (logos):
+    - Usuario bajo/guardo en documentacion/iconos-copas/ los logos OFICIALES: Libertadores,
+      Sudamericana, Copa America (wordmark blanco), Champions (starball png + logotype svg),
+      Europa League y Mundial. Fuentes: gol.conmebol.com/themes/custom/conmebol/files/
+      aux-menu-item-{libertadores,sudamericana}.png ; copaamerica.com/assets/images/logos/
+      conmebol-copa-america-white.png ; img.uefa.com/imgml/uefacom/app/logo_ucl.png +
+      .../ucl/2024/logos/logotype_dark.svg. (Descarga PS: $ProgressPreference='SilentlyContinue'
+      o System.Net.WebClient; Invoke-WebRequest solo se colgaba por la barra de progreso.)
+    - Iconos SVG estilizados propios (fallback) tambien en documentacion/iconos-copas/.
+    - bat/copiar_logos_a_static.ps1: copia esos logos a backend/static/logos/ con los nombres base
+      que espera el Live (mundial, champions, europa-league, copa-america, sudamericana, libertadores),
+      prioriza oficiales sobre los estilizados. EJECUTAR mañana.
+    - documentacion/migraciones/seed_copa_sudamericana.sql + bat/run_seed_sudamericana.bat (league 11).
+    - documentacion/reglamentos/README.md: convencion PDF por competicion, regla año >= 2026.
+
+  FASE 0 (refactor - listo para ejecutar):
+    - bat/run_fase0_unificar_repos.bat: respalda backend/.git + frontend/.git + frontend-becbuc/.git
+      (zip en _backups + export de logs a documentacion/git_history) -> git rm --cached gitlinks ->
+      borra los .git anidados -> git add -A -> commit de TODO -> corre backup_becbuc.ps1. NO push
+      (sin remoto). Dos confirmaciones (SI, COMMIT). Correr desde PowerShell:
+      & "C:\proyecto FAST API\bat\run_fase0_unificar_repos.bat"
+
+  PROXIMOS PASOS (mañana, en orden):
+    1. Correr bat/copiar_logos_a_static.ps1 (logos -> backend/static/logos) y verificar selector.
+    2. Correr bat/run_seed_sudamericana.bat (sembrar Sudamericana, league 11).
+    3. REINICIAR uvicorn (cambios torneo.py, torneo_service.py, registry.py) + npm run dev
+       (cambio next.config.ts).
+    4. Verificar Fase 0 si se corrio: git log --oneline -1 + que uvicorn arranca.
+    5. UI Buscador de copas en Portal->Competiciones (backend listo: /buscar-liga + /importar-liga).
+    6. Ficha de competicion (partidos/fechas/estado) tambien en Portal->Competiciones.
+    7. Reglamentos PDF: subir desde Portal->Competiciones validando año>=2026 (bajar los PDF desde la PC).
+    8. Fase 5 refactor: retirar HTML legacy (tester, tabla, diccionario, portal.html generico,
+       fixture, api-reference, BECBUC-pronos, becbuc-live.html, etc.).
+    9. Pendientes tecnicos viejos: 6 preguntas de reglamento con organizacion; fix tiebreaker H2H
+       bracket_service.py (Art.13 FIFA); seed catalogo_objeto + poblar equipo.codigo_iso/fifa_ranking.
+    10. Editor de pronosticos en el Live (baja prioridad).
+
+  NOTA: UEFA Europa League (clubes, league 3) tampoco esta sembrada; si se usa, seed + import.
 
 2026-07-20 - Sesion Cowork - FASE 4 FRONTEND: PILOTO "PLAYOFF LIVE" (Next.js) EN frontend-becbuc/:
 
