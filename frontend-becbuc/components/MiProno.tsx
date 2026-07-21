@@ -130,6 +130,42 @@ export default function MiProno({
     ? `${(first.fase_tipo || "").startsWith("grupo") ? first.fase_nombre : faseLabel(first.fase_tipo)} · ${show.length} partido${show.length === 1 ? "" : "s"}`
     : "";
 
+  const setEdit = (num: number, k: string, v: number | null) =>
+    setEdits((e) => ({ ...e, [num]: { ...(e[num] || {}), [k]: v } }));
+
+  async function guardar() {
+    if (sel == null) return;
+    const editables = show.filter((m) => m.estado === "programado");
+    if (editables.length === 0) { setSaveMsg("No hay partidos abiertos para editar."); return; }
+    const apuestas = editables.map((m) => {
+      const e = edits[m.numero_fifa] || {};
+      return {
+        numero_fifa: m.numero_fifa,
+        pred_local: e.pred_local ?? 0,
+        pred_visitante: e.pred_visitante ?? 0,
+        pred_amarillas: e.pred_amarillas ?? null,
+        pred_rojas: e.pred_rojas ?? null,
+        pred_var: e.pred_var ?? null,
+        pred_penales_partido: e.pred_penales_partido ?? null,
+        pred_minuto_gol: e.pred_minuto_gol ?? null,
+        pred_penales_local_tanda: e.pred_penales_local_tanda ?? null,
+        pred_penales_visitante_tanda: e.pred_penales_visitante_tanda ?? null,
+        pred_equipo_clasifica: e.pred_equipo_clasifica ?? null,
+      };
+    });
+    setSaving(true); setSaveMsg(null);
+    try {
+      const r = await api.post<{ ok: boolean; error?: string }>(
+        `/bets/live-guardar-apuestas/${torneoId}`,
+        { apostador_id: sel, pin, apuestas }
+      );
+      if (r?.ok) { setSaveMsg("\u2713 Guardado"); await loadRows(sel); }
+      else setSaveMsg("\u2717 " + (r?.error || "No se pudo guardar"));
+    } catch (err) {
+      setSaveMsg("\u2717 " + String(err));
+    } finally { setSaving(false); }
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <Selector apostadores={apostadores} sel={sel} onPick={pick} />
@@ -143,9 +179,23 @@ export default function MiProno({
       ) : (
         <>
           <div className="px-1 text-xs font-semibold text-muted">{title}</div>
-          {show.map((m, i) => (
-            <MatchCotejo key={m.numero_fifa ?? `idx-${i}`} m={m} idx={i + 1} total={show.length} />
-          ))}
+          {show.map((m, i) =>
+            !readOnly && m.estado === "programado" ? (
+              <EditableMatch
+                key={m.numero_fifa ?? `e-${i}`}
+                m={m}
+                idx={i + 1}
+                total={show.length}
+                ed={edits[m.numero_fifa] || {}}
+                onEdit={(k, v) => setEdit(m.numero_fifa, k, v)}
+              />
+            ) : (
+              <MatchCotejo key={m.numero_fifa ?? `idx-${i}`} m={m} idx={i + 1} total={show.length} />
+            )
+          )}
+          {!readOnly && show.some((m) => m.estado === "programado") ? (
+            <SaveBar pin={pin} setPin={setPin} saving={saving} msg={saveMsg} onSave={guardar} />
+          ) : null}
         </>
       )}
     </div>
@@ -179,6 +229,95 @@ function Selector({
         ))}
       </select>
     </label>
+  );
+}
+
+function NumInput({ value, onChange, w = "w-12" }: { value: number | null | undefined; onChange: (v: number | null) => void; w?: string }) {
+  return (
+    <input
+      type="number"
+      inputMode="numeric"
+      value={value ?? ""}
+      onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+      className={`${w} rounded border border-border bg-surface-2 px-1 py-0.5 text-center text-sm`}
+    />
+  );
+}
+
+const BONUS_ED: { k: string; icon: string; label: string }[] = [
+  { k: "pred_amarillas", icon: "\u{1F7E8}", label: "Amar." },
+  { k: "pred_rojas", icon: "\u{1F7E5}", label: "Rojas" },
+  { k: "pred_var", icon: "\u{1F4FA}", label: "VAR" },
+  { k: "pred_penales_partido", icon: "\u{1F945}", label: "Pen." },
+  { k: "pred_minuto_gol", icon: "\u23F1", label: "Min" },
+];
+
+function EditableMatch({
+  m, idx, total, ed, onEdit,
+}: {
+  m: MisPartidoRow; idx: number; total: number;
+  ed: Record<string, number | null>; onEdit: (k: string, v: number | null) => void;
+}) {
+  return (
+    <div id={`mp-${m.numero_fifa}`} className="scroll-mt-24 overflow-hidden rounded-xl border border-brand/40 bg-surface">
+      <div className="bg-surface-2 px-3 py-1 text-center text-[11px] font-semibold text-brand">
+        Editar pronostico · Partido {idx} de {total}
+      </div>
+      <div className="flex items-center justify-between gap-2 px-3 py-2">
+        <span className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-semibold">
+          {m.local_logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={m.local_logo} alt="" className="h-4 w-4 shrink-0 object-contain" />
+          ) : null}
+          <span className="truncate">{m.local_nombre}</span>
+        </span>
+        <div className="flex items-center gap-1">
+          <NumInput value={ed.pred_local} onChange={(v) => onEdit("pred_local", v)} />
+          <span className="text-muted">-</span>
+          <NumInput value={ed.pred_visitante} onChange={(v) => onEdit("pred_visitante", v)} />
+        </div>
+        <span className="flex min-w-0 flex-1 items-center justify-end gap-1.5 text-sm font-semibold">
+          <span className="truncate">{m.visit_nombre}</span>
+          {m.visit_logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={m.visit_logo} alt="" className="h-4 w-4 shrink-0 object-contain" />
+          ) : null}
+        </span>
+      </div>
+      <div className="grid grid-cols-5 gap-1 border-t border-border px-2 py-2">
+        {BONUS_ED.map((b) => (
+          <label key={b.k} className="flex flex-col items-center gap-0.5 text-[10px] text-muted">
+            <span>{b.icon} {b.label}</span>
+            <NumInput value={ed[b.k]} onChange={(v) => onEdit(b.k, v)} w="w-full" />
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SaveBar({ pin, setPin, saving, msg, onSave }: { pin: string; setPin: (v: string) => void; saving: boolean; msg: string | null; onSave: () => void }) {
+  return (
+    <div className="sticky bottom-0 flex flex-col gap-2 rounded-xl border border-border bg-surface p-3">
+      <div className="flex items-center gap-2">
+        <input
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+          placeholder="PIN (tu primer nombre)"
+          className="flex-1 rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-sm"
+        />
+        <button
+          onClick={onSave}
+          disabled={saving || !pin.trim()}
+          className="rounded-lg bg-brand px-4 py-1.5 text-sm font-bold text-black disabled:opacity-40"
+        >
+          {saving ? "Guardando..." : "Guardar"}
+        </button>
+      </div>
+      {msg ? (
+        <div className={`text-center text-xs ${msg.startsWith("\u2713") ? "text-brand" : "text-orange"}`}>{msg}</div>
+      ) : null}
+    </div>
   );
 }
 
