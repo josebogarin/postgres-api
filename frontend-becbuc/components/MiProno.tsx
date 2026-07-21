@@ -114,16 +114,26 @@ export default function MiProno({
 
   // Fase a mostrar: la del partido tocado; sino la abierta; si TODO cerrado, la FINAL (P104).
   const closedKey = byNum[104] ? phaseKey(byNum[104]) : all.length ? phaseKey(all[all.length - 1]) : null;
+  // Si se toco un partido y esta en los datos, mostrar SU fase; si no (o sin foco),
+  // mostrar la fase abierta (todos sus partidos). Nunca vaciar por un foco no hallado.
   const focusKey =
-    focusNum != null ? (byNum[focusNum] ? phaseKey(byNum[focusNum]) : null) : activeKey ?? closedKey;
+    focusNum != null && byNum[focusNum]
+      ? phaseKey(byNum[focusNum])
+      : activeKey ?? closedKey;
   // Solo partidos con equipos DEFINIDOS (excluye placeholders "Por Definir", "TBD",
   // "Gan. X/Y" de los cruces aun no jugados). Se puede pronosticar solo esos.
   const _TBD = /^(por definir|tbd|gan\.)/i;
   const _def = (n?: string | null) => !!n && !_TBD.test(String(n).trim());
+  // Agrupar ida+vuelta de la misma llave (por par de equipos), ida antes que vuelta.
+  const _tieKey = (m: MisPartidoRow) => {
+    const a = m.local_id ?? 0, b = m.visit_id ?? 0;
+    return Math.min(a, b) * 100000 + Math.max(a, b);
+  };
+  const _ts = (m: MisPartidoRow) => (m.fecha ? Date.parse(m.fecha) : m.numero_fifa);
   const show = focusKey
     ? all
         .filter((m) => phaseKey(m) === focusKey && _def(m.local_nombre) && _def(m.visit_nombre))
-        .sort((a, b) => a.numero_fifa - b.numero_fifa)
+        .sort((a, b) => _tieKey(a) - _tieKey(b) || _ts(a) - _ts(b))
     : [];
   const first = show[0];
   const title = first
