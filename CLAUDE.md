@@ -678,6 +678,51 @@ bracket_service.py -> _sort_grupo():
 
 ## HISTORIAL SESIONES
 
+2026-07-20 - Sesion Cowork - FASE 4 FRONTEND: PILOTO "PLAYOFF LIVE" (Next.js) EN frontend-becbuc/:
+
+  Proyecto NUEVO, separado y limpio (NO toca los HTML de produccion): C:\proyecto FAST API\frontend-becbuc\
+    Next.js 16 + React 19 + Tailwind 4 + TS (config clonada de frontend/). Mobile-first, tema Bet365 oscuro.
+    Servido: dev -> npm run dev (:3000, proxya /api -> uvicorn :8000; probar en celu via ngrok http 3000).
+      prod -> npm run build:export => out/ (basePath /static/v2) -> copiar a backend/static/v2/ (mismo
+      uvicorn/ngrok que hoy; el link viejo NO cambia hasta el cutover).
+    lib/api.ts: cliente fetch mismo-origen, JWT auto-login jose/catalina + header ngrok-skip.
+    NOTA mental: npm = pip (npm install baja libs); npm run dev = el "uvicorn" del front.
+
+  PILOTO app/playoff-live - INTERFAZ ACEPTADA POR EL USUARIO. 4 tabs (Playoff / En Vivo / Pronosticos / Puntaje):
+    - Playoff (components/BracketTree): arbol convergente SVG (mitades izq/der -> Final+3P al centro),
+      con pan+zoom PROPIO (components/PanZoom: arrastre con lazy-capture, pinch, min=tamano real, botones +/-;
+      un toque en la llave navega a Pronosticos de ese partido, un arrastre NO). Badges 🔴 EN VIVO / ⏭ PROXIMO.
+    - En Vivo (components/EnVivo): visor de 1 partido navegable (⏮ ‹ › ⏭ + swipe horizontal). Encabezado
+      🏆 PARTIDO FINAL (P104) / 🥉 TERCER PUESTO (P103) / ⏭ PROXIMO PARTIDO. STATS DERIVADAS DE LOS EVENTOS
+      (coinciden con el timeline): amarillas = cada Yellow Card, rojas = cada Red Card, banco EXCLUIDO
+      (player.id null o nombre con prefijo "Banco:"); REGLA: 2a amarilla suma amarilla + la roja aparte.
+      Timeline a DOS LADOS (local izq / visit der, minuto al centro); subs con ▲ verde (entra) / ▼ rojo (sale);
+      tanda de penales debajo con resultado + quien clasifica.
+    - Pronosticos (components/MiProno): selector de apostador (persist en localStorage) + cotejo por item
+      H-P vs resultado real, ICONOS+LABEL (⚽ Resultado, 🎯 Marcador, 🟨 Amarillas, 🟥 Rojas, 📺 VAR,
+      🥅 Penales, ⏱ Minuto, ⚡ Tanda, 🏳️ Clasifica); secciones "Items del partido" / "Definicion por penales";
+      "partido n de m"; muestra la fase activa o el partido tocado en el bracket (scroll a el).
+    - Puntaje: ranking + desglose con toggle Por item / Por fase (default Por item; los 12 grupos se
+      agrupan en "Grupos" para no romper por key duplicada) + globales.
+
+  ENDPOINTS consumidos (todos ya existen): bracket-real, ranking, apostadores, mis-partidos, live-panel,
+    torneo-cerrado. Fuente unica de scoring = backend (el front NO recalcula).
+
+  VAR EN EL TIMELINE (limite de datos, confirmado con diagnostico): API-Football NO trae eventos tipo
+    "Var" para varias fixtures (el VAR=N de la BD vino de fuente secundaria) -> no se puede dibujar.
+    TODO: traerlo de SofaScore (incidents varDecision con minuto, GRATIS) y mergearlo a eventos_api.
+    SofaScore da 403 desde la IP del server -> correr el fetch DESDE LA PC. (Fotmob = alternativa; ESPN sobrecuenta.)
+
+  SCRIPTS DE DATOS creados (raiz; REFRESCAN SOLO partido.eventos_api, NO tocan totales ni scoring):
+    diag_eventos.py (dump del eventos_api guardado), diag_eventos_api.py (consulta live a API-Football),
+    actualizar_eventos_api.py [numero_fifa|all] (refresca eventos_api con la data en vivo).
+    Hallazgo: el eventos_api guardado estaba VIEJO (ej. final: faltaba la 2a amarilla + roja de Enzo que
+    la API en vivo SI trae) -> actualizar_eventos_api.py 104 lo arregla sin tocar los 4 amarillas del Excel.
+
+  PROXIMO: (1) checkpoint git del frontend-becbuc + prueba en celu; (2) VAR via SofaScore;
+    (3) 2da superficie "Grupos Live" (ex becbuc-live); (4) editor de apuestas (lo mas delicado, para el final).
+
+
 2026-07-20 - Sesion Cowork (sesion 71) - SINCRONIZACION FINAL DESDE EXCEL DE CIERRE + ALINEAR RESULTADOS + VALIDAR ALGORITMO:
 
   OBJETIVO: verificar que apuestas + resultados de la BD coincidan con el Excel de cierre;
@@ -758,6 +803,53 @@ bracket_service.py -> _sort_grupo():
     Ctrl+F5 si el navegador tenia cache.
 
   PENDIENTE (opcional): ejecutar backup del nuevo estado (bat\run_backup.bat). Git sigue sin versionar.
+
+
+2026-07-20 - REFACTOR BACKEND (sesion aparte ~12h; CHECKPOINT recuperado en sesion 71 desde el codigo):
+
+  POR QUE NO ESTABA ACA: el refactor se hizo hoy ~mediodia en OTRA sesion de Cowork y se commiteo
+    al .git ANIDADO de backend/ (no al repo raiz). Por eso no figuraba en este CLAUDE.md ni en el
+    commit de la sesion 71. Reconstruido desde el estado del codigo + ASSESSMENT_ARQUITECTURA_BECBUC.md.
+
+  PLAN GUIA: ASSESSMENT_ARQUITECTURA_BECBUC.md (raiz, 2026-07-20). Roadmap de 6 fases, verificado
+    contra el golden master del torneo cerrado. Idea central del usuario: ALIVIAR EL CODIGO
+    ELIMINANDO LO QUE NO SE USA. Metricas objetivo: apostador_bets.py 12.775 -> <800/router;
+    text() SQL en endpoints 433 -> 0; scoring 2 fuentes (Py+JS) -> 1; Portal 11.330 -> shell <1.000.
+
+  ESTADO: FASES 0-3 COMPLETADAS (backend). FASE 4 (frontend) = PROXIMO PASO (confirmado por el usuario).
+
+  HECHO EN EL BACKEND (visible en el arbol de codigo):
+    - repositories/ NUEVO: ranking_repo.py (Fase 2: sacar el SQL crudo del ranking del God file).
+    - services/reportes/ NUEVO: auditoria_excel.py + puntajes_excel.py + ranking_excel.py
+      (la generacion de Excel salio de apostador_bets.py -> gran parte de la reduccion de tamano).
+    - Fase 3 (partir el God file): nuevos routers admin_extra.py, database_admin.py, sistema.py,
+      diccionario.py (ademas de los previos auth/users/roles/portal/torneo/admin/monitor).
+    - services/becbuc/ creado (placeholder para servicios de dominio).
+    - tests/golden/*.json versionado (red de no-regresion del scoring; Fase 1).
+    - Se conservan services/scoring/ (Strategy+Registry) y services/monitor/ (ya eran buenos).
+    OJO A VERIFICAR AL RETOMAR: apostador_bets.py TODAVIA existe en el arbol (confirmar si quedo
+    como shell fino o si hay residual por mover).
+
+  DECISION REPOS ANIDADOS (backend/.git + frontend/.git sin .gitmodules):
+    ELEGIDO -> UNIFICAR EN UN SOLO REPO RAIZ (no submodulos). Razon: un unico producto que se
+    despliega junto, equipo de una persona, meta liviano/simple; submodulos = ceremonia y punteros
+    que se olvidan (fue lo que hizo "invisible" este refactor). Unificar da commits/backup atomicos.
+    Procedimiento seguro: (1) exportar git log de backend/ y frontend/ a .txt (preservar relato),
+    (2) zipear los .git anidados como respaldo, (3) borrar backend/.git y frontend/.git,
+    (4) git add -A + commit desde la raiz. (Historia real -> git subtree; mas complejo, no recomendado.)
+
+  PROXIMO PASO - FASE 4 FRONTEND (assessment seccion 4.2):
+    - Extraer nucleo compartido: static/js/becbuc-core.js (cliente API + JWT + formato/i18n +
+      componentes: tabla ranking, ficha partido, desglose H-O, bracket SVG) + static/css/becbuc.css.
+    - Las 4 superficies (BECBUC-portal, BECBUC-movil, becbuc-live, becbuc-live-playoffs) consumen el
+      nucleo -> ELIMINA la "REGLA UI OBLIGATORIA" (no mas Portal+Movil en paralelo).
+    - SACAR el scoring duplicado en JS (becbuc-live.html reimplementa H/I/J/K/L/M/N/O) -> consumir
+      los puntajes del backend (una sola fuente de verdad).
+    - HTML monoliticos (3k-11k lineas) -> shells delgados. Verificacion: cada fase se valida contra
+      el golden master (debe dar identico) + captura visual antes/despues de cada superficie.
+    - Superficies legacy a evaluar/retirar (Fase 5, tu idea de eliminar lo no usado): tester.html,
+      portal.html generico, cabecera_detalle, config_cabecera, fixture.html, api-reference,
+      BECBUC-pronos (huerfano), etc.
 
 
 2026-07-19 - Sesion Cowork (sesion 70) - CIERRE DEFINITIVO DEL TORNEO + PROPUESTA BECBUC 2.0 (DOC):

@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/* ===== Tema BECBUC (estilo Bet365, oscuro) — mobile-first ===== */
+@theme {
+  --color-bg: #1a1d23;
+  --color-surface: #242930;
+  --color-surface-2: #2b313a;
+  --color-border: #2e3540;
+  --color-brand: #00a651;
+  --color-brand-2: #14c667;
+  --color-orange: #e05020;
+  --color-muted: #9ca3af;
+  --color-text: #e7e9ee;
+  --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-text-size-adjust: 100%;
+  /* respeta el notch / barra inferior en móviles */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
