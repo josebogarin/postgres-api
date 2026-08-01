@@ -3,11 +3,13 @@ comparar_excel_vs_bd_full.py
 Compara BECBUC_verificacion.xlsx (Jun-23) contra puntaje_detalle actual.
 Reporta diferencias por apostador.
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import subprocess, sys
 from datetime import datetime
 
-EXCEL_PATH = r"C:\proyecto FAST API\BECBUC_verificacion.xlsx"
-LOG_PATH   = r"C:\proyecto FAST API\comparar_excel_bd_log.txt"
+EXCEL_PATH = _osp.path.join(_BASE, 'BECBUC_verificacion.xlsx')
+LOG_PATH   = _osp.path.join(_BASE, 'comparar_excel_bd_log.txt')
 
 def psql(sql, db="becbuc"):
     cmd = ["docker", "exec", "core-postgres", "psql",

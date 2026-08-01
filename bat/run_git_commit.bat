@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 if exist ".git\index.lock" del /f /q ".git\index.lock"
 git config --global --add safe.directory "C:/proyecto FAST API" >nul 2>&1
 git config user.name "Jose Bogarin"

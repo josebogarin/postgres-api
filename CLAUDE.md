@@ -735,6 +735,44 @@ bracket_service.py -> _sort_grupo():
 
 ## HISTORIAL SESIONES
 
+2026-07-21 - Sesion Cowork (sesion 72c) - PORTABILIDAD: SIN DEPENDER DE UN DIRECTORIO FIJO:
+
+  OBJETIVO (pedido del usuario): poder renombrar o copiar/pegar el directorio a otra ubicacion
+  y que TODO siga funcionando, sin la ruta hardcodeada "C:\proyecto FAST API".
+
+  YA ERA PORTABLE (verificado): la app backend (main.py sirve /static con rutas relativas via
+  __file__, .env usa localhost) y el frontend Next.js (mismo-origen). No requerian cambios.
+
+  ARREGLADO ESTA TANDA:
+    1) sync_auto.py: LOG_FILE/STATE_FILE via _ROOT = os.path.dirname(os.path.abspath(__file__)).
+    2) 294 archivos .bat: `cd /d "C:\proyecto FAST API"` -> `%~dp0..` (en bat/) o `%~dp0.` (raiz);
+       rutas internas -> %~dp0. Los .bat corren desde su propia ubicacion.
+    3) Backend registro de Task Scheduler (3 puntos) ahora deriva la ruta de __file__:
+       - apostador_bets.py /scheduler-start: PS con placeholders __EXE__/__SCRIPT__/__WORKDIR__
+         reemplazados por os.path.join(_root, ...) (_root sube 5 niveles desde el endpoint).
+       - admin.py + admin_extra.py: bat_path derivado de __file__ (sube 5 niveles a la raiz).
+    4) 46 scripts .py de diagnostico de la raiz: barrido AST (_sweep_portable.py) que inyecta
+       `import os as _osp; _BASE = _osp.path.dirname(_osp.path.abspath(__file__))` tras el docstring
+       y reemplaza cada literal string "C:\proyecto FAST API\..." por os.path.join(_BASE, ...).
+       Solo toca literales string reales (ast.Constant), NO docstrings/comentarios. Valida con ast;
+       si un archivo falla no se escribe. 229/231 .py de raiz compilan OK.
+
+  QUEDA HARDCODEADO (bajo, dev tools, NO afecta el runtime de la app):
+    - 2 archivos ya rotos de ANTES (no tocados): test_simple.py (newline literal en string),
+      reforma_scores_tab.py (comilla suelta). Scratch de sesiones viejas.
+    - 2 f-strings con ruta en scripts de test (test_integral.py L817 rf"...\{filename}",
+      goleada_off_y_excel_grupos.py). El barrido AST no reescribe JoinedStr; a mano si se necesitan.
+
+  IMPORTANTE AL MOVER/RENOMBRAR EL DIRECTORIO:
+    - El codigo fuente ya no depende de la ruta. PERO Windows Task Scheduler guarda rutas ABSOLUTAS
+      en la tarea BECBUC-SyncAPI -> re-registrarla desde la nueva ubicacion (POST /scheduler-start
+      o bat/registrar_sync_auto). El endpoint ya toma la ruta nueva automaticamente.
+    - backend/.venv tiene rutas absolutas propias de Python: si se mueve, recrear el venv
+      (python -m venv .venv + pip install -r requirements.txt).
+
+  TEMPORALES A BORRAR (inocuos; el sandbox no pudo por permisos del mount):
+    _sweep_portable.py, _fix_portable_backend.py
+
 2026-07-21 - Sesion Cowork (sesion 72) - MULTI-TORNEO EN EL LIVE + BRACKET DE CLUBES (Libertadores/Sudamericana) + FIXTURES:
 
   ============================================================================

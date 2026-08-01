@@ -16,6 +16,7 @@ import BracketClubes from "@/components/BracketClubes";
 import MiProno from "@/components/MiProno";
 import EnVivo from "@/components/EnVivo";
 import GruposView from "@/components/GruposView";
+import MatchReplay from "@/components/MatchReplay";
 
 type Tab = "bracket" | "grupos" | "envivo" | "ranking" | "miprono";
 
@@ -24,18 +25,23 @@ export default function PlayoffLive() {
   const [torneoId, setTorneoId] = useState<number | null>(null);
   const [torneoNombre, setTorneoNombre] = useState<string>("");
   const [readOnly, setReadOnly] = useState<boolean>(false);
+  const [apoNombre, setApoNombre] = useState<string>("");
+  const [apoApodo, setApoApodo] = useState<string>("");
   const [tab, setTab] = useState<Tab>("bracket");
   const [bracket, setBracket] = useState<BracketMatch[] | null>(null);
   const [bracketClubes, setBracketClubes] = useState<ClubRonda[] | null>(null);
+  const [bracketLogo, setBracketLogo] = useState<string | null>(null);
   const [esClubes, setEsClubes] = useState(false);
   const [ranking, setRanking] = useState<RankingRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [sel, setSel] = useState<number | null>(null);
+  const [replayPid, setReplayPid] = useState<number | null>(null);
 
   // El torneo se elige en el login (root). Si no hay, volver a elegir.
   useEffect(() => {
     const id = Number(localStorage.getItem("becbuc_torneo"));
-    if (!id) {
+    const aid = Number(localStorage.getItem("becbuc_apostador_id"));
+    if (!id || !aid) {
       router.replace("/");
       return;
     }
@@ -43,12 +49,19 @@ export default function PlayoffLive() {
     setTorneoNombre(localStorage.getItem("becbuc_torneo_nombre") || "BECBUC Live");
     setReadOnly(localStorage.getItem("becbuc_torneo_ro") === "1");
     setEsClubes(localStorage.getItem("becbuc_torneo_tercero") === "0");
+    setApoNombre(localStorage.getItem("becbuc_apostador_nombre") || "");
+    setApoApodo(localStorage.getItem("becbuc_apostador_apodo") || "");
   }, [router]);
 
-  const salir = () => {
-    localStorage.removeItem("becbuc_torneo");
-    localStorage.removeItem("becbuc_torneo_nombre");
-    localStorage.removeItem("becbuc_torneo_ro");
+  const cambiarTorneo = () => {
+    ["becbuc_torneo", "becbuc_torneo_nombre", "becbuc_torneo_ro", "becbuc_torneo_tercero"]
+      .forEach((k) => localStorage.removeItem(k));
+    router.replace("/");
+  };
+  const cerrarSesion = () => {
+    ["becbuc_torneo", "becbuc_torneo_nombre", "becbuc_torneo_ro", "becbuc_torneo_tercero",
+     "becbuc_apostador_id", "becbuc_apostador_nombre", "becbuc_apostador_apodo", "becbuc_is_admin"]
+      .forEach((k) => localStorage.removeItem(k));
     router.replace("/");
   };
 
@@ -65,6 +78,7 @@ export default function PlayoffLive() {
       if (esClubes) {
         const bc = await api.get<BracketClubesResponse>(`/bets/bracket-clubes/${torneoId}`);
         setBracketClubes(bc?.rondas ?? []);
+        setBracketLogo(bc?.logo ?? null);
       } else {
         const b = await api.get<BracketResponse>(`/bets/bracket-real/${torneoId}`);
         setBracket(b?.partidos ?? []);
@@ -86,7 +100,7 @@ export default function PlayoffLive() {
 
   return (
     <main className="mx-auto w-full max-w-md md:max-w-3xl lg:max-w-none lg:px-6 pb-10">
-      <TopBar nombre={torneoNombre} readOnly={readOnly} onExit={salir} />
+      <TopBar nombre={torneoNombre} readOnly={readOnly} apoNombre={apoNombre} apoApodo={apoApodo} onCambiarTorneo={cambiarTorneo} onCerrarSesion={cerrarSesion} />
       <TabBar tab={tab} setTab={setTab} />
 
       {err && (
@@ -98,17 +112,21 @@ export default function PlayoffLive() {
       <div className="px-3 pt-3">
         {tab === "bracket" &&
           (esClubes ? (
-            <ClubesView rondas={bracketClubes} onGoPronos={() => setTab("miprono")} />
+            <ClubesView rondas={bracketClubes} logoUrl={bracketLogo} onGoPronos={() => setTab("miprono")} />
           ) : (
             <BracketView partidos={bracket} onSelect={selectMatch} />
           ))}
-        {tab === "grupos" && <GruposView torneoId={torneoId} onSelect={selectMatch} />}
+        {tab === "grupos" && <GruposView torneoId={torneoId} onSelect={selectMatch} onReplay={setReplayPid} />}
         {tab === "envivo" && <EnVivo torneoId={torneoId} />}
         {tab === "ranking" && <RankingView rows={ranking} />}
         {tab === "miprono" && (
           <MiProno torneoId={torneoId} readOnly={readOnly} focusNum={sel} />
         )}
       </div>
+
+      {replayPid != null && (
+        <MatchReplay partidoId={replayPid} onClose={() => setReplayPid(null)} />
+      )}
     </main>
   );
 }
@@ -116,12 +134,22 @@ export default function PlayoffLive() {
 function TopBar({
   nombre,
   readOnly,
-  onExit,
+  apoNombre,
+  apoApodo,
+  onCambiarTorneo,
+  onCerrarSesion,
 }: {
   nombre: string;
   readOnly: boolean;
-  onExit: () => void;
+  apoNombre: string;
+  apoApodo: string;
+  onCambiarTorneo: () => void;
+  onCerrarSesion: () => void;
 }) {
+  const ident =
+    apoNombre && apoApodo && apoNombre !== apoApodo
+      ? `${apoNombre} (${apoApodo})`
+      : apoNombre || apoApodo;
   return (
     <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-bg/95 px-3 py-2.5 backdrop-blur">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -132,13 +160,20 @@ function TopBar({
       />
       <div className="min-w-0 flex-1">
         <h1 className="truncate text-sm font-bold leading-tight">{nombre}</h1>
-        {readOnly && (
-          <span className="text-[10px] text-orange">Finalizado · solo lectura</span>
-        )}
+        <span className="block truncate text-[11px] text-muted">
+          👤 {ident}
+          {readOnly && <span className="ml-1 text-orange">· solo lectura</span>}
+        </span>
       </div>
       <button
-        onClick={onExit}
-        className="shrink-0 rounded-lg border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-muted active:bg-surface-2"
+        onClick={onCambiarTorneo}
+        className="shrink-0 rounded-lg border border-border bg-surface px-2 py-1 text-[11px] font-semibold text-muted active:bg-surface-2"
+      >
+        Torneos
+      </button>
+      <button
+        onClick={onCerrarSesion}
+        className="shrink-0 rounded-lg border border-border bg-surface px-2 py-1 text-[11px] font-semibold text-muted active:bg-surface-2"
       >
         Salir
       </button>
@@ -189,14 +224,16 @@ function BracketView({
 
 function ClubesView({
   rondas,
+  logoUrl,
   onGoPronos,
 }: {
   rondas: ClubRonda[] | null;
+  logoUrl: string | null;
   onGoPronos: () => void;
 }) {
   if (rondas === null) return <Loading />;
   if (rondas.length === 0) return <Empty msg="Todavía no hay partidos de playoff." />;
-  return <BracketClubes rondas={rondas} onSelect={() => onGoPronos()} />;
+  return <BracketClubes rondas={rondas} logoUrl={logoUrl} onSelect={() => onGoPronos()} />;
 }
 
 /* ---------------- Ranking ---------------- */

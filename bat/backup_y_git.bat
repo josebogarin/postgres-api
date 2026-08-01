@@ -6,7 +6,7 @@ echo.
 
 REM 1. Backup
 echo [1/3] Ejecutando backup...
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 powershell -ExecutionPolicy Bypass -File "backup_becbuc.ps1"
 echo.
 
@@ -18,7 +18,7 @@ if exist "backend\.git\index.lock" (
 
 REM 3. Git commit
 echo [2/3] Git add + commit...
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 git add -A
 git status --short
 echo.

@@ -2,6 +2,8 @@
 comparar_scores.py
 Compara puntajes en puntaje_detalle (BD) vs hoja Ranking del Excel generado.
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import sys, psycopg2, psycopg2.extras, openpyxl
 from pathlib import Path
 
@@ -10,7 +12,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 TORNEO_ID = 2
 DB = dict(host="localhost", port=5432, user="app_user",
           password="superpassword", dbname="becbuc")
-EXCEL = r"C:\proyecto FAST API\BECBUC_verificacion.xlsx"
+EXCEL = _osp.path.join(_BASE, 'BECBUC_verificacion.xlsx')
 
 # ── 1. Leer BD ────────────────────────────────────────────────────────────────
 conn = psycopg2.connect(**DB)

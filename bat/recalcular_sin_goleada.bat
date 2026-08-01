@@ -1,6 +1,6 @@
 @echo off
 echo Recalculando puntajes (Mayor Goleada deshabilitada)...
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 call .venv\Scripts\activate.bat
 
 python -c "

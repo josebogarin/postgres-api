@@ -4,7 +4,7 @@ echo   BECBUC - Iniciando servidor + pagina live
 echo ============================================
 echo.
 
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 
 echo [1/3] Cerrando servidor anterior (si existe)...
 taskkill /F /FI "WINDOWTITLE eq uvicorn-becbuc" /T >nul 2>&1

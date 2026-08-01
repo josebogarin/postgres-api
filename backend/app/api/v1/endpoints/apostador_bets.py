@@ -540,8 +540,28 @@ async def upsert_apuesta(body: ApuestaIn, current: CurrentUser, db: DBSession) -
             "pred": f"{body.pred_local} - {body.pred_visitante}"}
 
 
+_sust_cols_ok = False
+async def _ensure_sust_cols(db):
+    """Columnas de clubes (reglamento nuevo): sustituciones (total) + comodin.
+    Idempotente, 1 vez por proceso."""
+    global _sust_cols_ok
+    if _sust_cols_ok:
+        return
+    for stmt in (
+        # Sustituciones: UN total por partido (local + visitante).
+        "ALTER TABLE apuesta ADD COLUMN IF NOT EXISTS pred_sustituciones INT",
+        "ALTER TABLE partido ADD COLUMN IF NOT EXISTS sustituciones INT",
+        # Comodin: el apostador marca UN partido (x3 en el orquestador de clubes).
+        "ALTER TABLE apuesta ADD COLUMN IF NOT EXISTS pred_comodin BOOLEAN DEFAULT FALSE",
+    ):
+        await db.execute(text(stmt))
+    await db.commit()
+    _sust_cols_ok = True
+
+
 class LiveApuestaItem(BaseModel):
-    numero_fifa: int
+    partido_id: int | None = None
+    numero_fifa: int | None = None
     pred_local: int
     pred_visitante: int
     pred_amarillas: int | None = None
@@ -552,6 +572,118 @@ class LiveApuestaItem(BaseModel):
     pred_penales_local_tanda: int | None = None
     pred_penales_visitante_tanda: int | None = None
     pred_equipo_clasifica: int | None = None
+    pred_sustituciones: int | None = None
+    pred_comodin: bool | None = None
+
+
+# =============================================================================
+# PIN de apostador (login v2). PIN de 4 digitos, unico por apostador.
+# 1964 = PIN reservado del administrador (entra en modo SOLO LECTURA).
+# =============================================================================
+import hashlib as _hashlib
+ADMIN_PIN = "1964"
+
+def _pin_hash(pin: str) -> str:
+    return _hashlib.sha256(("becbuc_pin::" + (pin or "").strip()).encode("utf-8")).hexdigest()
+
+async def _ensure_pin_col():
+    """Crea la columna becbuc_pin en users (app_db) si no existe. Idempotente."""
+    async with _app_engine.begin() as conn:
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS becbuc_pin VARCHAR(64)"))
+        await conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ux_users_becbuc_pin ON users (becbuc_pin) "
+            "WHERE becbuc_pin IS NOT NULL"))
+
+class SetPinIn(BaseModel):
+    apostador_id: int
+    pin: str
+
+class VerifyPinIn(BaseModel):
+    apostador_id: int
+    pin: str
+
+@router.get("/live-pin-estado/{apostador_id}", summary="Si el apostador ya configuro su PIN (login v2)")
+async def live_pin_estado(apostador_id: int) -> dict:
+    await _ensure_pin_col()
+    async with _app_engine.connect() as conn:
+        r = await conn.execute(text("SELECT becbuc_pin IS NOT NULL FROM users WHERE id = :aid"),
+                               {"aid": apostador_id})
+        row = r.first()
+    if not row:
+        raise HTTPException(404, "Apostador no encontrado")
+    return {"tiene_pin": bool(row[0])}
+
+@router.post("/live-set-pin", summary="Crear/actualizar el PIN de 4 digitos de un apostador (login v2)")
+async def live_set_pin(body: SetPinIn) -> dict:
+    await _ensure_pin_col()
+    pin = (body.pin or "").strip()
+    if not (len(pin) == 4 and pin.isdigit()):
+        return {"ok": False, "error": "El PIN debe tener exactamente 4 digitos."}
+    if pin == ADMIN_PIN:
+        return {"ok": False, "error": "Ese PIN esta reservado. Elegi otro."}
+    ph = pin
+    async with _app_engine.begin() as conn:
+        r = await conn.execute(text(
+            "SELECT id FROM users WHERE becbuc_pin = :ph AND id <> :aid LIMIT 1"),
+            {"ph": ph, "aid": body.apostador_id})
+        if r.first():
+            return {"ok": False, "error": "Ese PIN ya fue solicitado por otro apostador. Elegi otro."}
+        upd = await conn.execute(text("UPDATE users SET becbuc_pin = :ph WHERE id = :aid"),
+                                 {"ph": ph, "aid": body.apostador_id})
+        if upd.rowcount == 0:
+            return {"ok": False, "error": "Apostador no encontrado."}
+    return {"ok": True}
+
+@router.post("/live-verify-pin", summary="Verificar el PIN de un apostador (login v2). 1964 = admin")
+async def live_verify_pin(body: VerifyPinIn) -> dict:
+    await _ensure_pin_col()
+    pin = (body.pin or "").strip()
+    if pin == ADMIN_PIN:
+        return {"ok": True, "is_admin": True}
+    async with _app_engine.connect() as conn:
+        r = await conn.execute(text("SELECT becbuc_pin FROM users WHERE id = :aid"),
+                               {"aid": body.apostador_id})
+        row = r.first()
+    if not row:
+        return {"ok": False, "error": "Apostador no encontrado."}
+    if row[0] is None:
+        return {"ok": False, "error": "Este apostador todavia no configuro su PIN.", "sin_pin": True}
+    if pin != row[0]:
+        return {"ok": False, "error": "PIN incorrecto."}
+    return {"ok": True, "is_admin": False}
+
+def _norm_tel(t: str) -> str:
+    return "".join(ch for ch in (t or "") if ch.isdigit())
+
+class RecuperarPinIn(BaseModel):
+    telefono: str
+
+@router.post("/live-recuperar-pin", summary="Recuperar el PIN por celular registrado (login v2)")
+async def live_recuperar_pin(body: RecuperarPinIn) -> dict:
+    await _ensure_pin_col()
+    tel = _norm_tel(body.telefono)
+    if len(tel) < 6:
+        return {"ok": False, "error": "Ingresa un numero de celular valido."}
+    async with _app_engine.connect() as conn:
+        r = await conn.execute(text("""
+            SELECT users.id, users.username, users.becbuc_pin,
+                   regexp_replace(COALESCE(users.telefono,''), '[^0-9]', '', 'g') AS tel_norm
+            FROM users
+            JOIN user_roles ur ON ur.user_id = users.id
+            JOIN roles ro ON ro.id = ur.role_id
+            WHERE ro.name = 'apostador' AND users.is_active = TRUE
+        """))
+        rows = r.mappings().all()
+    match = None
+    for u in rows:
+        tn = u["tel_norm"] or ""
+        if tn and (tn == tel or tn.endswith(tel) or tel.endswith(tn)):
+            match = u; break
+    if not match:
+        return {"ok": False, "error": "No encontramos ese celular. Verificalo o pedile al admin que lo cargue."}
+    if not match["becbuc_pin"]:
+        return {"ok": False, "error": "Ese apostador todavia no configuro su PIN.", "sin_pin": True, "apostador": match["username"]}
+    return {"ok": True, "apostador": match["username"], "pin": match["becbuc_pin"]}
 
 
 class LiveGuardarIn(BaseModel):
@@ -568,32 +700,69 @@ async def live_guardar_apuestas(torneo_id: int, body: LiveGuardarIn, db: DBSessi
     Solo guarda partidos en estado 'programado' cuya fase NO este bloqueada.
     No calcula puntajes ni cierra fases.
     """
-    # 1. Validar PIN = username (app_db), comparacion en UPPER
+    # 1. Validar PIN guardado (login v2). 1964 = admin -> solo lectura, no guarda.
+    await _ensure_pin_col()
+    _pin = (body.pin or "").strip()
+    if _pin == ADMIN_PIN:
+        return {"ok": False, "error": "Modo administrador: solo lectura. No se pueden modificar apuestas."}
     async with _app_engine.connect() as conn:
-        ur = await conn.execute(
-            text("SELECT username, nombre FROM users WHERE id = :aid"),
-            {"aid": body.apostador_id})
+        ur = await conn.execute(text("SELECT becbuc_pin FROM users WHERE id = :aid"),
+                                {"aid": body.apostador_id})
         urow = ur.first()
     if not urow:
         raise HTTPException(404, "Apostador no encontrado")
-    username = (urow[0] or "").strip()
-    nombre_full = (urow[1] or "").strip()
-    primer_nombre = nombre_full.split()[0] if nombre_full else username
-    if (body.pin or "").strip().upper() != primer_nombre.upper():
-        return {"ok": False, "error": "PIN incorrecto. El PIN es tu primer nombre."}
+    if urow[0] is None:
+        return {"ok": False, "error": "Todavia no configuraste tu PIN."}
+    if _pin != urow[0]:
+        return {"ok": False, "error": "PIN incorrecto."}
     if not body.apuestas:
         return {"ok": False, "error": "No hay apuestas para guardar."}
 
+    await _ensure_sust_cols(db)
+
+    # ── Validación de comodín ANTES de guardar (uso único por torneo) ──────────
+    _comodin_en_batch = sum(1 for it in body.apuestas if it.pred_comodin)
+    if _comodin_en_batch > 1:
+        return {"ok": False,
+                "error": "El comodín se usa en UN solo partido. Marcalo en uno solo."}
+    if _comodin_en_batch >= 1:
+        # ¿Ya tiene el comodín en un partido que YA se jugó? Entonces quedó fijo.
+        rlk = await db.execute(text("""
+            SELECT 1 FROM apuesta a
+            JOIN partido p ON p.id = a.partido_id
+            JOIN fase f ON f.id = p.fase_id
+            WHERE f.torneo_id = :tid AND a.apostador_id = :uid
+              AND COALESCE(a.pred_comodin, FALSE) = TRUE
+              AND p.estado IN ('en_juego', 'finalizado')
+            LIMIT 1
+        """), {"tid": torneo_id, "uid": body.apostador_id})
+        if rlk.first() is not None:
+            return {"ok": False,
+                    "error": "Ya usaste tu comodín en un partido que ya se jugó. No se puede cambiar."}
+
     resultados: list[dict] = []
     guardadas = 0
+    batch_pids: list[int] = []
+    comodin_pid: int | None = None
     for it in body.apuestas:
-        pr = await db.execute(text("""
-            SELECT p.id, p.estado, COALESCE(f.bloqueada, FALSE) AS bloqueada,
-                   p.equipo_local_id, p.equipo_visitante_id, p.fecha
-            FROM partido p JOIN fase f ON f.id = p.fase_id
-            WHERE f.torneo_id = :tid AND p.numero_fifa = :nfifa
-            LIMIT 1
-        """), {"tid": torneo_id, "nfifa": it.numero_fifa})
+        # Clubes (Liberta/Sudamericana) NO usan numero_fifa (es del Mundial): se
+        # identifica el partido por partido_id. Fallback a numero_fifa para el Mundial.
+        if it.partido_id is not None:
+            pr = await db.execute(text("""
+                SELECT p.id, p.estado, COALESCE(f.bloqueada, FALSE) AS bloqueada,
+                       p.equipo_local_id, p.equipo_visitante_id, p.fecha
+                FROM partido p JOIN fase f ON f.id = p.fase_id
+                WHERE f.torneo_id = :tid AND p.id = :pid
+                LIMIT 1
+            """), {"tid": torneo_id, "pid": it.partido_id})
+        else:
+            pr = await db.execute(text("""
+                SELECT p.id, p.estado, COALESCE(f.bloqueada, FALSE) AS bloqueada,
+                       p.equipo_local_id, p.equipo_visitante_id, p.fecha
+                FROM partido p JOIN fase f ON f.id = p.fase_id
+                WHERE f.torneo_id = :tid AND p.numero_fifa = :nfifa
+                LIMIT 1
+            """), {"tid": torneo_id, "nfifa": it.numero_fifa})
         prow = pr.first()
         if not prow:
             resultados.append({"numero_fifa": it.numero_fifa, "ok": False, "msg": "Partido no encontrado"})
@@ -624,11 +793,13 @@ async def live_guardar_apuestas(torneo_id: int, body: LiveGuardarIn, db: DBSessi
                  pred_minuto_gol, pred_amarillas, pred_var,
                  pred_rojas, pred_penales_partido,
                  pred_penales_local_tanda, pred_penales_visitante_tanda,
-                 pred_equipo_clasifica)
+                 pred_equipo_clasifica,
+                 pred_sustituciones, pred_comodin)
             VALUES
                 (:uid, :pid, :nombre, :nfifa,
                  :pl, :pv, :pmg, :pam, :pvar,
-                 :projas, :ppp, :pltanda, :pvtanda, :pec)
+                 :projas, :ppp, :pltanda, :pvtanda, :pec,
+                 :psub, :pcom)
             ON CONFLICT (apostador_id, partido_id) DO UPDATE SET
                 nombre_apostador             = EXCLUDED.nombre_apostador,
                 numero_fifa                  = EXCLUDED.numero_fifa,
@@ -642,6 +813,8 @@ async def live_guardar_apuestas(torneo_id: int, body: LiveGuardarIn, db: DBSessi
                 pred_penales_local_tanda     = EXCLUDED.pred_penales_local_tanda,
                 pred_penales_visitante_tanda = EXCLUDED.pred_penales_visitante_tanda,
                 pred_equipo_clasifica        = EXCLUDED.pred_equipo_clasifica,
+                pred_sustituciones           = EXCLUDED.pred_sustituciones,
+                pred_comodin                 = EXCLUDED.pred_comodin,
                 updated_at                   = NOW()
         """), {
             "uid": body.apostador_id, "pid": pid, "nombre": username,
@@ -652,9 +825,50 @@ async def live_guardar_apuestas(torneo_id: int, body: LiveGuardarIn, db: DBSessi
             "pltanda": it.pred_penales_local_tanda,
             "pvtanda": it.pred_penales_visitante_tanda,
             "pec": pec,
+            "psub": it.pred_sustituciones,
+            "pcom": bool(it.pred_comodin),
         })
+        batch_pids.append(pid)
+        if it.pred_comodin:
+            comodin_pid = pid  # el ultimo marcado gana (deberia haber solo uno)
         guardadas += 1
         resultados.append({"numero_fifa": it.numero_fifa, "ok": True, "msg": "Guardado"})
+
+    # ── Comodin unico por torneo: solo UN partido puede tenerlo activo ──────────
+    # Regla: una vez que el partido con comodin se jugo (en_juego/finalizado), el
+    # comodin queda FIJO y no se puede mover ni sacar.
+    comodin_bloqueado = False
+    if batch_pids:
+        rcb = await db.execute(text("""
+            SELECT 1 FROM apuesta a
+            JOIN partido p ON p.id = a.partido_id
+            JOIN fase f ON f.id = p.fase_id
+            WHERE f.torneo_id = :tid AND a.apostador_id = :uid
+              AND COALESCE(a.pred_comodin, FALSE) = TRUE
+              AND p.estado IN ('en_juego', 'finalizado')
+            LIMIT 1
+        """), {"tid": torneo_id, "uid": body.apostador_id})
+        comodin_bloqueado = rcb.first() is not None
+
+    if batch_pids and not comodin_bloqueado:
+        _ids_sql = ",".join(str(i) for i in batch_pids)
+        if comodin_pid is not None:
+            # Deja el comodin solo en el partido elegido; lo quita de cualquier otro
+            # (los del batch + cualquier partido del torneo que lo tuviera antes).
+            await db.execute(text(f"""
+                UPDATE apuesta a SET pred_comodin = (a.partido_id = :cpid)
+                FROM partido p JOIN fase f ON f.id = p.fase_id
+                WHERE a.partido_id = p.id AND f.torneo_id = :tid
+                  AND a.apostador_id = :uid
+                  AND (a.partido_id IN ({_ids_sql}) OR a.pred_comodin = TRUE)
+            """), {"cpid": comodin_pid, "tid": torneo_id, "uid": body.apostador_id})
+        else:
+            # Ningun comodin en este envio: solo desmarca los partidos del batch
+            # (no toca comodines de partidos que no vinieron en la boleta).
+            await db.execute(text(f"""
+                UPDATE apuesta SET pred_comodin = FALSE
+                WHERE apostador_id = :uid AND partido_id IN ({_ids_sql})
+            """), {"uid": body.apostador_id})
 
     await db.commit()
     return {"ok": guardadas > 0, "guardadas": guardadas,
@@ -1124,7 +1338,7 @@ async def bracket_clubes(torneo_id: int, db: DBSession) -> dict:
             LEFT JOIN equipo el ON el.id = p.equipo_local_id
             LEFT JOIN equipo ev ON ev.id = p.equipo_visitante_id
             WHERE p.fase_id = :fid
-            ORDER BY p.fecha NULLS LAST, p.id
+            ORDER BY p.id
         """), {"fid": f["id"]})
         rows = [dict(x) for x in rp.mappings()]
         # Emparejar ida+vuelta por PAR DE EQUIPOS (octavos/cuartos/semis son a doble
@@ -1239,7 +1453,60 @@ async def bracket_clubes(torneo_id: int, db: DBSession) -> dict:
             })
         rondas.append({"tipo": f["tipo"], "nombre": f["nombre"], "llaves": llaves})
 
-    return {"tipo": "clubes", "rondas": rondas}
+    # ── Topologia: alinear el R32 con los octavos que alimenta ────────────────
+    # Cada llave del R32 se ubica en el MISMO indice que el octavo donde jugara su
+    # ganador, para que el partido previo aparezca detras de su cruce siguiente.
+    def _win_id(ll):
+        if ll.get("ganador") == "A" and ll.get("teamA"): return ll["teamA"]["id"]
+        if ll.get("ganador") == "B" and ll.get("teamB"): return ll["teamB"]["id"]
+        return None
+    def _tids(ll):
+        s = set()
+        for k in ("teamA", "teamB"):
+            if ll.get(k): s.add(ll[k]["id"])
+        return s
+    def _align(feeder, target):
+        if not feeder or not target:
+            return feeder
+        res = [None] * len(target)
+        rem = []
+        for fll in feeder:
+            w = _win_id(fll); comp = _tids(fll); placed = False
+            if w is not None:
+                for ti, tll in enumerate(target):
+                    if res[ti] is None and w in _tids(tll):
+                        res[ti] = fll; placed = True; break
+            if not placed:
+                for ti, tll in enumerate(target):
+                    if res[ti] is None and (comp & _tids(tll)):
+                        res[ti] = fll; placed = True; break
+            if not placed:
+                rem.append(fll)
+        ri = 0
+        for ti in range(len(res)):
+            if res[ti] is None and ri < len(rem):
+                res[ti] = rem[ri]; ri += 1
+        return [x for x in res if x is not None] + rem[ri:]
+    _by = {r["tipo"]: r for r in rondas}
+    if "ronda32" in _by and "ronda16" in _by:
+        _by["ronda32"]["llaves"] = _align(_by["ronda32"]["llaves"], _by["ronda16"]["llaves"])
+
+    # Logo de la copa (para mostrar sobre la Final).
+    _LOGO_BASE = {1: "mundial", 2: "champions", 3: "europa-league", 4: "eurocopa",
+                  9: "copa-america", 11: "sudamericana", 13: "libertadores"}
+    _logo = None
+    try:
+        _lr = await db.execute(text(
+            "SELECT c.api_league_id FROM torneo t JOIN competicion c ON c.id = t.competicion_id WHERE t.id = :tid"
+        ), {"tid": torneo_id})
+        _lrow = _lr.mappings().first()
+        _base = _LOGO_BASE.get(_lrow["api_league_id"]) if _lrow else None
+        if _base:
+            _logo = f"/static/logos/{_base}.png"
+    except Exception:
+        _logo = None
+
+    return {"tipo": "clubes", "rondas": rondas, "logo": _logo}
 
 
 @router.get("/mi-bracket/{torneo_id}", summary="Bracket personal simulado del apostador (R32 → Final)")
@@ -1458,7 +1725,7 @@ async def listar_apostadores() -> list[dict]:
     async with _app_engine.connect() as conn:
         r = await conn.execute(
             text("""
-                SELECT u.id, u.username, u.username AS alias
+                SELECT u.id, u.username, u.username AS alias, COALESCE(u.nombre, u.username) AS nombre
                 FROM users u
                 JOIN user_roles ur ON ur.user_id = u.id
                 JOIN roles ro ON ro.id = ur.role_id
@@ -1467,7 +1734,7 @@ async def listar_apostadores() -> list[dict]:
                 ORDER BY u.username
             """)
         )
-        return [{"id": row[0], "username": row[2], "alias": row[2]} for row in r]
+        return [{"id": row[0], "username": row[2], "alias": row[2], "nombre": row[3]} for row in r]
 
 
 @router.get("/mis-partidos/{torneo_id}", summary="Partidos del torneo con puntajes por categoría del apostador")
@@ -1503,6 +1770,7 @@ async def mis_partidos(
                 p.minuto_primer_gol,
                 p.penales_local,
                 p.penales_visitante,
+                p.sustituciones,
                 COALESCE(p.penales_partido, 0)              AS penales_partido,
                 {minuto_col}                                AS minuto_actual,
                 f.nombre                                    AS fase_nombre,
@@ -1525,6 +1793,8 @@ async def mis_partidos(
                 a.pred_penales_local_tanda,
                 a.pred_penales_visitante_tanda,
                 a.pred_equipo_clasifica,
+                a.pred_sustituciones,
+                COALESCE(a.pred_comodin, FALSE)             AS pred_comodin,
                 p.equipo_clasificado_id,
                 COALESCE(a.puntos, 0)                       AS puntos_base,
                 COALESCE(a.puntos_bonus, 0)                 AS puntos_bonus,
@@ -1549,6 +1819,7 @@ async def mis_partidos(
             WHERE p.torneo_id = :tid
             ORDER BY f.orden, p.jornada NULLS LAST, p.fecha NULLS LAST, p.id
         """
+    await _ensure_sust_cols(db)
     _qparams = {"uid": target_id, "tid": torneo_id}
     try:
         r = await db.execute(text(_sql_partidos("p.minuto_actual")), _qparams)
@@ -2381,7 +2652,7 @@ async def ranking(torneo_id: int, db: DBSession) -> list[dict]:
 
     _ZERO_CATS = {
         "cat_resultado": 0, "cat_marcador": 0, "cat_amarillas": 0,
-        "cat_rojas": 0, "cat_var": 0, "cat_minuto": 0,
+        "cat_rojas": 0, "cat_var": 0, "cat_sustituciones": 0, "cat_minuto": 0,
         "cat_penales_partido": 0, "cat_penales_tanda": 0, "cat_equipo": 0,
     }
 
@@ -5776,18 +6047,19 @@ async def scheduler_start(current: CurrentAdmin) -> dict:
     Ejecuta PowerShell como subproceso del servidor (requiere el servidor corriendo como admin).
     """
     _check_admin(current)
-    import subprocess, textwrap
+    import os, subprocess, textwrap
+    _root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", ".."))
     ps_script = textwrap.dedent(r"""
-        $exe     = 'C:\proyecto FAST API\backend\.venv\Scripts\python.exe'
-        $script  = 'C:\proyecto FAST API\sync_auto.py'
-        $workdir = 'C:\proyecto FAST API'
+        $exe     = '__EXE__'
+        $script  = '__SCRIPT__'
+        $workdir = '__WORKDIR__'
         $action  = New-ScheduledTaskAction -Execute $exe -Argument $script -WorkingDirectory $workdir
         $trigger = New-ScheduledTaskTrigger -RepetitionInterval (New-TimeSpan -Minutes 1) -Once -At (Get-Date)
         $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 2) -MultipleInstances IgnoreNew
         try { Unregister-ScheduledTask -TaskName 'BECBUC-SyncAPI' -Confirm:$false -ErrorAction SilentlyContinue } catch {}
         Register-ScheduledTask -TaskName 'BECBUC-SyncAPI' -Action $action -Trigger $trigger -Settings $settings -RunLevel Highest -Force
         Write-Output 'OK'
-    """).strip()
+    """).strip().replace("__EXE__", os.path.join(_root, "backend", ".venv", "Scripts", "python.exe")).replace("__SCRIPT__", os.path.join(_root, "sync_auto.py")).replace("__WORKDIR__", _root)
     try:
         result = subprocess.run(
             ["powershell", "-NonInteractive", "-Command", ps_script],
@@ -5802,6 +6074,157 @@ async def scheduler_start(current: CurrentAdmin) -> dict:
         }
     except Exception as e:
         return {"ok": False, "message": str(e)}
+
+
+@router.post("/sync-pendientes/{torneo_id}", summary="Barrido por fecha: sincroniza partidos cuyo horario ya paso y siguen sin resultado (admin)")
+async def sync_pendientes_por_fecha(
+    torneo_id: int,
+    current: CurrentAdmin,
+    db: DBSession,
+    max_detalle: int = 15,
+) -> dict:
+    """
+    Barrido por FECHA/HORA para el tema apuestas:
+      1. Busca partidos cuyo horario YA paso (p.fecha <= ahora UTC) y que siguen
+         SIN resultado (estado <> 'finalizado'), con equipos reales (no 'Por Definir',
+         'TBD', ni placeholders 'Gan. ...'), no blindados (datos_confirmados=FALSE).
+      2. Si a alguno le falta api_fixture_id, corre auto-mapeo del torneo una vez.
+      3. Para cada partido con fixture: trae el fixture de API-Football y guarda en BD
+         TODOS los items (_update_partido_full): goles, estado, amarillas, rojas, VAR,
+         minuto primer gol, penales tanda, penales partido, equipo clasificado.
+      4. Al final: avanza bracket + recalcula puntajes/globales una sola vez.
+    Pensado para tarea programada relajada (cada ~15 min), SOLO para los torneos
+    habilitados en el Live. En dias sin partidos vencidos: 0 llamadas a API-Football.
+    """
+    _check_admin(current)
+
+    r_pending = await db.execute(text("""
+        SELECT p.id, p.numero_fifa, p.api_fixture_id, p.estado, p.fecha,
+               el.nombre AS local, ev.nombre AS visitante
+        FROM partido p
+        JOIN fase f ON f.id = p.fase_id
+        JOIN equipo el ON el.id = p.equipo_local_id
+        JOIN equipo ev ON ev.id = p.equipo_visitante_id
+        WHERE f.torneo_id = :tid
+          AND p.fecha IS NOT NULL
+          AND p.fecha <= (now() AT TIME ZONE 'UTC')
+          AND p.estado <> 'finalizado'
+          AND NOT COALESCE(p.datos_confirmados, FALSE)
+          AND el.nombre NOT IN ('Por Definir', 'TBD')
+          AND ev.nombre NOT IN ('Por Definir', 'TBD')
+          AND el.nombre NOT ILIKE 'Gan.%%'
+          AND ev.nombre NOT ILIKE 'Gan.%%'
+        ORDER BY p.fecha
+    """), {"tid": torneo_id})
+    pending = [dict(r) for r in r_pending.mappings().all()]
+
+    if not pending:
+        return {"ok": True, "mensaje": "Sin partidos pendientes por fecha",
+                "pendientes": 0, "sincronizados": 0, "puntajes_ok": False}
+
+    from app.services.sync_api_football import _headers, API_BASE, _update_partido_full, auto_mapeo_torneo
+    import httpx
+
+    mapeo_info = None
+    faltan_fix = [p for p in pending if not p["api_fixture_id"]]
+
+    synced = []
+    errors = []
+    sin_fixture = []
+    api_calls = 0
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        if faltan_fix:
+            try:
+                mapeo_info = await auto_mapeo_torneo(db, torneo_id, client)
+                await db.commit()
+                ids_sql = ",".join(str(int(p["id"])) for p in pending)
+                rmap = await db.execute(text(
+                    f"SELECT id, api_fixture_id FROM partido WHERE id IN ({ids_sql})"
+                ))
+                fixmap = {r["id"]: r["api_fixture_id"] for r in rmap.mappings()}
+                for p in pending:
+                    p["api_fixture_id"] = fixmap.get(p["id"])
+            except Exception as e:
+                mapeo_info = {"error": str(e)}
+
+        tmap_rows = await db.execute(text(
+            "SELECT api_team_id, id FROM equipo WHERE api_team_id IS NOT NULL"
+        ))
+        team_id_map = {r["api_team_id"]: r["id"] for r in tmap_rows.mappings()}
+
+        for p in pending:
+            if api_calls >= max_detalle:
+                break
+            fix_id = p["api_fixture_id"]
+            label = f"P{p.get('numero_fifa') or '?'} {p['local']} vs {p['visitante']}"
+            if not fix_id:
+                sin_fixture.append(label)
+                continue
+            try:
+                resp = await client.get(
+                    f"{API_BASE}/fixtures", params={"id": fix_id}, headers=_headers()
+                )
+                resp.raise_for_status()
+                api_calls += 1
+                fl = resp.json().get("response", [])
+                if not fl:
+                    errors.append({"partido": label, "error": "API sin response"})
+                    continue
+                fix = fl[0]
+                items = await _update_partido_full(db, p["id"], fix, team_id_map)
+                await db.commit()
+                synced.append({
+                    "partido": label,
+                    "estado_api": fix["fixture"]["status"]["short"],
+                    "items": items,
+                })
+            except Exception as e:
+                errors.append({"partido": label, "error": str(e)})
+
+    bracket_ok = False
+    puntajes_ok = False
+    puntajes = {}
+    if synced:
+        try:
+            from app.services import ko_scoring as _ko
+            _maps = await _ko.build_num_maps(db, torneo_id)
+            await _avanzar_bracket(db, torneo_id, _maps)
+            bracket_ok = True
+        except Exception as e:
+            bracket_ok = str(e)
+        try:
+            from app.services.scoring.registry import get_engine
+            from app.services.scoring.calculator import ScoringCalculator
+            comp_row = await db.execute(text(
+                "SELECT c.codigo FROM torneo t JOIN competicion c ON c.id=t.competicion_id WHERE t.id=:tid"
+            ), {"tid": torneo_id})
+            comp = comp_row.mappings().first()
+            engine = get_engine(comp["codigo"] if comp else None)
+            calc = ScoringCalculator(db)
+            result = await calc.calculate(torneo_id, engine)
+            if result is None:
+                result = {"plenos": 0, "aciertos": 0, "fallos": 0, "por_fase": {}}
+            await calc.calculate_global(torneo_id, engine)
+            await db.commit()
+            puntajes = result
+            puntajes_ok = True
+        except Exception as e:
+            puntajes_ok = str(e)
+
+    return {
+        "ok": True,
+        "pendientes": len(pending),
+        "sincronizados": len(synced),
+        "sin_fixture": sin_fixture,
+        "errores": errors,
+        "api_calls": api_calls,
+        "auto_mapeo": mapeo_info,
+        "bracket_ok": bracket_ok,
+        "puntajes_ok": puntajes_ok,
+        "puntajes": puntajes,
+        "detalle": synced,
+    }
 
 
 @router.post("/auto-catchup/{torneo_id}", summary="Catch-up: detecta partidos finalizados sin puntaje y los syncroniza (admin)")
@@ -6795,6 +7218,17 @@ async def _avanzar_bracket(db, torneo_id: int, maps: dict, hasta_tipo: str | Non
     - Si grupos SÍ están completos: arma R32 definitivo y propaga todo el KO.
     - Si hasta_tipo se indica, sólo avanza hasta esa fase (inclusive).
     """
+    # ── Guard CLUBES: los torneos de clubes (ida/vuelta) tienen su propio bracket
+    # (endpoint /bracket-clubes) y NO deben pasar por esta propagacion estilo Mundial
+    # (un solo partido por llave), que reconstruye el cuadro y pisa los octavos
+    # sembrados a mano (cabezas de serie). Se sale sin tocar nada.
+    _cr = (await db.execute(text(
+        "SELECT COALESCE(c.tipo,'') AS tipo FROM torneo t "
+        "JOIN competicion c ON c.id = t.competicion_id WHERE t.id = :tid"
+    ), {"tid": torneo_id})).mappings().first()
+    if _cr and (_cr["tipo"] or "").lower() == "clubes":
+        return
+
     orden_tipos = ["ronda32", "ronda16", "cuartos", "semis", "tercer_puesto", "final"]
 
     grupos_ok = await _grupos_completos(db, torneo_id)
@@ -11349,88 +11783,9 @@ async def sync_excel_resultados(
             await ScoringCalculator(db).calculate_global(torneo_id, engine)
         except Exception:
             pass
-    except Exception as _pe:
-        puntajes = {"error": str(_pe)}
-
-    return {
-        "ok": True,
-        "partidos_actualizados": len(actualizados),
-        "detalle": actualizados,
-        "bracket_ok": bracket_ok,
-        "puntajes": puntajes,
-    }
-
-
-# ── Enviar auditoría por email ────────────────────────────────────────────────
-
-@router.post("/enviar-auditoria-email/{torneo_id}")
-async def enviar_auditoria_email(
-    torneo_id: int,
-    current: CurrentAdmin = None,
-    db: DBSession = None,
-) -> dict:
-    """Genera Excel de auditoría y lo envía por email a andres.bogarin@gmail.com."""
-    import io, smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.base import MIMEBase
-    from email.mime.text import MIMEText
-    from email import encoders
-    from datetime import datetime as _dt2
-
-    # Generar Excel
-    try:
-        wb, torneo_nombre = await _build_auditoria_workbook(db, torneo_id)
+        await db.commit()
     except Exception as e:
-        raise HTTPException(500, f"Error generando Excel: {e}")
+        puntajes = {"error": str(e)}
 
-    buf = io.BytesIO()
-    wb.save(buf)
-    buf.seek(0)
-    excel_bytes = buf.read()
-
-    ts = _dt2.now().strftime('%Y%m%d_%H%M')
-    filename = f"becbuc_auditoria_{ts}.xlsx"
-
-    # Construir email
-    FROM_EMAIL = "jose.bogarin@gmail.com"
-    FROM_PASS  = "oiooegiltoopcgps"  # App Password Gmail
-    TO_EMAIL   = "andres.bogarin@gmail.com"
-    SUBJECT    = f"🏆 Auditoría BECBUC — {torneo_nombre} — {_dt2.now().strftime('%d/%m/%Y %H:%M')}"
-    BODY       = (
-        f"Adjunto encontrará el reporte de auditoría BECBUC del torneo: {torneo_nombre}.\n"
-        f"Generado: {_dt2.now().strftime('%d/%m/%Y %H:%M')} (hora del servidor)\n\n"
-        "— Sistema BECBUC"
-    )
-
-    msg = MIMEMultipart()
-    msg['From'] = FROM_EMAIL
-    msg['To'] = TO_EMAIL
-    msg['Subject'] = SUBJECT
-    msg.attach(MIMEText(BODY, 'plain', 'utf-8'))
-
-    part = MIMEBase('application', 'vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    part.set_payload(excel_bytes)
-    encoders.encode_base64(part)
-    part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
-    msg.attach(part)
-
-    try:
-        with smtplib.SMTP('smtp.gmail.com', 587, timeout=20) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(FROM_EMAIL, FROM_PASS)
-            server.sendmail(FROM_EMAIL, [TO_EMAIL], msg.as_string())
-    except smtplib.SMTPAuthenticationError:
-        raise HTTPException(500, (
-            "Error de autenticación Gmail. Si la cuenta tiene 2FA activo, "
-            "debes generar una 'Contraseña de aplicación' en myaccount.google.com "
-            "y configurarla en el servidor."
-        ))
-    except Exception as e:
-        raise HTTPException(500, f"Error enviando email: {e}")
-
-    return {"ok": True, "enviado_a": TO_EMAIL, "archivo": filename}
-
-
-
-
+    return {"ok": True, "actualizados": actualizados,
+            "bracket_ok": bracket_ok, "puntajes": puntajes}

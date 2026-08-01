@@ -5,8 +5,10 @@ Ejecutar desde: C:\proyecto FAST API\backend
   cd ..
   python diag_penales_tanda.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import asyncio, sys
-sys.path.insert(0, r'C:\proyecto FAST API\backend')
+sys.path.insert(0, _osp.path.join(_BASE, 'backend'))
 
 import httpx
 from app.core.config import settings

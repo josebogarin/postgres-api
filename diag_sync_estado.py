@@ -6,6 +6,8 @@ Verifica el estado completo del flujo de sync API-Football → partido:
   3. Partidos sin datos (amarillas/rojas/var nulos en finalizados)
   4. Prueba directa de un call a API-Football
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import psycopg2
 import os, sys
 
@@ -129,7 +131,7 @@ def main():
     # ── 6. API key ────────────────────────────────────────────────────────
     print("\n── 6. API KEY API-FOOTBALL ──────────────────────────────────────")
     # Intentar leer desde el backend config
-    sys.path.insert(0, r"C:\proyecto FAST API\backend")
+    sys.path.insert(0, _osp.path.join(_BASE, 'backend'))
     try:
         from app.core.config import settings
         key = getattr(settings, "API_FOOTBALL_KEY", None) or \

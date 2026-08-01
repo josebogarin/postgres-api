@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0."
 set OUT=estado_repos_out.txt
 echo === ESTADO REPOS === > %OUT%
 if exist "backend\.git" (echo backend\.git EXISTE >> %OUT%) else (echo backend\.git NO_EXISTE >> %OUT%)

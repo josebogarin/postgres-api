@@ -2,6 +2,8 @@
 Diagnóstico: compara terceros en bracket-real vs mejores-terceros-provisorios.
 Muestra qué partidos R32 tienen terceros y si coinciden con los calculados.
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import urllib.request, urllib.error, json
 
 BASE = "http://localhost:8000"
@@ -120,7 +122,7 @@ else:
 log("\n[4] Verificar TERCEROS_COMBINACIONES para el frozenset actual:")
 try:
     import sys
-    sys.path.insert(0, r"C:\proyecto FAST API\backend")
+    sys.path.insert(0, _osp.path.join(_BASE, 'backend'))
     from app.services.bracket_service import TERCEROS_COMBINACIONES
     key = frozenset(grupos_top8)
     comb = TERCEROS_COMBINACIONES.get(key)

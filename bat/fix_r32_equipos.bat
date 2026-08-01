@@ -14,7 +14,7 @@ pause > nul
 
 echo.
 echo [1/2] Aplicando fix en BD...
-powershell -Command "Get-Content 'C:\proyecto FAST API\documentacion\fix_r32_equipos.sql' | docker exec -i core-postgres psql -U app_user -d becbuc"
+powershell -Command "Get-Content '%~dp0..\documentacion\fix_r32_equipos.sql' | docker exec -i core-postgres psql -U app_user -d becbuc"
 
 IF %ERRORLEVEL% NEQ 0 (
     echo.

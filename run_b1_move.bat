@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0."
 set OUT=reorg_fase_b1_out.txt
 set STAT=backend\static
 set DST=backend\static\_backup_html

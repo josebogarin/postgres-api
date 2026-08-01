@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 echo ============================================================
 echo TEST: Item P - Bonus por equipos clasificados a R32
 echo ============================================================

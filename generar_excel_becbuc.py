@@ -11,6 +11,8 @@ Hojas:
 Uso:
     backend\\.venv\\Scripts\\python.exe generar_excel_becbuc.py [torneo_id]
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 
 import sys, os, subprocess, json
 from datetime import datetime
@@ -25,7 +27,7 @@ if hasattr(sys.stderr, 'reconfigure'):
 BASE_URL   = "http://localhost:8000"
 ADMIN_USER = "jose"
 ADMIN_PASS = "catalina"
-OUTPUT     = r"C:\proyecto FAST API\BECBUC_verificacion.xlsx"
+OUTPUT     = _osp.path.join(_BASE, 'BECBUC_verificacion.xlsx')
 
 # Colores por fase (hex sin #)
 FASE_COLORS = {

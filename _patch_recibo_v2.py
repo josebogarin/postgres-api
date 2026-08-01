@@ -1,10 +1,12 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 # -*- coding: utf-8 -*-
 """Recibo v2: lista todos los partidos pendientes con items (desde BD) + nombre y apellido."""
 import ast, re, shutil, subprocess, os
 from datetime import datetime
-HTML = r"C:\proyecto FAST API\backend\static\becbuc-live-playoffs.html"
-PY   = r"C:\proyecto FAST API\backend\app\api\v1\endpoints\apostador_bets.py"
-BKP  = r"C:\proyecto FAST API\_backups"
+HTML = _osp.path.join(_BASE, 'backend', 'static', 'becbuc-live-playoffs.html')
+PY   = _osp.path.join(_BASE, 'backend', 'app', 'api', 'v1', 'endpoints', 'apostador_bets.py')
+BKP  = _osp.path.join(_BASE, '_backups')
 if not os.path.exists(HTML):
     base="/sessions/stoic-busy-euler/mnt/proyecto FAST API"
     HTML=base+"/backend/static/becbuc-live-playoffs.html"

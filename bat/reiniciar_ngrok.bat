@@ -4,7 +4,7 @@ echo Cerrando ngrok anterior...
 taskkill /f /im ngrok.exe 2>nul
 timeout /t 2 /nobreak >nul
 echo Iniciando ngrok en puerto 8000...
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 start "" ngrok.exe http 8000
 timeout /t 3 /nobreak >nul
 echo.

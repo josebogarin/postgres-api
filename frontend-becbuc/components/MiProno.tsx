@@ -8,8 +8,6 @@ import {
 } from "@/lib/types";
 import { faseLabel, fmtFecha } from "@/lib/format";
 
-const LS_KEY = "becbuc_apostador";
-
 type ItemRow = {
   icon: string;
   label: string;
@@ -39,18 +37,21 @@ export default function MiProno({
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [filter, setFilter] = useState<"todos" | "pendientes">("todos");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Precargar el formulario con las predicciones actuales de cada partido.
   useEffect(() => {
     const e: Record<number, Record<string, number | null>> = {};
     for (const m of rows ?? []) {
-      e[m.numero_fifa] = {
+      e[m.partido_id] = {
         pred_local: m.pred_local, pred_visitante: m.pred_visitante,
         pred_amarillas: m.pred_amarillas, pred_rojas: m.pred_rojas, pred_var: m.pred_var,
         pred_penales_partido: m.pred_penales_partido, pred_minuto_gol: m.pred_minuto_gol,
         pred_penales_local_tanda: m.pred_penales_local_tanda,
         pred_penales_visitante_tanda: m.pred_penales_visitante_tanda,
         pred_equipo_clasifica: m.pred_equipo_clasifica,
+        pred_sustituciones: m.pred_sustituciones,
+        pred_comodin: m.pred_comodin ? 1 : 0,
       };
     }
     setEdits(e);
@@ -59,12 +60,22 @@ export default function MiProno({
 
   // Cargar lista de apostadores + apostador guardado.
   useEffect(() => {
-    api
-      .get<Apostador[]>("/bets/apostadores")
-      .then((a) => setApostadores(Array.isArray(a) ? a : []))
-      .catch(() => setApostadores([]));
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem(LS_KEY) : null;
-    if (saved) setSel(Number(saved));
+    const admin =
+      typeof window !== "undefined" &&
+      window.localStorage.getItem("becbuc_is_admin") === "1";
+    setIsAdmin(admin);
+    const sid =
+      typeof window !== "undefined"
+        ? Number(window.localStorage.getItem("becbuc_apostador_id") || 0)
+        : 0;
+    if (sid) setSel(sid);
+    // La lista de apostadores solo la necesita el admin (para elegir a quién ver).
+    if (admin) {
+      api
+        .get<Apostador[]>("/bets/apostadores")
+        .then((a) => setApostadores(Array.isArray(a) ? a : []))
+        .catch(() => setApostadores([]));
+    }
   }, []);
 
   const loadRows = useCallback(async (uid: number) => {
@@ -92,10 +103,7 @@ export default function MiProno({
     if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [focusNum, rows]);
 
-  const pick = (uid: number) => {
-    setSel(uid);
-    if (typeof window !== "undefined") window.localStorage.setItem(LS_KEY, String(uid));
-  };
+  const pick = (uid: number) => setSel(uid);
 
   // Todos los partidos (grupos + KO). Clave de fase: en grupos cada grupo es su
   // propia fase (por fase_nombre); en KO la clave es fase_tipo.
@@ -103,7 +111,7 @@ export default function MiProno({
   const phaseKey = (m: MisPartidoRow) =>
     (m.fase_tipo || "").startsWith("grupo") ? m.fase_nombre : m.fase_tipo;
   const byNum: Record<number, MisPartidoRow> = {};
-  for (const m of all) byNum[m.numero_fifa] = m;
+  for (const m of all) byNum[m.partido_id] = m;
 
   // Fase abierta = la que tiene un partido en juego; si no, la más próxima programada.
   const enJuego = all.find((m) => m.estado === "en_juego");
@@ -129,7 +137,7 @@ export default function MiProno({
     const a = m.local_id ?? 0, b = m.visit_id ?? 0;
     return Math.min(a, b) * 100000 + Math.max(a, b);
   };
-  const _ts = (m: MisPartidoRow) => (m.fecha ? Date.parse(m.fecha) : m.numero_fifa);
+  const _ts = (m: MisPartidoRow) => (m.fecha ? Date.parse(m.fecha) : m.partido_id);
   const show = focusKey
     ? all
         .filter((m) => phaseKey(m) === focusKey && _def(m.local_nombre) && _def(m.visit_nombre))
@@ -140,16 +148,100 @@ export default function MiProno({
     ? `${(first.fase_tipo || "").startsWith("grupo") ? first.fase_nombre : faseLabel(first.fase_tipo)} · ${show.length} partido${show.length === 1 ? "" : "s"}`
     : "";
 
+  // Tanda de penales: se carga en la pierna DECISIVA de cada serie (la vuelta;
+  // o el partido unico en la final). El reglamento la puntua solo si el global empata.
+  const tandaNums = new Set<number>();
+  {
+    const byTie: Record<number, MisPartidoRow[]> = {};
+    for (const mm of show) {
+      const k = _tieKey(mm);
+      (byTie[k] ||= []).push(mm);
+    }
+    for (const k of Object.keys(byTie)) {
+      const g = byTie[Number(k)].slice().sort((a, b) => _ts(a) - _ts(b));
+      const dec = g[g.length - 1];
+      if (dec) tandaNums.add(dec.partido_id);
+    }
+  }
+
+  // La tanda "se activa" solo si el global pronosticado por el apostador empata.
+  const tandaActiva: Record<number, boolean> = {};
+  {
+    const byTie2: Record<number, MisPartidoRow[]> = {};
+    for (const mm of show) {
+      const k = _tieKey(mm);
+      (byTie2[k] ||= []).push(mm);
+    }
+    for (const k of Object.keys(byTie2)) {
+      const g = byTie2[Number(k)];
+      const teams: number[] = [];
+      for (const mm of g) {
+        if (mm.local_id != null && !teams.includes(mm.local_id)) teams.push(mm.local_id);
+        if (mm.visit_id != null && !teams.includes(mm.visit_id)) teams.push(mm.visit_id);
+      }
+      const dec = g.slice().sort((x, y) => _ts(x) - _ts(y))[g.length - 1];
+      if (!dec || teams.length < 2) continue;
+      const [a, b] = teams;
+      void b;
+      let aggA = 0, aggB = 0, ok = true;
+      for (const mm of g) {
+        const e = edits[mm.partido_id] || {};
+        const pl = e.pred_local, pv = e.pred_visitante;
+        if (pl == null || pv == null) { ok = false; break; }
+        if (mm.local_id === a) { aggA += pl; aggB += pv; } else { aggB += pl; aggA += pv; }
+      }
+      tandaActiva[dec.partido_id] = ok && aggA === aggB;
+    }
+  }
+
   const setEdit = (num: number, k: string, v: number | null) =>
     setEdits((e) => ({ ...e, [num]: { ...(e[num] || {}), [k]: v } }));
+
+  // ── Comodín (solo torneos de clubes): uno por torneo, en octavos–semis ──────
+  const esClubes =
+    typeof window !== "undefined" &&
+    window.localStorage.getItem("becbuc_torneo_tercero") === "0";
+  // Partido que hoy tiene el comodín (desde la BD).
+  const comodinRow = all.find((m) => m.pred_comodin);
+  const comodinUsado = !!comodinRow;
+  // Si el partido del comodín ya se jugó → queda FIJO (no se puede mover ni sacar).
+  const comodinFijo =
+    !!comodinRow &&
+    (comodinRow.estado === "finalizado" || comodinRow.estado === "en_juego");
+  const comodinPidBD = comodinRow?.partido_id ?? null;
+  // El comodín solo aplica a octavos, cuartos y semis (no final, no 16avos).
+  const comodinFase = (m: MisPartidoRow) =>
+    ["ronda16", "octavos", "cuartos", "semis"].includes((m.fase_tipo || "").toLowerCase());
+  // ¿Mostrar el toggle en este partido?  Solo si:
+  //  - es clubes y fase elegible y el partido es editable (programado),
+  //  - el comodín NO está fijo (jugado), y
+  //  - o no se usó aún, o este es el partido que lo tiene.
+  const mostrarComodin = (m: MisPartidoRow) =>
+    esClubes && comodinFase(m) && m.estado === "programado" && !comodinFijo &&
+    (!comodinUsado || comodinPidBD === m.partido_id ||
+      (edits[m.partido_id]?.pred_comodin ?? 0) === 1);
+  const comodinOn = (m: MisPartidoRow) =>
+    (edits[m.partido_id]?.pred_comodin ?? (m.pred_comodin ? 1 : 0)) === 1;
+  // Al marcar el comodín en un partido, se apaga en todos los demás (único).
+  const setComodin = (num: number, on: boolean) =>
+    setEdits((e) => {
+      const next: Record<number, Record<string, number | null>> = {};
+      for (const k of Object.keys(e)) {
+        const id = Number(k);
+        next[id] = { ...e[id], pred_comodin: on && id === num ? 1 : 0 };
+      }
+      if (!next[num]) next[num] = { pred_comodin: on ? 1 : 0 };
+      return next;
+    });
 
   async function guardar() {
     if (sel == null) return;
     const editables = show.filter((m) => m.estado === "programado");
     if (editables.length === 0) { setSaveMsg("No hay partidos abiertos para editar."); return; }
     const apuestas = editables.map((m) => {
-      const e = edits[m.numero_fifa] || {};
+      const e = edits[m.partido_id] || {};
       return {
+        partido_id: m.partido_id,
         numero_fifa: m.numero_fifa,
         pred_local: e.pred_local ?? 0,
         pred_visitante: e.pred_visitante ?? 0,
@@ -161,6 +253,8 @@ export default function MiProno({
         pred_penales_local_tanda: e.pred_penales_local_tanda ?? null,
         pred_penales_visitante_tanda: e.pred_penales_visitante_tanda ?? null,
         pred_equipo_clasifica: e.pred_equipo_clasifica ?? null,
+        pred_sustituciones: e.pred_sustituciones ?? null,
+        pred_comodin: (e.pred_comodin ?? 0) === 1,
       };
     });
     setSaving(true); setSaveMsg(null);
@@ -178,10 +272,10 @@ export default function MiProno({
 
   return (
     <div className="flex flex-col gap-3">
-      <Selector apostadores={apostadores} sel={sel} onPick={pick} />
+      {isAdmin && <Selector apostadores={apostadores} sel={sel} onPick={pick} />}
 
       {sel == null ? (
-        <Msg text="Elegí tu nombre arriba para ver tu pronóstico." />
+        <Msg text="No pudimos identificar tu usuario. Volvé a entrar." />
       ) : loading ? (
         <Msg text="Cargando…" />
       ) : show.length === 0 ? (
@@ -192,15 +286,20 @@ export default function MiProno({
           {show.map((m, i) =>
             !readOnly && m.estado === "programado" ? (
               <EditableMatch
-                key={m.numero_fifa ?? `e-${i}`}
+                key={m.partido_id}
                 m={m}
                 idx={i + 1}
                 total={show.length}
-                ed={edits[m.numero_fifa] || {}}
-                onEdit={(k, v) => setEdit(m.numero_fifa, k, v)}
+                ed={edits[m.partido_id] || {}}
+                onEdit={(k, v) => setEdit(m.partido_id, k, v)}
+                showTanda={tandaNums.has(m.partido_id)}
+                tandaActive={!!tandaActiva[m.partido_id]}
+                showComodin={mostrarComodin(m)}
+                comodinOn={comodinOn(m)}
+                onComodin={(on) => setComodin(m.partido_id, on)}
               />
             ) : (
-              <MatchCotejo key={m.numero_fifa ?? `idx-${i}`} m={m} idx={i + 1} total={show.length} />
+              <MatchCotejo key={m.partido_id} m={m} idx={i + 1} total={show.length} />
             )
           )}
           {!readOnly && show.some((m) => m.estado === "programado") ? (
@@ -257,19 +356,22 @@ function NumInput({ value, onChange, w = "w-12" }: { value: number | null | unde
 const BONUS_ED: { k: string; icon: string; label: string }[] = [
   { k: "pred_amarillas", icon: "\u{1F7E8}", label: "Amar." },
   { k: "pred_rojas", icon: "\u{1F7E5}", label: "Rojas" },
-  { k: "pred_var", icon: "\u{1F4FA}", label: "VAR" },
   { k: "pred_penales_partido", icon: "\u{1F945}", label: "Pen." },
   { k: "pred_minuto_gol", icon: "\u23F1", label: "Min" },
+  { k: "pred_sustituciones", icon: "\u{1F504}", label: "Cambios" },
 ];
 
 function EditableMatch({
-  m, idx, total, ed, onEdit,
+  m, idx, total, ed, onEdit, showTanda, tandaActive,
+  showComodin, comodinOn, onComodin,
 }: {
   m: MisPartidoRow; idx: number; total: number;
   ed: Record<string, number | null>; onEdit: (k: string, v: number | null) => void;
+  showTanda?: boolean; tandaActive?: boolean;
+  showComodin?: boolean; comodinOn?: boolean; onComodin?: (on: boolean) => void;
 }) {
   return (
-    <div id={`mp-${m.numero_fifa}`} className="scroll-mt-24 overflow-hidden rounded-xl border border-brand/40 bg-surface">
+    <div id={`mp-${m.partido_id}`} className="scroll-mt-24 overflow-hidden rounded-xl border border-brand/40 bg-surface">
       <div className="bg-surface-2 px-3 py-1 text-center text-[11px] font-semibold text-brand">
         Editar pronostico · Partido {idx} de {total}
       </div>
@@ -294,7 +396,7 @@ function EditableMatch({
           ) : null}
         </span>
       </div>
-      <div className="grid grid-cols-5 gap-1 border-t border-border px-2 py-2">
+      <div className="grid grid-cols-3 gap-1 border-t border-border px-2 py-2">
         {BONUS_ED.map((b) => (
           <label key={b.k} className="flex flex-col items-center gap-0.5 text-[10px] text-muted">
             <span>{b.icon} {b.label}</span>
@@ -302,6 +404,36 @@ function EditableMatch({
           </label>
         ))}
       </div>
+      {showTanda && (
+        <div className="border-t border-border px-3 py-2">
+          <div className={`mb-1 text-center text-[11px] font-semibold ${tandaActive ? "text-brand" : "text-muted"}`}>
+            {tandaActive
+              ? "⚡ Definición por penales · se aplica (tu global empata)"
+              : "⚡ Definición por penales · se aplica solo si tu global empata"}
+          </div>
+          <div className="flex items-center justify-center gap-2 text-xs">
+            <span className="max-w-[38%] truncate">{m.local_nombre}</span>
+            <NumInput value={ed.pred_penales_local_tanda} onChange={(v) => onEdit("pred_penales_local_tanda", v)} />
+            <span className="text-muted">-</span>
+            <NumInput value={ed.pred_penales_visitante_tanda} onChange={(v) => onEdit("pred_penales_visitante_tanda", v)} />
+            <span className="max-w-[38%] truncate">{m.visit_nombre}</span>
+          </div>
+        </div>
+      )}
+      {showComodin && (
+        <button
+          type="button"
+          onClick={() => onComodin?.(!comodinOn)}
+          className={`flex w-full items-center justify-center gap-2 border-t border-border px-3 py-2 text-xs font-semibold ${
+            comodinOn ? "bg-brand/15 text-brand" : "text-muted"
+          }`}
+        >
+          <span className="text-base">🃏</span>
+          {comodinOn
+            ? "Comodín activado en este partido (×3) · tocá para quitar"
+            : "Usar mi comodín acá (×3 a esta llave)"}
+        </button>
+      )}
     </div>
   );
 }
@@ -313,7 +445,7 @@ function SaveBar({ pin, setPin, saving, msg, onSave }: { pin: string; setPin: (v
         <input
           value={pin}
           onChange={(e) => setPin(e.target.value)}
-          placeholder="PIN (tu primer nombre)"
+          placeholder="Ingresá tu PIN para confirmar"
           className="flex-1 rounded-lg border border-border bg-surface-2 px-2 py-1.5 text-sm"
         />
         <button
@@ -342,7 +474,7 @@ function MatchCotejo({ m, idx, total }: { m: MisPartidoRow; idx: number; total: 
 
   return (
     <div
-      id={`mp-${m.numero_fifa}`}
+      id={`mp-${m.partido_id}`}
       className="scroll-mt-24 overflow-hidden rounded-xl border border-border bg-surface"
     >
       <div className="bg-surface-2 px-3 py-1 text-center text-[11px] font-semibold text-muted">
@@ -366,7 +498,7 @@ function MatchCotejo({ m, idx, total }: { m: MisPartidoRow; idx: number; total: 
         </span>
       </div>
       <div className="flex items-center justify-between px-3 py-1 text-[11px] text-muted">
-        <span>P{m.numero_fifa}</span>
+        <span>{m.pred_comodin ? "🃏 Comodín ×3" : m.numero_fifa ? `P${m.numero_fifa}` : ""}</span>
         <span>
           {live ? "🔴 En vivo" : done ? "Final" : m.fecha ? fmtFecha(m.fecha) : "Programado"}
         </span>
@@ -455,15 +587,15 @@ function buildItems(m: MisPartidoRow): ItemRow[] {
     if (cond)
       out.push({ icon, label, real: has ? real : null, pred, pts, done, section: MATCH_SECTION });
   };
-  opt(m.pred_amarillas != null || m.amarillas != null, "🟨", "Amarillas", m.amarillas, m.pred_amarillas, m.pts_amarillas);
-  opt(m.pred_rojas != null || m.rojas != null, "🟥", "Rojas", m.rojas, m.pred_rojas, m.pts_rojas);
-  opt(m.pred_var != null || m.decisiones_var != null, "📺", "VAR", m.decisiones_var, m.pred_var, m.pts_var);
-  opt(m.pred_penales_partido != null || m.penales_partido != null, "🥅", "Penales (juego)", m.penales_partido, m.pred_penales_partido, m.pts_penales_partido);
+  opt(m.pred_amarillas != null || m.amarillas != null, "\u{1F7E8}", "Amarillas", m.amarillas, m.pred_amarillas, m.pts_amarillas);
+  opt(m.pred_rojas != null || m.rojas != null, "\u{1F7E5}", "Rojas", m.rojas, m.pred_rojas, m.pts_rojas);
+  opt(m.pred_sustituciones != null || m.sustituciones != null, "\u{1F504}", "Cambios", m.sustituciones, m.pred_sustituciones, null);
+  opt(m.pred_penales_partido != null || m.penales_partido != null, "\u{1F945}", "Penales (juego)", m.penales_partido, m.pred_penales_partido, m.pts_penales_partido);
   opt(m.pred_minuto_gol != null || m.minuto_primer_gol != null, "⏱", "Minuto gol", m.minuto_primer_gol, m.pred_minuto_gol, m.pts_minuto);
 
-  // En fase de grupos NO hay tanda de penales ni país que clasifica: se ocultan.
+  // En fase de grupos NO hay tanda de penales ni pais que clasifica: se ocultan.
   const isGroup = (m.fase_tipo || "").startsWith("grupo");
-  const PENAL_SECTION = "⚡ Definición por penales";
+  const PENAL_SECTION = "⚡ Definicion por penales";
   const tandaReal = m.penales_local != null || m.penales_visitante != null;
   const tandaPred =
     m.pred_penales_local_tanda != null || m.pred_penales_visitante_tanda != null;
@@ -482,8 +614,8 @@ function buildItems(m: MisPartidoRow): ItemRow[] {
     });
   }
 
-  // P — País que clasifica. En victoria en tiempo normal se infiere del marcador;
-  // en definición por penales, es el ganador de la tanda.
+  // P — Equipo que clasifica. En victoria en tiempo normal se infiere del marcador;
+  // en definicion por penales, es el ganador de la tanda.
   const teamName = (id: number | null) =>
     id == null
       ? null
@@ -500,8 +632,8 @@ function buildItems(m: MisPartidoRow): ItemRow[] {
   const predClasif = teamName(predClasifId);
   if (!isGroup && (realClasif != null || predClasif != null)) {
     out.push({
-      icon: "🏳️",
-      label: "País que clasifica",
+      icon: "\u{1F3F3}️",
+      label: "Equipo que clasifica",
       real: realClasif,
       pred: predClasif,
       pts: m.pts_equipo,

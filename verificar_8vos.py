@@ -1,3 +1,5 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import psycopg2, psycopg2.extras, sys
 
 CONN_BEC = "host=localhost port=5432 dbname=becbuc user=app_user password=superpassword"
@@ -51,11 +53,11 @@ try:
 
     resultado = "\n".join(lineas) + "\n\nOK"
     print(resultado)
-    with open(r"C:\proyecto FAST API\resultado_verificacion_8vos.txt", "w", encoding="utf-8") as f:
+    with open(_osp.path.join(_BASE, 'resultado_verificacion_8vos.txt'), "w", encoding="utf-8") as f:
         f.write(resultado)
 
 except Exception as e:
     msg = f"ERROR: {e}"
     print(msg)
-    with open(r"C:\proyecto FAST API\resultado_verificacion_8vos.txt", "w", encoding="utf-8") as f:
+    with open(_osp.path.join(_BASE, 'resultado_verificacion_8vos.txt'), "w", encoding="utf-8") as f:
         f.write(msg)

@@ -5,7 +5,7 @@ echo =============================================
 echo.
 
 echo [1/3] Ejecutando migracion SQL en Docker...
-docker exec -i core-postgres psql -U app_user -d becbuc < "C:\proyecto FAST API\documentacion\migracion_stats_fuentes.sql"
+docker exec -i core-postgres psql -U app_user -d becbuc < "%~dp0..\documentacion\migracion_stats_fuentes.sql"
 echo.
 
 echo [2/3] Verificando tabla...

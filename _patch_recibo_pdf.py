@@ -1,9 +1,11 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 # -*- coding: utf-8 -*-
 """Recibo de apuestas imprimible/PDF, auto al guardar con exito (live-playoffs)."""
 import re, shutil, subprocess, os
 from datetime import datetime
-HTML = r"C:\proyecto FAST API\backend\static\becbuc-live-playoffs.html"
-BKP  = r"C:\proyecto FAST API\_backups"
+HTML = _osp.path.join(_BASE, 'backend', 'static', 'becbuc-live-playoffs.html')
+BKP  = _osp.path.join(_BASE, '_backups')
 if not os.path.exists(HTML):
     HTML = "/sessions/stoic-busy-euler/mnt/proyecto FAST API/backend/static/becbuc-live-playoffs.html"
     BKP  = "/sessions/stoic-busy-euler/mnt/proyecto FAST API/_backups"

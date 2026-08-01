@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0."
 set OUT=git_fase1_out.txt
 echo === git add -A === > %OUT%
 git add -A >> %OUT% 2>&1

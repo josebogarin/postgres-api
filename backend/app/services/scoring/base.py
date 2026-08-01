@@ -24,6 +24,10 @@ class FaseConfig:
     pts_penales_partido: int = 1         # M — penales sancionados durante el partido
     pts_penales_tanda_por_equipo: int = 2   # O — 2 pts por equipo tanda acertado (0 en grupos)
     pts_equipo_clasifica: int = 0           # P — equipo que clasifica
+    # ── Torneos de clubes (reglamento nuevo Opción C) ──────────────────────────
+    # Sustituciones: reemplazan a VAR. UN solo total del partido (local + visitante).
+    # Solo suma si el pronóstico es EXACTO y hubo al menos un cambio.
+    pts_sustituciones: int = 0   # clubes: 3/5/8/12 por fase
 
 
 @dataclass
@@ -62,7 +66,10 @@ class PartidoScore:
     pts_penales_tanda: int = 0  # O
     pts_equipo: int = 0         # P
 
-    pts_bonus: int = 0          # J+K+L+N+O+P
+    # Clubes: sustituciones (total local + visitante, reemplazan a VAR)
+    pts_sustituciones: int = 0
+
+    pts_bonus: int = 0          # J+K+L+N+O+P (+sustituciones en clubes)
     pts_total: int = 0          # H+I+bonus
 
     # Clasificador para Excel (3=pleno, 1=ganador, 0=cero) — no es el puntaje real

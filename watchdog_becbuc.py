@@ -22,6 +22,8 @@ Registrar en Windows Task Scheduler para que corra cada minuto:
     # Eliminar:
     Unregister-ScheduledTask -TaskName 'BECBUC-Watchdog' -Confirm:$false
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 
 import logging
 import os
@@ -31,7 +33,7 @@ import urllib.error
 import urllib.request
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-BASE_DIR    = r"C:\proyecto FAST API"
+BASE_DIR    = _BASE
 VENV_PYTHON = os.path.join(BASE_DIR, r".venv\Scripts\python.exe")
 BACKEND_DIR = os.path.join(BASE_DIR, "backend")
 SERVER_URL  = "http://localhost:8000"

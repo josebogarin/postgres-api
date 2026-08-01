@@ -1,3 +1,5 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 # -*- coding: utf-8 -*-
 """
 fix_etapa_paraguay.py — FIX ITEM F (Etapa Paraguay).
@@ -24,7 +26,7 @@ import sys, os, time, json, urllib.request, urllib.error
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-ROOT = r"C:\proyecto FAST API"
+ROOT = _BASE
 sys.path.insert(0, ROOT)
 TID = 2
 DB = dict(host="localhost", port=5432, user="app_user", password="superpassword")

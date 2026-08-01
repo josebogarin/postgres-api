@@ -10,13 +10,13 @@ echo   - Bracket tree SVG rediseñado (live-playoffs + portal)
 echo   - CLAUDE.md actualizado
 echo.
 
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 git add -A
 git commit -m "sesion 52 partes 3+4: revert KO_FEEDERS incorrecto + bracket tree SVG rediseno oficial FIFA"
 echo.
 echo [OK] Commit en backend hecho.
 
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 git add -A
 git commit -m "sesion 52 partes 3+4: CLAUDE.md + scripts bracket + revert r32 fix incorrecto"
 echo.
@@ -24,7 +24,7 @@ echo [OK] Commit en raiz hecho.
 
 echo.
 echo Push al remoto...
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 git push
 echo.
 echo ============================================================

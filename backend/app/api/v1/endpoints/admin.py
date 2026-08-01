@@ -1360,7 +1360,8 @@ async def sync_sistema(_: CurrentSuperuser) -> dict:
 @router.post("/register-sync-task")
 async def register_sync_task(_admin: CurrentAdmin):
     """Registra o re-registra la tarea BECBUC-SyncAPI en Windows Task Scheduler."""
-    bat_path = r"C:\proyecto FAST API\run_sync_auto.bat"
+    import os as _os
+    bat_path = _os.path.join(_os.path.abspath(_os.path.join(_os.path.dirname(__file__), "..", "..", "..", "..", "..")), "run_sync_auto.bat")
     results = {}
 
     # 1. Eliminar tarea anterior si existe

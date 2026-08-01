@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 call backend\.venv\Scripts\activate.bat 2>nul
 python diag_sistema_schema.py
 echo.

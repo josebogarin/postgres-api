@@ -4,6 +4,8 @@ Script combinado (usa asyncpg, que ya esta instalado en el venv):
   2. Genera Excel de puntaje por item - Fase de Grupos + Peor equipo (D)
 Ejecutar: python goleada_off_y_excel_grupos.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import asyncio, sys, datetime
 import io
 # Force UTF-8 output on Windows console
@@ -209,7 +211,7 @@ async def main():
     ws.column_dimensions[get_column_letter(total_col)].width = 12
 
     ts  = datetime.datetime.now().strftime("%Y%m%d_%H%M")
-    out = rf"C:\proyecto FAST API\puntaje_grupos_{ts}.xlsx"
+    out = _osp.path.join(_BASE, 'puntaje_grupos_')
     wb.save(out)
     print(f"\nExcel generado: {out}")
     print(f"   Apostadores: {len(rows_data)}")

@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 if exist ".git\index.lock" del /f ".git\index.lock"
 git add static/login.html
 git commit -m "sesion 29: fix login.html"

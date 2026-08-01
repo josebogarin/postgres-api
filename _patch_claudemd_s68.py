@@ -1,9 +1,11 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 # -*- coding: utf-8 -*-
 """Registrar sesion 68 (2026-07-15) en CLAUDE.md."""
 import shutil, os
 from datetime import datetime
 B="/sessions/stoic-busy-euler/mnt/proyecto FAST API"
-if not os.path.exists(B): B=r"C:\proyecto FAST API"
+if not os.path.exists(B): B=_BASE
 MD=B+"/CLAUDE.md"; BKP=B+"/_backups"; os.makedirs(BKP,exist_ok=True)
 
 ENTRY = r"""2026-07-15 - Sesion Cowork (sesion 68) - CIERRE CUARTOS + SEMIS/BRACKET + EDITOR APUESTAS LIVE-PLAYOFFS + EXPORT:

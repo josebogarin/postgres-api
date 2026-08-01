@@ -8,9 +8,11 @@ import { fmtFecha } from "@/lib/format";
 export default function GruposView({
   torneoId,
   onSelect,
+  onReplay,
 }: {
   torneoId: number;
   onSelect: (num: number) => void;
+  onReplay?: (partidoId: number) => void;
 }) {
   const [grupos, setGrupos] = useState<Group[] | null>(null);
   const [idx, setIdx] = useState(0); // siempre arranca en el Grupo A (índice 0)
@@ -104,21 +106,22 @@ export default function GruposView({
           .slice()
           .sort((a, b) => a.numero_fifa - b.numero_fifa)
           .map((m) => (
-            <MatchRow key={m.id} m={m} onClick={() => onSelect(m.numero_fifa)} />
+            <MatchRow key={m.id} m={m} onClick={() => onSelect(m.numero_fifa)} onReplay={onReplay} />
           ))}
       </div>
     </div>
   );
 }
 
-function MatchRow({ m, onClick }: { m: GroupMatch; onClick: () => void }) {
+function MatchRow({ m, onClick, onReplay }: { m: GroupMatch; onClick: () => void; onReplay?: (partidoId: number) => void }) {
   const done = m.estado === "finalizado";
   const live = m.estado === "en_juego";
+  const handle = () => (done && onReplay ? onReplay(m.id) : onClick());
   const lname = m.local_nombre_es || m.local_nombre;
   const vname = m.visit_nombre_es || m.visit_nombre;
   return (
     <button
-      onClick={onClick}
+      onClick={handle}
       className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-left text-xs active:bg-surface-2"
     >
       <span className="min-w-0 flex-1 truncate text-right">{lname}</span>

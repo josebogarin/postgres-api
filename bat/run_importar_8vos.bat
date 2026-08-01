@@ -3,8 +3,8 @@ echo ============================================================
 echo  BECBUC - Importar pronosticos 8vos de final
 echo ============================================================
 
-SET PYTHON="C:\proyecto FAST API\backend\.venv\Scripts\python.exe"
-SET SCRIPT="C:\proyecto FAST API\importar_8vos_excel.py"
+SET PYTHON="%~dp0..\backend\.venv\Scripts\python.exe"
+SET SCRIPT="%~dp0..\importar_8vos_excel.py"
 
 IF "%1"=="--import" (
     echo MODO: IMPORTAR + BLOQUEAR R32

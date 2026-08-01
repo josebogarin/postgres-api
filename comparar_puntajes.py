@@ -3,6 +3,8 @@ comparar_puntajes.py
 Extrae puntajes de la BD BECBUC y compara contra tabla de referencia (imagen).
 Ejecutar desde: cd "C:\proyecto FAST API" && python comparar_puntajes.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import subprocess
 import sys
 import os
@@ -242,7 +244,7 @@ def main():
         print("\n✅ Todos los puntajes coinciden con la tabla de referencia.")
 
     # Guardar CSV BD
-    csv_path = r"C:\proyecto FAST API\becbuc_scores.csv"
+    csv_path = _osp.path.join(_BASE, 'becbuc_scores.csv')
     with open(csv_path, "w", encoding="utf-8") as f:
         f.write("username|nombre_completo|H|I|J|K|L|M|N|O|TOTAL_PARTIDOS|GLOBALES|TOTAL\n")
         for r in bd_rows:

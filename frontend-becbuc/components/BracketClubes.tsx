@@ -40,9 +40,11 @@ function fechaCorta(iso?: string | null): string {
 export default function BracketClubes({
   rondas,
   onSelect,
+  logoUrl,
 }: {
   rondas: ClubRonda[];
   onSelect?: (partidoId: number) => void;
+  logoUrl?: string | null;
 }) {
   const byTipo = new Map(rondas.map((r) => [r.tipo, r]));
   const firstIdx = KO_ORDER.findIndex((t) => byTipo.has(t));
@@ -117,7 +119,7 @@ export default function BracketClubes({
       <PanZoom contentW={contentW} contentH={contentH} focusX={focusX} height="76vh">
         <div className="flex items-start" style={{ width: contentW, height: contentH, gap: GAP, padding: GAP }}>
           {orderedCols.map((c, i) => (
-            <Column key={i} col={c} bodyH={bodyH} onSelect={onSelect} nextTs={nextTs} />
+            <Column key={i} col={c} bodyH={bodyH} onSelect={onSelect} nextTs={nextTs} logoUrl={logoUrl} />
           ))}
         </div>
       </PanZoom>
@@ -130,11 +132,13 @@ function Column({
   bodyH,
   onSelect,
   nextTs,
+  logoUrl,
 }: {
   col: Col;
   bodyH: number;
   onSelect?: (partidoId: number) => void;
   nextTs: number;
+  logoUrl?: string | null;
 }) {
   return (
     <div className="flex shrink-0 flex-col" style={{ width: COLW }}>
@@ -148,6 +152,14 @@ function Column({
         className={"flex flex-col " + (col.final ? "justify-center" : "justify-around")}
         style={{ height: bodyH }}
       >
+        {col.final ? (
+          logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="" draggable={false} className="mx-auto mb-2 object-contain" style={{ height: 44 }} />
+          ) : (
+            <div className="mb-2 text-center" style={{ fontSize: 34, lineHeight: 1 }}>{"\u{1F3C6}"}</div>
+          )
+        ) : null}
         {col.llaves.map((ll, i) => (
           <LlaveCard key={i} ll={ll} onSelect={onSelect} nextTs={nextTs} />
         ))}

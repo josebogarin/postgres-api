@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-set DEST=C:\proyecto FAST API\documentacion\iconos-copas
+set DEST=%~dp0..\documentacion\iconos-copas
 echo === Bajando logos oficiales CONMEBOL a %DEST% ===
 if not exist "%DEST%" mkdir "%DEST%"
 powershell -NoProfile -Command ^

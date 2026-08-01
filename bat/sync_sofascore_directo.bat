@@ -5,7 +5,7 @@ echo  SYNC SOFASCORE DIRECTO (sin servidor uvicorn)
 echo  J=Amarillas  K=Rojas  L=VAR  M=Penales partido
 echo ============================================================
 echo.
-cd /D "C:\proyecto FAST API"
+cd /D "%~dp0.."
 backend\.venv\Scripts\python.exe sync_sofascore_directo.py ayer
 echo.
 pause

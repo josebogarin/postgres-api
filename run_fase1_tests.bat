@@ -2,9 +2,9 @@
 chcp 65001 >nul
 set PYTHONIOENCODING=utf-8
 set PYTHONUTF8=1
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0backend"
 call .venv\Scripts\activate
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0."
 set OUT=fase1_tests_out.txt
 echo === [1] generar golden master === > %OUT%
 python tests\golden\export_golden.py >> %OUT% 2>&1

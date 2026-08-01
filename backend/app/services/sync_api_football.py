@@ -1252,14 +1252,18 @@ async def auto_mapeo_torneo(
             equipos_actualizados += 1
 
     # ── Guardar partidos ───────────────────────────────────────────────────────
+    # Guard anti-duplicado: en clubes ida/vuelta comparten par de equipos y pueden
+    # mapear al mismo fixture -> saltar los ya usados para NO violar UNIQUE (partido_api_fixture_id_key).
+    used_api_fix: set[int] = {p["api_fixture_id"] for p in db_partidos if p.get("api_fixture_id")}
     partidos_actualizados = 0
     for db_id, api_id in db_to_api_fix.items():
         p = next((x for x in db_partidos if x["id"] == db_id), None)
-        if p and not p.get("api_fixture_id"):
+        if p and not p.get("api_fixture_id") and api_id not in used_api_fix:
             await db.execute(
                 text("UPDATE partido SET api_fixture_id = :fid WHERE id = :did"),
                 {"fid": api_id, "did": db_id},
             )
+            used_api_fix.add(api_id)
             partidos_actualizados += 1
 
     await db.commit()
@@ -2449,6 +2453,7 @@ async def _update_partido_full(
     # Penales cobrados durante el partido (ítem M): convertidos + fallados.
     # NO incluye la tanda de penales (ítem O), que se cuenta aparte por score.penalty.
     penales_partido_total = 0
+    sustituciones_total = 0
 
     # Rastrear goles anulados por VAR para no usarlos como minuto_primer_gol
     goles_anulados_minutos: set[int] = set()
@@ -2457,6 +2462,9 @@ async def _update_partido_full(
         ev_detail = ev.get("detail", "")
         elapsed   = ev.get("time", {}).get("elapsed")
         ev_team_id = ev.get("team", {}).get("id")
+
+        if (ev_type or "").lower() == "subst":
+            sustituciones_total += 1  # cambios (reemplazan a VAR en clubes)
 
         if ev_type == "Var":
             var_count += 1
@@ -2555,6 +2563,7 @@ async def _update_partido_full(
     # decisiones_var: None si sin eventos, int (0+) si con eventos (ya asignado arriba)
     # penales_partido: mismo criterio — None si sin eventos para no pisar valor correcto
     penales_partido_final = penales_partido_total if events else None
+    sustituciones_final = sustituciones_total if events else None
 
     STATUS_MAP = {
         "FT": "finalizado", "AET": "finalizado", "PEN": "finalizado",
@@ -2580,7 +2589,8 @@ async def _update_partido_full(
                 ADD COLUMN IF NOT EXISTS local_amarillas     INT,
                 ADD COLUMN IF NOT EXISTS visitante_amarillas INT,
                 ADD COLUMN IF NOT EXISTS local_rojas         INT,
-                ADD COLUMN IF NOT EXISTS visitante_rojas     INT
+                ADD COLUMN IF NOT EXISTS visitante_rojas     INT,
+                ADD COLUMN IF NOT EXISTS sustituciones       INT
         """))
     except Exception:
         pass
@@ -2600,6 +2610,7 @@ async def _update_partido_full(
                 minuto_primer_gol      = COALESCE(:mpg, minuto_primer_gol),
                 equipo_clasificado_id  = COALESCE(:ecid, equipo_clasificado_id),
                 penales_partido        = COALESCE(:pp, penales_partido),
+                sustituciones          = COALESCE(:subs, sustituciones),
                 local_amarillas        = COALESCE(:loc_am,  local_amarillas),
                 visitante_amarillas    = COALESCE(:vis_am,  visitante_amarillas),
                 local_rojas            = COALESCE(:loc_ro,  local_rojas),
@@ -2620,6 +2631,7 @@ async def _update_partido_full(
             "mpg":     minuto_primer_gol,
             "ecid":    equipo_clasif_id,
             "pp":      penales_partido_final,
+            "subs":    sustituciones_final,
             "loc_am":  _loc_amar,
             "vis_am":  _vis_amar,
             "loc_ro":  _loc_rojas,
@@ -2636,5 +2648,6 @@ async def _update_partido_full(
         "rojas":           rojas_total       if rojas_total       is not None else 0,
         "decisiones_var":  decisiones_var    if decisiones_var    is not None else 0,
         "penales_partido": penales_partido_final if penales_partido_final is not None else 0,
+        "sustituciones":   sustituciones_total if events else 0,
         "_events_empty":   not events,   # True = fixture llegó sin eventos (diagnóstico)
     }

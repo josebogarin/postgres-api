@@ -4,7 +4,7 @@ echo ============================================================
 echo  SYNC PARTIDOS DE AYER + RECALCULO PUNTAJES
 echo ============================================================
 echo.
-cd /D "C:\proyecto FAST API"
+cd /D "%~dp0.."
 backend\.venv\Scripts\python.exe sync_ayer.py
 echo.
 pause

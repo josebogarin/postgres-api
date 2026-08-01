@@ -1,6 +1,6 @@
 @echo off
 echo Arrancando uvicorn...
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 start "BECBUC-Server" cmd /k ".venv\Scripts\activate.bat && uvicorn app.main:app --reload --port 8000"
 echo Esperando 15 segundos para que inicie el servidor...
 timeout /t 15 /nobreak

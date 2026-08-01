@@ -2,9 +2,9 @@
 chcp 65001 >nul
 set PYTHONIOENCODING=utf-8
 set PYTHONUTF8=1
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0backend"
 call .venv\Scripts\activate
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0."
 set OUT=fase3b_verif_out.txt
 echo ==== FASE 3b: extraer exportar_puntajes del God file ==== > %OUT%
 echo. >> %OUT%

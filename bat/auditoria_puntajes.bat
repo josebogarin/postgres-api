@@ -2,7 +2,7 @@
 REM Auditoria de puntajes BECBUC 2026
 REM Ejecuta comparar_puntajes_control.py con el venv del backend
 
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 
 echo.
 echo ====================================================

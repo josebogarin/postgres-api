@@ -7,10 +7,12 @@ Script consolidado - pronosticos_aux:
    Join: apuesta.numero_fifa = pronosticos_aux.numero_partido_fifa
          + nombre_apostador match
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import psycopg2, traceback, unicodedata, re
 
 DB = dict(host="localhost", port=5432, dbname="becbuc", user="app_user", password="superpassword")
-OUT = r"C:\proyecto FAST API\resultado_sync_paux.txt"
+OUT = _osp.path.join(_BASE, 'resultado_sync_paux.txt')
 
 # Traduccion ES -> EN para nombres de equipos Copa Mundial
 DICT_ES_EN = {

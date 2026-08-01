@@ -5,6 +5,8 @@ Compara puntajes del Excel BECBUC_contexto.xlsx vs puntaje_detalle en BD.
 Para cada apostador × partido finalizado identifica diferencias en A-G y total.
 Genera: comparar_bd_excel.xlsx con resumen y detalle.
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import sys, io, os, re
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
@@ -25,7 +27,7 @@ XLSX_SRC = (r"C:\Users\Jose Bogarin\AppData\Roaming\Claude\local-agent-mode-sess
             r"\agent\local_ditto_dfc0381f-d9d1-4349-b3fa-24cab5c5da8b\uploads"
             r"\83901ff8-BECBUC_contexto.xlsx")
 TORNEO_ID = 2
-OUTPUT    = r"C:\proyecto FAST API\comparar_bd_excel.xlsx"
+OUTPUT    = _osp.path.join(_BASE, 'comparar_bd_excel.xlsx')
 PG_BEC    = dict(host="localhost", port=5432, user="app_user",
                  password="superpassword", dbname="becbuc")
 PG_APP    = dict(host="localhost", port=5432, user="app_user",

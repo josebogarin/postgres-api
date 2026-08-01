@@ -1,5 +1,5 @@
 @echo off
-echo Comparando pronosticos_aux vs apuesta (todos los apostadores, grupos)... > "C:\proyecto FAST API\todos_diffs.txt"
+echo Comparando pronosticos_aux vs apuesta (todos los apostadores, grupos)... > "%~dp0..\todos_diffs.txt"
 docker exec core-postgres psql -U app_user -d becbuc -t -A -F"|" -c "
 SELECT
     pa.nombre,
@@ -21,10 +21,10 @@ WHERE f.torneo_id = 2
   AND p.estado = 'finalizado'
   AND (pa.goles_local != a.pred_local OR pa.goles_visitante != a.pred_visitante)
 ORDER BY pa.nombre, p.numero_fifa;
-" >> "C:\proyecto FAST API\todos_diffs.txt" 2>&1
+" >> "%~dp0..\todos_diffs.txt" 2>&1
 
-echo. >> "C:\proyecto FAST API\todos_diffs.txt"
-echo === RESUMEN: diferencias por apostador === >> "C:\proyecto FAST API\todos_diffs.txt"
+echo. >> "%~dp0..\todos_diffs.txt"
+echo === RESUMEN: diferencias por apostador === >> "%~dp0..\todos_diffs.txt"
 docker exec core-postgres psql -U app_user -d becbuc -c "
 SELECT
     pa.nombre,
@@ -43,10 +43,10 @@ WHERE f.torneo_id = 2
   AND (pa.goles_local != a.pred_local OR pa.goles_visitante != a.pred_visitante)
 GROUP BY pa.nombre, pa.alias
 ORDER BY partidos_diferentes DESC, pa.nombre;
-" >> "C:\proyecto FAST API\todos_diffs.txt" 2>&1
+" >> "%~dp0..\todos_diffs.txt" 2>&1
 
-echo. >> "C:\proyecto FAST API\todos_diffs.txt"
-echo === TOTAL apostadores con diferencias === >> "C:\proyecto FAST API\todos_diffs.txt"
+echo. >> "%~dp0..\todos_diffs.txt"
+echo === TOTAL apostadores con diferencias === >> "%~dp0..\todos_diffs.txt"
 docker exec core-postgres psql -U app_user -d becbuc -c "
 SELECT COUNT(DISTINCT pa.nombre) AS apostadores_con_diff,
        COUNT(*) AS total_diferencias
@@ -61,7 +61,7 @@ WHERE f.torneo_id = 2
   AND f.tipo ILIKE 'grupo%%'
   AND p.estado = 'finalizado'
   AND (pa.goles_local != a.pred_local OR pa.goles_visitante != a.pred_visitante);
-" >> "C:\proyecto FAST API\todos_diffs.txt" 2>&1
+" >> "%~dp0..\todos_diffs.txt" 2>&1
 
-type "C:\proyecto FAST API\todos_diffs.txt"
+type "%~dp0..\todos_diffs.txt"
 pause

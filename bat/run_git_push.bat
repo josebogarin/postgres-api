@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 set GIT_TERMINAL_PROMPT=0
 > git_push_log.txt (
   echo === REMOTE SET ===

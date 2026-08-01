@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 powershell -NoProfile -ExecutionPolicy Bypass -Command "
 $base = 'http://localhost:8000'
 Write-Host '=== Login ===' -ForegroundColor Cyan

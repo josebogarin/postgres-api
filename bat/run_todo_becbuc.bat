@@ -6,7 +6,7 @@ echo  BECBUC - Simulacion completa + Excel
 echo ============================================
 echo.
 
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 
 REM --- Paso 1: Verificar Docker ---
 echo [1/4] Verificando Docker...
@@ -21,7 +21,7 @@ echo       Docker OK.
 
 REM --- Paso 2: Arrancar uvicorn en ventana separada ---
 echo [2/4] Iniciando servidor uvicorn en puerto 8000...
-start "BECBUC-Server" cmd /k "cd /d \"C:\proyecto FAST API\backend\" && .venv\Scripts\activate && uvicorn app.main:app --port 8000"
+start "BECBUC-Server" cmd /k "cd /d \"%~dp0..\backend\" && .venv\Scripts\activate && uvicorn app.main:app --port 8000"
 echo       Esperando 10 segundos para que el servidor arranque...
 timeout /t 10 /nobreak >nul
 
@@ -36,7 +36,7 @@ REM --- Paso 3: Simulacion ---
 echo [3/4] Corriendo test_integral.py (simulacion)...
 echo       Esto puede tardar 1-2 minutos...
 echo.
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 backend\.venv\Scripts\python.exe test_integral.py
 if %errorlevel% neq 0 (
     echo.
@@ -58,9 +58,9 @@ if %errorlevel% neq 0 (
 echo.
 echo ============================================
 echo  LISTO. Archivo generado:
-echo  C:\proyecto FAST API\BECBUC_verificacion.xlsx
+echo  %~dp0..\BECBUC_verificacion.xlsx
 echo ============================================
 echo.
 echo Abriendo Excel...
-start "" "C:\proyecto FAST API\BECBUC_verificacion.xlsx"
+start "" "%~dp0..\BECBUC_verificacion.xlsx"
 pause

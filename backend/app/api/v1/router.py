@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     apostador_bets,
     audit_logs,
     auth,
+    clubes_scoring,
     database_admin,
     diccionario,
     health,
@@ -34,4 +35,5 @@ api_router.include_router(database_admin.router, prefix="/admin/db", tags=["data
 api_router.include_router(portal.router, prefix="/portal", tags=["portal"])
 api_router.include_router(torneo.router, prefix="/torneo", tags=["torneo"])
 api_router.include_router(apostador_bets.router, prefix="/bets", tags=["apuestas"])
+api_router.include_router(clubes_scoring.router, prefix="/bets", tags=["apuestas-clubes"])
 api_router.include_router(monitor.router, prefix="/monitor", tags=["monitor"])

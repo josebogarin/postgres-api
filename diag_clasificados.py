@@ -2,9 +2,11 @@
 diag_clasificados.py — Diagnóstico del algoritmo item P (equipos clasificados grupos)
 Ejecutar con: python diag_clasificados.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import asyncio
 import sys
-sys.path.insert(0, r'C:\proyecto FAST API\backend')
+sys.path.insert(0, _osp.path.join(_BASE, 'backend'))
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -12,7 +14,7 @@ from sqlalchemy import text
 
 def get_db_url():
     try:
-        with open(r'C:\proyecto FAST API\backend\.env') as f:
+        with open(_osp.path.join(_BASE, 'backend', '.env')) as f:
             for line in f:
                 if 'DATABASE_BECBUC_URL' in line:
                     return line.split('=',1)[1].strip().strip('"\'')

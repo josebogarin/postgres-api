@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 echo === DRY-RUN (no escribe) ===
 python cargar_fixture_libertadores_octavos.py
 echo.

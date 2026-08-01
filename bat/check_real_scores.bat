@@ -1,5 +1,5 @@
 @echo off
-echo === Resultados reales vs predicciones NUEVAS de cherem (10 partidos corregidos) === > "C:\proyecto FAST API\real_scores.txt"
+echo === Resultados reales vs predicciones NUEVAS de cherem (10 partidos corregidos) === > "%~dp0..\real_scores.txt"
 docker exec core-postgres psql -U app_user -d becbuc -c "
 SELECT
     p.numero_fifa,
@@ -27,10 +27,10 @@ LEFT JOIN puntaje_detalle pd ON pd.partido_id = p.id AND pd.apostador_id = a.apo
 WHERE a.apostador_id = 15
   AND p.numero_fifa IN (37,38,49,50,55,56,61,62,65,66)
 ORDER BY p.numero_fifa;
-" >> "C:\proyecto FAST API\real_scores.txt" 2>&1
+" >> "%~dp0..\real_scores.txt" 2>&1
 
-echo. >> "C:\proyecto FAST API\real_scores.txt"
-echo === Puntaje ESPERADO vs ACTUAL (segun resultado real) === >> "C:\proyecto FAST API\real_scores.txt"
+echo. >> "%~dp0..\real_scores.txt"
+echo === Puntaje ESPERADO vs ACTUAL (segun resultado real) === >> "%~dp0..\real_scores.txt"
 docker exec core-postgres psql -U app_user -d becbuc -c "
 SELECT
     p.numero_fifa,
@@ -52,7 +52,7 @@ LEFT JOIN puntaje_detalle pd ON pd.partido_id = p.id AND pd.apostador_id = a.apo
 WHERE a.apostador_id = 15
   AND p.numero_fifa IN (37,38,49,50,55,56,61,62,65,66)
 ORDER BY p.numero_fifa;
-" >> "C:\proyecto FAST API\real_scores.txt" 2>&1
+" >> "%~dp0..\real_scores.txt" 2>&1
 
-type "C:\proyecto FAST API\real_scores.txt"
+type "%~dp0..\real_scores.txt"
 pause

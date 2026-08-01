@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 echo === PROPAGAR (dry-run) Libertadores(1) + Sudamericana(14) ===
 python propagar_ganadores_clubes.py 1
 python propagar_ganadores_clubes.py 14

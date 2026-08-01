@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 echo === DRY-RUN: revisa que cada equipo matchee el club del pais correcto ===
 python buscar_logos_equipos.py
 echo.

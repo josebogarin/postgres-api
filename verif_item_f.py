@@ -1,3 +1,5 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 # -*- coding: utf-8 -*-
 """verif_item_f.py — SOLO LECTURA. Cierre del tema item F (Etapa Paraguay).
 Cruza la BD (post-fix) con el Excel master de globales para:
@@ -11,7 +13,7 @@ from psycopg2.extras import RealDictCursor
 
 TID = 2
 DB = dict(host="localhost", port=5432, user="app_user", password="superpassword")
-XLSX = r"C:\proyecto FAST API\20260611_2000- TBL CONSOLIDADA PRONOSTICOS ok.xlsx"
+XLSX = _osp.path.join(_BASE, '20260611_2000- TBL CONSOLIDADA PRONOSTICOS ok.xlsx')
 
 def p(*a): print(*a); sys.stdout.flush()
 def norm(s):

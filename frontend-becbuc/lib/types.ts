@@ -71,7 +71,8 @@ export interface Apostador {
 
 // ---- Mis partidos (GET /bets/mis-partidos/{tid}?for_apostador_id=) ----
 export interface MisPartidoRow {
-  numero_fifa: number;
+  partido_id: number;
+  numero_fifa: number | null;
   fase_tipo: string;
   fase_nombre: string;
   fase_orden: number;
@@ -86,6 +87,7 @@ export interface MisPartidoRow {
   penales_local: number | null;
   penales_visitante: number | null;
   penales_partido: number | null;
+  sustituciones: number | null;
   local_id: number | null;
   visit_id: number | null;
   local_nombre: string;
@@ -103,6 +105,8 @@ export interface MisPartidoRow {
   pred_minuto_gol: number | null;
   pred_penales_local_tanda: number | null;
   pred_penales_visitante_tanda: number | null;
+  pred_sustituciones: number | null;
+  pred_comodin: boolean | null;
   pts_resultado: number | null;
   pts_marcador: number | null;
   pts_amarillas: number | null;
@@ -142,6 +146,7 @@ export interface LivePartido {
   amarillas: number;
   rojas: number;
   decisiones_var: number;
+  sustituciones?: number | null;
   penales_partido: number | null;
   penales_tanda_local: number | null;
   penales_tanda_visitante: number | null;
@@ -214,6 +219,7 @@ export interface RankingRow {
   cat_amarillas?: number;
   cat_rojas?: number;
   cat_var?: number;
+  cat_sustituciones?: number;
   cat_minuto?: number;
   cat_penales_partido?: number;
   cat_penales_tanda?: number;
@@ -254,4 +260,5 @@ export interface ClubRonda {
 export interface BracketClubesResponse {
   tipo: string;
   rondas: ClubRonda[];
+  logo?: string | null; // logo de la copa (arriba de la final)
 }

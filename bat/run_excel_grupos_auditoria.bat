@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 echo ============================================================
 echo BECBUC 2026 - Excel Auditoria Fase de Grupos
 echo ============================================================

@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /D "C:\proyecto FAST API"
+cd /D "%~dp0.."
 echo Ejecutando check_ultimo.py...
 backend\.venv\Scripts\python.exe check_ultimo.py > check_ultimo_log.txt 2>&1
 echo.

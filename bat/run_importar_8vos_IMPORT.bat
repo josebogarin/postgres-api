@@ -4,8 +4,8 @@ echo  BECBUC - IMPORTAR 8vos + BLOQUEAR R32
 echo ============================================================
 echo.
 
-SET PYTHON="C:\proyecto FAST API\backend\.venv\Scripts\python.exe"
-SET SCRIPT="C:\proyecto FAST API\importar_8vos_excel.py"
+SET PYTHON="%~dp0..\backend\.venv\Scripts\python.exe"
+SET SCRIPT="%~dp0..\importar_8vos_excel.py"
 
 %PYTHON% %SCRIPT% --import
 

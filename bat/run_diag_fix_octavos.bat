@@ -1,4 +1,4 @@
 @echo off
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 call backend\.venv\Scripts\activate
 python diag_y_fix_octavos.py

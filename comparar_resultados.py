@@ -6,6 +6,8 @@ penales del partido (M), minuto primer gol (N).
 Ejecutar:
     python comparar_resultados.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 
 import psycopg2
 import openpyxl
@@ -15,7 +17,7 @@ from datetime import datetime
 # ── Configuracion ────────────────────────────────────────────────────────────
 DB   = dict(host="localhost", port=5432, dbname="becbuc", user="app_user", password="superpassword")
 XLSX = r"C:\Users\Jose Bogarin\AppData\Roaming\Claude\local-agent-mode-sessions\a9fdc79d-9227-450c-a0c1-27eafc601471\dfc0381f-d9d1-4349-b3fa-24cab5c5da8b\local_2cded1ed-1658-4b6a-8527-0fe1e6eff1cc\uploads\20260623-check.xlsx"
-OUT  = r"C:\proyecto FAST API\comparacion_resultados.txt"
+OUT  = _osp.path.join(_BASE, 'comparacion_resultados.txt')
 
 # ── Leer Excel ───────────────────────────────────────────────────────────────
 wb = openpyxl.load_workbook(XLSX, data_only=True)

@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 
 echo ============================================================
 echo  FASE 0 - Unificar repos anidados + commit de TODO (BECBUC)

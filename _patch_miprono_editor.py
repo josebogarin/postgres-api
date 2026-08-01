@@ -1,3 +1,5 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 # -*- coding: utf-8 -*-
 """
 Patch: Editor de apuestas en tab Mi Prono (becbuc-live-playoffs.html) + endpoint
@@ -6,9 +8,9 @@ POST /live-guardar-apuestas (apostador_bets.py). Con backup + verificacion + rol
 import ast, re, shutil, subprocess, sys, os
 from datetime import datetime
 
-HTML = r"C:\proyecto FAST API\backend\static\becbuc-live-playoffs.html"
-PY   = r"C:\proyecto FAST API\backend\app\api\v1\endpoints\apostador_bets.py"
-BKP  = r"C:\proyecto FAST API\_backups"
+HTML = _osp.path.join(_BASE, 'backend', 'static', 'becbuc-live-playoffs.html')
+PY   = _osp.path.join(_BASE, 'backend', 'app', 'api', 'v1', 'endpoints', 'apostador_bets.py')
+BKP  = _osp.path.join(_BASE, '_backups')
 os.makedirs(BKP, exist_ok=True)
 
 # Permite correr desde el sandbox Linux (paths montados) o Windows.

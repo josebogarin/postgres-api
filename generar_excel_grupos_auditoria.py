@@ -3,6 +3,8 @@ generar_excel_grupos_auditoria.py
 Genera Excel de auditoria de fase de grupos con totales por item H-O + Bonus P (R32).
 Ejecutar: backend\.venv\Scripts\python generar_excel_grupos_auditoria.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import psycopg2
 import psycopg2.extras
 from openpyxl import Workbook
@@ -15,7 +17,7 @@ import os
 BECBUC_DSN  = "host=localhost dbname=becbuc user=app_user"
 APP_DB_DSN  = "host=localhost dbname=app_db user=app_user"
 TORNEO_ID   = 2
-OUT_PATH    = r"C:\proyecto FAST API\auditoria_grupos_becbuc.xlsx"
+OUT_PATH    = _osp.path.join(_BASE, 'auditoria_grupos_becbuc.xlsx')
 
 # ── Colores ──────────────────────────────────────────────────────────────────
 C_HEADER_BG  = "1F2937"   # gris oscuro

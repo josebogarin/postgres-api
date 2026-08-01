@@ -1,8 +1,10 @@
 """Diagnostico: muestra columnas de apuesta y partidos de torneo_id=2"""
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import psycopg2
 
 DB = dict(host="localhost", port=5432, dbname="becbuc", user="app_user", password="superpassword")
-OUT = r"C:\proyecto FAST API\resultado_diag_apuesta.txt"
+OUT = _osp.path.join(_BASE, 'resultado_diag_apuesta.txt')
 lines = []
 
 try:

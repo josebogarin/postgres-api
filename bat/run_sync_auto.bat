@@ -1,3 +1,3 @@
 @echo off
-cd /d "C:\proyecto FAST API"
-"C:\proyecto FAST API\backend\.venv\Scripts\python.exe" "C:\proyecto FAST API\sync_auto.py"
+cd /d "%~dp0.."
+"%~dp0..\backend\.venv\Scripts\python.exe" "%~dp0..\sync_auto.py"

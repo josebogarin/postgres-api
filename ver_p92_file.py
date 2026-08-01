@@ -1,3 +1,5 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import subprocess
 r = subprocess.run(["docker","exec","core-postgres","psql","-U","app_user","-d","becbuc","-c",
 """SELECT p.id, p.numero_fifa, p.fecha AS fecha_utc,
@@ -11,6 +13,6 @@ WHERE p.numero_fifa = 92;"""],
 capture_output=True, text=True)
 output = r.stdout or r.stderr
 print(output)
-with open(r"C:\proyecto FAST API\resultado_p92.txt", "w", encoding="utf-8") as f:
+with open(_osp.path.join(_BASE, 'resultado_p92.txt'), "w", encoding="utf-8") as f:
     f.write(output)
 print("Guardado en resultado_p92.txt")

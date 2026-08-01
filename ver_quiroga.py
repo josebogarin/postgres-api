@@ -1,8 +1,10 @@
 """Pronosticos + resultado + puntos de Quiroga para partidos finalizados."""
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import psycopg2
 
 DB = dict(host="localhost", port=5432, dbname="becbuc", user="app_user", password="superpassword")
-OUT = r"C:\proyecto FAST API\resultado_quiroga.txt"
+OUT = _osp.path.join(_BASE, 'resultado_quiroga.txt')
 lines = []
 
 conn = psycopg2.connect(**DB)

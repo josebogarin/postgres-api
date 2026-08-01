@@ -4,7 +4,7 @@ echo ============================================
 echo  POBLAR equipo.codigo_iso + fifa_ranking
 echo ============================================
 echo.
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 
 echo [1/2] DRY-RUN -- mostrando lo que se actualizaria...
 echo.

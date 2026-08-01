@@ -1,6 +1,8 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import psycopg2, psycopg2.extras
 
-OUT = r"C:\proyecto FAST API\check_pts_equipo.txt"
+OUT = _osp.path.join(_BASE, 'check_pts_equipo.txt')
 
 try:
     conn = psycopg2.connect("host=localhost port=5432 dbname=becbuc user=app_user password=superpassword")

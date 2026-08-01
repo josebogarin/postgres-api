@@ -1,2 +1,2 @@
 @echo off
-powershell.exe -ExecutionPolicy Bypass -File "C:\proyecto FAST API\sincronizar_final_grupos.ps1"
+powershell.exe -ExecutionPolicy Bypass -File "%~dp0..\sincronizar_final_grupos.ps1"

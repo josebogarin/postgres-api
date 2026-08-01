@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 call .venv\Scripts\activate.bat
 start "BECBUC-Uvicorn" cmd /k "uvicorn app.main:app --reload --port 8000"
 timeout /t 3

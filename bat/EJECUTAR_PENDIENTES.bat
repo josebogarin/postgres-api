@@ -1,2 +1,2 @@
 @echo off
-powershell -ExecutionPolicy Bypass -NoExit -File "C:\proyecto FAST API\run_pendientes.ps1"
+powershell -ExecutionPolicy Bypass -NoExit -File "%~dp0..\run_pendientes.ps1"

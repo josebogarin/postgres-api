@@ -20,12 +20,14 @@ Ejecutar:
 
   --apply : aplica la correccion (actualiza partido_id). Sin este flag solo diagnostica.
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import sys
 import psycopg2
 import psycopg2.extras
 
 DB = dict(host="localhost", port=5432, dbname="becbuc", user="app_user", password="superpassword")
-OUT = r"C:\proyecto FAST API\resultado_reconciliar.txt"
+OUT = _osp.path.join(_BASE, 'resultado_reconciliar.txt')
 APPLY = "--apply" in sys.argv
 
 lines = []

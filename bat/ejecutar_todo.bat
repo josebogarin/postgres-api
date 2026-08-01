@@ -1,6 +1,6 @@
 @echo off
 title BECBUC - Ejecutar Todo
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 call .venv\Scripts\activate.bat
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 python ejecutar_todo.py

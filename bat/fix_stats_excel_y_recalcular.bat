@@ -5,7 +5,7 @@ echo =====================================================
 echo.
 
 echo [1/3] Aplicando fix_partido_stats_from_excel.sql en Docker...
-Get-Content "C:\proyecto FAST API\documentacion\fix_partido_stats_from_excel.sql" | docker exec -i core-postgres psql -U app_user -d becbuc
+Get-Content "%~dp0..\documentacion\fix_partido_stats_from_excel.sql" | docker exec -i core-postgres psql -U app_user -d becbuc
 if %errorlevel% neq 0 (
     echo ERROR al ejecutar SQL en Docker. Verifica que Docker este corriendo.
     pause

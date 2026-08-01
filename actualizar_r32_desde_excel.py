@@ -9,6 +9,8 @@ Ejecutar:
   cd "C:\proyecto FAST API"
   backend\.venv\Scripts\python.exe actualizar_r32_desde_excel.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 
 import sys, pathlib, openpyxl, psycopg2, requests
 
@@ -27,8 +29,8 @@ if not EXCEL_PATH:
     search_dirs = [
         r"C:\Users\Jose Bogarin\Downloads",
         r"C:\Users\Jose Bogarin\Desktop",
-        r"C:\proyecto FAST API",
-        r"C:\proyecto FAST API\documentacion",
+        _BASE,
+        _osp.path.join(_BASE, 'documentacion'),
     ]
     # También buscar en uploads de las sesiones activas (solo nivel 1)
     uploads_base = pathlib.Path(r"C:\Users\Jose Bogarin\AppData\Roaming\Claude\local-agent-mode-sessions")

@@ -10,6 +10,7 @@ para avisar al admin que suba el reglamento del torneo en el portal.
 from __future__ import annotations
 import logging
 from .engines.copa_mundo_2026 import CopasMundoScoringEngine
+from .engines.copa_clubes import CopaClubesScoringEngine  # torneos de clubes (ida/vuelta)
 from .engines.default import DefaultScoringEngine  # legacy 3/1/0 (opt-in explicito)
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ _DEFAULT_ENGINE: type = CopasMundoScoringEngine
 
 _ENGINES: dict[str, type] = {
     "copa_mundo_2026": CopasMundoScoringEngine,
+    "copa_clubes": CopaClubesScoringEngine,      # Libertadores / Sudamericana (ida y vuelta)
     "legacy_3_1_0": DefaultScoringEngine,  # disponible solo si se pide explicitamente
     # "champions_2027": ChampionsScoringEngine,  # ← agregar sin tocar el resto
 }

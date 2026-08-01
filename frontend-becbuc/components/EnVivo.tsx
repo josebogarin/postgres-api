@@ -207,7 +207,7 @@ function TeamBig({ name, logo, align }: { name: string; logo?: string | null; al
   );
 }
 
-type Ev = {
+export type Ev = {
   el: number;
   min: string;
   side: "L" | "V";
@@ -224,7 +224,7 @@ function isBench(e: LiveEvent): boolean {
   return e.player?.id == null || pn.startsWith("banco:") || pn.startsWith("banco ");
 }
 
-function classifyEvents(eventos: LiveEvent[], d: LivePartido): Ev[] {
+export function classifyEvents(eventos: LiveEvent[], d: LivePartido): Ev[] {
   // Jugadores con 1ª amarilla (para detectar 2ª amarilla aunque llegue como roja aparte).
   const sideOf = (e: LiveEvent): "L" | "V" => {
     const tid = e.team?.id;
@@ -269,11 +269,14 @@ function Stats({ d, evs }: { d: LivePartido; evs: Ev[] }) {
   // Totales derivados de los eventos (coinciden con el timeline).
   const amar = evs.filter((e) => e.kind === "yellow").length;
   const roja = evs.filter((e) => e.kind === "red").length;
-  const varc = evs.filter((e) => e.kind === "var").length;
+  // Cambios (sustituciones) reemplazan a VAR. Prioriza el total oficial del
+  // partido (d.sustituciones); si no, cuenta los eventos de sustitución.
+  const cambiosEv = evs.filter((e) => e.kind === "subst").length;
+  const cambios = d.sustituciones ?? cambiosEv;
   const cells = [
     { icon: "🟨", label: "Amar.", v: amar },
     { icon: "🟥", label: "Rojas", v: roja },
-    { icon: "📺", label: "VAR", v: varc || d.decisiones_var || 0 },
+    { icon: "🔄", label: "Cambios", v: cambios },
     { icon: "🥅", label: "Pen.", v: d.penales_partido ?? 0 },
     { icon: "⏱", label: "1er gol", v: d.minuto_primer_gol },
   ];
@@ -290,7 +293,7 @@ function Stats({ d, evs }: { d: LivePartido; evs: Ev[] }) {
   );
 }
 
-function SectionLabel({ text, color }: { text: string; color?: boolean }) {
+export function SectionLabel({ text, color }: { text: string; color?: boolean }) {
   return (
     <div className={`px-1 pt-1 text-[11px] font-semibold ${color ? "text-orange" : "text-muted"}`}>
       {text}
@@ -304,7 +307,7 @@ function isShootout(e: Ev): boolean {
   return e.el >= 120 && (e.kind === "goal" || dd.includes("penalty") || dd.includes("miss"));
 }
 
-function Timeline({ evs }: { evs: Ev[] }) {
+export function Timeline({ evs }: { evs: Ev[] }) {
   const main = evs.filter((e) => !isShootout(e));
   if (main.length === 0)
     return <p className="text-center text-[11px] text-muted">Sin eventos registrados.</p>;
@@ -344,7 +347,7 @@ function EvContent({ r }: { r: Ev }) {
   );
 }
 
-function PenalTimeline({ cur, d, evs }: { cur: BracketMatch; d: LivePartido; evs: Ev[] }) {
+export function PenalTimeline({ cur, d, evs }: { cur: BracketMatch; d: LivePartido; evs: Ev[] }) {
   const shots = evs.filter(isShootout);
   const conv = (e: Ev) => !(e.detail.toLowerCase().includes("miss") || e.icon === "❌");
   const cid = d.equipo_clasificado_id;

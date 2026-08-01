@@ -1,3 +1,5 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 # -*- coding: utf-8 -*-
 r"""
 diag_eventos_api.py [numero_fifa]   (default 104)
@@ -22,7 +24,7 @@ CONN = "host=localhost port=5432 dbname=becbuc user=app_user password=superpassw
 
 # API key desde backend/.env (o raiz), fallback a la conocida.
 KEY = None
-for envp in (r"C:\proyecto FAST API\backend\.env", r"C:\proyecto FAST API\.env"):
+for envp in (_osp.path.join(_BASE, 'backend', '.env'), _osp.path.join(_BASE, '.env')):
     try:
         with open(envp, encoding="utf-8") as f:
             for line in f:

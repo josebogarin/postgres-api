@@ -17,6 +17,8 @@ Ejecutar con el venv activo:
 
 Si no se pasa ruta, busca automaticamente el archivo mas reciente.
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 
 import sys
 import re
@@ -46,7 +48,7 @@ API_CANDIDATES = [
     "http://127.0.0.1:8000/api/v1",
 ]
 
-OUTPUT_PATH = Path(r"C:\proyecto FAST API\reporte_diferencias_puntajes.xlsx")
+OUTPUT_PATH = Path(_osp.path.join(_BASE, 'reporte_diferencias_puntajes.xlsx'))
 
 # Puntos por fase grupos
 H_PTS = 4

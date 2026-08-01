@@ -90,10 +90,20 @@ async def root(request: Request):
     destino = "/static/BECBUC-movil.html" if _es_movil(request) else "/BECBUC-portal"
     return RedirectResponse(url=destino)
 
+@app.get("/becbuc-live", include_in_schema=False)
+async def becbuc_live():
+    """Link amigable de la Live (redirige a la interfaz nueva /static/v2/)."""
+    return RedirectResponse(url="/static/v2/")
+
+@app.get("/reglamento", include_in_schema=False)
+async def reglamento():
+    """Link amigable al PDF del reglamento vigente de clubes."""
+    return RedirectResponse(url="/static/reglamentos/BECBUC_Reglamento_Clubes_v1.pdf")
+
 # ── CRUD Tester (solo en desarrollo) ─────────────────────────────────────────
 _static_dir = Path(__file__).parent.parent / "static"
 if _static_dir.exists():
-    app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+    app.mount("/static", StaticFiles(directory=str(_static_dir), html=True), name="static")
 
     @app.get("/login", response_class=HTMLResponse, include_in_schema=False)
     async def login_page():

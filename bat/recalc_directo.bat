@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 echo Activando entorno virtual...
 call backend\.venv\Scripts\activate.bat
 echo Ejecutando recalc_directo.py...

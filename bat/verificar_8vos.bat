@@ -1,4 +1,4 @@
 @echo off
-SET PYTHON="C:\proyecto FAST API\backend\.venv\Scripts\python.exe"
-%PYTHON% "C:\proyecto FAST API\verificar_8vos.py"
+SET PYTHON="%~dp0..\backend\.venv\Scripts\python.exe"
+%PYTHON% "%~dp0..\verificar_8vos.py"
 pause

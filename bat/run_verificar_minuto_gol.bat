@@ -6,7 +6,7 @@ echo ============================================================
 echo.
 
 echo Ejecutando comparacion y actualizacion...
-powershell -Command "Get-Content 'C:\proyecto FAST API\documentacion\verificar_y_fix_minuto_gol.sql' | docker exec -i core-postgres psql -U app_user -d becbuc"
+powershell -Command "Get-Content '%~dp0..\documentacion\verificar_y_fix_minuto_gol.sql' | docker exec -i core-postgres psql -U app_user -d becbuc"
 
 echo.
 echo Minutos aun NULL en finalizados (deberia ser 0):

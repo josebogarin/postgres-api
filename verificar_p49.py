@@ -1,4 +1,6 @@
 """verificar_p49.py v7 - solo ASCII en output"""
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import psycopg2, unicodedata, os
 
 def ascii_safe(s):
@@ -67,7 +69,7 @@ if noap:
     out.append(f"  SIN_APO: {noap}")
 
 text = '\n'.join(out)
-outpath = r'C:\proyecto FAST API\verificar_p49_output.txt'
+outpath = _osp.path.join(_BASE, 'verificar_p49_output.txt')
 with open(outpath, 'w', encoding='ascii') as f:
     f.write(text)
     f.flush()

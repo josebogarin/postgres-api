@@ -1,3 +1,3 @@
 @echo off
-"C:\proyecto FAST API\backend\.venv\Scripts\python.exe" "C:\proyecto FAST API\comparar_excel_vs_bd_full.py"
+"%~dp0..\backend\.venv\Scripts\python.exe" "%~dp0..\comparar_excel_vs_bd_full.py"
 pause

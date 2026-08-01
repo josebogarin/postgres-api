@@ -5,6 +5,8 @@ Genera un Excel con dos hojas desde las vistas de becbuc:
   2. Detalle  <- v_copamundial_puntajes_det
 Ejecutar: python exportar_puntajes_vista.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import subprocess, json, sys
 from datetime import datetime
 from openpyxl import Workbook
@@ -14,7 +16,7 @@ from openpyxl.utils import get_column_letter
 DB      = "becbuc"
 USER    = "app_user"
 CONT    = "core-postgres"
-OUTFILE = r"C:\proyecto FAST API\puntajes_copa_mundial.xlsx"
+OUTFILE = _osp.path.join(_BASE, 'puntajes_copa_mundial.xlsx')
 
 # ─── helpers ─────────────────────────────────────────────────────────────────
 def psql(sql):

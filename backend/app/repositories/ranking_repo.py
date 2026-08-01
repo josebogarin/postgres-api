@@ -39,6 +39,8 @@ async def fetch_puntajes_por_item(db: AsyncSession, torneo_id: int) -> list[dict
                     COALESCE(SUM(pd.pts_amarillas),                   0)::int AS cat_amarillas,
                     COALESCE(SUM(COALESCE(pd.pts_rojas,0)),           0)::int AS cat_rojas,
                     COALESCE(SUM(pd.pts_var),                         0)::int AS cat_var,
+                    -- En clubes pts_var almacena las Sustituciones (reemplazan a VAR).
+                    COALESCE(SUM(pd.pts_var),                         0)::int AS cat_sustituciones,
                     COALESCE(SUM(pd.pts_minuto),                      0)::int AS cat_minuto,
                     COALESCE(SUM(COALESCE(pd.pts_penales_partido,0)), 0)::int AS cat_penales_partido,
                     COALESCE(SUM(COALESCE(pd.pts_penales_tanda,0)),   0)::int AS cat_penales_tanda,

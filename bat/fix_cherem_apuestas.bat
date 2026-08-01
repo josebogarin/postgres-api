@@ -30,15 +30,15 @@ WHERE apostador_id=15 AND partido_id=(SELECT id FROM partido WHERE numero_fifa=6
 
 UPDATE apuesta SET pred_local=2, pred_visitante=3
 WHERE apostador_id=15 AND partido_id=(SELECT id FROM partido WHERE numero_fifa=66);
-" > "C:\proyecto FAST API\fix_cherem_result.txt" 2>&1
+" > "%~dp0..\fix_cherem_result.txt" 2>&1
 
-echo. >> "C:\proyecto FAST API\fix_cherem_result.txt"
-echo === Verificacion post-fix === >> "C:\proyecto FAST API\fix_cherem_result.txt"
+echo. >> "%~dp0..\fix_cherem_result.txt"
+echo === Verificacion post-fix === >> "%~dp0..\fix_cherem_result.txt"
 docker exec core-postgres psql -U app_user -d becbuc -c "
 SELECT p.numero_fifa, a.pred_local, a.pred_visitante
 FROM apuesta a JOIN partido p ON p.id=a.partido_id
 WHERE a.apostador_id=15 AND p.numero_fifa IN (37,38,49,50,55,56,61,62,65,66)
-ORDER BY p.numero_fifa;" >> "C:\proyecto FAST API\fix_cherem_result.txt" 2>&1
+ORDER BY p.numero_fifa;" >> "%~dp0..\fix_cherem_result.txt" 2>&1
 
-type "C:\proyecto FAST API\fix_cherem_result.txt"
+type "%~dp0..\fix_cherem_result.txt"
 pause

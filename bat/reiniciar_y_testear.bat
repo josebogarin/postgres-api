@@ -1,6 +1,6 @@
 @echo off
 echo === Reiniciando servidor BECBUC ===
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 
 REM Matar proceso uvicorn anterior
 taskkill /F /IM python.exe /T 2>nul
@@ -12,7 +12,7 @@ timeout /t 5 /nobreak >nul
 
 REM Test: login + avanzar bracket + verificar
 echo === Testing brackets ===
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$b='http://localhost:8000';" ^
   "$t=(Invoke-RestMethod -Uri $b/api/v1/auth/login -Method POST -ContentType 'application/x-www-form-urlencoded' -Body 'username=jose&password=catalina').access_token;" ^

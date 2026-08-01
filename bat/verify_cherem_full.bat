@@ -1,7 +1,7 @@
 @echo off
-echo === VERIFICACION COMPLETA PUNTAJE CHEREM (apostador_id=15) === > "C:\proyecto FAST API\verify_cherem.txt"
-echo === Calculo esperado (SQL) vs puntaje_detalle almacenado === >> "C:\proyecto FAST API\verify_cherem.txt"
-echo. >> "C:\proyecto FAST API\verify_cherem.txt"
+echo === VERIFICACION COMPLETA PUNTAJE CHEREM (apostador_id=15) === > "%~dp0..\verify_cherem.txt"
+echo === Calculo esperado (SQL) vs puntaje_detalle almacenado === >> "%~dp0..\verify_cherem.txt"
+echo. >> "%~dp0..\verify_cherem.txt"
 
 REM Calcular puntajes esperados vs almacenados (todos los items H,I,J,K,L,M,N por partido)
 docker exec core-postgres psql -U app_user -d becbuc -c "
@@ -106,10 +106,10 @@ SELECT
     N_esperado, N_bd, CASE WHEN N_esperado!=N_bd THEN 'DIFF' ELSE 'ok' END AS N_chk
 FROM esperado
 ORDER BY numero_fifa;
-" >> "C:\proyecto FAST API\verify_cherem.txt" 2>&1
+" >> "%~dp0..\verify_cherem.txt" 2>&1
 
-echo. >> "C:\proyecto FAST API\verify_cherem.txt"
-echo === RESUMEN: diferencias esperado vs almacenado === >> "C:\proyecto FAST API\verify_cherem.txt"
+echo. >> "%~dp0..\verify_cherem.txt"
+echo === RESUMEN: diferencias esperado vs almacenado === >> "%~dp0..\verify_cherem.txt"
 docker exec core-postgres psql -U app_user -d becbuc -c "
 WITH paraguay_ids AS (
     SELECT id FROM equipo WHERE UPPER(nombre) LIKE '%%PARAGUAY%%' OR UPPER(nombre_es) LIKE '%%PARAGUAY%%'
@@ -139,7 +139,7 @@ JOIN fase f ON f.id=p.fase_id
 JOIN fase_pts fp ON fp.fase_id=f.id
 LEFT JOIN puntaje_detalle pd ON pd.partido_id=p.id AND pd.apostador_id=a.apostador_id
 WHERE a.apostador_id=15 AND f.torneo_id=2 AND f.tipo ILIKE 'grupo%%' AND p.estado='finalizado';
-" >> "C:\proyecto FAST API\verify_cherem.txt" 2>&1
+" >> "%~dp0..\verify_cherem.txt" 2>&1
 
-type "C:\proyecto FAST API\verify_cherem.txt"
+type "%~dp0..\verify_cherem.txt"
 pause

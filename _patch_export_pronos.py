@@ -1,9 +1,11 @@
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 # -*- coding: utf-8 -*-
 """Exportar pronosticos (Excel) + indicador de completados por fase abierta. Portal + Movil + Backend."""
 import ast, re, shutil, subprocess, os
 from datetime import datetime
 B="/sessions/stoic-busy-euler/mnt/proyecto FAST API"
-if not os.path.exists(B): B=r"C:\proyecto FAST API"
+if not os.path.exists(B): B=_BASE
 HTMLP=B+"/backend/static/BECBUC-portal.html"
 HTMLM=B+"/backend/static/BECBUC-movil.html"
 PY=B+"/backend/app/api/v1/endpoints/apostador_bets.py"

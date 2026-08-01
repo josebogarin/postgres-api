@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0."
 set OUT=diag_repos_out.txt
 echo ==== DIAG NESTED REPOS + FOOTPRINT ==== > %OUT%
 echo. >> %OUT%
@@ -25,7 +25,7 @@ echo remotes: >> %OUT%
 git -C frontend remote -v >> %OUT% 2>&1
 echo. >> %OUT%
 echo === repo raiz (padre) === >> %OUT%
-git -C "C:\proyecto FAST API" rev-list --all --count >> %OUT% 2>&1
+git -C "%~dp0." rev-list --all --count >> %OUT% 2>&1
 echo. >> %OUT%
 echo === footprint excluible === >> %OUT%
 echo backend\.venv: >> %OUT%

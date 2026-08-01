@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 set OUT=git_commit_out.txt
 echo === Repo y commits previos === > %OUT%
 git rev-parse --is-inside-work-tree >> %OUT% 2>&1

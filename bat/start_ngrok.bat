@@ -1,3 +1,3 @@
 @echo off
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 start "BECBUC-Ngrok" cmd /k "ngrok.exe http 8000"

@@ -3,7 +3,7 @@ setlocal
 cls
 color 0A
 
-set RAIZ=C:\proyecto FAST API
+set RAIZ=%~dp0..
 set BACKEND=%RAIZ%\backend
 set NGROK=%RAIZ%\ngrok.exe
 set PORT=8000

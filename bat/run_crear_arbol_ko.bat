@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 echo === LIBERTADORES (torneo 1) - DRY RUN ===
 python crear_arbol_ko_clubes.py 1
 echo.

@@ -8,7 +8,7 @@ echo Paso 2: Recalc tarjetas por equipo (fair play)
 echo Paso 3: Ranking mejores 8 terceros con FP
 echo Paso 4: Recalcular puntajes apostadores
 echo.
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 backend\.venv\Scripts\python.exe recalc_fairplay.py
 echo.
 echo ============================================================

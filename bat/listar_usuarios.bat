@@ -1,4 +1,4 @@
 @echo off
-"C:\proyecto FAST API\backend\.venv\Scripts\python.exe" "C:\proyecto FAST API\buscar_usuario.py" --all > "C:\proyecto FAST API\buscar_log.txt" 2>&1
-type "C:\proyecto FAST API\buscar_log.txt"
+"%~dp0..\backend\.venv\Scripts\python.exe" "%~dp0..\buscar_usuario.py" --all > "%~dp0..\buscar_log.txt" 2>&1
+type "%~dp0..\buscar_log.txt"
 pause

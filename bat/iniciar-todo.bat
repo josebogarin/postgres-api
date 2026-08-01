@@ -11,8 +11,8 @@ echo ===========================================================================
 echo.
 
 REM Definir rutas
-set BACKEND_PATH=C:\proyecto FAST API\backend
-set WEB_PATH=C:\proyecto FAST API\web
+set BACKEND_PATH=%~dp0..\backend
+set WEB_PATH=%~dp0..\web
 set BACKEND_PORT=8000
 set WEB_PORT=5000
 

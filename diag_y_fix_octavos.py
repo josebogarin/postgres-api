@@ -6,6 +6,8 @@ Diagnóstico y fix para octavos (ronda16):
 4. Llama /sync-partido/{num} para cada R16 finalizado
 5. Llama /calcular-puntajes/2
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import subprocess, sys, os, json, time
 
 BASE_URL = "http://localhost:8000"
@@ -86,7 +88,7 @@ print("\n" + "="*60)
 print("PASO 2: Últimas líneas de sync_auto.log")
 print("="*60)
 
-log_path = r"C:\proyecto FAST API\sync_auto.log"
+log_path = _osp.path.join(_BASE, 'sync_auto.log')
 try:
     with open(log_path, "r", encoding="utf-8", errors="replace") as f:
         lines = f.readlines()

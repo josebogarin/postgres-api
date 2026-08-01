@@ -57,3 +57,8 @@ becbuc_*.txt
 Thumbs.db
 .vscode/
 .idea/
+
+backend/static/v2/
+_rgprev*/
+_reglamento_preview/
+.~lock.*#

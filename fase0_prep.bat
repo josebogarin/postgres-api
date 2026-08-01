@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0."
 set OUT=fase0_prep_out.txt
 echo ==== FASE 0 PREP (no destructivo) ==== > %OUT%
 echo. >> %OUT%

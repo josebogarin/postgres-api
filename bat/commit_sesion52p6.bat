@@ -1,5 +1,5 @@
 @echo off
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0..\backend"
 del ".git\index.lock" 2>nul
 git add "static/becbuc-live-playoffs.html" "..\CLAUDE.md"
 git commit -m "sesion 52 parte 6: login real + timezone fix + live items panel + tab apuestas privacidad"

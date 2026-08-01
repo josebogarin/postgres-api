@@ -47,7 +47,7 @@ export const ITEMS: { key: keyof RankingRow; icon: string; label: string }[] = [
   { key: "cat_marcador", icon: "🎯", label: "Marcador exacto" },
   { key: "cat_amarillas", icon: "🟨", label: "Amarillas" },
   { key: "cat_rojas", icon: "🟥", label: "Rojas" },
-  { key: "cat_var", icon: "📺", label: "VAR" },
+  { key: "cat_sustituciones", icon: "🔄", label: "Cambios" },
   { key: "cat_penales_partido", icon: "🥅", label: "Penales (juego)" },
   { key: "cat_minuto", icon: "⏱", label: "Minuto gol" },
   { key: "cat_penales_tanda", icon: "⚡", label: "Tanda penales" },

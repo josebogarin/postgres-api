@@ -1,3 +1,3 @@
 @echo off
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 python fix_scotland_bracket.py

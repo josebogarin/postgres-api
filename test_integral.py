@@ -20,6 +20,8 @@ Ejecutar:
     cd "C:\\proyecto FAST API"
     backend\\.venv\\Scripts\\python.exe test_integral.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 
 import json, sys, os, random, subprocess
 from datetime import datetime
@@ -35,8 +37,8 @@ APOSTADOR_CREDS = {
     "jose":       "catalina",
 }
 
-REPORT_FILE  = r"C:\proyecto FAST API\test_integral_report.md"
-EXCEL_OUTPUT = r"C:\proyecto FAST API\test_auditoria_output.xlsx"
+REPORT_FILE  = _osp.path.join(_BASE, 'test_integral_report.md')
+EXCEL_OUTPUT = _osp.path.join(_BASE, 'test_auditoria_output.xlsx')
 
 report_lines = []
 
@@ -814,7 +816,7 @@ def generar_excel(tok):
             except Exception as e:
                 log(f"  ⚠️  Descarga via ID: {e}")
 
-        static_path = rf"C:\proyecto FAST API\backend\static\{filename}"
+        static_path = _osp.path.join(_BASE, 'backend', 'static')
         if filename and os.path.exists(static_path):
             import shutil; shutil.copy2(static_path, EXCEL_OUTPUT)
             log(f"  ✓ Copiado: {EXCEL_OUTPUT}")
@@ -959,7 +961,7 @@ def main():
         import importlib.util, sys as _sys
         spec = importlib.util.spec_from_file_location(
             "generar_excel_becbuc",
-            r"C:\proyecto FAST API\generar_excel_becbuc.py"
+            _osp.path.join(_BASE, 'generar_excel_becbuc.py')
         )
         excel_mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(excel_mod)

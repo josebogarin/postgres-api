@@ -6,15 +6,17 @@ Verifica:
   3. R32 KO (pts_equipo en puntaje_detalle): suma y max con Paraguay
 Ejecutar: python diag_p_clasificados.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import asyncio, sys
-sys.path.insert(0, r'C:\proyecto FAST API\backend')
+sys.path.insert(0, _osp.path.join(_BASE, 'backend'))
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 
 def get_becbuc_url():
     try:
-        with open(r'C:\proyecto FAST API\backend\.env') as f:
+        with open(_osp.path.join(_BASE, 'backend', '.env')) as f:
             for line in f:
                 if 'DATABASE_BECBUC_URL' in line:
                     return line.split('=',1)[1].strip().strip('"\'')
@@ -23,7 +25,7 @@ def get_becbuc_url():
 
 def get_app_url():
     try:
-        with open(r'C:\proyecto FAST API\backend\.env') as f:
+        with open(_osp.path.join(_BASE, 'backend', '.env')) as f:
             for line in f:
                 if line.startswith('DATABASE_URL='):
                     return line.split('=',1)[1].strip().strip('"\'')

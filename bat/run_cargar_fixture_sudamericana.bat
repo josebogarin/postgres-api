@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0.."
 echo === DRY-RUN (no escribe) — revisa que cada llave matchee el partido correcto ===
 python cargar_fixture_sudamericana_16avos.py
 echo.

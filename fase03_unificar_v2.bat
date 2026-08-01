@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0."
 set OUT=fase03_unificar_out.txt
 echo ==== FASE 0.3 UNIFICAR (opcion A) v2 ==== > %OUT%
 echo. >> %OUT%
@@ -48,9 +48,9 @@ goto :end
 :verify
 echo. >> %OUT%
 echo [5] pytest tests/golden (deben ser 17 passed) >> %OUT%
-cd /d "C:\proyecto FAST API\backend"
+cd /d "%~dp0backend"
 call .venv\Scripts\activate
-cd /d "C:\proyecto FAST API"
+cd /d "%~dp0."
 python -m pytest tests\golden -q >> %OUT% 2>&1
 echo. >> %OUT%
 echo [6] HTTP (uvicorn :8000) >> %OUT%

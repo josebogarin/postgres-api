@@ -8,6 +8,8 @@ Compara puntajes de QUIROGA partido a partido:
 
 Uso: python comparar_quiroga.py
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 
 import re
 import psycopg2
@@ -21,7 +23,7 @@ DB_NAME = "becbuc"
 DB_APP = "app_db"   # BD de usuarios
 TORNEO_ID = 2
 
-EXCEL_PATH = r"C:\proyecto FAST API\20260611_2000- TBL CONSOLIDADA PRONOSTICOS ok.xlsx"
+EXCEL_PATH = _osp.path.join(_BASE, '20260611_2000- TBL CONSOLIDADA PRONOSTICOS ok.xlsx')
 ALIAS_BUSCAR = "QUIROGA"  # case-insensitive
 
 # Puntos por fase (reglamento BEC BUC)

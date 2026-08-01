@@ -32,16 +32,18 @@ Uso:
 
 Ejecutar desde C:\proyecto FAST API\backend
 """
+import os as _osp
+_BASE = _osp.path.dirname(_osp.path.abspath(__file__))
 import sys, asyncio, json
 from pathlib import Path
 from collections import defaultdict
 
 EXCEL_PATH = (sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith('--')
-    else r"C:\proyecto FAST API\documentacion\20260611_2000- TBL CONSOLIDADA PRONOSTICOS ok.xlsx")
+    else _osp.path.join(_BASE, 'documentacion', '20260611_2000- TBL CONSOLIDADA PRONOSTICOS ok.xlsx'))
 
 DB_BECBUC  = "postgresql://app_user:superpassword@localhost:5432/becbuc"
 DB_APP     = "postgresql://app_user:superpassword@localhost:5432/app_db"
-REPORT_OUT = Path(r"C:\proyecto FAST API\documentacion\verificacion_pronosticos.json")
+REPORT_OUT = Path(_osp.path.join(_BASE, 'documentacion', 'verificacion_pronosticos.json'))
 TORNEO_ID  = 2  # Copa del Mundo 2026
 
 ARGS = set(sys.argv[1:])
