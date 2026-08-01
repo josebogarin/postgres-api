@@ -62,3 +62,8 @@ backend/static/v2/
 _rgprev*/
 _reglamento_preview/
 .~lock.*#
+
+# temporales
+~$*
+_sweep_portable.py
+_fix_portable_backend.py
