@@ -2,54 +2,60 @@
 
 > Se **sobrescribe** cada sesión. El histórico vive en git. Contrastar SIEMPRE con
 > `git log --oneline -20` y `git status` antes de asumir nada.
-> Última actualización: 2026-08-01 (sesión Cowork).
+> Última actualización: 2026-08-02.
 
 ## Fase actual
 Torneos de **clubes** activos: Copa Libertadores (torneo_id=1) y Copa Sudamericana
 (torneo_id=14), en **octavos** (ronda16), apostables desde el **Live nuevo** (`/static/v2/`).
-La Copa del Mundo (torneo_id=2) está **cerrada/finalizada**. El reglamento nuevo de clubes
-(Opción C) está **implementado** en `engines/copa_clubes.py`, pero el cálculo de puntajes de
-clubes todavía **no se validó end-to-end**.
+Copa del Mundo (torneo_id=2) **cerrada**. El reglamento nuevo de clubes (Opción C) está
+**implementado, testeado y todo compila**: engine `copa_clubes`, orquestador
+`clubes_calculator`, avance de bracket + cierre de fase `clubes_bracket`. **Falta
+desplegar** (uvicorn corre código viejo) y **validar contra la BD real**.
 
-## Última sesión (2026-08-01)
-- **Engine `copa_clubes`** + orquestador `clubes_calculator.py` + endpoint
-  `POST /bets/calcular-puntajes-clubes/{tid}` (H/I por fase, Cambios, comodín, cruce, tanda).
-- **Boleta**: VAR → **Cambios** (un solo total) + **comodín** (único por torneo, se fija al
-  jugarse su partido). Backend con `pred_sustituciones` / `pred_comodin`, validación de uso único.
-- **Login por PIN** end-to-end (crear/entrar/olvidé; admin 1964 = solo lectura). Muestra nombre+apodo.
-- **Popup MatchReplay** (replay minuto a minuto de cualquier partido terminado) + endpoint
-  `GET /bets/partido-detalle/{id}`; en Grupos, tocar un partido terminado lo abre.
-- **Fechas/horas de octavos** (Liberta + Sudamericana) corregidas desde **ESPN** (API-Football
-  traía placeholders: día corrido + hora uniforme). 16/16 en cada torneo, en hora Paraguay.
-- **Fix bracket**: `bracket-clubes` ordena por `p.id` (estructura fija) — antes ordenaba por
-  fecha y movía llaves de lado (Olimpia saltaba de mitad).
-- **Git**: commit `6d4546c` pusheado (force; el remoto `postgres-api` tenía historia no
-  relacionada — quedó respaldado en rama local `remoto-viejo-postgres-api`).
+## Última sesión (2026-08-01/02)
+- **Fechas/horas** de octavos (Liberta + Sudam) corregidas desde **ESPN** (16/16 c/u), en
+  hora Paraguay. API-Football descartada (placeholders); CONMEBOL sin API usable.
+- **Fix estructura**: `bracket-clubes` ordena por `p.id` (fijo), no por fecha (antes movía
+  llaves de lado — Olimpia saltaba de mitad).
+- **Avance de bracket de clubes** octavos→cuartos→semis→final (agregado + penales,
+  posicional) — automático en cada sync + endpoint `POST /bets/avanzar-bracket-clubes/{tid}`.
+- **Cierre de fase**: al finalizar TODOS sus partidos, la fase KO queda **bloqueada**
+  (no se editan apuestas).
+- **Test intensivo E2E** de clubes (autocontenido, sin BD): **TODO OK** — octavos→campeón,
+  ítem por ítem, con comodín, empate+tanda, minuto pleno, cruce (×2 y bono). Ver
+  `docs/INFORME_TEST_CLUBES.md`; reproducible en `tests/test_e2e_clubes.py` y
+  `tests/test_copa_clubes_reglas.py` (21/21).
+- **Doc reorganizada**: CLAUDE.md (estable) + ESTADO.md (vivo) + docs/decisiones.md +
+  protocolo de sesión + regla anti-truncamiento. **FASE 0 de reorg** (inventario) hecha:
+  `docs/INVENTARIO.md` + `docs/INVENTARIO_archivos.tsv` (nada movido).
+- **Skills** creados: `becbuc-fechas-fases-live`, `espn-horarios-fixtures`, `comandos-powershell`.
+- **Git**: `6d4546c` (clubes/PIN/replay/fechas/fix bracket) + `c0f9ab3` (docs reorg),
+  ambos pusheados (force sobre remoto no relacionado). **HOY sin commitear**:
+  `clubes_bracket.py`, guard de avance en `apostador_bets.py`, endpoint en
+  `clubes_scoring.py`, `tests/*`, `docs/INFORME_TEST_CLUBES.md`, `docs/INVENTARIO*`.
 
 ## Pendientes
-1. **Setear `competicion.codigo='copa_clubes'`** en torneos 1 y 14 (si no, el scoring cae al
-   engine del Mundial). Correr `POST /calcular-puntajes-clubes/{tid}` y validar el ranking
-   (cat_sustituciones, cruce, comodín, tanda).
-2. **Test integral clubes** end-to-end: resultados → avance de bracket → apuestas → puntajes →
-   ranking → vencedor.
-3. **Recibo PDF** al guardar apuesta en el Live (v2).
-4. **Portal → Competiciones**: UI de buscador de copas + subir reglamento PDF; ficha de competición;
-   banner "torneo sin reglamento propio".
-5. **Cuartos/semis/final de clubes**: inferir fecha/hora con ESPN cuando se definan los equipos
-   (`inferir_fechas_espn.py`, cambiar `FASE_TIPO`).
-6. **Seguridad**: rotar la API-key de API-Football (quedó en git) + repo privado; mover secretos a `.env`.
-7. **Limpieza git**: quitar temporales (`~$..docx`, `_sweep_portable.py`, `_fix_portable_backend.py`).
-8. **Bug conocido**: tiebreaker H2H en `bracket_service.py` (Art.13 FIFA) sin corregir.
+1. **Desplegar** hoy: `bat\rebuild_reiniciar.bat` (backend avance/cierre + front Cambios/
+   comodín/replay/EnVivo-Cambios NO están live todavía).
+2. **Setear `competicion.codigo='copa_clubes'`** en torneos 1 y 14; correr
+   `POST /bets/calcular-puntajes-clubes/{tid}` y validar el ranking (Cambios/cruce/comodín/tanda).
+3. **E2E contra BD real** con apostador de prueba **PIN 1404** (torneo real + reset, o torneo
+   de prueba aislado).
+4. **Reorganización del proyecto (FASE 1+)**: POSPUESTA. Backup por `git tag`/rama (no ZIP
+   lento); empezar por scripts sueltos → `_cuarentena/`. Inventario en `docs/INVENTARIO.md`.
+5. Recibo PDF al guardar apuesta (v2). Portal→Competiciones (buscador copas + subir
+   reglamento PDF + banner "sin reglamento"). Cuartos/semis/final: fechas ESPN cuando se
+   definan los equipos.
+6. **Seguridad**: rotar API-key de API-Football (quedó en git) + repo privado; secretos a `.env`.
+7. Bug conocido: tiebreaker H2H en `bracket_service.py` (Art.13 FIFA).
 
 ## Próximo paso concreto
-Setear `competicion.codigo='copa_clubes'` en Libertadores(1) y Sudamericana(14), correr
-`POST /bets/calcular-puntajes-clubes/{tid}` y verificar en el Live que el ranking muestra
-Cambios/cruce/comodín/tanda; luego el test integral de clubes.
+Desplegar (`rebuild_reiniciar.bat`), setear `competicion.codigo='copa_clubes'` en 1 y 14,
+correr `calcular-puntajes-clubes` y validar el ranking en el Live; después el E2E real con 1404.
 
 ## Decisiones abiertas
-- Calibración final de valores del reglamento de clubes (Opción C): cruce / comodín / tanda / minuto.
-- Flag formal para 3er puesto: ¿`competicion.categoria` ('clubes'|'selecciones') o
-  `tiene_tercer_puesto` BOOL?
-- Preguntas de reglamento Mundial que quedaron sin cerrar (mejores terceros, equipo clasifica
-  24 vs 32, Paraguay KO doble, tanda 3P, mayor goleada con empate). Relevantes solo si se
-  reutiliza el engine del Mundial (ya cerrado).
+- **Cruce vía tanda**: ¿acreditar el cruce cuando el apostador predijo la llave EMPATADA y
+  acertó la tanda? Hoy NO acredita (va bono al ganador limpio del par). Pendiente de definir.
+- Calibración final de valores del reglamento de clubes (Opción C): cruce/comodín/tanda/minuto.
+- Flag formal de 3er puesto: `competicion.categoria` ('clubes'|'selecciones') o `tiene_tercer_puesto`.
+- Mejor forma de hacer la **reorganización** (backup por tag/rama; orden de las movidas).

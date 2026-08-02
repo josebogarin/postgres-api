@@ -1,0 +1,1609 @@
+ruta	bytes	modificado	lineas
+.gitignore	2332	2026-07-20	
+0	0	2026-06-27	
+20260611_2000- TBL CONSOLIDADA PRONOSTICOS ok.xlsx	3056624	2026-06-12	
+20260628_1600- BEC BUC PRONOSTICOS CONSOLIDADOS 16AVOS.xlsx	2324747	2026-06-28	
+20260702- TBL CHECK PARA JOSE.xlsx	1908471	2026-07-02	
+20260704- BEC BUC PRONOSTICOS CONSOLIDADOS 8vos.xlsx	1361933	2026-07-04	
+20260705_2016- TBL PARA SUBIR AL LIVE.xlsx	1839757	2026-07-09	
+20260709_1500- PRONOSTICOS CONSOLIDADOS 4TOS.xlsx	1825111	2026-07-09	
+20260718_2214- TBL PARA CARGAR LIVE- JOSE con correcciones.xlsx	2209743	2026-07-19	
+20260720_1600- TBL PARA CARGAR LIVE- JOSE torneo cerrado.xlsx	2209272	2026-07-20	
+ABRIR_INPRIVATE.vbs	176	2026-06-28	4
+ABRIR_LIVE_EDGE.vbs	172	2026-06-28	4
+ABRIR_LIVE_HOY.vbs	172	2026-06-28	4
+ARRANCAR_SERVIDOR.vbs	641	2026-06-28	17
+ASSESSMENT_ARQUITECTURA_BECBUC.md	15471	2026-07-20	182
+BECBUC.md	19062	2026-06-08	382
+BECBUC_Guia_Recuperacion.docx	17127	2026-06-05	
+BECBUC_Propuesta_Rediseno_Puntajes.docx	35298	2026-07-20	
+BECBUC_Reglamento_Clubes_v1.docx	145366	2026-08-01	
+BECBUC_verificacion.xlsx	451068	2026-06-23	
+BECBUC_verificacion_backup.xlsx	436863	2026-06-23	
+C:\proyecto FAST API\_backups/BECBUC-movil.html.20260629_185357.bak	263164	2026-06-29	
+C:\proyecto FAST API\_backups/BECBUC-movil.html.20260629_190400.bak	263069	2026-06-29	
+C:\proyecto FAST API\_backups/BECBUC-movil.html.20260702_003941.bak	263755	2026-07-02	
+C:\proyecto FAST API\_backups/BECBUC-movil.html.20260704_183341.bak	273391	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-movil.html.20260704_190137.bak	273816	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-movil.html.20260704_233348.bak	276172	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260629_185348.bak	501305	2026-06-29	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260629_190400.bak	501421	2026-06-29	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260702_003920.bak	545790	2026-07-02	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260702_010841.bak	546418	2026-07-02	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260702_132457.bak	591723	2026-07-02	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_180528.bak	602938	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_180612.bak	603409	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_180613.bak	603632	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_180744.bak	603891	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_180745.bak	604082	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_180846.bak	605184	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_180847.bak	606978	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_180859.bak	607033	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_183328.bak	607059	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_190136.bak	607618	2026-07-04	
+C:\proyecto FAST API\_backups/BECBUC-portal.html.20260704_233334.bak	619012	2026-07-04	
+C:\proyecto FAST API\_backups/CLAUDE.md.20260630_222528.bak	172666	2026-06-29	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260629_213646.bak	399455	2026-06-29	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260629_215215.bak	399558	2026-06-29	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260630_205800.bak	400844	2026-06-30	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260630_222200.bak	406183	2026-06-30	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260701_173226.bak	406976	2026-07-01	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260701_174957.bak	409919	2026-07-01	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260701_193431.bak	413323	2026-07-01	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260701_194150.bak	415172	2026-07-01	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260704_180441.bak	492525	2026-07-03	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260704_181105.bak	492791	2026-07-04	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260704_181620.bak	493752	2026-07-04	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260704_183304.bak	494175	2026-07-04	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260704_183310.bak	495056	2026-07-04	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260704_233316.bak	515170	2026-07-04	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260705_000622.bak	515324	2026-07-04	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260705_001933.bak	515536	2026-07-05	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260705_002556.bak	515973	2026-07-05	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260705_002752.bak	516387	2026-07-05	
+C:\proyecto FAST API\_backups/apostador_bets.py.20260708_220622.bak	551154	2026-07-05	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260629_185340.bak	151674	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260629_190400.bak	151724	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260629_191437.bak	151674	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260629_211051.bak	151804	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260629_213631.bak	151790	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260629_213658.bak	152015	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260629_213709.bak	152142	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260629_215040.bak	152379	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260629_215310.bak	152524	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260630_164438.bak	153432	2026-06-30	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260630_210101.bak	154008	2026-06-30	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260630_222217.bak	154158	2026-06-30	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260630_222239.bak	155106	2026-06-30	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260630_222320.bak	156969	2026-06-30	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_173433.bak	163615	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_173657.bak	172261	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_174128.bak	172392	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_174155.bak	173638	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_174550.bak	173608	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_174612.bak	173952	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_174757.bak	173970	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_175020.bak	174076	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_182318.bak	174526	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_182709.bak	174446	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_183429.bak	176562	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_193450.bak	180825	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_194230.bak	181940	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_194903.bak	185458	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260701_195530.bak	186268	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260702_010908.bak	194635	2026-07-01	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260702_132530.bak	196642	2026-07-02	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260704_181105.bak	197695	2026-07-04	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260704_181621.bak	197738	2026-07-04	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260704_181905.bak	198146	2026-07-04	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260704_182304.bak	198180	2026-07-04	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260704_182552.bak	198646	2026-07-04	
+C:\proyecto FAST API\_backups/becbuc-live-playoffs.html.20260704_182553.bak	198745	2026-07-04	
+C:\proyecto FAST API\_backups/becbuc-live.html.20260629_180703.bak	133687	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live.html.20260629_182111.bak	134534	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live.html.20260629_185331.bak	134629	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live.html.20260629_190400.bak	134370	2026-06-29	
+C:\proyecto FAST API\_backups/becbuc-live.html.20260629_191437.bak	134333	2026-06-29	
+C:\proyecto FAST API\_backups/calculator.py.20260629_214034.bak	55035	2026-06-29	
+C:\proyecto FAST API\_backups/calculator.py.20260629_215538.bak	55275	2026-06-29	
+C:\proyecto FAST API\_backups/calculator.py.20260701_023732.bak	55369	2026-06-29	
+C:\proyecto FAST API\_backups/calculator.py.20260701_024313.bak	55425	2026-07-01	
+C:\proyecto FAST API\_backups/calculator.py.20260702_003927.bak	56989	2026-07-01	
+C:\proyecto FAST API\_backups/calculator.py.20260705_003033.bak	56056	2026-07-02	
+C:\proyecto FAST API\_backups/calculator.py.20260705_182929.bak	56140	2026-07-05	
+C:\proyecto FAST API\_backups/copa_mundo_2026.py.20260704_185740.bak	12210	2026-07-02	
+C:\proyecto FAST API\_backups/sync_api_football.py.20260629_191457.bak	110840	2026-06-27	
+C:\proyecto FAST API\_backups/sync_api_football.py.20260629_212554.bak	110885	2026-06-29	
+C:\proyecto FAST API\_backups/sync_api_football.py.20260629_212807.bak	111046	2026-06-29	
+C:\proyecto FAST API\_backups/sync_api_football.py.20260705_001312.bak	116691	2026-07-03	
+C:\proyecto FAST API\_backups/table_crud.py.20260630_163138.bak	17765	2026-06-05	
+CERRAR_TORNEO_LIVE.ps1	996	2026-07-19	19
+CLAUDE.md	10298	2026-08-01	192
+CLAUDE.md.20260709_225247.bak	209316	2026-07-09	
+CORRER_BAT.vbs	150	2026-06-28	4
+CRUD_SYSTEM_DESIGN.md	11470	2026-05-23	396
+DATABASE_EXPLORER_API.md	6427	2026-05-23	294
+EJECUTAR_AHORA.vbs	121	2026-06-28	2
+ESTADO.md	3615	2026-08-01	55
+FastAPI_Postgres_Platform_Documentacion.docx	29994	2026-05-23	
+INICIAR.md	4324	2026-05-23	193
+Ingles)	33	2026-06-28	
+RECARGAR_LIVE.vbs	208	2026-06-28	5
+SKILL.md	7375	2026-05-23	386
+VER_URL_NGROK.vbs	778	2026-06-28	24
+_backups/20260718_1622- TBL PARA CARGAR LIVE- JOSE semifinal.xlsx	1864013	2026-07-18	
+_backups/BECBUC-movil.html.20260715_231027.bak	293102	2026-07-05	
+_backups/BECBUC-movil.html.20260720_120352.bak	295321	2026-07-15	
+_backups/BECBUC-portal.html.20260703_193751.bak	596166	2026-07-03	
+_backups/BECBUC-portal.html.20260715_231026.bak	645505	2026-07-05	
+_backups/BECBUC-portal.html.20260721_131933.bak	648221	2026-07-15	
+_backups/BECBUC-pronos.html.20260720_120353.bak	110378	2026-06-11	
+_backups/BracketClubes.tsx.20260721_160153.bak	6167	2026-07-21	
+_backups/BracketClubes.tsx.20260721_160413.bak	6157	2026-07-21	
+_backups/CLAUDE.md.20260715_234320.bak	211453	2026-07-09	
+_backups/EnVivo.tsx.20260721_192937.bak	15185	2026-07-21	
+_backups/MiProno.tsx.20260721_163840.bak	12563	2026-07-21	
+_backups/MiProno.tsx.20260721_163855.bak	12584	2026-07-21	
+_backups/MiProno.tsx.20260721_171600.bak	12577	2026-07-21	
+_backups/MiProno.tsx.20260721_173200.bak	13088	2026-07-21	
+_backups/MiProno.tsx.20260721_193443.bak	13437	2026-07-21	
+_backups/MiProno.tsx.20260721_194018.bak	19374	2026-07-21	
+_backups/MiProno.tsx.20260721_194255.bak	19551	2026-07-21	
+_backups/PanZoom.tsx.20260721_162904.bak	5339	2026-07-21	
+_backups/admin.py.20260721_195237.bak	58132	2026-07-01	
+_backups/admin_extra.py.20260721_195238.bak	1356	2026-07-01	
+_backups/apostador_bets.py.20260715_222445.bak	562401	2026-07-08	
+_backups/apostador_bets.py.20260715_223620.bak	567654	2026-07-15	
+_backups/apostador_bets.py.20260715_224513.bak	567777	2026-07-15	
+_backups/apostador_bets.py.20260715_230306.bak	567800	2026-07-15	
+_backups/apostador_bets.py.20260715_231026.bak	568306	2026-07-15	
+_backups/apostador_bets.py.20260719_023343.bak	575572	2026-07-15	
+_backups/apostador_bets.py.20260720_161245.bak	576253	2026-07-19	
+_backups/apostador_bets.py.20260720_162713.bak	581708	2026-07-20	
+_backups/apostador_bets.py.20260720_163432.bak	552175	2026-07-20	
+_backups/apostador_bets.py.20260720_164152.bak	548117	2026-07-20	
+_backups/apostador_bets.py.20260721_153400.bak	514021	2026-07-20	
+_backups/apostador_bets.py.20260721_161755.bak	509060	2026-07-21	
+_backups/apostador_bets.py.20260721_163112.bak	509098	2026-07-21	
+_backups/apostador_bets.py.20260721_165002.bak	510127	2026-07-21	
+_backups/apostador_bets.py.20260721_195237.bak	510316	2026-07-21	
+_backups/apostador_bets.py.20260801_213358.restaurado.bak	527316	2026-08-01	
+_backups/apostador_bets.py.20260801_215201.task2.bak	527340	2026-08-01	
+_backups/becbuc-live-playoffs.html.20260715_222445.bak	205095	2026-07-06	
+_backups/becbuc-live-playoffs.html.20260715_223620.bak	223073	2026-07-15	
+_backups/becbuc-live-playoffs.html.20260715_223731.bak	223071	2026-07-15	
+_backups/becbuc-live-playoffs.html.20260715_224024.bak	222744	2026-07-15	
+_backups/becbuc-live-playoffs.html.20260715_224513.bak	227124	2026-07-15	
+_backups/becbuc-live-playoffs.html.20260715_230306.bak	227228	2026-07-15	
+_backups/becbuc-live-playoffs.html.20260718_223240.bak	228124	2026-07-15	
+_backups/becbuc-live-playoffs.html.20260719_023439.bak	228112	2026-07-18	
+_backups/becbuc-live.html.20260720_170428.bak	138276	2026-07-05	
+_backups/becbuc_src_20260721_2002.zip	0	2026-07-21	
+_backups/copa_mundo_2026.py.20260720_120243.bak	12370	2026-07-19	
+_backups/format.ts.20260721_163112.bak	1768	2026-07-21	
+_backups/page.tsx.20260721_131838.bak	8905	2026-07-21	
+_backups/page.tsx.20260721_154003.bak	9961	2026-07-21	
+_backups/page.tsx.20260721_155826.bak	10800	2026-07-21	
+_backups/page.tsx.20260721_161925.bak	10913	2026-07-21	
+_backups/page.tsx.20260721_193920.bak	10948	2026-07-21	
+_backups/page.tsx.20260721_194018.bak	10931	2026-07-21	
+_backups/static_pre_v2_20260801_1108/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1108/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1108/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1108/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1108/main.py.bak	6521	2026-08-01	
+_backups/static_pre_v2_20260801_1321/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1321/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1321/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1321/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1321/main.py.bak	6521	2026-08-01	
+_backups/static_pre_v2_20260801_1342/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1342/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1342/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1342/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1342/main.py.bak	6521	2026-08-01	
+_backups/static_pre_v2_20260801_1612/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1612/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1612/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1612/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1612/main.py.bak	6949	2026-08-01	
+_backups/static_pre_v2_20260801_1619/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1619/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1619/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1619/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1619/main.py.bak	6949	2026-08-01	
+_backups/static_pre_v2_20260801_1754/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1754/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1754/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1754/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1754/main.py.bak	6949	2026-08-01	
+_backups/static_pre_v2_20260801_1820/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1820/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1820/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1820/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1820/main.py.bak	6949	2026-08-01	
+_backups/static_pre_v2_20260801_1840/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1840/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1840/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1840/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1840/main.py.bak	6949	2026-08-01	
+_backups/static_pre_v2_20260801_1858/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1858/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1858/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1858/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1858/main.py.bak	6949	2026-08-01	
+_backups/static_pre_v2_20260801_1906/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1906/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1906/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1906/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1906/main.py.bak	6949	2026-08-01	
+_backups/static_pre_v2_20260801_1918/BECBUC-movil.html	300079	2026-07-20	4757
+_backups/static_pre_v2_20260801_1918/BECBUC-portal.html	649986	2026-07-21	11358
+_backups/static_pre_v2_20260801_1918/becbuc-live-playoffs.html	228770	2026-07-19	4279
+_backups/static_pre_v2_20260801_1918/becbuc-live.html	136772	2026-07-20	2904
+_backups/static_pre_v2_20260801_1918/main.py.bak	6949	2026-08-01	
+_backups/sync_auto.py.20260721_194800.bak	10830	2026-07-05	
+_backups/torneo.py.20260721_131824.bak	20619	2026-07-21	
+_backups/torneo_service.py.20260721_150510.bak	46128	2026-07-21	
+_backups/ziMEk0xu	5297132	2026-07-21	
+_patch_claudemd_s68.py	8742	2026-07-21	134
+_patch_export_pronos.py	15903	2026-07-21	296
+_patch_lock_4h.py	9558	2026-07-21	162
+_patch_miprono_editor.py	28070	2026-07-21	489
+_patch_pin_primer_nombre.py	3453	2026-07-21	77
+_patch_recibo_pdf.py	6282	2026-07-21	95
+_patch_recibo_v2.py	3979	2026-07-21	71
+_patch_solo_pendientes.py	1891	2026-07-21	39
+actualizar_eventos_api.py	3627	2026-07-21	86
+actualizar_hora_partido.py	1991	2026-07-06	61
+actualizar_log.txt	226	2026-06-21	11
+actualizar_puntajes.py	2508	2026-06-21	61
+actualizar_r32_desde_excel.py	8327	2026-07-21	220
+actualizar_resultados_desde_excel.py	6621	2026-07-21	177
+actualizar_resultados_fase.py	8148	2026-07-18	192
+alter_paux_numero_fifa.py	1671	2026-06-16	52
+analisis_datos.py	4270	2026-07-19	83
+analisis_datos_log.txt	2016	2026-07-19	89
+analizar_fuentes.py	8156	2026-06-25	210
+andresboga_check.txt	209	2026-06-27	17
+aplicar_correcciones_excel.py	4642	2026-06-23	132
+assess_becbuc_db.py	3955	2026-07-20	101
+assess_becbuc_out.txt	37796	2026-07-20	601
+audit_after_out.txt	379	2026-07-20	11
+audit_before_out.txt	379	2026-07-20	11
+auditoria_gonzalo_log.txt	120	2026-06-21	2
+auditoria_jugador.py	17921	2026-06-21	455
+auditoria_log.txt	626	2026-06-21	18
+auditoria_patito.xlsx	14009	2026-06-21	
+avanzar_bracket.py	2379	2026-06-26	67
+avanzar_bracket_y_sync.ps1	3965	2026-06-28	86
+backend/.env	2122	2026-06-03	
+backend/.env.example	1878	2026-05-17	
+backend/.gitattributes	39	2026-05-17	
+backend/.gitignore	639	2026-06-11	
+backend/CLAUDE.md	12438	2026-06-10	298
+backend/README.md	2936	2026-05-23	116
+backend/alembic.ini	636	2026-05-17	
+backend/alembic/__init__.py	0	2026-05-17	0
+backend/alembic/env.py	1282	2026-05-17	46
+backend/alembic/script.py.mako	594	2026-05-17	
+backend/alembic/versions/2026_05_23_add_diccionario_table.py	2288	2026-05-23	52
+backend/alembic/versions/9a020001a476_initial_schema_with_audit_logs.py	5918	2026-05-17	120
+backend/app/__init__.py	0	2026-05-17	0
+backend/app/api/__init__.py	0	2026-05-17	0
+backend/app/api/deps.py	3768	2026-06-16	106
+backend/app/api/permission.py	1280	2026-05-17	41
+backend/app/api/permissions.py	224	2026-05-23	7
+backend/app/api/v1/__init__.py	0	2026-05-17	0
+backend/app/api/v1/endpoints/__init__.py	0	2026-05-17	0
+backend/app/api/v1/endpoints/admin.py	58237	2026-07-21	1400
+backend/app/api/v1/endpoints/admin_extra.py	1461	2026-07-21	48
+backend/app/api/v1/endpoints/apostador_bets.py	527320	2026-08-01	11791
+backend/app/api/v1/endpoints/applications.py	103	2026-05-23	2
+backend/app/api/v1/endpoints/audit_logs.py	1321	2026-05-29	43
+backend/app/api/v1/endpoints/auth.py	3367	2026-06-10	95
+backend/app/api/v1/endpoints/becbuc/__init__.py	0	2026-06-03	0
+backend/app/api/v1/endpoints/clubes_scoring.py	4121	2026-08-01	97
+backend/app/api/v1/endpoints/database_admin.py	2558	2026-05-23	93
+backend/app/api/v1/endpoints/diccionario.py	3540	2026-06-01	88
+backend/app/api/v1/endpoints/health.py	351	2026-05-17	17
+backend/app/api/v1/endpoints/monitor.py	6861	2026-07-01	196
+backend/app/api/v1/endpoints/permissions.py	2074	2026-05-23	64
+backend/app/api/v1/endpoints/portal.py	15333	2026-06-01	423
+backend/app/api/v1/endpoints/roles.py	1460	2026-05-23	45
+backend/app/api/v1/endpoints/sistema.py	3227	2026-05-29	94
+backend/app/api/v1/endpoints/torneo.py	21794	2026-07-21	525
+backend/app/api/v1/endpoints/users.py	4309	2026-06-10	120
+backend/app/api/v1/router.py	1602	2026-08-01	39
+backend/app/core/__init__.py	0	2026-05-17	0
+backend/app/core/audit_middleware.py	5115	2026-05-29	159
+backend/app/core/config.py	2576	2026-06-13	87
+backend/app/core/exceptions.py	1044	2026-05-17	30
+backend/app/core/logging.py	1257	2026-05-17	44
+backend/app/core/security.py	1408	2026-06-10	46
+backend/app/crud/__init__.py	0	2026-05-17	0
+backend/app/crud/application.py	91	2026-05-23	2
+backend/app/crud/audit_log.py	1504	2026-05-29	58
+backend/app/crud/base.py	2034	2026-05-17	55
+backend/app/crud/diccionario.py	3114	2026-06-01	81
+backend/app/crud/permission.py	2356	2026-05-23	64
+backend/app/crud/role.py	1987	2026-05-23	54
+backend/app/crud/sistema.py	2302	2026-05-23	65
+backend/app/crud/user.py	4391	2026-06-10	121
+backend/app/db/__init__.py	0	2026-05-17	0
+backend/app/db/base.py	723	2026-05-23	13
+backend/app/db/init_db.py	2215	2026-06-10	50
+backend/app/db/session.py	3087	2026-06-10	97
+backend/app/main.py	6949	2026-08-01	176
+backend/app/models/__init__.py	0	2026-05-17	0
+backend/app/models/application.py	93	2026-05-23	2
+backend/app/models/audit_log.py	1383	2026-05-29	30
+backend/app/models/base.py	680	2026-05-17	25
+backend/app/models/cabecera.py	1294	2026-05-23	36
+backend/app/models/detalle.py	1228	2026-05-23	35
+backend/app/models/diccionario.py	2387	2026-06-01	49
+backend/app/models/permission.py	1635	2026-05-23	39
+backend/app/models/role.py	817	2026-06-10	27
+backend/app/models/sistema.py	922	2026-05-23	18
+backend/app/models/user.py	2069	2026-06-10	50
+backend/app/repositories/__init__.py	275	2026-07-20	7
+backend/app/repositories/ranking_repo.py	8567	2026-08-01	200
+backend/app/schemas/__init__.py	0	2026-05-17	0
+backend/app/schemas/application.py	94	2026-05-23	2
+backend/app/schemas/auth.py	359	2026-06-10	22
+backend/app/schemas/base.py	306	2026-05-17	17
+backend/app/schemas/diccionario.py	1442	2026-06-01	53
+backend/app/schemas/permission.py	379	2026-05-23	21
+backend/app/schemas/role.py	315	2026-05-23	20
+backend/app/schemas/sistema.py	1310	2026-05-23	43
+backend/app/schemas/user.py	1656	2026-06-10	74
+backend/app/services/__init__.py	0	2026-05-17	0
+backend/app/services/auth.py	1624	2026-06-10	49
+backend/app/services/becbuc/__init__.py	0	2026-06-03	0
+backend/app/services/bracket_service.py	55957	2026-06-27	1029
+backend/app/services/database_explorer.py	9727	2026-05-23	270
+backend/app/services/ko_scoring.py	10481	2026-06-29	264
+backend/app/services/monitor/__init__.py	610	2026-06-10	18
+backend/app/services/monitor/api_client.py	11225	2026-06-12	293
+backend/app/services/monitor/config.py	6013	2026-06-12	112
+backend/app/services/monitor/persistence.py	16468	2026-06-12	443
+backend/app/services/monitor/poller.py	9175	2026-06-12	243
+backend/app/services/monitor/scheduler.py	16636	2026-06-12	411
+backend/app/services/monitor/state_mapper.py	5722	2026-06-10	134
+backend/app/services/reportes/__init__.py	46	2026-07-20	1
+backend/app/services/reportes/auditoria_excel.py	30690	2026-07-20	636
+backend/app/services/reportes/puntajes_excel.py	4593	2026-07-20	101
+backend/app/services/reportes/ranking_excel.py	34629	2026-07-20	675
+backend/app/services/scoring/__init__.py	25	2026-06-08	1
+backend/app/services/scoring/base.py	4481	2026-08-01	123
+backend/app/services/scoring/calculator.py	56145	2026-07-05	1177
+backend/app/services/scoring/clubes_calculator.py	22081	2026-08-01	470
+backend/app/services/scoring/engines/__init__.py	18	2026-06-08	1
+backend/app/services/scoring/engines/copa_clubes.py	8071	2026-08-01	194
+backend/app/services/scoring/engines/copa_mundo_2026.py	12909	2026-07-20	243
+backend/app/services/scoring/engines/default.py	3183	2026-06-11	105
+backend/app/services/scoring/registry.py	1879	2026-08-01	45
+backend/app/services/sync_api_football.py	117662	2026-08-01	2653
+backend/app/services/table_crud.py	18145	2026-06-30	486
+backend/app/services/torneo_service.py	47949	2026-07-21	1088
+backend/app/services/user.py	2801	2026-05-24	69
+backend/app/static/auditorias/auditoria_torneo2_20260604_202529.xlsx	15264	2026-06-04	
+backend/claude project brief.md	6746	2026-05-17	258
+backend/docker-compose.yml	1058	2026-06-05	38
+backend/docker/Dockerfile	813	2026-05-17	
+backend/documentacion/migracion_monitor.sql	5701	2026-06-10	113
+backend/fix_admin_password.py	1760	2026-05-23	54
+backend/init-db/00_create_databases.sql	340	2026-06-05	8
+backend/init-db/01_schema.sql	6413	2026-05-17	165
+backend/init-db/02_seed.sql	3358	2026-05-17	106
+backend/migracion_apuesta_cols_v2.sql	759	2026-06-10	15
+backend/migracion_minuto_actual.sql	299	2026-06-10	5
+backend/migracion_penales_partido.sql	595	2026-06-10	14
+backend/migracion_user_nombre_telefono.sql	672	2026-06-10	11
+backend/migrate_add_tabla.py	1089	2026-05-29	40
+backend/postman_collection.json	23003	2026-05-17	812
+backend/pyproject.toml	1077	2026-05-23	
+backend/requirements.txt	350	2026-06-10	19
+backend/scripts/create_superuser.py	854	2026-05-17	33
+backend/scripts/seed_playoff_mundial.py	10724	2026-06-04	224
+backend/scripts/smoke_test.sh	4347	2026-05-17	
+backend/seed_ventas.py	16735	2026-05-29	426
+backend/setup-venv.ps1	2618	2026-05-23	47
+backend/static/BECBUC-ADM-fases.html	29554	2026-06-07	522
+backend/static/BECBUC-ADM.html	85966	2026-07-02	1738
+backend/static/BECBUC-movil.html	300079	2026-07-20	4757
+backend/static/BECBUC-movil.html.js	0	2026-06-07	0
+backend/static/BECBUC-portal.html	649986	2026-07-21	11358
+backend/static/BECBUC-portal.html.js	0	2026-06-07	0
+backend/static/BECBUC-pronos.html	110379	2026-07-20	1822
+backend/static/BECBUC_verificacion.xlsx	436863	2026-06-23	
+backend/static/_backup_html/BECBUC-portal.html.20260702_011820.bak	548182	2026-07-02	
+backend/static/_backup_html/becbuc-live-playoffs-backup-sesion50.html	88885	2026-06-28	1737
+backend/static/_backup_html/becbuc-live-playoffs.html.20260704_182251.bak	198092	2026-07-04	
+backend/static/_backup_html/becbuc-live-playoffs.html.gl5.bak	162120	2026-06-30	
+backend/static/_backup_html/becbuc-live-playoffs.html.logout.bak	163161	2026-06-30	
+backend/static/_backup_html/becbuc-live-playoffs.html.mem.bak	162148	2026-06-30	
+backend/static/_backup_html/becbuc-live.html.20260704_182251.bak	138022	2026-07-02	
+backend/static/api-reference.html	42220	2026-06-05	757
+backend/static/apostador.html	62711	2026-06-03	1306
+backend/static/auditorias/auditoria_torneo1_20260609_132932.xlsx	6416	2026-06-09	
+backend/static/auditorias/auditoria_torneo1_20260609_134147.xlsx	6417	2026-06-09	
+backend/static/auditorias/auditoria_torneo1_20260609_134856.xlsx	6417	2026-06-09	
+backend/static/auditorias/auditoria_torneo1_20260609_135159.xlsx	6417	2026-06-09	
+backend/static/auditorias/auditoria_torneo2_20260604_202614.xlsx	15262	2026-06-04	
+backend/static/auditorias/auditoria_torneo2_20260604_204940.xlsx	20070	2026-06-04	
+backend/static/auditorias/auditoria_torneo2_20260604_204959.xlsx	20074	2026-06-04	
+backend/static/auditorias/auditoria_torneo2_20260607_235613.xlsx	33370	2026-06-07	
+backend/static/auditorias/auditoria_torneo2_20260609_140818.xlsx	6908	2026-06-09	
+backend/static/becbuc-live-playoffs.html	228770	2026-07-19	4279
+backend/static/becbuc-live.html	136772	2026-07-20	2904
+backend/static/becbuc-logo.jpeg	126989	2026-06-19	
+backend/static/becbuc_manual_admin.pdf	28366	2026-07-03	
+backend/static/becbuc_playoffs_bracket.png	54907	2026-06-27	
+backend/static/becbuc_playoffs_envivo.png	80229	2026-06-27	
+backend/static/becbuc_playoffs_puntajes.png	52868	2026-06-27	
+backend/static/bracket_propagado.png	46958	2026-06-27	
+backend/static/build_pronos.py	7923	2026-06-11	182
+backend/static/cabecera_detalle.html	78084	2026-06-01	1496
+backend/static/config_cabecera.html	33478	2026-06-01	673
+backend/static/diccionario.html	94618	2026-06-01	1907
+backend/static/docs/.~lock.Manual_Administrador_Lambda.pdf#	112	2026-06-01	
+backend/static/docs/.~lock.Manual_Usuario_Lambda.pdf#	112	2026-06-01	
+backend/static/docs/Manual_Administrador_BECBUC.pdf	34299	2026-06-09	
+backend/static/docs/Manual_Administrador_Lambda.pdf	231660	2026-06-01	
+backend/static/docs/Manual_Apostador_BECBUC.pdf	31231	2026-06-09	
+backend/static/docs/Manual_Operacion_BECBUC.pdf	37862	2026-06-09	
+backend/static/docs/Manual_Usuario_Lambda.pdf	201178	2026-06-01	
+backend/static/docs/lu42a36vp.tmp	231660	2026-06-01	
+backend/static/docs/lu479wh37.tmp	201178	2026-06-01	
+backend/static/docs/wc-2026-regulations.pdf	762474	2026-06-09	
+backend/static/excel_resultados_oficiales.json	28245	2026-07-02	1536
+backend/static/excel_tbl_check.json	1406890	2026-07-02	1
+backend/static/excel_tbl_check2.json	266526	2026-07-02	1
+backend/static/exports/puntos_por_fase_torneo_2.xlsx	33368	2026-06-07	
+backend/static/fixture.html	63808	2026-06-15	1270
+backend/static/importar-apuestas.html	92520	2026-06-16	1733
+backend/static/js/becbuc-core.js	4651	2026-07-20	65
+backend/static/login.html	7215	2026-06-16	176
+backend/static/logos/champions.svg	8261	2026-07-21	
+backend/static/logos/copa-america.png	4833	2026-07-21	
+backend/static/logos/eurocopa.jpg	7430	2026-07-21	
+backend/static/logos/europa-league.png	10415	2026-07-21	
+backend/static/logos/libertadores.png	13666	2026-07-21	
+backend/static/logos/mundial.jpg	3034	2026-07-21	
+backend/static/logos/sudamericana.png	14601	2026-07-21	
+backend/static/mobile_bracket.png	61607	2026-06-27	
+backend/static/mobile_envivo.png	93467	2026-06-27	
+backend/static/mobile_live_fifa_style.png	66874	2026-06-27	
+backend/static/mobile_puntajes.png	67704	2026-06-27	
+backend/static/playoffs_mobile_v2.png	78734	2026-06-27	
+backend/static/playoffs_usuario.png	106955	2026-06-27	
+backend/static/portal.html	110322	2026-06-01	1913
+backend/static/reglamentos/BECBUC_Reglamento_Clubes_v1.pdf	202806	2026-08-01	
+backend/static/tabla.html	139570	2026-06-14	2915
+backend/static/tester.html	86856	2026-05-29	2267
+backend/static/usuarios.html	40032	2026-06-03	994
+backend/static/v2/404.html	8100	2026-08-01	1
+backend/static/v2/404/index.html	8100	2026-08-01	1
+backend/static/v2/__next.__PAGE__.txt	834	2026-08-01	9
+backend/static/v2/__next._full.txt	4037	2026-08-01	17
+backend/static/v2/__next._head.txt	844	2026-08-01	5
+backend/static/v2/__next._index.txt	1845	2026-08-01	5
+backend/static/v2/__next._tree.txt	254	2026-08-01	2
+backend/static/v2/_next/static/-iiEp90eP3hefPSFeF8sj/_buildManifest.js	219	2026-08-01	11
+backend/static/v2/_next/static/-iiEp90eP3hefPSFeF8sj/_clientMiddlewareManifest.js	96	2026-08-01	1
+backend/static/v2/_next/static/-iiEp90eP3hefPSFeF8sj/_ssgManifest.js	80	2026-08-01	1
+backend/static/v2/_next/static/chunks/0-rjhsw3x1_wj.css	21384	2026-08-01	1
+backend/static/v2/_next/static/chunks/02i7dfk78~t~2.js	53149	2026-08-01	4
+backend/static/v2/_next/static/chunks/03~yq9q893hmn.js	112594	2026-08-01	1
+backend/static/v2/_next/static/chunks/07lhk_q6pmm3r.js	227537	2026-08-01	1
+backend/static/v2/_next/static/chunks/0a51~fn578jhy.js	1076	2026-08-01	1
+backend/static/v2/_next/static/chunks/0dbhjjzl8qfwv.js	57909	2026-08-01	1
+backend/static/v2/_next/static/chunks/0g-dyon6iw.6h.js	13753	2026-08-01	1
+backend/static/v2/_next/static/chunks/0tvif09j9hotm.js	147511	2026-08-01	2
+backend/static/v2/_next/static/chunks/0y9sn4p.h9zff.js	58177	2026-08-01	1
+backend/static/v2/_next/static/chunks/15xrurgzs99gv.js	17474	2026-08-01	31
+backend/static/v2/_next/static/chunks/turbopack-0pqmljhbmwrzt.js	10590	2026-08-01	1
+backend/static/v2/_not-found/__next._full.txt	5063	2026-08-01	15
+backend/static/v2/_not-found/__next._head.txt	895	2026-08-01	5
+backend/static/v2/_not-found/__next._index.txt	1845	2026-08-01	5
+backend/static/v2/_not-found/__next._not-found.txt	385	2026-08-01	5
+backend/static/v2/_not-found/__next._not-found/__PAGE__.txt	1432	2026-08-01	5
+backend/static/v2/_not-found/__next._tree.txt	329	2026-08-01	2
+backend/static/v2/_not-found/index.html	8100	2026-08-01	1
+backend/static/v2/_not-found/index.txt	5063	2026-08-01	15
+backend/static/v2/index.html	6248	2026-08-01	1
+backend/static/v2/index.txt	4037	2026-08-01	17
+backend/static/v2/playoff-live/__next._full.txt	4640	2026-08-01	19
+backend/static/v2/playoff-live/__next._head.txt	844	2026-08-01	5
+backend/static/v2/playoff-live/__next._index.txt	1845	2026-08-01	5
+backend/static/v2/playoff-live/__next._tree.txt	330	2026-08-01	2
+backend/static/v2/playoff-live/__next.playoff-live.txt	385	2026-08-01	5
+backend/static/v2/playoff-live/__next.playoff-live/__PAGE__.txt	981	2026-08-01	9
+backend/static/v2/playoff-live/index.html	6919	2026-08-01	1
+backend/static/v2/playoff-live/index.txt	4640	2026-08-01	19
+backend/test_api.ps1	16117	2026-05-23	354
+backend/tests/__init__.py	0	2026-05-17	0
+backend/tests/api/__init__.py	0	2026-05-17	0
+backend/tests/api/test_applications.py	3444	2026-05-17	109
+backend/tests/api/test_auth.py	1568	2026-05-17	52
+backend/tests/api/test_roles.py	3058	2026-05-17	92
+backend/tests/api/test_users.py	1620	2026-05-17	53
+backend/tests/conftest.py	1246	2026-05-17	40
+backend/tests/crud/__init__.py	0	2026-05-17	0
+backend/tests/crud/test_user.py	4512	2026-05-17	119
+backup_becbuc.ps1	5155	2026-07-20	112
+backup_becbuc_log.txt	859	2026-07-19	32
+backup_out.txt	984	2026-07-20	33
+bat/ABRIR_EN_VIVO.bat	941	2026-07-21	28
+bat/BECBUC.bat	2840	2026-07-21	74
+bat/EJECUTAR_PENDIENTES.bat	88	2026-07-21	2
+bat/INICIAR_UVICORN.bat	172	2026-07-21	6
+bat/actualizar_puntajes.bat	162	2026-07-21	4
+bat/analizar_numeros_partido.bat	1286	2026-07-02	44
+bat/arrancar_despacho.bat	630	2026-07-21	19
+bat/arrancar_todo.bat	2736	2026-08-01	84
+bat/arrancar_y_recalcular.bat	991	2026-07-21	25
+bat/auditoria_gonzalo.bat	257	2026-07-21	5
+bat/auditoria_jugador.bat	1019	2026-06-21	38
+bat/auditoria_puntajes.bat	840	2026-07-21	30
+bat/avanzar_bracket.bat	149	2026-07-21	5
+bat/backup_y_git.bat	772	2026-07-21	33
+bat/bajar_logos_conmebol.ps1	892	2026-07-21	16
+bat/blindar_y_corregir.bat	157	2026-07-21	5
+bat/buscar_patito.bat	465	2026-07-21	10
+bat/buscar_usuario.bat	152	2026-07-21	4
+bat/check_andresboga.bat	780	2026-07-21	11
+bat/check_cherem.bat	1007	2026-07-21	9
+bat/check_cobertura.bat	2131	2026-07-21	56
+bat/check_estado.bat	1527	2026-06-21	11
+bat/check_estado2.bat	462	2026-07-21	10
+bat/check_no_match.bat	1074	2026-07-21	14
+bat/check_r32.bat	85	2026-07-21	3
+bat/check_real_scores.bat	2576	2026-07-21	58
+bat/check_todos_apostadores.bat	2702	2026-07-21	67
+bat/check_ultimo.bat	240	2026-07-21	10
+bat/commit_sesion52p6.bat	309	2026-07-21	9
+bat/comparar_control.bat	276	2026-07-21	10
+bat/comparar_excel_bd.bat	773	2026-07-21	23
+bat/comparar_scores.bat	188	2026-07-21	6
+bat/copiar_logos_a_static.ps1	2006	2026-07-21	35
+bat/cutover_v2.bat	2358	2026-08-01	64
+bat/diag_bracket.bat	49	2026-07-21	3
+bat/diag_bracket_terceros.bat	58	2026-07-21	3
+bat/diag_fechas.bat	230	2026-07-21	8
+bat/diag_join.bat	1504	2026-07-21	16
+bat/diag_puntajes.bat	96	2026-07-21	5
+bat/diagnostico_bracket.bat	1572	2026-06-27	40
+bat/ejecutar_comparar.bat	162	2026-07-21	7
+bat/ejecutar_sesion39.bat	1075	2026-07-21	22
+bat/ejecutar_todo.bat	135	2026-07-21	6
+bat/exportar_scores_becbuc.bat	1065	2026-07-21	6
+bat/finalizar_p90.bat	268	2026-07-21	9
+bat/fix_apuestas_faltantes.bat	293	2026-07-21	9
+bat/fix_bracket_completo.bat	114	2026-07-21	4
+bat/fix_bracket_sin_provisorios.bat	126	2026-07-21	5
+bat/fix_cherem2.bat	2831	2026-07-21	17
+bat/fix_cherem_apuestas.bat	1983	2026-07-21	44
+bat/fix_fechas_r32.bat	114	2026-07-21	5
+bat/fix_grupo_g.bat	452	2026-07-21	12
+bat/fix_nombres_en.bat	476	2026-07-21	12
+bat/fix_p030_y_recalcular.bat	830	2026-07-21	23
+bat/fix_p79_fecha_estado.bat	452	2026-07-01	7
+bat/fix_paraguay.bat	132	2026-07-21	5
+bat/fix_partido_suspension.bat	143	2026-07-21	4
+bat/fix_penales_partido.bat	592	2026-07-21	13
+bat/fix_penales_tanda_ko.bat	1032	2026-07-03	16
+bat/fix_r32_equipos.bat	1049	2026-07-21	32
+bat/fix_r32_oficial.bat	139	2026-07-21	4
+bat/fix_scotland_bracket.bat	57	2026-07-21	3
+bat/fix_stats_excel_y_recalcular.bat	1505	2026-07-21	35
+bat/fix_tarjetas_r32.bat	334	2026-07-21	8
+bat/fix_var_canada_qatar.bat	1462	2026-06-25	18
+bat/fix_var_y_recalcular.bat	328	2026-07-21	10
+bat/fix_y_recalcular.bat	575	2026-07-21	17
+bat/fix_y_recalcular_full.bat	2007	2026-06-25	47
+bat/fix_y_recalcular_penales.bat	1412	2026-07-03	24
+bat/generar_excel.bat	195	2026-07-21	7
+bat/get_ngrok_url.bat	156	2026-06-28	5
+bat/git_commit_sesion52.bat	1065	2026-07-21	33
+bat/git_push.bat	414	2026-07-21	15
+bat/git_push2.bat	202	2026-07-21	8
+bat/importar_pucheta_octavos.bat	259	2026-07-21	9
+bat/inferir_fechas_espn.bat	265	2026-08-01	9
+bat/inferir_fechas_espn_libertadores.bat	184	2026-08-01	7
+bat/inferir_fechas_espn_sudamericana.bat	184	2026-08-01	7
+bat/inferir_fechas_octavos_sudamericana.bat	282	2026-08-01	9
+bat/inferir_fechas_octavos_sudamericana_APPLY.bat	290	2026-08-01	9
+bat/iniciar-todo.bat	1502	2026-07-21	49
+bat/iniciar_brasil.bat	259	2026-07-21	9
+bat/iniciar_cloudflared.bat	266	2026-07-21	6
+bat/iniciar_hoy.bat	254	2026-07-21	9
+bat/iniciar_ngrok.bat	110	2026-07-21	5
+bat/listar_usuarios.bat	155	2026-07-21	4
+bat/query_grupos_estado.bat	991	2026-07-21	10
+bat/ranking_excel.bat	162	2026-07-21	4
+bat/ranking_top10.bat	124	2026-07-21	4
+bat/re_registrar_task.bat	1229	2026-07-21	46
+bat/real_scores2.bat	630	2026-07-21	5
+bat/rebuild_reiniciar.bat	1501	2026-08-01	40
+bat/recalc_cherem.bat	1975	2026-07-21	11
+bat/recalc_directo.bat	162	2026-07-21	6
+bat/recalc_participacion.bat	103	2026-07-21	5
+bat/recalc_post_update.bat	144	2026-07-21	5
+bat/recalcular_puntajes.bat	118	2026-07-21	6
+bat/recalcular_sin_goleada.bat	896	2026-07-21	28
+bat/recalcular_y_audit.bat	830	2026-07-21	23
+bat/regenerar_excel.bat	199	2026-07-21	6
+bat/registrar_propagar_auto.bat	539	2026-07-21	5
+bat/registrar_sync_pendientes.bat	1028	2026-08-01	33
+bat/reiniciar_ngrok.bat	346	2026-07-21	13
+bat/reiniciar_servidor.bat	426	2026-07-21	13
+bat/reiniciar_y_testear.bat	1573	2026-07-21	30
+bat/rename_andres.bat	452	2026-07-21	8
+bat/restart_ngrok.bat	219	2026-07-21	7
+bat/restart_server.bat	281	2026-07-21	8
+bat/run_actualizar_eventos_api.bat	256	2026-07-21	7
+bat/run_actualizar_hora.bat	72	2026-07-21	5
+bat/run_actualizar_r32.bat	487	2026-07-21	9
+bat/run_actualizar_resultados.bat	255	2026-07-21	9
+bat/run_actualizar_resultados_octavos.bat	207	2026-07-21	6
+bat/run_actualizar_resultados_octavos_APPLY.bat	203	2026-07-21	6
+bat/run_actualizar_resultados_semis.bat	195	2026-07-21	6
+bat/run_actualizar_resultados_semis_APPLY.bat	191	2026-07-21	6
+bat/run_actualizar_resultados_todas.bat	209	2026-07-21	6
+bat/run_actualizar_resultados_todas_APPLY.bat	270	2026-07-21	7
+bat/run_all.bat	93	2026-07-21	2
+bat/run_alter_paux.bat	95	2026-07-21	3
+bat/run_analisis_datos.bat	151	2026-07-21	4
+bat/run_backup.bat	121	2026-07-21	4
+bat/run_backup_becbuc.bat	159	2026-07-21	4
+bat/run_bajar_logos_conmebol.bat	970	2026-07-21	18
+bat/run_bloquear_final_3p.bat	159	2026-07-21	6
+bat/run_bloquear_final_3p_APPLY.bat	184	2026-07-21	6
+bat/run_buscar_logos.bat	305	2026-07-21	9
+bat/run_cargar_fixture_libertadores.bat	265	2026-07-21	11
+bat/run_cargar_fixture_sudamericana.bat	338	2026-07-21	11
+bat/run_cargar_goleadores.bat	154	2026-07-21	7
+bat/run_cerrar_cuartos.bat	192	2026-07-21	8
+bat/run_cerrar_semis.bat	219	2026-07-21	7
+bat/run_cerrar_torneo_custom.bat	166	2026-07-21	4
+bat/run_cerrar_torneo_final.bat	224	2026-07-21	7
+bat/run_check99.bat	207	2026-07-21	2
+bat/run_check_pts_equipo.bat	109	2026-07-21	4
+bat/run_comparar.bat	103	2026-07-21	5
+bat/run_comparar_excel.bat	98	2026-07-21	3
+bat/run_comparar_items_octavos.bat	184	2026-07-21	6
+bat/run_comparar_items_semis.bat	176	2026-07-21	6
+bat/run_comparar_items_todas.bat	194	2026-07-21	6
+bat/run_comparar_octavos.bat	104	2026-07-21	5
+bat/run_comparar_puntajes_fin.bat	187	2026-07-21	6
+bat/run_comparar_puntajes_items.bat	227	2026-07-21	7
+bat/run_comparar_resultados_todos.bat	196	2026-07-21	6
+bat/run_comparar_tbl_check.bat	912	2026-07-21	33
+bat/run_corregir_llave_ganador.bat	120	2026-08-01	5
+bat/run_crear_arbol_ko.bat	405	2026-07-21	15
+bat/run_diag.bat	134	2026-07-21	5
+bat/run_diag_cierre.bat	139	2026-07-21	4
+bat/run_diag_clasificados.bat	116	2026-07-21	6
+bat/run_diag_clasificados2.bat	117	2026-07-21	6
+bat/run_diag_eventos.bat	155	2026-07-21	6
+bat/run_diag_eventos_api.bat	183	2026-07-21	6
+bat/run_diag_fix_octavos.bat	91	2026-07-21	4
+bat/run_diag_item_f.bat	184	2026-07-21	6
+bat/run_diag_libertadores.bat	246	2026-08-01	5
+bat/run_diag_n.bat	204	2026-07-21	2
+bat/run_diag_n2.bat	206	2026-07-21	2
+bat/run_diag_octavos.bat	91	2026-07-21	5
+bat/run_diag_p_clasificados.bat	118	2026-07-21	6
+bat/run_diag_sistema.bat	165	2026-07-21	7
+bat/run_diag_sudamericana.bat	246	2026-08-01	5
+bat/run_diag_sync_p90.bat	98	2026-07-21	5
+bat/run_diag_tanda_semis.bat	182	2026-07-21	6
+bat/run_diag_var_L.bat	176	2026-07-21	6
+bat/run_diag_var_real.bat	181	2026-07-21	6
+bat/run_diagnostico_paraguay.bat	98	2026-07-21	4
+bat/run_diagnostico_tarjetas.bat	96	2026-07-21	4
+bat/run_docker_migrations.bat	810	2026-07-21	13
+bat/run_estado_fases.bat	171	2026-07-21	6
+bat/run_estado_semis.bat	193	2026-07-21	8
+bat/run_excel_grupos.bat	181	2026-07-21	7
+bat/run_excel_grupos_auditoria.bat	289	2026-07-21	9
+bat/run_excel_log.bat	333	2026-07-21	8
+bat/run_exportar_diffs.bat	179	2026-07-21	6
+bat/run_exportar_diffs_fin.bat	185	2026-07-21	6
+bat/run_fase0_unificar_repos.bat	4018	2026-07-21	94
+bat/run_fill_clasifica_null.bat	198	2026-07-21	6
+bat/run_fill_clasifica_null_APPLY.bat	207	2026-07-21	6
+bat/run_fill_logos.bat	108	2026-08-01	5
+bat/run_fill_tbd_octavos.bat	114	2026-08-01	5
+bat/run_finalizar_p097_y_calcular.bat	214	2026-07-21	8
+bat/run_fix2_recalc.bat	81	2026-07-21	2
+bat/run_fix_clasificado_faltante.bat	192	2026-07-21	6
+bat/run_fix_clasificado_faltante_APPLY.bat	236	2026-07-21	7
+bat/run_fix_estado_p79.bat	90	2026-07-21	4
+bat/run_fix_etapa_paraguay.bat	272	2026-07-21	9
+bat/run_fix_hora.bat	72	2026-07-21	5
+bat/run_fix_orden_octavos.bat	128	2026-08-01	5
+bat/run_fix_p73.bat	551	2026-07-21	10
+bat/run_fix_passwords.bat	172	2026-07-21	8
+bat/run_fix_pts_equipo_grupos.bat	375	2026-07-21	7
+bat/run_fix_sistema.bat	173	2026-07-21	8
+bat/run_fix_stats.bat	94	2026-07-21	2
+bat/run_fix_swap_numero_fifa.bat	486	2026-07-21	11
+bat/run_fix_swap_predicciones.bat	481	2026-07-21	12
+bat/run_fix_var_L.bat	162	2026-07-21	6
+bat/run_fix_var_L_APPLY.bat	181	2026-07-21	6
+bat/run_gestionar_fases_cuartos.bat	206	2026-07-21	8
+bat/run_get_ngrok.bat	122	2026-07-21	7
+bat/run_git_commit.bat	729	2026-07-21	21
+bat/run_git_commit_reorg_a.bat	397	2026-07-21	12
+bat/run_git_push.bat	397	2026-07-21	15
+bat/run_git_push_branch.bat	322	2026-07-21	13
+bat/run_goleada_off_y_excel.bat	308	2026-07-21	10
+bat/run_importar.bat	157	2026-07-21	4
+bat/run_importar_8vos.bat	556	2026-07-21	21
+bat/run_importar_8vos_IMPORT.bat	332	2026-07-21	13
+bat/run_importar_cuartos.bat	181	2026-07-21	8
+bat/run_importar_cuartos_IMPORT.bat	180	2026-07-21	8
+bat/run_importar_fechas_ko.bat	231	2026-07-21	8
+bat/run_importar_final3p.bat	194	2026-07-21	6
+bat/run_importar_final3p_IMPORT.bat	202	2026-07-21	6
+bat/run_importar_r32.bat	619	2026-06-28	22
+bat/run_importar_r32_IMPORT.bat	245	2026-06-28	11
+bat/run_importar_semis.bat	169	2026-07-21	6
+bat/run_importar_semis_IMPORT.bat	178	2026-07-21	6
+bat/run_list_cherem_globales.bat	290	2026-07-21	9
+bat/run_list_ganaron_f.bat	256	2026-07-21	9
+bat/run_migracion_vistas_alias.bat	447	2026-07-21	8
+bat/run_migrar_tanda_split.bat	435	2026-06-29	6
+bat/run_migration_aux.bat	390	2026-07-21	6
+bat/run_paso_backup.bat	287	2026-07-21	7
+bat/run_paso_git_commit.bat	882	2026-07-21	25
+bat/run_paux_numero_fifa.bat	225	2026-07-21	4
+bat/run_poblar_equipos.bat	619	2026-07-21	24
+bat/run_poblar_octavos_sudamericana.bat	263	2026-07-21	11
+bat/run_preview_ranking_postfix.bat	122	2026-07-21	6
+bat/run_propagar_ganadores.bat	373	2026-07-21	13
+bat/run_ranking_actual.bat	174	2026-07-21	6
+bat/run_reabrir_y_recalcular.bat	248	2026-07-21	7
+bat/run_recalc_fairplay.bat	670	2026-07-21	17
+bat/run_recalc_force_grupos.bat	219	2026-07-21	7
+bat/run_recalc_hasta_semis.bat	282	2026-07-21	8
+bat/run_recalc_octavos_bloquear_cuartos.bat	194	2026-07-21	8
+bat/run_recalc_ranking.bat	151	2026-07-21	4
+bat/run_reimportar_predicciones_bonus.bat	203	2026-07-21	6
+bat/run_reimportar_predicciones_bonus_APPLY.bat	255	2026-07-21	7
+bat/run_reorg_b1.bat	122	2026-07-21	4
+bat/run_reset_ko.bat	643	2026-07-21	15
+bat/run_reset_sudamericana_ko.bat	206	2026-07-21	8
+bat/run_resolve_placeholders_penales.bat	126	2026-08-01	5
+bat/run_restaurar_octavos_sud.bat	128	2026-08-01	5
+bat/run_resubir_sanbie_pato.bat	207	2026-07-21	8
+bat/run_resubir_sanbie_pato_APPLY.bat	211	2026-07-21	8
+bat/run_seed_sudamericana.bat	452	2026-07-21	8
+bat/run_sim_live.bat	462	2026-07-21	9
+bat/run_sim_live_revert.bat	232	2026-07-21	6
+bat/run_simular_propagacion.bat	208	2026-07-21	9
+bat/run_sin_apuesta_semis.bat	151	2026-07-21	6
+bat/run_sincronizar_resultados.bat	188	2026-07-21	6
+bat/run_sincronizar_resultados_APPLY.bat	203	2026-07-21	6
+bat/run_swap_san_pato_octavos.bat	210	2026-07-21	8
+bat/run_swap_san_pato_octavos_APPLY.bat	217	2026-07-21	8
+bat/run_sync_auto.bat	92	2026-07-21	3
+bat/run_sync_p103.bat	241	2026-07-21	7
+bat/run_sync_paux.bat	185	2026-07-21	6
+bat/run_sync_pendientes.bat	98	2026-08-01	3
+bat/run_sync_semis.bat	178	2026-07-21	8
+bat/run_test_auto.bat	203	2026-07-21	5
+bat/run_test_bracket.bat	692	2026-06-28	22
+bat/run_test_export_pronos.bat	180	2026-07-21	8
+bat/run_test_grupos_p.bat	279	2026-07-21	9
+bat/run_test_live_guardar.bat	206	2026-07-21	8
+bat/run_test_sudamericana.bat	447	2026-08-01	12
+bat/run_todo.bat	92	2026-07-21	4
+bat/run_todo_becbuc.bat	1936	2026-07-21	66
+bat/run_ver_p92.bat	50	2026-07-21	4
+bat/run_ver_p92_file.bat	55	2026-07-21	4
+bat/run_verificar_amarillas.bat	435	2026-07-21	14
+bat/run_verificar_amarillas_APPLY.bat	710	2026-07-21	24
+bat/run_verificar_apuestas_fin.bat	188	2026-07-21	6
+bat/run_verificar_apuestas_fin_APPLY.bat	192	2026-07-21	6
+bat/run_verificar_estado_final.bat	174	2026-07-21	6
+bat/run_verificar_item_p.bat	168	2026-07-21	6
+bat/run_verificar_minuto_gol.bat	748	2026-07-21	16
+bat/run_verificar_p49.bat	137	2026-07-21	7
+bat/run_verificar_semis.bat	177	2026-07-21	6
+bat/run_verificar_usuarios.bat	199	2026-07-21	8
+bat/run_verify_cherem.bat	238	2026-07-21	5
+bat/run_verify_final.bat	108	2026-07-21	3
+bat/run_verify_final_tarjetas.bat	283	2026-07-21	6
+bat/run_verify_todos.bat	410	2026-07-21	2
+bat/set_fecha_partido.bat	199	2026-08-01	7
+bat/set_peor_equipo_irak.bat	1692	2026-06-28	48
+bat/sincronizar_final_grupos.bat	94	2026-07-21	2
+bat/start_ngrok.bat	76	2026-07-21	3
+bat/start_server.bat	124	2026-07-21	3
+bat/start_servidor.bat	212	2026-07-21	6
+bat/sync_ahora.bat	197	2026-08-01	6
+bat/sync_ayer.bat	287	2026-07-21	10
+bat/sync_francia_iraq.bat	227	2026-07-21	6
+bat/sync_sofascore_directo.bat	361	2026-07-21	11
+bat/test2.bat	174	2026-07-21	8
+bat/test3.bat	184	2026-07-21	8
+bat/test_bracket_live.bat	1317	2026-07-21	26
+bat/test_simple.bat	80	2026-07-21	4
+bat/update_from_excel.bat	142	2026-07-21	5
+bat/validar_bracket_oficial.bat	174	2026-07-21	6
+bat/ver_equipos_bd.bat	178	2026-07-21	7
+bat/ver_fechas_ko.bat	583	2026-06-28	8
+bat/ver_ngrok.bat	86	2026-07-21	3
+bat/ver_patito.bat	456	2026-07-21	10
+bat/ver_standings.bat	90	2026-07-21	4
+bat/ver_tarjetas3.bat	237	2026-07-21	8
+bat/ver_tarjetas_api.bat	627	2026-07-02	17
+bat/ver_tarjetas_api2.bat	737	2026-07-02	20
+bat/verificar_8vos.bat	107	2026-07-21	4
+bat/verificar_excel.bat	141	2026-07-21	6
+bat/verificar_fechas_fases.bat	264	2026-08-01	9
+bat/verify_cherem_full.bat	10362	2026-07-21	145
+becbuc-flags.skill	3920	2026-07-02	
+becbuc-tbl-check.skill	4480	2026-07-02	
+becbuc-verificar-bracket.skill	2030	2026-06-27	
+becbuc_analisis_numeros_partido_20260702_1804.xlsx	13097	2026-07-02	
+becbuc_comparacion_tbl_20260704_0200.xlsx	11969	2026-07-04	
+becbuc_config.py	1199	2026-06-29	19
+becbuc_diferencias_puntaje_20260720_2016.xlsx	8031	2026-07-20	
+becbuc_diffs_puntajes_20260718_2248.xlsx	10281	2026-07-19	
+becbuc_diffs_puntajes_20260718_2256.xlsx	8505	2026-07-19	
+becbuc_diffs_puntajes_20260718_2303.xlsx	10595	2026-07-19	
+becbuc_items_comparacion_20260702_1823.xlsx	5658	2026-07-02	
+becbuc_live_A_mobile.jpg	41356	2026-06-13	
+becbuc_live_B_mobile.jpg	57877	2026-06-13	
+becbuc_live_C_mobile.jpg	52975	2026-06-13	
+becbuc_playoffs_bracket.png	54907	2026-06-27	
+becbuc_playoffs_envivo.png	80229	2026-06-27	
+becbuc_playoffs_puntajes.png	52868	2026-06-27	
+becbuc_scores.csv	2679	2026-06-27	45
+becbuc_tbl_check_comparacion_20260702_1834.xlsx	69582	2026-07-02	
+blindar_y_corregir.py	10835	2026-06-26	205
+bloquear_final_3p.py	2616	2026-07-19	61
+build_doc.js	28381	2026-07-19	276
+build_doc2.js	32576	2026-07-19	296
+buscar_log.txt	3293	2026-06-21	50
+buscar_logos_equipos.py	4238	2026-07-21	86
+buscar_patito.py	2345	2026-06-21	71
+buscar_usuario.py	1038	2026-06-21	22
+buscar_y_sync_partido1.ps1	6295	2026-06-12	154
+calcular_terceros.py	1992	2026-06-26	49
+cargar_fixture_libertadores_octavos.py	4552	2026-07-21	102
+cargar_fixture_sudamericana_16avos.py	4717	2026-07-21	98
+cargar_goleadores.py	8742	2026-07-02	198
+cerrar_cuartos.py	9278	2026-07-15	204
+cerrar_live.py	4159	2026-07-19	85
+cerrar_semis.py	8989	2026-07-18	212
+cerrar_torneo_custom.py	5893	2026-07-19	112
+cerrar_torneo_custom_log.txt	2367	2026-07-19	55
+cerrar_torneo_final.py	8525	2026-07-19	175
+check99_out.txt	524	2026-06-27	7
+check_estado.py	3265	2026-06-21	98
+check_estado_log.txt	1210	2026-06-21	35
+check_minuto99.sql	343	2026-06-27	7
+check_penales.py	1857	2026-06-14	44
+check_pts_equipo.py	2652	2026-07-21	76
+check_pts_equipo.txt	283	2026-07-04	9
+check_r32.ps1	1532	2026-06-28	36
+check_ultimo.py	3426	2026-06-22	94
+check_ultimo_log.txt	1950	2026-06-22	25
+cherem_bd.txt	984	2026-06-27	67
+cloudflared.exe	54116816	2026-06-05	
+cobertura.txt	178	2026-06-27	5
+comparacion_resultados.txt	816	2026-06-23	17
+comparar_control_excel.py	11059	2026-06-24	259
+comparar_excel_bd.py	19593	2026-07-21	467
+comparar_excel_bd_log.txt	14819	2026-06-27	327
+comparar_excel_vs_bd.py	6594	2026-07-05	153
+comparar_excel_vs_bd_full.py	10232	2026-07-21	271
+comparar_items_resultados.py	8871	2026-07-18	219
+comparar_items_semis.py	6377	2026-07-18	164
+comparar_live_vs_bd.py	6556	2026-06-25	131
+comparar_octavos_excel_bd.py	28509	2026-07-06	307
+comparar_output.txt	9353	2026-06-27	156
+comparar_pronosticos.py	33210	2026-07-21	806
+comparar_puntajes.ps1	1895	2026-06-27	33
+comparar_puntajes.py	11121	2026-07-21	257
+comparar_puntajes_control.py	36434	2026-07-21	911
+comparar_puntajes_fin_torneo.py	12527	2026-07-20	268
+comparar_puntajes_items.py	11096	2026-07-19	269
+comparar_puntajes_r32.py	8073	2026-07-03	196
+comparar_quiroga.py	11407	2026-07-21	334
+comparar_resultados.py	7099	2026-07-21	206
+comparar_resultados_todos.py	5095	2026-07-18	123
+comparar_scores.py	7423	2026-07-21	181
+comparar_tbl_check.py	13631	2026-07-04	323
+corregir_llave_ganador.py	3210	2026-08-01	66
+crear_arbol_ko_clubes.py	3219	2026-07-21	76
+crear_fases_ko.py	6982	2026-06-28	183
+cruzar_fuentes.py	5717	2026-06-25	159
+debug_import_excel.py	8209	2026-06-13	215
+diag_apuesta.py	2592	2026-07-21	77
+diag_bd_estado.py	2827	2026-06-28	78
+diag_bracket.py	3418	2026-06-27	99
+diag_bracket_log.txt	382	2026-06-27	12
+diag_bracket_r32.py	5078	2026-06-28	140
+diag_bracket_terceros.py	6147	2026-07-21	156
+diag_cierre.py	2485	2026-07-19	48
+diag_cierre_log.txt	1023	2026-07-19	30
+diag_clasificados.py	7852	2026-07-21	155
+diag_clasificados2.py	6333	2026-07-21	129
+diag_espn_760432.json	702193	2026-06-16	21117
+diag_eventos.py	2855	2026-07-21	74
+diag_eventos_api.py	4013	2026-07-21	99
+diag_fechas.py	2532	2026-06-29	70
+diag_item_f.py	9350	2026-07-20	212
+diag_item_f_out.txt	4810	2026-07-20	96
+diag_join.txt	739	2026-06-27	25
+diag_libertadores.py	2023	2026-08-01	49
+diag_libertadores_out.txt	23288	2026-08-01	211
+diag_n2_out.txt	918	2026-06-27	9
+diag_n_diffs.sql	2079	2026-06-27	46
+diag_n_out.txt	0	2026-06-27	0
+diag_n_simple.sql	1918	2026-06-27	48
+diag_octavos.py	3578	2026-07-04	96
+diag_p_clasificados.py	7177	2026-07-21	143
+diag_penales_tanda.py	3281	2026-07-21	82
+diag_puntajes.py	4781	2026-06-27	138
+diag_quiroga.py	6389	2026-06-14	172
+diag_quiroga_pts.py	3220	2026-06-16	75
+diag_repos.bat	1405	2026-07-21	38
+diag_repos_out.txt	1227	2026-07-20	34
+diag_sistema_schema.py	1935	2026-07-09	60
+diag_sofascore.py	6199	2026-06-25	145
+diag_sudamericana.py	2025	2026-08-01	49
+diag_sudamericana_out.txt	23483	2026-08-01	216
+diag_sync_estado.py	8385	2026-07-21	176
+diag_tanda_semis.py	6261	2026-07-20	136
+diag_var_L.py	4907	2026-07-19	126
+diag_var_espn.py	5048	2026-06-16	129
+diag_var_france.py	7538	2026-06-16	188
+diag_var_france_response.json	1458	2026-06-16	74
+diag_var_real.py	5335	2026-07-20	133
+diag_y_fix_octavos.py	6976	2026-07-21	177
+diag_y_sync_p90.py	4919	2026-07-04	116
+diagnosticar_penales_partido.py	1542	2026-07-03	39
+diagnostico_cherem.ps1	1753	2026-06-13	38
+diagnostico_import.sql	1328	2026-06-13	41
+diagnostico_paraguay_goles.py	3575	2026-07-01	72
+diagnostico_tarjetas_api.py	5074	2026-07-02	118
+docs/decisiones.md	4201	2026-08-01	30
+documentacion/20260611_2000- TBL CONSOLIDADA PRONOSTICOS ok.xlsx	3056624	2026-06-13	
+documentacion/ANEXO_C_SIMULADOR_CUSE_2026.xlsx	1217025	2026-07-07	
+documentacion/CONFIGURADOR DEL SERVIDOR BEELINK CON DOCKER.docx	19355	2026-05-17	
+documentacion/Manual_Administrador_Lambda.docx	20689	2026-06-01	
+documentacion/Manual_Usuario_Lambda.docx	20910	2026-06-01	
+documentacion/ejecutar_migracion_cuse.bat	1952	2026-07-07	44
+documentacion/fifa_numeracion_partidos.xlsx	7379	2026-06-13	
+documentacion/fixes_oneoff/comentarios_app_db.sql	13078	2026-05-29	143
+documentacion/fixes_oneoff/comentarios_sistema_ventas_db.sql	2790	2026-05-29	59
+documentacion/fixes_oneoff/debug_penales.sql	829	2026-06-16	20
+documentacion/fixes_oneoff/diag_partido143.sql	413	2026-06-12	16
+documentacion/fixes_oneoff/diagnostico_fases.sql	909	2026-06-09	25
+documentacion/fixes_oneoff/fix_fases_copa_mundo.sql	2912	2026-06-09	73
+documentacion/fixes_oneoff/fix_jose_rol.sql	778	2026-06-28	21
+documentacion/fixes_oneoff/fix_kpi_titulos.sql	648	2026-06-05	14
+documentacion/fixes_oneoff/fix_nombres_equipos_en.sql	3835	2026-06-28	98
+documentacion/fixes_oneoff/fix_p73_en_juego.sql	569	2026-06-28	19
+documentacion/fixes_oneoff/fix_partido_id_apuestas.sql	3823	2026-06-15	102
+documentacion/fixes_oneoff/fix_partido_id_apuestas_v2.sql	4104	2026-06-15	106
+documentacion/fixes_oneoff/fix_partido_stats_from_excel.sql	3098	2026-06-25	60
+documentacion/fixes_oneoff/fix_penales_partido_tanda.sql	1148	2026-07-03	25
+documentacion/fixes_oneoff/fix_pts_equipo_grupos.sql	858	2026-07-04	20
+documentacion/fixes_oneoff/fix_pts_penales_partido.sql	782	2026-06-17	19
+documentacion/fixes_oneoff/fix_quiroga_rojas.sql	905	2026-06-16	27
+documentacion/fixes_oneoff/fix_r32_equipos.sql	2183	2026-06-28	64
+documentacion/fixes_oneoff/fix_swap_numero_fifa.sql	6299	2026-07-02	142
+documentacion/fixes_oneoff/fix_swap_predicciones.sql	9309	2026-07-02	190
+documentacion/fixes_oneoff/fix_tarjetas_r32.sql	1984	2026-07-02	61
+documentacion/fixes_oneoff/fix_torneo_activo.sql	1333	2026-06-09	36
+documentacion/fixes_oneoff/fix_var_discrepancias.sql	4317	2026-07-02	119
+documentacion/fixes_oneoff/fix_var_p27_p39.sql	609	2026-06-24	16
+documentacion/fixes_oneoff/limpiar_apuestas_prueba.sql	2095	2026-06-13	55
+documentacion/fixes_oneoff/limpiar_resultados_excepto_p1.sql	4034	2026-06-12	122
+documentacion/fixes_oneoff/migrar_datos_becbuc.sql	5989	2026-06-03	102
+documentacion/fixes_oneoff/patch_torneos_v2.sql	2595	2026-06-03	67
+documentacion/fixes_oneoff/quiroga_check.sql	700	2026-06-16	16
+documentacion/fixes_oneoff/quiroga_debug.sql	769	2026-06-16	13
+documentacion/fixes_oneoff/quiroga_rojas_detalle.sql	806	2026-06-16	20
+documentacion/fixes_oneoff/repair_fixture_grupos.sql	1781	2026-06-04	55
+documentacion/fixes_oneoff/reset_admin_pw.sql	208	2026-06-12	2
+documentacion/fixes_oneoff/reset_grupos_torneo2.sql	1955	2026-06-12	61
+documentacion/fixes_oneoff/reset_ko_resultados.sql	3052	2026-06-28	91
+documentacion/fixes_oneoff/restaurar_partido143.sql	643	2026-06-12	22
+documentacion/fixes_oneoff/revert_r32_fix_incorrecto.sql	1402	2026-06-28	47
+documentacion/fixes_oneoff/sim_partido_live.sql	3281	2026-06-28	94
+documentacion/fixes_oneoff/sim_partido_live_revert.sql	958	2026-06-28	32
+documentacion/fixes_oneoff/update_fifa_ranking.sql	7518	2026-06-26	79
+documentacion/fixes_oneoff/update_nombre_es.sql	1260	2026-06-15	17
+documentacion/fixes_oneoff/verificar_y_fix_minuto_gol.sql	4684	2026-07-02	217
+documentacion/genera_comentarios_sistemas.py	4815	2026-05-29	150
+documentacion/iconos-copas/champions league.png	16163	2026-07-21	
+documentacion/iconos-copas/champions-logotype.svg	8261	2026-07-21	
+documentacion/iconos-copas/champions.svg	1175	2026-07-21	
+documentacion/iconos-copas/conmebol-oficial.svg	31031	2026-07-21	
+documentacion/iconos-copas/copa mundial fifa.jpg	3034	2026-07-21	
+documentacion/iconos-copas/copa-america-oficial.png	4833	2026-07-21	
+documentacion/iconos-copas/copa-america.svg	1218	2026-07-21	
+documentacion/iconos-copas/eurocopa.jpg	7430	2026-07-21	
+documentacion/iconos-copas/eurocopa.svg	1121	2026-07-21	
+documentacion/iconos-copas/europa league ok.png	10415	2026-07-21	
+documentacion/iconos-copas/libertadores-oficial.png	13666	2026-07-21	
+documentacion/iconos-copas/libertadores.svg	1003	2026-07-21	
+documentacion/iconos-copas/logioptionsplus_installer.exe	45319320	2026-07-26	
+documentacion/iconos-copas/mundial.svg	920	2026-07-21	
+documentacion/iconos-copas/sudamericana-oficial.png	14601	2026-07-21	
+documentacion/iconos-copas/sudamericana.svg	983	2026-07-21	
+documentacion/iconos-copas/uefa europa league.jpg	4083	2026-07-21	
+documentacion/manuales_pdf/20260608_0240- Reglamento_BEC_BUC_2026.pdf	373606	2026-06-09	
+documentacion/manuales_pdf/20260608_0240-Reglamento_BEC_BUC_2026.pdf	373606	2026-06-09	
+documentacion/manuales_pdf/Manual_Administrador_BECBUC.pdf	34299	2026-06-05	
+documentacion/manuales_pdf/Manual_Apostador_BECBUC.pdf	31231	2026-06-05	
+documentacion/manuales_pdf/Manual_Operacion_BECBUC.pdf	37862	2026-06-05	
+documentacion/manuales_pdf/documentacion del sistema.pdf	5135841	2026-05-22	
+documentacion/manuales_pdf/wc-2026-regulations.pdf	762474	2026-06-05	
+documentacion/md/CONTINUACION_2026-06-02.md	4707	2026-06-01	76
+documentacion/md/DOCUMENTACION_COMPLETA.md	41296	2026-05-23	1541
+documentacion/md/arquitectura_scoring_engine.md	22002	2026-06-08	568
+documentacion/md/contexto_inicio_sesion.md	3977	2026-05-29	75
+documentacion/migraciones/depuracion_vistas_becbuc.sql	19118	2026-06-05	461
+documentacion/migraciones/drop_tablas_obsoletas_becbuc.sql	1473	2026-06-05	35
+documentacion/migraciones/migracion_api_log_contexto.sql	497	2026-06-12	9
+documentacion/migraciones/migracion_apostador.sql	1008	2026-06-03	19
+documentacion/migraciones/migracion_apostador_clasificados.sql	1697	2026-06-28	31
+documentacion/migraciones/migracion_becbuc_db.sql	8893	2026-06-03	165
+documentacion/migraciones/migracion_bonus_partido.sql	1829	2026-06-05	28
+documentacion/migraciones/migracion_cabecera_detalle.sql	2295	2026-05-29	57
+documentacion/migraciones/migracion_catalogo_objeto.sql	1871	2026-06-05	33
+documentacion/migraciones/migracion_competicion_emoji.sql	121	2026-06-09	2
+documentacion/migraciones/migracion_datos_confirmados.sql	972	2026-06-25	21
+documentacion/migraciones/migracion_equipo_competicion.sql	3863	2026-06-09	89
+documentacion/migraciones/migracion_eventos_api.sql	570	2026-06-11	8
+documentacion/migraciones/migracion_fair_play_partido.sql	1778	2026-06-25	34
+documentacion/migraciones/migracion_fase_bloqueada.sql	419	2026-06-08	8
+documentacion/migraciones/migracion_fase_visible_apostador.sql	510	2026-06-03	7
+documentacion/migraciones/migracion_grupo_calculo.sql	706	2026-06-01	12
+documentacion/migraciones/migracion_icono_cabecera_detalle.sql	578	2026-06-01	13
+documentacion/migraciones/migracion_mensajes_admin.sql	1213	2026-06-05	23
+documentacion/migraciones/migracion_monitor.sql	2771	2026-06-12	64
+documentacion/migraciones/migracion_mostrar_live.sql	463	2026-07-21	7
+documentacion/migraciones/migracion_nombre_apostador.sql	288	2026-06-15	8
+documentacion/migraciones/migracion_paux_numero_fifa.sql	283	2026-06-16	9
+documentacion/migraciones/migracion_periodo_apuestas.sql	1912	2026-06-04	33
+documentacion/migraciones/migracion_portal.sql	1644	2026-05-29	38
+documentacion/migraciones/migracion_portal_menu.sql	1448	2026-06-01	26
+documentacion/migraciones/migracion_pred_penales.sql	789	2026-06-08	16
+documentacion/migraciones/migracion_pronosticos_aux.sql	246171	2026-06-16	3255
+documentacion/migraciones/migracion_puntaje_item.sql	2962	2026-06-12	64
+documentacion/migraciones/migracion_scoring_v2.sql	4269	2026-06-08	93
+documentacion/migraciones/migracion_stats_fuentes.sql	3366	2026-06-25	86
+documentacion/migraciones/migracion_sync_log_partido.sql	908	2026-07-01	17
+documentacion/migraciones/migracion_tiebreakers_becbuc.sql	3169	2026-06-04	49
+documentacion/migraciones/migracion_torneos.sql	9902	2026-06-03	198
+documentacion/migraciones/migracion_unificacion_app_db.sql	4171	2026-05-23	109
+documentacion/migraciones/migracion_user_sistemas.sql	739	2026-05-24	15
+documentacion/migraciones/migracion_vistas_alias.sql	9972	2026-06-17	203
+documentacion/migraciones/reset_fixture_torneo.sql	1234	2026-07-21	16
+documentacion/migraciones/seed_appdb_cabecera.sql	5111	2026-06-01	88
+documentacion/migraciones/seed_becbuc_kpis.sql	2763	2026-06-05	67
+documentacion/migraciones/seed_becbuc_sistema.sql	912	2026-06-03	28
+documentacion/migraciones/seed_becbuc_sistema_v2.sql	1737	2026-06-03	52
+documentacion/migraciones/seed_copa_sudamericana.sql	643	2026-07-21	9
+documentacion/migraciones/seed_menu_ventas.sql	1225	2026-06-01	28
+documentacion/migraciones/seed_playoff_mundial.sql	21666	2026-06-04	594
+documentacion/migraciones/seed_ventas_cab.sql	1198	2026-05-29	28
+documentacion/migraciones/v_copamundial_puntajes.sql	4565	2026-06-17	101
+documentacion/migraciones/v_copamundial_puntajes_det.sql	5269	2026-06-17	103
+documentacion/migraciones/vistas_auditoria_becbuc.sql	26149	2026-06-05	578
+documentacion/proyecto_resumen.docx	50995	2026-06-09	
+documentacion/reglamentos/.~lock.BECBUC_Reglamento_Clubes_v1.pdf#	106	2026-08-01	
+documentacion/reglamentos/BECBUC_Reglamento_Clubes_v1.docx	145366	2026-08-01	
+documentacion/reglamentos/BECBUC_Reglamento_Clubes_v1.pdf	202806	2026-08-01	
+documentacion/reglamentos/README.md	2417	2026-07-21	42
+documentacion/reglamentos/generar_reglamento.py	12617	2026-08-01	169
+documentacion/seed_becbuc_sistema.py	1682	2026-06-03	47
+documentacion/test_apifootball.py	1779	2026-06-03	47
+documentacion/verificacion_pronosticos.json	193066	2026-06-13	12396
+drop_becbuc_obsoletas.py	3018	2026-07-20	81
+ejecutar_fair_play.ps1	2717	2026-06-25	59
+ejecutar_sesion39.ps1	1417	2026-06-25	29
+ejecutar_todo.ps1	2663	2026-06-27	58
+ejecutar_todo.py	3481	2026-06-29	98
+escribir_becbuc_md.ps1	12537	2026-06-05	351
+estado_fases.py	1368	2026-07-19	29
+estado_repos.bat	853	2026-07-21	19
+estado_semis_bracket.py	2671	2026-07-15	66
+excel_gen_log.txt	1191	2026-06-23	11
+excel_grupos_por_item.py	11878	2026-06-29	273
+excel_tbl_check.json	1406890	2026-07-02	1
+exportar_diffs_fin_torneo.py	12700	2026-07-20	272
+exportar_diffs_puntajes.py	14571	2026-07-19	304
+exportar_puntajes_vista.py	5013	2026-07-21	126
+extract_auditoria_excel.py	4606	2026-07-20	124
+extract_puntajes_excel.py	3464	2026-07-20	94
+extract_ranking_excel.py	3455	2026-07-20	96
+fase03_unificar.bat	2473	2026-07-21	57
+fase03_unificar_out.txt	14731	2026-07-20	271
+fase03_unificar_v2.bat	2385	2026-07-21	64
+fase0_prep.bat	1751	2026-07-21	28
+fase0_prep_out.txt	2540	2026-07-20	55
+fase1_tests_out.txt	2200	2026-07-20	34
+fase2_verif.bat	1674	2026-07-21	38
+fase2_verif_out.txt	27054	2026-07-20	234
+fase3_verif.bat	1339	2026-07-21	34
+fase3_verif_out.txt	1644	2026-07-20	47
+fase3b_verif.bat	1099	2026-07-21	33
+fase3b_verif_out.txt	905	2026-07-20	32
+fase3c_reverif.bat	1072	2026-07-21	27
+fase3c_reverif_out.txt	709	2026-07-20	23
+fase3c_verif.bat	1106	2026-07-21	33
+fase3c_verif_out.txt	1184	2026-07-20	38
+fase4_pilot.bat	847	2026-07-21	22
+fase4_pilot_out.txt	545	2026-07-20	13
+fill_clasifica_null.py	6614	2026-07-19	158
+fill_logos.py	3999	2026-08-01	75
+fill_tbd_octavos.py	3535	2026-08-01	86
+finalizar_p097_y_calcular.py	8600	2026-07-09	197
+finalizar_partido_ko.py	5291	2026-07-04	151
+fix_bracket_sin_provisorios.py	3846	2026-06-27	108
+fix_cherem_result.txt	671	2026-06-27	27
+fix_clasificado_faltante.py	3720	2026-07-18	82
+fix_estado_partido.py	977	2026-07-01	36
+fix_etapa_paraguay.py	10967	2026-07-21	257
+fix_etapa_paraguay_backup_rows.txt	120	2026-07-20	10
+fix_etapa_paraguay_out.txt	2815	2026-07-20	64
+fix_fechas_r32.py	3136	2026-06-30	64
+fix_hora_mexico_england.py	4118	2026-07-06	101
+fix_minuto.sql	583	2026-06-27	18
+fix_minuto2.sql	543	2026-06-27	13
+fix_nombres_equipos_en.py	4223	2026-06-28	110
+fix_nulls_apuesta.py	918	2026-06-16	22
+fix_numero_fifa_ko.py	2340	2026-06-28	68
+fix_orden_octavos_sudamericana.py	4658	2026-08-01	102
+fix_p030.py	4177	2026-06-21	105
+fix_p030_log.txt	6739	2026-06-21	104
+fix_paraguay.py	10048	2026-06-26	225
+fix_paraguay_log.txt	2436	2026-06-26	50
+fix_partido_suspension.py	7075	2026-06-23	195
+fix_passwords_appdb.py	4686	2026-06-29	106
+fix_penales_partido.py	2347	2026-06-14	69
+fix_r32_oficial.py	9285	2026-06-28	223
+fix_scotland_bracket.py	3285	2026-06-27	95
+fix_scotland_log.txt	1217	2026-06-27	41
+fix_sistema_columns.py	2402	2026-07-09	69
+fix_sistema_columns.txt	1146	2026-07-09	26
+fix_standings_grupo_g.py	6566	2026-06-28	182
+fix_stats_excel_y_recalcular.ps1	2061	2026-06-25	39
+fix_suspension_log.txt	2832	2026-06-23	107
+fix_tarjetas_r32.ps1	128	2026-07-02	1
+fix_var_L.py	4214	2026-07-19	92
+fix_var_canada_qatar.py	1819	2026-06-25	48
+fix_var_p27_p39.py	2877	2026-06-24	81
+fix_y_recalcular_full.ps1	1907	2026-06-25	45
+fp-7.jpg	116807	2026-07-19	
+fp-8.jpg	78502	2026-07-19	
+frontend-becbuc/.gitignore	99	2026-07-20	
+frontend-becbuc/README.md	1660	2026-07-21	42
+frontend-becbuc/app/globals.css	911	2026-07-20	40
+frontend-becbuc/app/layout.tsx	531	2026-07-20	25
+frontend-becbuc/app/page.tsx	19505	2026-08-01	423
+frontend-becbuc/app/playoff-live/page.tsx	12702	2026-08-01	357
+frontend-becbuc/build_v2.log	657	2026-08-01	
+frontend-becbuc/components/BracketClubes.tsx	11140	2026-08-01	311
+frontend-becbuc/components/BracketTree.tsx	9314	2026-07-21	299
+frontend-becbuc/components/EnVivo.tsx	15960	2026-08-01	423
+frontend-becbuc/components/GruposView.tsx	6272	2026-08-01	149
+frontend-becbuc/components/MatchReplay.tsx	9376	2026-08-01	245
+frontend-becbuc/components/MiProno.tsx	26072	2026-08-01	649
+frontend-becbuc/components/PanZoom.tsx	5445	2026-07-21	162
+frontend-becbuc/lib/api.ts	2380	2026-07-20	75
+frontend-becbuc/lib/format.ts	1895	2026-08-01	59
+frontend-becbuc/lib/types.ts	7508	2026-08-01	264
+frontend-becbuc/next-env.d.ts	253	2026-08-01	6
+frontend-becbuc/next.config.ts	1054	2026-07-21	29
+frontend-becbuc/out/404.html	8100	2026-08-01	1
+frontend-becbuc/out/404/index.html	8100	2026-08-01	1
+frontend-becbuc/out/__next.__PAGE__.txt	834	2026-08-01	9
+frontend-becbuc/out/__next._full.txt	4037	2026-08-01	17
+frontend-becbuc/out/__next._head.txt	844	2026-08-01	5
+frontend-becbuc/out/__next._index.txt	1845	2026-08-01	5
+frontend-becbuc/out/__next._tree.txt	254	2026-08-01	2
+frontend-becbuc/out/_next/static/-iiEp90eP3hefPSFeF8sj/_buildManifest.js	219	2026-08-01	11
+frontend-becbuc/out/_next/static/-iiEp90eP3hefPSFeF8sj/_clientMiddlewareManifest.js	96	2026-08-01	1
+frontend-becbuc/out/_next/static/-iiEp90eP3hefPSFeF8sj/_ssgManifest.js	80	2026-08-01	1
+frontend-becbuc/out/_next/static/chunks/0-rjhsw3x1_wj.css	21384	2026-08-01	1
+frontend-becbuc/out/_next/static/chunks/02i7dfk78~t~2.js	53149	2026-08-01	4
+frontend-becbuc/out/_next/static/chunks/03~yq9q893hmn.js	112594	2026-08-01	1
+frontend-becbuc/out/_next/static/chunks/07lhk_q6pmm3r.js	227537	2026-08-01	1
+frontend-becbuc/out/_next/static/chunks/0a51~fn578jhy.js	1076	2026-08-01	1
+frontend-becbuc/out/_next/static/chunks/0dbhjjzl8qfwv.js	57909	2026-08-01	1
+frontend-becbuc/out/_next/static/chunks/0g-dyon6iw.6h.js	13753	2026-08-01	1
+frontend-becbuc/out/_next/static/chunks/0tvif09j9hotm.js	147511	2026-08-01	2
+frontend-becbuc/out/_next/static/chunks/0y9sn4p.h9zff.js	58177	2026-08-01	1
+frontend-becbuc/out/_next/static/chunks/15xrurgzs99gv.js	17474	2026-08-01	31
+frontend-becbuc/out/_next/static/chunks/turbopack-0pqmljhbmwrzt.js	10590	2026-08-01	1
+frontend-becbuc/out/_not-found/__next._full.txt	5063	2026-08-01	15
+frontend-becbuc/out/_not-found/__next._head.txt	895	2026-08-01	5
+frontend-becbuc/out/_not-found/__next._index.txt	1845	2026-08-01	5
+frontend-becbuc/out/_not-found/__next._not-found.txt	385	2026-08-01	5
+frontend-becbuc/out/_not-found/__next._not-found/__PAGE__.txt	1432	2026-08-01	5
+frontend-becbuc/out/_not-found/__next._tree.txt	329	2026-08-01	2
+frontend-becbuc/out/_not-found/index.html	8100	2026-08-01	1
+frontend-becbuc/out/_not-found/index.txt	5063	2026-08-01	15
+frontend-becbuc/out/index.html	6248	2026-08-01	1
+frontend-becbuc/out/index.txt	4037	2026-08-01	17
+frontend-becbuc/out/playoff-live/__next._full.txt	4640	2026-08-01	19
+frontend-becbuc/out/playoff-live/__next._head.txt	844	2026-08-01	5
+frontend-becbuc/out/playoff-live/__next._index.txt	1845	2026-08-01	5
+frontend-becbuc/out/playoff-live/__next._tree.txt	330	2026-08-01	2
+frontend-becbuc/out/playoff-live/__next.playoff-live.txt	385	2026-08-01	5
+frontend-becbuc/out/playoff-live/__next.playoff-live/__PAGE__.txt	981	2026-08-01	9
+frontend-becbuc/out/playoff-live/index.html	6919	2026-08-01	1
+frontend-becbuc/out/playoff-live/index.txt	4640	2026-08-01	19
+frontend-becbuc/package-lock.json	234801	2026-07-21	6838
+frontend-becbuc/package.json	618	2026-07-20	28
+frontend-becbuc/postcss.config.mjs	94	2026-07-20	
+frontend-becbuc/tsconfig.json	699	2026-07-21	41
+frontend-becbuc/tsconfig.tsbuildinfo	104108	2026-08-01	
+frontend/.env.example	166	2026-05-17	
+frontend/.env.local	49	2026-05-17	
+frontend/.gitattributes	39	2026-05-17	
+frontend/.gitignore	480	2026-05-17	
+frontend/README.md	2504	2026-05-17	88
+frontend/app/(auth)/login/page.tsx	2897	2026-05-17	87
+frontend/app/(dashboard)/layout.tsx	322	2026-05-17	10
+frontend/app/(dashboard)/users/[id]/UserDetail.tsx	10200	2026-05-17	272
+frontend/app/(dashboard)/users/[id]/page.tsx	613	2026-05-17	24
+frontend/app/(dashboard)/users/new/page.tsx	4462	2026-05-17	130
+frontend/app/(dashboard)/users/page.tsx	3244	2026-05-17	88
+frontend/app/api/login/route.ts	580	2026-05-17	16
+frontend/app/api/logout/route.ts	344	2026-05-17	8
+frontend/app/api/users/[id]/route.ts	722	2026-05-17	21
+frontend/app/api/users/route.ts	640	2026-05-17	17
+frontend/app/dashboard/page.tsx	6258	2026-05-23	172
+frontend/app/favicon.ico	25931	2026-05-17	
+frontend/app/globals.css	488	2026-05-17	26
+frontend/app/layout.tsx	741	2026-05-17	33
+frontend/app/login/page.tsx	4461	2026-05-23	122
+frontend/app/page.tsx	226	2026-05-17	8
+frontend/components/layout/Sidebar.tsx	1666	2026-05-17	49
+frontend/components/navbar.tsx	2143	2026-05-23	67
+frontend/components/ui/Badge.tsx	538	2026-05-17	17
+frontend/components/ui/Button.tsx	1553	2026-05-17	41
+frontend/eslint.config.mjs	465	2026-05-17	
+frontend/lib/api-client.ts	6581	2026-05-23	250
+frontend/lib/api.ts	1243	2026-05-17	36
+frontend/lib/auth-context.tsx	2118	2026-05-23	92
+frontend/lib/auth.ts	843	2026-05-17	28
+frontend/lib/use-protected-route.ts	513	2026-05-23	22
+frontend/middleware.ts	4227	2026-05-17	129
+frontend/next-env.d.ts	251	2026-05-17	6
+frontend/next.config.ts	133	2026-05-17	7
+frontend/package.json	602	2026-05-17	29
+frontend/pnpm-lock.yaml	133849	2026-05-17	
+frontend/pnpm-workspace.yaml	142	2026-05-17	
+frontend/postcss.config.mjs	94	2026-05-17	
+frontend/public/file.svg	391	2026-05-17	
+frontend/public/globe.svg	1035	2026-05-17	
+frontend/public/next.svg	1375	2026-05-17	
+frontend/public/vercel.svg	128	2026-05-17	
+frontend/public/window.svg	385	2026-05-17	
+frontend/services/applications.ts	896	2026-05-17	34
+frontend/services/auth.ts	373	2026-05-17	13
+frontend/services/roles.ts	616	2026-05-17	19
+frontend/services/users.ts	1279	2026-05-17	42
+frontend/tsconfig.json	666	2026-05-17	34
+frontend/tsconfig.tsbuildinfo	136116	2026-05-17	
+frontend/types/index.ts	819	2026-05-17	45
+generar_excel_becbuc.py	49995	2026-07-21	1123
+generar_excel_grupos_auditoria.py	19655	2026-07-21	486
+gestionar_fases_cuartos.py	6842	2026-07-09	170
+get_cloudflared_url.ps1	1081	2026-06-25	28
+get_ngrok.py	930	2026-07-15	22
+git_commit_log.txt	149876	2026-07-20	1725
+git_commit_out.txt	3076	2026-07-20	50
+git_commit_sesion33.ps1	413	2026-06-17	13
+git_dbcleanup_out.txt	1758	2026-07-20	18
+git_fase1_out.txt	1976	2026-07-20	32
+git_fase2_out.txt	1993	2026-07-20	29
+git_fase3_out.txt	2307	2026-07-20	27
+git_fase3b_out.txt	2213	2026-07-20	24
+git_fase3c_out.txt	2603	2026-07-20	29
+git_fase4_out.txt	2145	2026-07-20	21
+git_push_branch_log.txt	471	2026-07-20	14
+git_push_log.txt	754	2026-07-20	16
+git_reorg_a_out.txt	70255	2026-07-20	723
+goleada_log.txt	345	2026-06-29	10
+goleada_off_y_excel_grupos.py	10180	2026-07-21	221
+grupos_estado.txt	330	2026-06-27	11
+importar_8vos_excel.py	14434	2026-07-04	362
+importar_apuestas_fase.py	10551	2026-07-18	227
+importar_bonus_r32_desde_excel.py	6722	2026-07-03	168
+importar_cuartos_excel.py	11369	2026-07-09	224
+importar_fechas_ko.py	8045	2026-06-28	162
+importar_globales_api.py	10074	2026-06-12	309
+importar_globales_excel.py	7165	2026-06-12	195
+importar_partidos_api.py	10447	2026-06-12	311
+importar_pronosticos_aux.py	2001	2026-06-16	69
+importar_pucheta_octavos.py	10012	2026-07-05	221
+importar_r32_excel.py	10842	2026-06-28	277
+importar_semis_excel.py	10601	2026-07-18	227
+inferir_fechas_espn.py	6694	2026-08-01	163
+inferir_fechas_octavos_sudamericana.py	7375	2026-08-01	182
+iniciar-todo-simple.ps1	1056	2026-05-23	40
+iniciar-todo.ps1	3669	2026-05-23	107
+iniciar_brasil.py	1912	2026-06-29	55
+iniciar_brasil_log.txt	320	2026-06-29	7
+iniciar_paraguay_usa.py	1483	2026-06-29	42
+limpiar_becbuc_out.txt	1047	2026-07-20	22
+list_cherem_globales.py	3232	2026-07-20	62
+list_cherem_globales_out.txt	1991	2026-07-20	28
+list_ganaron_f.py	1661	2026-07-20	45
+llave del mundial.jpg	57948	2026-06-29	
+migration_log.txt	1124	2026-06-17	44
+ngrok.exe	32696136	2026-06-01	
+ngrok.zip	12033039	2026-06-05	
+ngrok_tmp.yml	87	2026-07-10	3
+ngrok_url.txt	137	2026-07-15	2
+no_match.txt	4305	2026-06-27	109
+nuevo-proyecto.ps1	8383	2026-05-23	192
+p.goles_visitante)	0	2026-06-27	
+page-1.jpg	28691	2026-07-19	
+page-3.jpg	110095	2026-07-19	
+page-8.jpg	92947	2026-07-19	
+patch_frontend_core.py	3178	2026-07-20	81
+patch_ranking.py	3023	2026-07-20	82
+plantillas/expo-react-native/.env.example	51	2026-05-23	
+plantillas/expo-react-native/app.json	229	2026-05-23	11
+plantillas/expo-react-native/app/(auth)/login.tsx	1943	2026-05-23	54
+plantillas/expo-react-native/app/(tabs)/_layout.tsx	303	2026-05-23	10
+plantillas/expo-react-native/app/(tabs)/index.tsx	643	2026-05-23	20
+plantillas/expo-react-native/app/(tabs)/perfil.tsx	1896	2026-05-23	49
+plantillas/expo-react-native/app/_layout.tsx	710	2026-05-23	27
+plantillas/expo-react-native/context/AuthContext.tsx	2055	2026-05-23	76
+plantillas/expo-react-native/package.json	602	2026-05-23	25
+plantillas/expo-react-native/services/api.ts	3203	2026-05-23	83
+plantillas/expo-react-native/tsconfig.json	148	2026-05-23	10
+plantillas/nextjs-postgres-api/.env.local	49	2026-05-17	
+plantillas/nextjs-postgres-api/.gitignore	47	2026-05-17	
+plantillas/nextjs-postgres-api/app/(auth)/login/page.tsx	2906	2026-05-17	88
+plantillas/nextjs-postgres-api/app/(dashboard)/layout.tsx	322	2026-05-17	10
+plantillas/nextjs-postgres-api/app/(dashboard)/page.tsx	736	2026-05-17	24
+plantillas/nextjs-postgres-api/app/api/login/route.ts	778	2026-05-17	22
+plantillas/nextjs-postgres-api/app/api/logout/route.ts	219	2026-05-17	7
+plantillas/nextjs-postgres-api/app/globals.css	23	2026-05-17	1
+plantillas/nextjs-postgres-api/app/layout.tsx	372	2026-05-17	15
+plantillas/nextjs-postgres-api/app/page.tsx	230	2026-05-17	8
+plantillas/nextjs-postgres-api/components/layout/Sidebar.tsx	1713	2026-05-17	49
+plantillas/nextjs-postgres-api/components/ui/Badge.tsx	544	2026-05-17	17
+plantillas/nextjs-postgres-api/components/ui/Button.tsx	1579	2026-05-17	49
+plantillas/nextjs-postgres-api/lib/api.ts	1249	2026-05-17	31
+plantillas/nextjs-postgres-api/lib/auth.ts	680	2026-05-17	23
+plantillas/nextjs-postgres-api/middleware.ts	2619	2026-05-17	75
+plantillas/nextjs-postgres-api/next.config.ts	104	2026-05-17	5
+plantillas/nextjs-postgres-api/package.json	535	2026-05-17	26
+plantillas/nextjs-postgres-api/postcss.config.mjs	94	2026-05-17	
+plantillas/nextjs-postgres-api/services/auth.ts	394	2026-05-17	8
+plantillas/nextjs-postgres-api/services/users.ts	1208	2026-05-17	26
+plantillas/nextjs-postgres-api/tsconfig.json	562	2026-05-17	21
+plantillas/nextjs-postgres-api/types/index.ts	819	2026-05-17	45
+plantillas/python-api-client/.env.example	99	2026-05-23	
+plantillas/python-api-client/api_client.py	4009	2026-05-23	104
+plantillas/python-api-client/main.py	1568	2026-05-23	38
+plantillas/python-api-client/requirements.txt	35	2026-05-23	2
+poblar_equipos_iso_ranking.py	11246	2026-07-04	269
+poblar_equipos_resultado.txt	714	2026-07-04	10
+poblar_octavos_sudamericana.py	4475	2026-07-21	91
+post_fix_paraguay.ps1	2283	2026-06-26	40
+preview_ranking_postfix.py	5274	2026-07-21	122
+propagar_auto.py	1946	2026-07-21	43
+propagar_ganadores_clubes.py	5990	2026-07-21	135
+proyectos/.gitkeep	0	2026-05-23	
+pun_after_out.txt	73	2026-07-20	3
+pun_before_out.txt	46	2026-07-20	1
+puntaje_grupos_20260629_1333.xlsx	9310	2026-06-29	
+puntajes_copa_mundial.xlsx	460618	2026-06-15	
+query_tarjetas.sql	516	2026-07-02	16
+ranking_actual.py	2931	2026-07-19	71
+ranking_auditoria.xlsx	8197	2026-06-21	
+ranking_excel.py	7958	2026-06-21	233
+ranking_excel_log.txt	367	2026-06-21	11
+ranking_resultado.txt	1195	2026-06-22	21
+ranking_top10.py	3103	2026-06-22	82
+ranking_top10_log.txt	34	2026-06-22	1
+reabrir_y_recalcular.py	4630	2026-07-20	110
+real2.txt	653	2026-06-27	15
+real_scores.txt	149	2026-06-27	3
+recalc_api.ps1	920	2026-06-27	28
+recalc_directo.py	8666	2026-06-26	229
+recalc_fairplay.py	7557	2026-06-26	169
+recalc_force_grupos.py	2982	2026-07-19	74
+recalc_hasta_semis.py	4646	2026-07-18	113
+recalc_mejores_terceros.ps1	2118	2026-06-26	45
+recalc_octavos_bloquear_cuartos.py	3349	2026-07-09	81
+recalc_participacion.py	4850	2026-06-27	129
+recalc_post_excel.ps1	577	2026-06-26	9
+recalc_puntajes.py	624	2026-06-27	19
+recalc_ranking.py	3191	2026-07-19	56
+recalc_ranking_log.txt	1428	2026-07-19	33
+recalc_result.txt	3378	2026-06-27	80
+recalcular_audit_log.txt	2144	2026-06-21	67
+recalcular_log.txt	886	2026-06-22	20
+recalcular_puntajes.py	897	2026-07-04	24
+recalcular_todo.py	3130	2026-06-26	88
+reconciliar_partido_id.py	9405	2026-07-21	231
+reforma_scores_tab.py	14342	2026-06-29	343
+regenerar_excel.ps1	1364	2026-06-27	36
+registrar_sync_auto.ps1	1597	2026-06-13	34
+reimportar_predicciones_bonus.py	8116	2026-07-18	212
+rename_result.txt	98	2026-06-27	6
+reorg_fase_a.ps1	2796	2026-07-20	62
+reorg_fase_a_out.txt	456	2026-07-20	6
+reorg_fase_b1.ps1	2677	2026-07-20	54
+reorg_fase_b1_out.txt	3579	2026-07-20	87
+reset_sudamericana_ko.py	2034	2026-07-21	47
+resolve_placeholders_penales.py	6797	2026-08-01	133
+restaurar_octavos_sudamericana.py	8219	2026-08-01	182
+resubir_octavos_sanbie_pato.py	7383	2026-07-09	143
+resultado_diag_apuesta.txt	2723	2026-06-16	64
+resultado_importacion.txt	138	2026-06-16	4
+resultado_quiroga.txt	2625	2026-06-16	25
+resultado_sync_paux.txt	3439	2026-06-16	65
+resultado_verificacion_8vos.txt	455	2026-07-04	14
+resultado_verificar_sync.txt	177	2026-06-16	5
+resultados_partidos.json	16817	2026-06-24	1
+resync_grupo_g.py	7607	2026-06-28	188
+run_all.ps1	1912	2026-06-27	39
+run_all_log.txt	30283	2026-06-27	102
+run_analisis_fuentes.ps1	182	2026-06-25	6
+run_assess_becbuc.bat	267	2026-07-21	10
+run_auto_mapeo.ps1	1774	2026-06-25	39
+run_b1_move.bat	1887	2026-07-21	46
+run_commit_dbcleanup.bat	504	2026-07-21	12
+run_commit_fase1.bat	447	2026-07-21	14
+run_commit_fase2.bat	580	2026-07-21	14
+run_commit_fase3.bat	443	2026-07-21	12
+run_commit_fase3b.bat	486	2026-07-21	12
+run_commit_fase3c.bat	672	2026-07-21	14
+run_commit_fase4.bat	422	2026-07-21	12
+run_diag_sofascore.ps1	153	2026-06-25	5
+run_fase1_tests.bat	505	2026-07-21	16
+run_fix2_recalc.ps1	1252	2026-06-27	23
+run_fix_pts_equipo_grupos.ps1	828	2026-07-04	18
+run_fix_swap_numero_fifa.ps1	920	2026-07-02	9
+run_fix_var_discrepancias.ps1	731	2026-07-02	11
+run_git_y_backup.ps1	1417	2026-06-25	35
+run_limpiar_becbuc.bat	1125	2026-07-21	26
+run_migrate_and_populate.ps1	1491	2026-06-25	27
+run_migration_aux.ps1	523	2026-06-16	6
+run_pendientes.ps1	841	2026-06-17	18
+run_populate_y_analisis.ps1	971	2026-06-25	23
+run_reorg_b1.bat	146	2026-07-21	5
+run_reset_ko.ps1	740	2026-06-28	12
+run_todo.ps1	3389	2026-06-28	84
+run_verif_item_f.bat	247	2026-07-21	9
+run_verify_cherem.ps1	266	2026-06-27	3
+run_verify_final.ps1	1046	2026-06-27	26
+safe_write.py	6024	2026-07-20	157
+scores_apostador.json	6642	2026-06-24	1
+set_fecha_partido.py	1864	2026-08-01	53
+simular_propagacion_clubes.py	5528	2026-07-21	144
+sin_apuesta_semis.py	2897	2026-07-18	73
+sincronizar_final_grupos.ps1	5622	2026-06-28	125
+sincronizar_resultados_excel.py	8534	2026-07-20	204
+skills/becbuc-ui-sync/SKILL.md	2592	2026-06-06	58
+soporte_microsoft_nameservers.md	2076	2026-06-05	43
+swap_apuestas.py	5915	2026-07-09	107
+sync_ahora.py	2815	2026-08-01	58
+sync_auto.log	780	2026-06-29	
+sync_auto.py	10219	2026-08-01	262
+sync_ayer.py	5057	2026-06-25	134
+sync_francia_iraq.py	5490	2026-06-23	140
+sync_francia_iraq_log.txt	1290	2026-06-23	30
+sync_partido.py	3767	2026-07-18	93
+sync_partido1.ps1	4347	2026-06-12	122
+sync_paux_a_apuesta.py	11639	2026-07-21	331
+sync_paux_faltantes.py	10621	2026-06-17	309
+sync_pendientes.py	3242	2026-08-01	81
+sync_puntajes_grupos_excel.py	6315	2026-06-28	184
+sync_semis.py	3996	2026-07-15	88
+sync_sofascore_directo.py	12587	2026-06-25	280
+sync_state.json	23	2026-06-29	1
+test2.py	26	2026-06-22	1
+test2_log.txt	17	2026-06-22	1
+test3.py	304	2026-06-22	10
+test_api_football.py	6500	2026-06-11	147
+test_bash_write.txt	27	2026-07-01	1
+test_bracket_live.ps1	1497	2026-06-28	27
+test_bracket_output.txt	12282	2026-06-28	134
+test_export_pronos.py	1144	2026-07-15	22
+test_export_pronos_out.txt	556	2026-07-15	3
+test_grupos_p.py	7562	2026-07-21	181
+test_integral.py	43050	2026-07-21	1011
+test_integral_report.md	12693	2026-06-11	231
+test_live_guardar.py	2315	2026-07-15	45
+test_live_guardar_out.txt	461	2026-07-15	4
+test_propagacion_bracket.py	16473	2026-06-28	439
+test_simple.py	103	2026-06-22	5
+test_tabla.py	4056	2026-06-14	105
+test_write_check.txt	27	2026-07-01	1
+tests/golden/conftest.py	322	2026-07-20	8
+tests/golden/export_golden.py	5202	2026-07-20	135
+tests/golden/ranking_torneo2_golden.json	22976	2026-07-20	1245
+tests/golden/test_golden_ranking.py	4349	2026-07-20	108
+tests/golden/test_scoring_engine.py	5085	2026-07-20	133
+todos_diffs.txt	170	2026-06-27	5
+tools/__init__.py	0	2026-07-20	0
+tools/db_env.py	2878	2026-07-20	73
+update_fifa_ranking.py	4880	2026-06-26	132
+update_from_excel.py	11759	2026-06-26	222
+update_from_excel_log.txt	3915	2026-06-26	68
+uvicorn_test.log	71113667	2026-06-11	
+v2p-08.jpg	92774	2026-07-19	
+v3p-3.jpg	102843	2026-07-19	
+v3p-4.jpg	97585	2026-07-19	
+v3p-5.jpg	103649	2026-07-19	
+v3p-6.jpg	95263	2026-07-19	
+validar_bracket_oficial.py	14841	2026-06-28	342
+ver_equipos_bd.py	575	2026-07-04	11
+ver_mejores_terceros.py	12705	2026-06-26	328
+ver_ngrok_url.py	985	2026-06-27	26
+ver_p92.py	555	2026-07-06	12
+ver_p92_file.py	786	2026-07-21	18
+ver_patito.py	6189	2026-06-21	152
+ver_patito_log.txt	5850	2026-06-21	52
+ver_quiroga.py	3968	2026-07-21	99
+ver_standings.py	2840	2026-06-27	77
+ver_tarjetas3.ps1	732	2026-07-02	23
+verif_item_f.py	5825	2026-07-21	137
+verif_item_f_out.txt	2761	2026-07-20	55
+verificar_8vos.py	2235	2026-07-21	63
+verificar_amarillas_playoffs.py	12322	2026-07-09	329
+verificar_apuestas_fin_torneo.py	18639	2026-07-20	423
+verificar_estado_final.py	2448	2026-07-20	53
+verificar_excel.py	8816	2026-06-26	160
+verificar_excel_log.txt	190	2026-06-27	9
+verificar_fechas_fases.py	3117	2026-08-01	73
+verificar_grupos_y_bracket.ps1	5983	2026-06-28	130
+verificar_item_p.py	3363	2026-07-18	78
+verificar_p49.py	3280	2026-07-21	79
+verificar_p49_output.txt	3077	2026-06-24	54
+verificar_semis_excel_vs_bd.py	8183	2026-07-18	207
+verificar_sudamericana.py	2233	2026-08-01	44
+verificar_sudamericana_out.txt	1076	2026-08-01	38
+verificar_sync.py	3315	2026-07-21	88
+verificar_usuario_sandra.py	1688	2026-07-09	41
+verify_audit_excel.py	1329	2026-07-20	41
+verify_cherem.sql	8666	2026-06-27	129
+verify_cherem.txt	188	2026-06-27	5
+verify_cherem_out.txt	28224	2026-06-27	71
+verify_final.txt	14129	2026-06-27	79
+verify_final3.txt	5088	2026-06-27	56
+verify_final_tarjetas.py	2492	2026-07-19	59
+verify_final_tarjetas_log.txt	585	2026-07-19	13
+verify_puntajes_excel.py	1261	2026-07-20	37
+verify_ranking_excel.py	1154	2026-07-20	35
+verify_todos.sql	5502	2026-06-27	106
+verify_todos2.txt	7192	2026-06-27	48
+verify_todos_out.txt	14362	2026-06-27	49
+watchdog_becbuc.py	3488	2026-07-21	95
+web/.env	110	2026-05-23	
+web/README.md	3345	2026-05-23	149
+web/app.py	7292	2026-05-23	233
+web/requirements.txt	51	2026-05-23	3
+web/templates/404.html	306	2026-05-23	9
+web/templates/500.html	303	2026-05-23	9
+web/templates/applications.html	1408	2026-05-23	41
+web/templates/audit-logs.html	1103	2026-05-23	33
+web/templates/base.html	5701	2026-05-23	151
+web/templates/dashboard.html	3702	2026-05-23	112
+web/templates/login.html	2412	2026-05-23	55
+web/templates/users.html	989	2026-05-23	31

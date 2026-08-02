@@ -7227,6 +7227,12 @@ async def _avanzar_bracket(db, torneo_id: int, maps: dict, hasta_tipo: str | Non
         "JOIN competicion c ON c.id = t.competicion_id WHERE t.id = :tid"
     ), {"tid": torneo_id})).mappings().first()
     if _cr and (_cr["tipo"] or "").lower() == "clubes":
+        # Clubes: avance propio (ida/vuelta) + cierre de fases completas. Nunca rompe el sync.
+        try:
+            from app.services.scoring.clubes_bracket import avanzar_bracket_clubes
+            await avanzar_bracket_clubes(db, torneo_id)
+        except Exception:
+            pass
         return
 
     orden_tipos = ["ronda32", "ronda16", "cuartos", "semis", "tercer_puesto", "final"]

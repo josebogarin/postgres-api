@@ -75,6 +75,9 @@ Rebuild + deploy del Live nuevo: `bat\rebuild_reiniciar.bat` (cierra uvicorn si 
 - **Torneo cerrado = solo lectura** en el Live (`torneo.cerrado=TRUE` → MiProno no edita).
 - **Estructura del playoff FIJA por seeding (`p.id`), NUNCA por fecha.** El bracket de clubes
   (`bracket-clubes`) ordena las llaves por `p.id`; cambiar fechas no debe reordenar el cuadro.
+- **Fase KO cerrada**: cuando TODOS los partidos de una fase están finalizados, la fase se
+  bloquea (`fase.bloqueada`) y no se editan más apuestas. El avance de clubes es automático
+  (`clubes_bracket.avanzar_bracket_clubes`, posicional `Gan.{L}{k}` por agregado + penales).
 - **Hora Paraguay = UTC−3 fijo** (Paraguay = Argentina, sin horario de verano desde 2024). Se
   guarda en UTC; el Live convierte a `America/Asuncion`.
 - **Fecha/hora de partidos KO**: fuente = **ESPN** (API-Football trae placeholders). Ver skills
@@ -101,7 +104,7 @@ arranque; ver historial git), etc.
 Scoring engine — patrón **Strategy + Registry** (una competencia = un engine):
 ```
 backend/app/services/scoring/
-  base.py · registry.py · calculator.py · clubes_calculator.py
+  base.py · registry.py · calculator.py · clubes_calculator.py · clubes_bracket.py
   engines/copa_mundo_2026.py   (reglamento Mundial)
   engines/copa_clubes.py       (reglamento nuevo de clubes: H/I por fase, Cambios, comodín, cruce, tanda)
   engines/default.py           (legacy 3/1/0, opt-in explícito)
@@ -113,7 +116,7 @@ Archivos clave: `apostador_bets.py` (God file, `/bets/*`: pronósticos, ranking,
 
 Endpoints clave: `POST /api/v1/auth/login` · `/bets/{grupos,mi-bracket,bracket-real,bracket-clubes,
 ranking,apostadores,mis-partidos,live-panel,partido-detalle}` · `POST /bets/{guardar-apuestas,
-live-guardar-apuestas,calcular-puntajes/{tid},calcular-puntajes-clubes/{tid},avanzar-bracket,
+live-guardar-apuestas,calcular-puntajes/{tid},calcular-puntajes-clubes/{tid},avanzar-bracket,avanzar-bracket-clubes/{tid},
 sync-resultados}` · PIN: `/bets/{live-pin-estado,live-set-pin,live-verify-pin,live-recuperar-pin}` ·
 `GET /torneo/activas` · `/torneo/buscar-liga` · `POST /torneo/importar-liga`.
 

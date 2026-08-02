@@ -13,6 +13,7 @@ from sqlalchemy import text
 
 from app.api.deps import CurrentAdmin, BECBUCSession as DBSession
 from app.services.scoring.clubes_calculator import calcular_clubes
+from app.services.scoring.clubes_bracket import avanzar_bracket_clubes
 
 router = APIRouter()
 
@@ -27,6 +28,16 @@ async def calcular_puntajes_clubes(torneo_id: int, current: CurrentAdmin, db: DB
     except Exception as e:
         import traceback
         raise HTTPException(500, f"Error calculando clubes: {e}\n{traceback.format_exc()}")
+
+
+@router.post("/avanzar-bracket-clubes/{torneo_id}",
+             summary="Propaga ganadores del bracket de clubes y cierra fases completas")
+async def avanzar_bracket_clubes_ep(torneo_id: int, current: CurrentAdmin, db: DBSession) -> dict:
+    try:
+        return await avanzar_bracket_clubes(db, torneo_id)
+    except Exception as e:
+        import traceback
+        raise HTTPException(500, f"Error avanzando bracket clubes: {e}\n{traceback.format_exc()}")
 
 
 # Mismo SELECT que /live-panel (para que el popup use el componente del Live tal cual),
